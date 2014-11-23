@@ -1,8 +1,42 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-a {
-  color: #00B7FF;
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+.header {
+  display: block;
+  background: yellow;
+  position: fixed;
+  width: 100%;
+  top: 0px;
+  left: 0px;
+  height: 30px;
+}
+
+.all-sketches {
+  width: 100%;
+  height: 100%;
+  padding-top: 30px;
+}
+
+.sketch-wrapper {
+  width: 100%;
+  height: 100%;
+  background: grey;
+}
+
+#sketch2 {
+  background: green;
+}
+
+canvas {
+  background: black;
+  width: 100%;
+  height: 100%;
 }
