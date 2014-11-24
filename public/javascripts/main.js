@@ -1,15 +1,13 @@
 function initializeSketch(sketchId) {
-  var canvasWrapper = document.getElementById(sketchId);
+  var $canvasWrapper = $("#"+sketchId);
 
-  var canvasWrapperWidth = canvasWrapper.clientWidth;
-  var canvasWrapperHeight = canvasWrapper.clientHeight;
+  var $canvas = $("<canvas></canvas>")
+                  .attr("width", $canvasWrapper.width())
+                  .attr("height", $canvasWrapper.height())
+                  .appendTo($canvasWrapper);
+  var context = $canvas[0].getContext('2d');
 
-  var canvas = document.getElementById(sketchId+"-canvas");
-  canvas.attributes.width.value = canvasWrapperWidth;
-  canvas.attributes.height.value = canvasWrapperHeight;
-  var context = canvas.getContext('2d');
-
-  window.sketches[sketchId](canvas, context);
+  window.sketches[sketchId]($canvas[0], context);
 }
 
 function sketch1(canvas, context) {

@@ -6,7 +6,7 @@ module.exports = function(grunt) {
       task: {
         src: ['views/index.jade'],
         options: {
-          ignorePath: 'views'
+          ignorePath: '..'
         }
       }
     }
