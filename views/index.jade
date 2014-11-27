@@ -8,7 +8,11 @@ html
     .all-sketches
       .sketch-wrapper#sketch1
       .sketch-wrapper#sketch2
+      .sketch-wrapper#sketch3
+        canvas#sketch3(data-processing-sources="AdditiveWave.pde")
+    div.footer
     // bower:js
     script(src='/bower_components/jquery/dist/jquery.js')
+    script(src='/bower_components/processing/processing.js')
     // endbower
     script(src="/javascripts/main.js")

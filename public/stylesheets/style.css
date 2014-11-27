@@ -9,34 +9,69 @@ html, body {
   height: 100%;
 }
 
+body {
+  background-color: #e9eaed;
+}
+
 .header {
-  display: block;
-  background: yellow;
+  background-color: #ff5140;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+  color: #333;
+  font-family: ‘Palatino Linotype’, ‘Book Antiqua’, Palatino, serif;
   position: fixed;
-  width: 100%;
   top: 0px;
   left: 0px;
-  height: 30px;
+  right: 0px;
+  height: 50px;
+  line-height: 50px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.footer {
+  height: 1px;
 }
 
 .all-sketches {
-  width: 100%;
-  height: 100%;
-  padding-top: 30px;
+  padding-top: 50px;
+  /* background: url(/images/background.png); */
 }
 
 .sketch-wrapper {
-  width: 100%;
-  height: 100%;
+  width: 800px;
+  height: 500px;
+  margin: 110px auto;
   background: grey;
+}
+
+.sketch-wrapper:first-of-type {
+  margin-top: 60px;
+}
+.sketch-wrapper:last-of-type {
+  margin-bottom: 60px;
 }
 
 #sketch2 {
   background: green;
 }
 
-canvas {
-  background: black;
-  width: 100%;
-  height: 100%;
+/* https://color.adobe.com/create/color-wheel/?base=2&rule=Compound&selected=0&name=My%20Color%20Theme&mode=rgb&rgbvalues=0.07999999999999999,0.5946747250313638,0.8,0.24,0.4973373625156819,0.6,0,1,0.7406588226733675,1,0.31748377417886786,0.25,0.8,0.10246771211019282,0.2360470610908914&swatchOrder=0,1,2,3,4 */
+.teal {
+  color: #1498cc;
+}
+
+.darkteal {
+  color: #3d7f99;
+}
+
+.lightteal {
+  color: #00ffbd;
+}
+
+.darkorange {
+  color: #ff5140;
+}
+
+.darkred {
+  color: #cc1a3c;
 }
