@@ -41,7 +41,7 @@ body {
   width: 800px;
   height: 500px;
   margin: 110px auto;
-  background: grey;
+  background: #fafafa;
 }
 
 .sketch-wrapper:first-of-type {
@@ -49,10 +49,6 @@ body {
 }
 .sketch-wrapper:last-of-type {
   margin-bottom: 60px;
-}
-
-#sketch2 {
-  background: green;
 }
 
 /* https://color.adobe.com/create/color-wheel/?base=2&rule=Compound&selected=0&name=My%20Color%20Theme&mode=rgb&rgbvalues=0.07999999999999999,0.5946747250313638,0.8,0.24,0.4973373625156819,0.6,0,1,0.7406588226733675,1,0.31748377417886786,0.25,0.8,0.10246771211019282,0.2360470610908914&swatchOrder=0,1,2,3,4 */
