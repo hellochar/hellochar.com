@@ -33,13 +33,16 @@ body {
 }
 
 .all-sketches {
+  height: 100%;
   padding-top: 50px;
   /* background: url(/images/background.png); */
 }
 
 .sketch-wrapper {
-  width: 800px;
-  height: 500px;
+  /* width: 800px; */
+  /* height: 500px; */
+  width: 90%;
+  height: 90%;
   margin: 110px auto;
   background: #fafafa;
 }
