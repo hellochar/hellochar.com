@@ -17,7 +17,7 @@ body {
   background-color: #ff5140;
   box-shadow: 0 0 4px rgba(0,0,0,0.5);
   color: #333;
-  font-family: ‘Palatino Linotype’, ‘Book Antiqua’, Palatino, serif;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
   position: fixed;
   top: 0px;
   left: 0px;
@@ -26,6 +26,7 @@ body {
   line-height: 50px;
   vertical-align: middle;
   text-align: center;
+  z-index: 1;
 }
 
 .footer {
@@ -45,6 +46,8 @@ body {
   height: 90%;
   margin: 110px auto;
   background: #fafafa;
+  position: relative;
+  overflow: hidden;
 }
 
 .sketch-wrapper:first-of-type {

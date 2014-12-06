@@ -1,0 +1,15 @@
+#sketch1 .program-display {
+    font: 12px Arial;
+    word-break: break-all;
+}
+
+#sketch1 canvas {
+    position: absolute;
+    top: 0px;
+}
+
+#sketch1 .highlighted {
+    color: red;
+    font-size: 150%;
+    font-weight: bold;
+}
