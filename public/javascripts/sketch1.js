@@ -117,6 +117,9 @@
         var executeFn;
 
         function setExecuteFn() {
+            if (program.length > 1e4) {
+                program = 'a';
+            }
             context.resetTransform();
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.translate(canvas.width/2, canvas.height/2);
@@ -138,7 +141,7 @@
             var prefix = program.substring(0, executeFn.index);
             var highlightedChar = program.charAt(executeFn.index);
             var suffix = program.substring(executeFn.index + 1);
-            programDisplayElement.html(prefix+'<span class="highlighted">'+highlightedChar+'</span>'+suffix);
+            // programDisplayElement.html(prefix+'<span class="highlighted">'+highlightedChar+'</span>'+suffix);
             if (done) {
                 program = transform(program, transformationRules);
                 setTimeout(function () {
@@ -150,24 +153,6 @@
             }
         }
         requestAnimationFrame(animate);
-
-        // function animate() {
-        //     var millisBefore = (new Date()).getTime();
-        //     context.resetTransform();
-        //     context.clearRect(0, 0, canvas.width, canvas.height);
-        //     context.translate(canvas.width/2, canvas.height/2);
-        //     
-        //     execute(program, mapping, context);
-        //     var millisAfter = (new Date()).getTime();
-        //     var elapsed = millisAfter - millisBefore;
-        //     if (elapsed < 20) {
-        //         programDisplayElement.text(program);
-        //         program = transform(program, transformationRules);
-        //     }
-        //     setTimeout(animate, 1000);
-        // }
-
-        // animate();
     }
 
     initializeSketch(sketch1, "sketch1");

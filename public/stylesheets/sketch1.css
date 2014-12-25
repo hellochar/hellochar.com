@@ -3,11 +3,6 @@
     word-break: break-all;
 }
 
-#sketch1 canvas {
-    position: absolute;
-    top: 0px;
-}
-
 #sketch1 .highlighted {
     color: red;
     font-size: 150%;

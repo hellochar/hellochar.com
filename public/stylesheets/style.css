@@ -50,6 +50,12 @@ body {
   overflow: hidden;
 }
 
+.sketch-wrapper canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 .sketch-wrapper:first-of-type {
   margin-top: 60px;
 }
