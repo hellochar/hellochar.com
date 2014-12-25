@@ -6,11 +6,13 @@
 
     var returnToStartPower = 0;
 
-    var attractors = {};
+    var attractors = {
+        mouse: null
+    };
     var particles = [];
 
-    function sketch2(canvas, context) {
-        function init() {
+    var sketch2 = {
+        init: function (canvas, context) {
             var resetButton = $('<button class="reset">Reset</button>').click(function() {
                 for (var i = 0; i < NUM_PARTICLES; i++) {
                     particles[i].dx = 0;
@@ -28,7 +30,7 @@
                     attractors["mouse"].y = event.offsetY;
                 }
             }).mouseup(function (event) {
-                delete attractors["mouse"];
+                attractors["mouse"] = null;
             });
 
             for( var i = 0; i < NUM_PARTICLES; i++ ) {
@@ -39,10 +41,9 @@
                     dy: 0
                 };
             }
-            animate();
-        }
+        },
 
-        function animate() {
+        animate: function (canvas, context) {
             var start = (new Date()).getTime();
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.strokeStyle = "white";
@@ -56,6 +57,7 @@
                 var particle = particles[i];
                 for (var attractorName in attractors) {
                     var attractor = attractors[attractorName];
+                    if (attractor == null) continue;
                     var dx = attractor.x - particle.x;
                     var dy = attractor.y - particle.y;
                     var length2 = Math.sqrt(dx*dx + dy*dy);
@@ -78,17 +80,13 @@
                     particle.y -= (particle.y - wantedY) * returnToStartPower;
                 }
 
-                // context.fillRect(particle.x, particle.y, 1, 1);
                 context.moveTo(particle.x, particle.y);
                 context.lineTo(particle.x + 1, particle.y);
             }
             context.stroke();
             var elapsed = (new Date()).getTime() - start;
             console.log(1000 / elapsed);
-            requestAnimationFrame(animate);
         }
-
-        init();
     }
     initializeSketch(sketch2, "sketch2");
 })();

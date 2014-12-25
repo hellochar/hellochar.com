@@ -1,4 +1,16 @@
 function initializeSketch(sketchFn, sketchId) {
+  if (typeof sketchFn === 'object') {
+      var init = sketchFn.init;
+      var animate = sketchFn.animate;
+      sketchFn = function (canvas, context) {
+          init(canvas, context);
+          function animateAndRequestAnimationFrame() {
+              animate(canvas, context);
+              requestAnimationFrame(animateAndRequestAnimationFrame);
+          }
+          animateAndRequestAnimationFrame();
+      }
+  }
   var $canvasWrapper = $("#"+sketchId);
 
   var $canvas = $("<canvas></canvas>")
