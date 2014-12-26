@@ -2,7 +2,7 @@
     var NUM_PARTICLES = 20000;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
-    var DRAG_CONSTANT = 0.998;
+    var DRAG_CONSTANT = 0.995;
 
     var returnToStartPower = 0;
 
@@ -87,6 +87,6 @@
             var elapsed = (new Date()).getTime() - start;
             console.log(1000 / elapsed);
         }
-    }
+    };
     initializeSketch(sketch2, "sketch2");
 })();
