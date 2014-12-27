@@ -15,6 +15,13 @@
                       .attr("height", $sketchElement.height())
       var context = $canvas[0].getContext('2d');
 
+
+      ["mousedown", "mouseup", "mousemove"].forEach(function (eventName) {
+          if (sketchObj[eventName] != null) {
+              $canvas[eventName](sketchObj[eventName]);
+          }
+      });
+
       $(window).resize(function() {
           $canvas.attr("width", $sketchElement.width())
                  .attr("height", $sketchElement.height());

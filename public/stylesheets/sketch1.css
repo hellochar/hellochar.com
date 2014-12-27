@@ -1,6 +1,8 @@
 #sketch1 .program-display {
     font: 12px Arial;
     word-break: break-all;
+    position: absolute;
+    top: 0;
 }
 
 #sketch1 .highlighted {

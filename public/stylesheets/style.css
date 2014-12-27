@@ -11,19 +11,19 @@ html, body {
 
 body {
   background-color: #e9eaed;
+  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 }
 
 .header {
   background-color: #ff5140;
   box-shadow: 0 0 4px rgba(0,0,0,0.5);
   color: #333;
-  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
   position: fixed;
   top: 0px;
   left: 0px;
   right: 0px;
-  height: 50px;
-  line-height: 50px;
+  height: 55px;
+  line-height: 55px;
   vertical-align: middle;
   text-align: center;
   z-index: 1;
@@ -35,32 +35,25 @@ body {
 
 .all-sketches {
   height: 100%;
-  padding-top: 50px;
-  /* background: url(/images/background.png); */
+  padding-top: 55px;
 }
 
 .sketch-wrapper {
-  /* width: 800px; */
-  /* height: 500px; */
   width: 90%;
-  height: 90%;
+  min-height: 90%;
   margin: 110px auto;
-  background: #fafafa;
   position: relative;
-  overflow: hidden;
 }
 
 .sketch-wrapper canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
+  background: #fafafa;
 }
 
 .sketch-wrapper:first-of-type {
-  margin-top: 60px;
+  margin-top: 55px;
 }
 .sketch-wrapper:last-of-type {
-  margin-bottom: 60px;
+  margin-bottom: 55px;
 }
 
 /* https://color.adobe.com/create/color-wheel/?base=2&rule=Compound&selected=0&name=My%20Color%20Theme&mode=rgb&rgbvalues=0.07999999999999999,0.5946747250313638,0.8,0.24,0.4973373625156819,0.6,0,1,0.7406588226733675,1,0.31748377417886786,0.25,0.8,0.10246771211019282,0.2360470610908914&swatchOrder=0,1,2,3,4 */

@@ -16,7 +16,7 @@
     };
     var particles = [];
 
-    var html = 'Click.<canvas></canvas><button class="reset">Reset</button>';
+    var html = '<div class="topbar">Click for gravity.<button class="reset">Reset</button></div><canvas></canvas>';
 
     var canvas;
 
@@ -28,19 +28,6 @@
                 particles[i].dy = 0;
             }
             returnToStartPower = 0.01;
-        });
-        $(canvas).mousedown(function (event) {
-            attractors["mouse"] = { x: event.offsetX, y : event.offsetY };
-            dragConstant = PULLING_DRAG_CONSTANT;
-            returnToStartPower = 0;
-        }).mousemove(function (event) {
-            if (attractors["mouse"]) {
-                attractors["mouse"].x = event.offsetX;
-                attractors["mouse"].y = event.offsetY;
-            }
-        }).mouseup(function (event) {
-            dragConstant = INERTIAL_DRAG_CONSTANT;
-            attractors["mouse"] = null;
         });
 
         for( var i = 0; i < NUM_PARTICLES; i++ ) {
@@ -95,13 +82,33 @@
         }
         context.stroke();
         var elapsed = (new Date()).getTime() - start;
-        console.log(1000 / elapsed);
+    }
+
+    function mousedown(event) {
+        attractors["mouse"] = { x: event.offsetX, y : event.offsetY };
+        dragConstant = PULLING_DRAG_CONSTANT;
+        returnToStartPower = 0;
+    }
+
+    function mousemove(event) {
+        if (attractors["mouse"]) {
+            attractors["mouse"].x = event.offsetX;
+            attractors["mouse"].y = event.offsetY;
+        }
+    }
+
+    function mouseup(event) {
+        dragConstant = INERTIAL_DRAG_CONSTANT;
+        attractors["mouse"] = null;
     }
 
     var sketch2 = {
         init: init,
         animate: animate,
-        html: html
+        html: html,
+        mousedown: mousedown,
+        mousemove: mousemove,
+        mouseup: mouseup
     };
     initializeSketch(sketch2, "sketch2");
 })();
