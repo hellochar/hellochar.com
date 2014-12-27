@@ -1,5 +1,6 @@
 (function (window) {
     var $allSketches = $(".all-sketches");
+    var $navbarElement = $(".nav");
     var DEFAULT_SKETCH_HTML = '<canvas></canvas>';
 
     function initializeSketch(sketchObj, sketchId) {
@@ -7,7 +8,16 @@
       var animate = sketchObj.animate;
       var sketchHtml = sketchObj.html || DEFAULT_SKETCH_HTML;
 
-      var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketchId).appendTo($allSketches);
+      var $navElement = $('<li></li>');
+      $navElement.text(sketchId)
+                 .click(function () {
+                     $('html, body').animate({ scrollTop: $sketchElement.offset().top }, 600);
+                 })
+                 .appendTo($navbarElement);
+
+
+      var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketchId);
+      $allSketches.append($sketchElement);
       $sketchElement.append(sketchHtml);
 
       var $canvas = $sketchElement.find("canvas")
