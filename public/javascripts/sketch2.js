@@ -2,8 +2,10 @@
     var NUM_PARTICLES = 20000;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
-    var PULLING_DRAG_CONSTANT = 0.998;
-    var INERTIAL_DRAG_CONSTANT = 0.982;
+
+    // speed becomes this percentage of its original speed every second
+    var PULLING_DRAG_CONSTANT = 0.96075095702;
+    var INERTIAL_DRAG_CONSTANT = 0.73913643334;
 
     var dragConstant = INERTIAL_DRAG_CONSTANT;
 
@@ -14,7 +16,7 @@
     };
     var particles = [];
 
-    var html = '<canvas></canvas><button class="reset">Reset</button>';
+    var html = 'Click.<canvas></canvas><button class="reset">Reset</button>';
 
     var canvas;
 
@@ -75,8 +77,8 @@
                 particle.dx += forceX * TIME_STEP;
                 particle.dy += forceY * TIME_STEP;
             }
-            particle.dx *= dragConstant;
-            particle.dy *= dragConstant;
+            particle.dx *= Math.pow(dragConstant, TIME_STEP);
+            particle.dy *= Math.pow(dragConstant, TIME_STEP);
 
             particle.x += particle.dx * TIME_STEP;
             particle.y += particle.dy * TIME_STEP;
