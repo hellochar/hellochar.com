@@ -29,6 +29,19 @@ body {
   z-index: 1;
 }
 
+.header .nav {
+    display: inline;
+}
+.header .nav li {
+    transition: background 0.15s;
+    display: inline;
+    padding: 0 10px;
+    cursor: pointer;
+}
+.header .nav li:hover {
+    background-color: #cc1a3c;
+}
+
 .footer {
   height: 1px;
 }
