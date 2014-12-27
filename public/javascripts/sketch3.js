@@ -1,8 +1,6 @@
 (function () {
 
     var triangles = _.range(1000).map(function () {
-        return [{x: 
-        };
     });
 
     var sketch3 = {

@@ -63,8 +63,6 @@
         }).join("");
     }
 
-
-    var program = "a";
     var transformationRules = {
         'a': 'd[rrdablllla]',
         'b': 'drdblda'
@@ -107,30 +105,37 @@
             state.angle = lastState.angle;
         }
     }
-    var programDisplayElement = $('<div class="program-display"></div>');
-    var MILLIS_PER_ITERATION = 1000;
+
+    var program = "a";
+    var millisPerIteration = 1000;
     var executeFn;
 
-    function setExecuteFn(canvas, context) {
+    var canvas;
+    var $programDisplayElement;
+    var html = '<canvas></canvas><div class="program-display"></div>';
+
+    function setExecuteFn(context) {
         if (program.length > 1e4) {
             program = 'a';
+            millisPerIteration = 1000;
         }
         context.resetTransform();
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.translate(canvas.width/2, canvas.height/2);
         executeFn = createExecuteGenerator(program, mapping, context);
         executeFn.startTime = (new Date()).getTime();
-        MILLIS_PER_ITERATION += 1000;
+        millisPerIteration += 1000;
     }
 
-    function init(canvas, context) {
-        $(canvas).parent().append(programDisplayElement);
-        setExecuteFn(canvas, context);
+    function init($sketchElement, context) {
+        canvas = $sketchElement.find("canvas")[0];
+        $programDisplayElement = $sketchElement.find(".program-display");
+        setExecuteFn(context);
     }
 
-    function animate(canvas, context) {
+    function animate($sketchElement, context) {
         var timeElapsed = (new Date()).getTime() - executeFn.startTime;
-        var wantedIndex = Math.floor(Math.min(timeElapsed / MILLIS_PER_ITERATION, 1) * program.length);
+        var wantedIndex = Math.floor(Math.min(timeElapsed / millisPerIteration, 1) * program.length);
         var done = false;
         while (executeFn.index < wantedIndex && !done) {
             done = executeFn();
@@ -139,17 +144,17 @@
         var prefix = program.substring(0, executeFn.index);
         var highlightedChar = program.charAt(executeFn.index);
         var suffix = program.substring(executeFn.index + 1);
-        programDisplayElement.html(prefix+'<span class="highlighted">'+highlightedChar+'</span>'+suffix);
-        console.log(timeElapsed)
-        if (timeElapsed > MILLIS_PER_ITERATION + 1000) {
+        $programDisplayElement.html(prefix+'<span class="highlighted">'+highlightedChar+'</span>'+suffix);
+        if (timeElapsed > millisPerIteration + 1000) {
             program = transform(program, transformationRules);
-            setExecuteFn(canvas, context);
+            setExecuteFn(context);
         }
     }
 
     var sketch1 = {
         init: init,
-        animate: animate
+        animate: animate,
+        html: html
     };
     initializeSketch(sketch1, "sketch1");
 })();
