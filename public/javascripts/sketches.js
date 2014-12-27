@@ -1,25 +1,32 @@
-function initializeSketch(sketchObj, sketchId) {
-  var init = sketchObj.init;
-  var animate = sketchObj.animate;
+(function (window) {
 
-  var $canvasWrapper = $("#"+sketchId);
+    var DEFAULT_SKETCH_HTML = '<canvas></canvas>';
 
-  var $canvas = $("<canvas></canvas>")
-                  .attr("width", $canvasWrapper.width())
-                  .attr("height", $canvasWrapper.height())
-                  .appendTo($canvasWrapper);
-  var canvas = $canvas[0];
-  var context = canvas.getContext('2d');
+    function initializeSketch(sketchObj, sketchId) {
+      var init = sketchObj.init;
+      var animate = sketchObj.animate;
+      var sketchHtml = sketchObj.html || DEFAULT_SKETCH_HTML;
 
-  $(window).resize(function() {
-      $canvas.attr("width", $canvasWrapper.width())
-             .attr("height", $canvasWrapper.height());
-  });
+      var $sketchElement = $("#"+sketchId);
+      $sketchElement.append(sketchHtml);
 
-  function animateAndRequestAnimationFrame() {
-      animate(canvas, context);
-      requestAnimationFrame(animateAndRequestAnimationFrame);
-  }
-  init(canvas, context);
-  animateAndRequestAnimationFrame();
-}
+      var $canvas = $sketchElement.find("canvas")
+                      .attr("width", $sketchElement.width())
+                      .attr("height", $sketchElement.height())
+      var context = $canvas[0].getContext('2d');
+
+      $(window).resize(function() {
+          $canvas.attr("width", $sketchElement.width())
+                 .attr("height", $sketchElement.height());
+      });
+
+      function animateAndRequestAnimationFrame() {
+          animate($sketchElement, context);
+          requestAnimationFrame(animateAndRequestAnimationFrame);
+      }
+      init($sketchElement, context);
+      animateAndRequestAnimationFrame();
+    }
+
+    window.initializeSketch = initializeSketch;
+})(window);
