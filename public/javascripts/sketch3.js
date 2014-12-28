@@ -1,11 +1,13 @@
 (function () {
     var frame = 0;
+    var gridOffset = 0;
+    var drawMode = 0;
     var canvas;
 
     var width, height;
 
-    var mouseX;
-    var mouseY;
+    var mouseX = 0;
+    var mouseY = 0;
 
     function lerp(a, b, x) {
         return a + (b-a) * x;
@@ -68,13 +70,14 @@
         }
         context.beginPath();
         var GRIDSIZE = 50;
-        for (var x = -GRIDSIZE + frame % GRIDSIZE; x < width + GRIDSIZE; x += GRIDSIZE) {
-            for (var y = -GRIDSIZE + frame % GRIDSIZE; y < height + GRIDSIZE; y += GRIDSIZE) {
+        gridOffset = (gridOffset + map(mouseX, 0, width, 0.6, 1.5)) % GRIDSIZE;
+        for (var x = -GRIDSIZE + gridOffset; x < width + GRIDSIZE; x += GRIDSIZE) {
+            for (var y = -GRIDSIZE + gridOffset; y < height + GRIDSIZE; y += GRIDSIZE) {
 
-                // permutedLine(x, y, x + GRIDSIZE, y + GRIDSIZE, context);
-                permutedLine(x + GRIDSIZE, y, x, y + GRIDSIZE, context);
-                // permutedLine(x + GRIDSIZE, y + GRIDSIZE, x, y + GRIDSIZE, context);
-                // permutedLine(x, y + GRIDSIZE, x, y, context);
+                if (drawMode & 0x1) permutedLine(x, y, x + GRIDSIZE, y + GRIDSIZE, context);
+                if (drawMode & 0x2) permutedLine(x + GRIDSIZE, y, x, y + GRIDSIZE, context);
+                if (drawMode & 0x4) permutedLine(x + GRIDSIZE, y + GRIDSIZE, x, y + GRIDSIZE, context);
+                if (drawMode & 0x8) permutedLine(x, y + GRIDSIZE, x, y, context);
             }
         }
         context.stroke();
@@ -85,10 +88,16 @@
         mouseY = event.offsetY;
     }
 
+    function mousedown(event) {
+        // 4 lines to draw, cycle through all 16 permutations
+        drawMode = (drawMode + 1) % 16;
+    }
+
     var sketch3 = {
         init: init,
         animate: animate,
-        mousemove: mousemove
+        mousemove: mousemove,
+        mousedown: mousedown
     };
     initializeSketch(sketch3, "sketch3");
 })();
