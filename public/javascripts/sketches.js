@@ -1,9 +1,9 @@
 (function (window) {
     var $allSketches = $(".all-sketches");
     var $navbarElement = $(".nav");
-    var DEFAULT_SKETCH_HTML = '<canvas></canvas>';
-
     var $window = $(window);
+
+    var DEFAULT_SKETCH_HTML = '<canvas></canvas>';
 
     function isElementOnScreen(element) {
         var scrollTop = $window.scrollTop(),
@@ -16,11 +16,17 @@
         return scrollTop < elementMiddle && elementMiddle < scrollBottom;
     }
 
+    function setCanvasDimensions($canvas) {
+        $canvas.attr("width", $window.width() * 0.9)
+               .attr("height", $window.height() * 0.9 - 55);
+    }
+
     function initializeSketch(sketchObj, sketchId) {
       var init = sketchObj.init;
       var animate = sketchObj.animate;
       var sketchHtml = sketchObj.html || DEFAULT_SKETCH_HTML;
 
+      // add sketch element to nav
       var $navElement = $('<li></li>');
       $navElement.text(sketchId)
                  .click(function () {
@@ -28,41 +34,40 @@
                  })
                  .appendTo($navbarElement);
 
-
+      // add sketch element to body
       var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketchId);
       $allSketches.append($sketchElement);
       $sketchElement.append(sketchHtml);
 
-      var $canvas = $sketchElement.find("canvas")
-                      .attr("width", $sketchElement.width())
-                      .attr("height", $sketchElement.height())
-      var context = $canvas[0].getContext('2d');
-
-
+      // canvas setup
+      var $canvas = $sketchElement.find("canvas");
       ["mousedown", "mouseup", "mousemove"].forEach(function (eventName) {
           if (sketchObj[eventName] != null) {
               $canvas[eventName](sketchObj[eventName]);
           }
       });
 
-      $(window).resize(function() {
-          $canvas.attr("width", $sketchElement.width())
-                 .attr("height", $sketchElement.height());
+      setCanvasDimensions($canvas);
+      $window.resize(function() {
+          setCanvasDimensions($canvas);
       });
 
+      // initialize and run sketch
+      var lastAnimate = (new Date()).getTime();
       function animateAndRequestAnimationFrame() {
           if (isElementOnScreen($sketchElement)) {
               $sketchElement.removeClass("disabled");
-              var start = (new Date()).getTime();
-              animate($sketchElement, context);
-              var elapsed = (new Date()).getTime() - start;
+              animate($sketchElement, $canvas[0].getContext('2d'));
+              var now = (new Date()).getTime();
+              var elapsed = now - lastAnimate;
+              lastAnimate = now;
               console.log(sketchId, 1000 / elapsed);
           } else {
               $sketchElement.addClass("disabled");
           }
           requestAnimationFrame(animateAndRequestAnimationFrame);
       }
-      init($sketchElement, context);
+      init($sketchElement, $canvas[0].getContext('2d'));
       animateAndRequestAnimationFrame();
     }
 
