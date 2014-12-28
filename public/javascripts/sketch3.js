@@ -1,7 +1,7 @@
 (function () {
     var frame = 0;
     var gridOffset = 0;
-    var drawMode = 0;
+    var drawMode = 7;
     var canvas;
 
     var width, height;
@@ -16,20 +16,23 @@
         return lerp(yStart, yStop, (x - xStart) / (xStop - xStart));
     }
 
+    var fnCosLengthScalar = 1.0;
+    var fnFrameDivider = 25;
     function fn(x, y) {
         var dx = (x - width/2);
         var dy = (y - height/2);
         var length2 = dx*dx + dy*dy;
         var z1 = 23000 / (1 + Math.exp(-length2 / 10000));
-        var z2 = 600 * Math.cos(length2 / 25000 * map(mouseX, 0, width, 0.9, 1.1) + frame / map(mouseX, 0, width, 43, 11));
+        var z2 = 600 * Math.cos(length2 / 25000 * fnCosLengthScalar + frame / fnFrameDivider);
 
         return lerp(z1, z2, (1+Math.sin(frame / 100))/2);
     }
 
     function gradient(x, y) {
+        var fnxy = fn(x, y);
         var epsilon = 1e-4;
-        var ddx = (fn(x + epsilon, y) - fn(x, y)) / epsilon;
-        var ddy = (fn(x, y + epsilon) - fn(x, y)) / epsilon;
+        var ddx = (fn(x + epsilon, y) - fnxy) / epsilon;
+        var ddy = (fn(x, y + epsilon) - fnxy) / epsilon;
 
         return [ddx, ddy];
     }
@@ -64,9 +67,9 @@
         height = canvas.height;
 
         if (frame % 1000 < 500) {
-            context.strokeStyle = "rgba(0,0,0,0.05)";
+            context.fillStyle = "rgba(0,0,0,0.05)";
         } else {
-            context.strokeStyle = "rgba(255,255,255,0.05)";
+            context.fillStyle = "rgba(255,255,255,0.05)";
         }
         context.beginPath();
         var GRIDSIZE = 50;
@@ -80,12 +83,14 @@
                 if (drawMode & 0x8) permutedLine(x, y + GRIDSIZE, x, y, context);
             }
         }
-        context.stroke();
+        context.fill();
     }
 
     function mousemove(event) {
-        mouseX = event.offsetX;
-        mouseY = event.offsetY;
+        mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+        mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        fnCosLengthScalar = map(mouseX, 0, width, 0.9, 1.1);
+        fnFrameDivider = map(mouseX, 0, width, 43, 11);
     }
 
     function mousedown(event) {
