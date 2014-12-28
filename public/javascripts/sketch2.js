@@ -41,7 +41,6 @@
     }
 
     function animate($sketchElement, context) {
-        var start = (new Date()).getTime();
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.strokeStyle = "white";
         context.beginPath();
@@ -81,7 +80,6 @@
             context.lineTo(particle.x + 1, particle.y);
         }
         context.stroke();
-        var elapsed = (new Date()).getTime() - start;
     }
 
     function mousedown(event) {
