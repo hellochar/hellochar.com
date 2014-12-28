@@ -52,10 +52,15 @@ body {
 }
 
 .sketch-wrapper {
+  transition: opacity 0.25s;
   width: 90%;
   min-height: 90%;
   margin: 110px auto;
   position: relative;
+}
+
+.sketch-wrapper.disabled {
+    opacity: 0.25;
 }
 
 .sketch-wrapper canvas {

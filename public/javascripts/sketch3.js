@@ -2,35 +2,50 @@
     var frame = 0;
     var canvas;
 
-    // how much the map gets scaled by
-    var windSpeed = 0;
+    var width, height;
 
     var mouseX;
     var mouseY;
 
-    function map(x, y) {
-        var dx = (x - canvas.width / 2 ) / (canvas.width/2);
-        var dy = (y - canvas.height / 2 ) / (canvas.width/2);
+    function lerp(a, b, x) {
+        return a + (b-a) * x;
+    }
+    function map(x, xStart, xStop, yStart, yStop) {
+        return lerp(yStart, yStop, (x - xStart) / (xStop - xStart));
+    }
+
+    function fn(x, y) {
+        var dx = (x - width/2);
+        var dy = (y - height/2);
         var length2 = dx*dx + dy*dy;
-        return 0.025 / (1 + Math.exp(-length2 * 40));
+        var z1 = 23000 / (1 + Math.exp(-length2 / 10000));
+        var z2 = 600 * Math.cos(length2 / 25000 * map(mouseX, 0, width, 0.9, 1.1) + frame / map(mouseX, 0, width, 43, 11));
+
+        return lerp(z1, z2, (1+Math.sin(frame / 100))/2);
     }
 
     function gradient(x, y) {
-        var epsilon = 1e-6;
-        var ddx = (map(x + epsilon, y) - map(x, y)) / epsilon;
-        var ddy = (map(x, y + epsilon) - map(x, y + epsilon)) / epsilon;
+        var epsilon = 1e-4;
+        var ddx = (fn(x + epsilon, y) - fn(x, y)) / epsilon;
+        var ddy = (fn(x, y + epsilon) - fn(x, y)) / epsilon;
 
-        return [ddx / epsilon, ddy / epsilon];
+        return [ddx, ddy];
     }
 
-    function lineToPermutedPoint(ox, oy, nx, ny, context) {
+    function permutedLine(ox, oy, nx, ny, context) {
+        function permutedMove(x, y) {
+            var grad = gradient(x, y);
+            context.moveTo(x + grad[0], y + grad[1]);
+        }
         function permutedPoint(x, y) {
             var grad = gradient(x, y);
             context.lineTo(x + grad[0], y + grad[1]);
         }
 
+        permutedMove(ox, oy);
+
         var STEPS = 10;
-        for( var t = 0; t < STEPS; t += 1) {
+        for( var t = 1; t <= STEPS; t += 1) {
             var percentage = t / STEPS;
             permutedPoint(ox + (nx - ox) * percentage,
                           oy + (ny - oy) * percentage);
@@ -43,26 +58,26 @@
 
     function animate($sketchElement, context) {
         frame++;
+        width = canvas.width;
+        height = canvas.height;
 
-        if (Math.random(1) < Math.abs(windSpeed)) {
+        if (frame % 1000 < 500) {
+            context.strokeStyle = "rgba(0,0,0,0.05)";
+        } else {
+            context.strokeStyle = "rgba(255,255,255,0.05)";
         }
-
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.beginPath();
         var GRIDSIZE = 50;
-        for (var x = -GRIDSIZE + frame % GRIDSIZE; x < canvas.width + GRIDSIZE; x += GRIDSIZE) {
-            for (var y = -GRIDSIZE + frame % GRIDSIZE; y < canvas.height + GRIDSIZE; y += GRIDSIZE) {
+        for (var x = -GRIDSIZE + frame % GRIDSIZE; x < width + GRIDSIZE; x += GRIDSIZE) {
+            for (var y = -GRIDSIZE + frame % GRIDSIZE; y < height + GRIDSIZE; y += GRIDSIZE) {
 
-                var grad = gradient(x, y);
-                context.fillStyle = "rgba(0, 0, 0, 0.25)";
-                context.beginPath();
-                context.moveTo(x + grad[0], y + grad[1]);
-
-                lineToPermutedPoint(x + grad[0], y + grad[0], x + GRIDSIZE, y + GRIDSIZE, context);
-                lineToPermutedPoint(x + GRIDSIZE, y + GRIDSIZE, x, y + GRIDSIZE, context);
-                lineToPermutedPoint(x, y + GRIDSIZE, x, y, context);
-                context.fill();
+                // permutedLine(x, y, x + GRIDSIZE, y + GRIDSIZE, context);
+                permutedLine(x + GRIDSIZE, y, x, y + GRIDSIZE, context);
+                // permutedLine(x + GRIDSIZE, y + GRIDSIZE, x, y + GRIDSIZE, context);
+                // permutedLine(x, y + GRIDSIZE, x, y, context);
             }
         }
+        context.stroke();
     }
 
     function mousemove(event) {

@@ -3,6 +3,19 @@
     var $navbarElement = $(".nav");
     var DEFAULT_SKETCH_HTML = '<canvas></canvas>';
 
+    var $window = $(window);
+
+    function isElementOnScreen(element) {
+        var scrollTop = $window.scrollTop(),
+            scrollBottom = scrollTop + $window.height();
+
+        var elementTop = element.offset().top;
+        var elementBottom = elementTop + element.height();
+        var elementMiddle = (elementBottom + elementTop) / 2;
+
+        return scrollTop < elementMiddle && elementMiddle < scrollBottom;
+    }
+
     function initializeSketch(sketchObj, sketchId) {
       var init = sketchObj.init;
       var animate = sketchObj.animate;
@@ -38,7 +51,15 @@
       });
 
       function animateAndRequestAnimationFrame() {
-          animate($sketchElement, context);
+          if (isElementOnScreen($sketchElement)) {
+              $sketchElement.removeClass("disabled");
+              var start = (new Date()).getTime();
+              animate($sketchElement, context);
+              var elapsed = (new Date()).getTime() - start;
+              console.log(sketchId, 1000 / elapsed);
+          } else {
+              $sketchElement.addClass("disabled");
+          }
           requestAnimationFrame(animateAndRequestAnimationFrame);
       }
       init($sketchElement, context);
