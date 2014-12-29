@@ -1,5 +1,5 @@
 (function () {
-    var NUM_PARTICLES = 20000;
+    var NUM_PARTICLES = 15000;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
 
@@ -20,12 +20,13 @@
 
     var canvas;
 
-    function init($sketchElement, context, stage, renderer) {
+    function init($sketchElement, stage, renderer) {
         canvas = $sketchElement.find("canvas")[0];
-        var particleCanvas = $("<canvas>").attr("width", 2).attr("height", 2)[0];
+        var particleCanvas = $("<canvas>").attr("width", 3).attr("height", 3)[0];
         var particleCanvasContext = particleCanvas.getContext('2d');
-        particleCanvasContext.fillStyle = 'white';
-        particleCanvasContext.fillRect(0.5, 0.5, 1, 1);
+        particleCanvasContext.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        particleCanvasContext.fillRect(0.5, 0.5, 2, 2);
+        particleCanvasContext.fillRect(1, 1, 1, 1);
         stage.setBackgroundColor(0x000000);
 
         var particleTexture = PIXI.Texture.fromCanvas(particleCanvas);
@@ -54,7 +55,7 @@
         }
     }
 
-    function animate($sketchElement, context, stage, renderer) {
+    function animate($sketchElement, stage, renderer) {
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
         }
