@@ -120,7 +120,8 @@
         animate: animate,
         mousemove: mousemove,
         mousedown: mousedown,
-        resize: resize
+        resize: resize,
+        usePixi: true
     };
     initializeSketch(sketch3, "sketch3");
 })();

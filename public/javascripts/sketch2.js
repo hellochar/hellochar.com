@@ -20,8 +20,19 @@
 
     var canvas;
 
-    function init($sketchElement, context) {
+    function init($sketchElement, context, stage, renderer) {
         canvas = $sketchElement.find("canvas")[0];
+        var particleCanvas = $("<canvas>").attr("width", 2).attr("height", 2)[0];
+        var particleCanvasContext = particleCanvas.getContext('2d');
+        particleCanvasContext.fillStyle = 'white';
+        particleCanvasContext.fillRect(0.5, 0.5, 1, 1);
+        stage.setBackgroundColor(0x000000);
+
+        var particleTexture = PIXI.Texture.fromCanvas(particleCanvas);
+
+        var container = new PIXI.SpriteBatch();
+        stage.addChild(container);
+
         $sketchElement.find(".reset").click(function() {
             for (var i = 0; i < NUM_PARTICLES; i++) {
                 particles[i].dx = 0;
@@ -31,20 +42,19 @@
         });
 
         for( var i = 0; i < NUM_PARTICLES; i++ ) {
+            var particleSprite = new PIXI.Sprite(particleTexture);
+            container.addChild(particleSprite);
             particles[i] = {
                 x: i * canvas.width / NUM_PARTICLES,
                 y: canvas.height / 2,
                 dx: 0,
-                dy: 0
+                dy: 0,
+                sprite: particleSprite
             };
         }
     }
 
-    function animate($sketchElement, context) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.strokeStyle = "white";
-        context.beginPath();
-
+    function animate($sketchElement, context, stage, renderer) {
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
         }
@@ -76,22 +86,26 @@
                 particle.y -= (particle.y - wantedY) * returnToStartPower;
             }
 
-            context.moveTo(particle.x, particle.y);
-            context.lineTo(particle.x + 1, particle.y);
+            particle.sprite.position.x = particle.x;
+            particle.sprite.position.y = particle.y;
         }
-        context.stroke();
+        renderer.render(stage);
     }
 
     function mousedown(event) {
-        attractors["mouse"] = { x: event.offsetX, y : event.offsetY };
+        var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+        var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        attractors["mouse"] = { x: mouseX, y : mouseY };
         dragConstant = PULLING_DRAG_CONSTANT;
         returnToStartPower = 0;
     }
 
     function mousemove(event) {
+        var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+        var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
         if (attractors["mouse"]) {
-            attractors["mouse"].x = event.offsetX;
-            attractors["mouse"].y = event.offsetY;
+            attractors["mouse"].x = mouseX;
+            attractors["mouse"].y = mouseY;
         }
     }
 
@@ -106,7 +120,8 @@
         html: html,
         mousedown: mousedown,
         mousemove: mousemove,
-        mouseup: mouseup
+        mouseup: mouseup,
+        usePixi: true
     };
     initializeSketch(sketch2, "sketch2");
 })();
