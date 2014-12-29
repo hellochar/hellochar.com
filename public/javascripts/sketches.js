@@ -65,7 +65,7 @@
         var stage, renderer;
         if (usePixi) {
             stage = new PIXI.Stage(0xfcfcfc);
-            renderer = PIXI.autoDetectRenderer(100, 100, {
+            renderer = PIXI.autoDetectRenderer(1, 1, {
                 antialias: true,
                 view: $canvas[0]
             });
@@ -81,7 +81,11 @@
         function animateAndRequestAnimFrame() {
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
-                animate($sketchElement, $canvas[0].getContext('2d'), stage, renderer);
+                if (usePixi) {
+                    animate($sketchElement, stage, renderer);
+                } else {
+                    animate($sketchElement, $canvas[0].getContext('2d'));
+                }
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
@@ -91,7 +95,11 @@
             }
             requestAnimFrame(animateAndRequestAnimFrame);
         }
-        init($sketchElement, $canvas[0].getContext('2d'), stage, renderer);
+        if (usePixi) {
+            init($sketchElement, stage, renderer);
+        } else {
+            init($sketchElement, $canvas[0].getContext('2d'));
+        }
         animateAndRequestAnimFrame();
     }
 
