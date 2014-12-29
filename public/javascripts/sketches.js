@@ -25,6 +25,7 @@
         var init = sketchObj.init;
         var animate = sketchObj.animate;
         var sketchHtml = sketchObj.html || DEFAULT_SKETCH_HTML;
+        var sketchResizeCallback = sketchObj.resize;
 
         // add sketch element to nav
         var $navElement = $('<li></li>');
@@ -51,6 +52,9 @@
         setCanvasDimensions($canvas);
         $window.resize(function() {
             setCanvasDimensions($canvas);
+            if (sketchResizeCallback != null) {
+                sketchResizeCallback($window.width(), $window.height());
+            }
         });
 
         // initialize and run sketch

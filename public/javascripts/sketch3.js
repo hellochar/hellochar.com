@@ -49,7 +49,7 @@
 
         permutedMove(ox, oy);
 
-        var STEPS = 10;
+        var STEPS = 4;
         for( var t = 1; t <= STEPS; t += 1) {
             var percentage = t / STEPS;
             permutedPoint(ox + (nx - ox) * percentage,
@@ -67,9 +67,9 @@
         height = canvas.height;
 
         if (frame % 1000 < 500) {
-            context.fillStyle = "rgba(0,0,0,0.05)";
+            context.fillStyle = "rgba(13,7,5,0.04)";
         } else {
-            context.fillStyle = "rgba(255,255,255,0.05)";
+            context.fillStyle = "rgba(252,252,252,0.04)";
         }
         context.beginPath();
         var GRIDSIZE = 50;
@@ -98,11 +98,17 @@
         drawMode = (drawMode + 1) % 16;
     }
 
+    function resize(windowX, windowY) {
+        // draw black again
+        frame = 0;
+    }
+
     var sketch3 = {
         init: init,
         animate: animate,
         mousemove: mousemove,
-        mousedown: mousedown
+        mousedown: mousedown,
+        resize: resize
     };
     initializeSketch(sketch3, "sketch3");
 })();
