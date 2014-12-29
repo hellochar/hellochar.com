@@ -16,10 +16,15 @@
         return scrollTop < elementMiddle && elementMiddle < scrollBottom;
     }
 
-    function setCanvasDimensions($canvas, renderer) {
-        $canvas.attr("width", $window.width() * 0.9)
-               .attr("height", $window.height() * 0.9 - 55);
-        renderer.resize($window.width() * 0.9, $window.height() * 0.9 - 55);
+    function setCanvasDimensions($canvasOrRenderer) {
+        if ($canvasOrRenderer instanceof PIXI.CanvasRenderer || $canvasOrRenderer instanceof PIXI.WebGLRenderer) {
+            var renderer = $canvasOrRenderer;
+            renderer.resize($window.width() * 0.9, $window.height() * 0.9 - 55);
+        } else {
+            var $canvas = $canvasOrRenderer;
+            $canvas.attr("width", $window.width() * 0.9)
+                   .attr("height", $window.height() * 0.9 - 55);
+        }
     }
 
     function initializeSketch(sketchObj, sketchId) {
@@ -27,6 +32,7 @@
         var animate = sketchObj.animate;
         var sketchHtml = sketchObj.html || DEFAULT_SKETCH_HTML;
         var sketchResizeCallback = sketchObj.resize;
+        var usePixi = sketchObj.usePixi || false;
 
         // add sketch element to nav
         var $navElement = $('<li></li>');
@@ -37,14 +43,10 @@
             })
             .appendTo($navbarElement);
 
-        var stage = new PIXI.Stage(0xfcfcfc);
-        var renderer = new PIXI.CanvasRenderer(100, 100);
-
         // add sketch element to body
         var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketchId);
         $allSketches.append($sketchElement);
         $sketchElement.append(sketchHtml);
-        $sketchElement.append(renderer.view);
 
         // canvas setup
         var $canvas = $sketchElement.find("canvas:first-of-type");
@@ -54,13 +56,25 @@
             }
         });
 
-        setCanvasDimensions($canvas, renderer);
         $window.resize(function() {
-            setCanvasDimensions($canvas, renderer);
             if (sketchResizeCallback != null) {
                 sketchResizeCallback($window.width(), $window.height());
             }
         });
+
+        var stage, renderer;
+        if (usePixi) {
+            stage = new PIXI.Stage(0xfcfcfc);
+            renderer = PIXI.autoDetectRenderer(100, 100, {
+                antialias: true,
+                view: $canvas[0]
+            });
+            setCanvasDimensions(renderer);
+            $window.resize(function() { setCanvasDimensions(renderer); });
+        } else {
+            setCanvasDimensions($canvas);
+            $window.resize(function() { setCanvasDimensions($canvas); });
+        }
 
         // initialize and run sketch
         var lastAnimate = (new Date()).getTime();
