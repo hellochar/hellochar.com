@@ -40,11 +40,13 @@
     function permutedLine(ox, oy, nx, ny, context) {
         function permutedMove(x, y) {
             var grad = gradient(x, y);
-            context.moveTo(x + grad[0], y + grad[1]);
+            // context.moveTo(x + grad[0], y + grad[1]);
+            graphics.moveTo(x + grad[0], y + grad[1]);
         }
         function permutedPoint(x, y) {
             var grad = gradient(x, y);
-            context.lineTo(x + grad[0], y + grad[1]);
+            // context.lineTo(x + grad[0], y + grad[1]);
+            graphics.lineTo(x + grad[0], y + grad[1]);
         }
 
         permutedMove(ox, oy);
@@ -57,21 +59,28 @@
         }
     }
 
-    function init($sketchElement, context) {
+    var graphics;
+    function init($sketchElement, context, stage, renderer) {
         canvas = $sketchElement.find("canvas")[0];
+        graphics = new PIXI.Graphics();
+
+        stage.addChild(graphics);
     }
 
-    function animate($sketchElement, context) {
+    function animate($sketchElement, context, stage, renderer) {
         frame++;
         width = canvas.width;
         height = canvas.height;
 
         if (frame % 1000 < 500) {
             context.fillStyle = "rgba(13,7,5,0.04)";
+            context.beginPath();
+            graphics.beginFill(0x0d0705, 0.04);
         } else {
             context.fillStyle = "rgba(252,252,252,0.04)";
+            context.beginPath();
+            graphics.beginFill(0xfcfcfc, 0.04);
         }
-        context.beginPath();
         var GRIDSIZE = 50;
         gridOffset = (gridOffset + map(mouseX, 0, width, 0.6, 1.5)) % GRIDSIZE;
         for (var x = -GRIDSIZE + gridOffset; x < width + GRIDSIZE; x += GRIDSIZE) {
@@ -84,6 +93,9 @@
             }
         }
         context.fill();
+        graphics.endFill();
+
+        renderer.render(stage);
     }
 
     function mousemove(event) {
