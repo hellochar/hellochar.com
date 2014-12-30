@@ -11,9 +11,7 @@
 
     var returnToStartPower = 0;
 
-    var attractors = {
-        mouse: null
-    };
+    var attractor = null;
     var particles = [];
 
     var html = '<div class="topbar">Click for gravity.<button class="reset">Reset</button></div><canvas></canvas>';
@@ -62,9 +60,7 @@
 
         for (var i = 0; i < NUM_PARTICLES; i++) {
             var particle = particles[i];
-            for (var attractorName in attractors) {
-                var attractor = attractors[attractorName];
-                if (attractor == null) continue;
+            if (attractor != null) {
                 var dx = attractor.x - particle.x;
                 var dy = attractor.y - particle.y;
                 var length2 = Math.sqrt(dx*dx + dy*dy);
@@ -96,7 +92,7 @@
     function mousedown(event) {
         var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        attractors["mouse"] = { x: mouseX, y : mouseY };
+        attractor = { x: mouseX, y : mouseY };
         dragConstant = PULLING_DRAG_CONSTANT;
         returnToStartPower = 0;
     }
@@ -104,15 +100,15 @@
     function mousemove(event) {
         var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        if (attractors["mouse"]) {
-            attractors["mouse"].x = mouseX;
-            attractors["mouse"].y = mouseY;
+        if (attractor != null) {
+            attractor.x = mouseX;
+            attractor.y = mouseY;
         }
     }
 
     function mouseup(event) {
         dragConstant = INERTIAL_DRAG_CONSTANT;
-        attractors["mouse"] = null;
+        attractor = null;
     }
 
     var sketch2 = {
