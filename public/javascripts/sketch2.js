@@ -48,11 +48,8 @@
         }
     }
 
-    var AUDIO_PARTICLE_SAMPLE_COUNT = 20;
-    var AUDIO_FAST_VELOCITY = 200;
-
     var audioContext = new AudioContext();
-    var audioGroups = [];
+    var audioGroup;
 
     function createAudioGroup() {
 
@@ -95,7 +92,7 @@
         //     }
         //     return node;
         // })();
-        //
+
         var sourceGain = audioContext.createGain();
         sourceGain.gain.value = 0.0;
 
@@ -105,7 +102,7 @@
         filter.Q.value = 5.0;
 
         var filterGain = audioContext.createGain();
-        filterGain.gain.value = 15.5;
+        filterGain.gain.value = 5.5;
 
         source.connect(sourceGain);
         sourceGain.connect(filter);
@@ -120,9 +117,7 @@
         };
     }
 
-    for(var i = 0; i < AUDIO_PARTICLE_SAMPLE_COUNT; i++) {
-        audioGroups[i] = createAudioGroup();
-    }
+    audioGroup = createAudioGroup();
 
     function init($sketchElement, stage, renderer) {
         canvas = $sketchElement.find("canvas")[0];
@@ -165,6 +160,8 @@
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
         }
+        var averageX = 0, averageY = 0;
+        var averageVel2 = 0;
         for (var i = 0; i < NUM_PARTICLES; i++) {
             var particle = particles[i];
             if (attractor != null) {
@@ -192,17 +189,37 @@
 
             particle.sprite.position.x = particle.x;
             particle.sprite.position.y = particle.y;
+            averageX += particle.x;
+            averageY += particle.y;
+            averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
         }
+        averageX /= NUM_PARTICLES;
+        averageY /= NUM_PARTICLES;
+        averageVel2 /= NUM_PARTICLES;
+        var varianceX2 = 0;
+        var varianceY2 = 0;
+        var varianceVel22 = 0;
+        for (var i = 0; i < NUM_PARTICLES; i++) {
+            var particle = particles[i];
+            varianceX2 += Math.pow(particle.x - averageX, 2);
+            varianceY2 += Math.pow(particle.y - averageY, 2);
+            varianceVel22 += Math.pow(particle.dx * particle.dx + particle.dy * particle.dy - averageVel2, 2);
+        }
+        varianceX2 /= NUM_PARTICLES;
+        varianceY2 /= NUM_PARTICLES;
+        varianceVel22 /= NUM_PARTICLES;
 
-        for (var i = 0; i < AUDIO_PARTICLE_SAMPLE_COUNT; i++) {
-            var audioGroup = audioGroups[i];
-            var particle = particles[Math.floor(Math.map(i, 0, AUDIO_PARTICLE_SAMPLE_COUNT - 1, 0, NUM_PARTICLES - 1))];
-            var velocity = Math.sqrt(particle.dx * particle.dx + particle.dy * particle.dy);
-            velocity = Math.pow(velocity / AUDIO_FAST_VELOCITY, 2.3) * AUDIO_FAST_VELOCITY;
-            var wantedGain = Math.map(velocity, 0, AUDIO_FAST_VELOCITY, 0, 1) / AUDIO_PARTICLE_SAMPLE_COUNT;
-            audioGroup.filter.frequency.value = Math.map(velocity, 0, AUDIO_FAST_VELOCITY, 500, 20000);
-            audioGroup.sourceGain.gain.value = wantedGain;
-        }
+        var varianceX = Math.sqrt(varianceX2);
+        var varianceY = Math.sqrt(varianceY2);
+        var varianceVel2 = Math.sqrt(varianceVel22);
+
+        var varianceLength = Math.sqrt(varianceX2 + varianceY2);
+        var varianceVel = Math.sqrt(varianceVel2);
+        var averageVel = Math.sqrt(averageVel2);
+
+        audioGroup.filter.frequency.value = Math.map(varianceLength, 10, 350, 500, 20000);
+        audioGroup.sourceGain.gain.value = Math.map(averageVel, 0, 250, 0, 0.9);
+
         renderer.render(stage);
     }
 
