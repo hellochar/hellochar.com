@@ -40,12 +40,12 @@
     }
 
     function endAutoAttract() {
-        try {
+        if (lastAutoAttractPromise != null) {
+            // catch the cancellation exception
+            lastAutoAttractPromise.catch(function() { });
             lastAutoAttractPromise.cancel();
-        } catch(e) {
-            // no op
+            lastAutoAttractPromise = null;
         }
-        lastAutoAttractPromise = null;
     }
 
     var AUDIO_PARTICLE_SAMPLE_COUNT = 20;
