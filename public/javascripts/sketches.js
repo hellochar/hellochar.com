@@ -52,7 +52,15 @@
         var $canvas = $sketchElement.find("canvas:first-of-type");
         ["mousedown", "mouseup", "mousemove"].forEach(function (eventName) {
             if (sketchObj[eventName] != null) {
-                $canvas[eventName](sketchObj[eventName]);
+                var eventCallbacks;
+                if (!_.isArray(sketchObj[eventName])) {
+                    eventCallbacks = [sketchObj[eventName]];
+                } else {
+                    eventCallbacks = sketchObj[eventName];
+                }
+                eventCallbacks.forEach(function(cb) {
+                    $canvas[eventName](cb);
+                });
             }
         });
 
@@ -89,7 +97,7 @@
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
-                console.log(sketchId, 1000 / elapsed);
+                // console.log(sketchId, 1000 / elapsed);
             } else {
                 $sketchElement.addClass("disabled");
             }

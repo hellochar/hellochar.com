@@ -9,13 +9,6 @@
     var mouseX = 0;
     var mouseY = 0;
 
-    function lerp(a, b, x) {
-        return a + (b-a) * x;
-    }
-    function map(x, xStart, xStop, yStart, yStop) {
-        return lerp(yStart, yStop, (x - xStart) / (xStop - xStart));
-    }
-
     var fnCosLengthScalar = 1.0;
     var fnFrameDivider = 25;
     function fn(x, y) {
@@ -25,7 +18,7 @@
         var z1 = 23000 / (1 + Math.exp(-length2 / 10000));
         var z2 = 600 * Math.cos(length2 / 25000 * fnCosLengthScalar + frame / fnFrameDivider);
 
-        return lerp(z1, z2, (1+Math.sin(frame / 100))/2);
+        return Math.lerp(z1, z2, (1+Math.sin(frame / 100))/2);
     }
 
     function gradient(x, y) {
@@ -73,7 +66,7 @@
         }
         context.beginPath();
         var GRIDSIZE = 50;
-        gridOffset = (gridOffset + map(mouseX, 0, width, 0.6, 1.5)) % GRIDSIZE;
+        gridOffset = (gridOffset + Math.map(mouseX, 0, width, 0.6, 1.5)) % GRIDSIZE;
         for (var x = -GRIDSIZE + gridOffset; x < width + GRIDSIZE; x += GRIDSIZE) {
             for (var y = -GRIDSIZE + gridOffset; y < height + GRIDSIZE; y += GRIDSIZE) {
 
@@ -89,8 +82,8 @@
     function mousemove(event) {
         mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        fnCosLengthScalar = map(mouseX, 0, width, 0.9, 1.1);
-        fnFrameDivider = map(mouseX, 0, width, 43, 11);
+        fnCosLengthScalar = Math.map(mouseX, 0, width, 0.9, 1.1);
+        fnFrameDivider = Math.map(mouseX, 0, width, 43, 11);
     }
 
     function mousedown(event) {
