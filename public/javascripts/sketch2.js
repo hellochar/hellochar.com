@@ -52,15 +52,11 @@
     var audioGroup;
 
 
-    // TRY 3
     // When the dots are all spread out and particle-y, it should sound like wind/noise (maybe swishy)
     // When the dots are coming together the audio should turn into a specific tone at a medium distance,
     // and go up in harmonics as the sound gets closer and closer
     // there should always be some background audio that has the base frequency in it
-    //
-    //
 
-    // oscillator
     function createAudioGroup() {
 
         // // white noise
@@ -102,7 +98,7 @@
         //     return node;
         // })();
 
-        var BASE_FREQUENCY = 84;
+        var BASE_FREQUENCY = 164.82;
         function detuned(freq, centsOffset) {
             return freq * Math.pow(2, centsOffset / 1200);
         }
@@ -113,7 +109,7 @@
             node.start(0);
 
             var gain = audioContext.createGain();
-            gain.gain.value = 0.67;
+            gain.gain.value = 0.30;
             node.connect(gain);
 
             return gain;
@@ -125,7 +121,7 @@
             node.start(0);
 
             var gain = audioContext.createGain();
-            gain.gain.value = 0.55;
+            gain.gain.value = 0.30;
             node.connect(gain);
 
             return gain;
@@ -134,28 +130,53 @@
         var sourceGain = audioContext.createGain();
         sourceGain.gain.value = 0.0;
 
+        var lfo = audioContext.createOscillator();
+        lfo.frequency.value = 8.66;
+        lfo.start(0);
+
+        var lfoGain = audioContext.createGain();
+        lfoGain.gain.value = 0;
+
+        lfo.connect(lfoGain);
+
         var filter = audioContext.createBiquadFilter();
         filter.type = "bandpass";
-        filter.frequency.value = 111;
+        filter.frequency.value = 0;
         filter.Q.value = 5.18;
 
-        var filterGain = audioContext.createGain();
-        filterGain.gain.value = 1.5;
+        var filter2 = audioContext.createBiquadFilter();
+        filter2.type = "bandpass";
+        filter2.frequency.value = 0;
+        filter2.Q.value = 5.18;
 
-        // average x = width * 1/2
-        // average x^2 = width * sqrt(1/2) = width * 0.7071
-        // variance = width * (sqrt(1/2) - 1/2) ~= width * 0.2071
+        var filterGain = audioContext.createGain();
+        filterGain.gain.value = 0.7;
 
         source1.connect(sourceGain);
         source2.connect(sourceGain);
         sourceGain.connect(filter);
-        filter.connect(filterGain);
+
+        lfoGain.connect(filter.frequency);
+        lfoGain.connect(filter2.frequency);
+        filter.connect(filter2);
+        filter2.connect(filterGain);
 
         filterGain.connect(audioContext.destination);
         return {
             sourceGain: sourceGain,
+            lfo: lfo,
+            lfoGain: lfoGain,
             filter: filter,
-            filterGain: filterGain
+            filter2: filter2,
+            filterGain: filterGain,
+            setFrequency: function(freq) {
+                filter.frequency.value = freq;
+                filter2.frequency.value = freq;
+                lfoGain.gain.value = freq * .06;
+            },
+            setVolume: function(volume) {
+                sourceGain.gain.value = volume;
+            }
         };
     }
 
@@ -264,16 +285,16 @@
         // flatRatio is low (near 0) -> vertically thin
         var flatRatio = varianceX / varianceY;
 
-        // TODO consider dividing variance and velocity by canvas dimensions so that octave shift and other
-        // musical parameters that depend on the size of your canvas are unaffected
-        // when reset, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
+        // TODO divide velocity and length by canvas dimensions so that size of canvas has no effect
+
+        // in reset formation, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
         // magicNumber is experimentally found to be 1.3938
         // AKA varianceLength = 0.28866 * canvasWidth
         var normalizedVarianceLength = varianceLength / (0.28866 * (canvas.width + canvas.height) / 2);
 
-        audioGroup.filter.frequency.value = 440 / normalizedVarianceLength;
-        // audioGroup.sourceGain.gain.value = Math.map(averageVel, 0, 250, 0, 0.9);
-        audioGroup.sourceGain.gain.value = Math.sqrt(averageVel / varianceLength);
+        audioGroup.lfo.frequency.value = flatRatio;
+        audioGroup.setFrequency(111 / normalizedVarianceLength);
+        audioGroup.setVolume(Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0));
 
         // console.log(audioGroup.filter.frequency.value, audioGroup.sourceGain.gain.value);
 
