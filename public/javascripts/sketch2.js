@@ -60,46 +60,52 @@
     function createAudioGroup() {
 
         // white noise
+        // var noise = (function() {
+        //     var node = audioContext.createBufferSource()
+        //     , buffer = audioContext.createBuffer(1, audioContext.sampleRate * 5, audioContext.sampleRate)
+        //     , data = buffer.getChannelData(0);
+        //     for (var i = 0; i < buffer.length; i++) {
+        //         data[i] = Math.random();
+        //     }
+        //     node.buffer = buffer;
+        //     node.loop = true;
+        //     node.start(0);
+        //     return node;
+        // })();
+
+        // pink noise from http://noisehack.com/generate-noise-web-audio-api/
         var noise = (function() {
-            var node = audioContext.createBufferSource()
-            , buffer = audioContext.createBuffer(1, audioContext.sampleRate * 5, audioContext.sampleRate)
-            , data = buffer.getChannelData(0);
-            for (var i = 0; i < buffer.length; i++) {
-                data[i] = Math.random();
+            var bufferSize = 4096;
+            var b0, b1, b2, b3, b4, b5, b6;
+            b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+            var node = audioContext.createScriptProcessor(bufferSize, 1, 1);
+            node.onaudioprocess = function(e) {
+                var output = e.outputBuffer.getChannelData(0);
+                for (var i = 0; i < bufferSize; i++) {
+                    var white = Math.random() * 2 - 1;
+                    b0 = 0.99886 * b0 + white * 0.0555179;
+                    b1 = 0.99332 * b1 + white * 0.0750759;
+                    b2 = 0.96900 * b2 + white * 0.1538520;
+                    b3 = 0.86650 * b3 + white * 0.3104856;
+                    b4 = 0.55000 * b4 + white * 0.5329522;
+                    b5 = -0.7616 * b5 - white * 0.0168980;
+                    output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+                    output[i] *= 0.11; // (roughly) compensate for gain
+                    b6 = white * 0.115926;
+                }
             }
-            node.buffer = buffer;
-            node.loop = true;
-            node.start(0);
             return node;
         })();
         var noiseGain = audioContext.createGain();
         noiseGain.gain.value = 0;
         noise.connect(noiseGain);
 
+        var noiseFilter = audioContext.createBiquadFilter();
+        noiseFilter.type = "lowpass";
+        noiseFilter.frequency.value = 0;
+        noiseFilter.Q.value = 1.0;
+        noiseGain.connect(noiseFilter);
 
-        // // pink noise from http://noisehack.com/generate-noise-web-audio-api/
-        // var source = (function() {
-        //     var bufferSize = 4096;
-        //     var b0, b1, b2, b3, b4, b5, b6;
-        //     b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
-        //     var node = audioContext.createScriptProcessor(bufferSize, 1, 1);
-        //     node.onaudioprocess = function(e) {
-        //         var output = e.outputBuffer.getChannelData(0);
-        //         for (var i = 0; i < bufferSize; i++) {
-        //             var white = Math.random() * 2 - 1;
-        //             b0 = 0.99886 * b0 + white * 0.0555179;
-        //             b1 = 0.99332 * b1 + white * 0.0750759;
-        //             b2 = 0.96900 * b2 + white * 0.1538520;
-        //             b3 = 0.86650 * b3 + white * 0.3104856;
-        //             b4 = 0.55000 * b4 + white * 0.5329522;
-        //             b5 = -0.7616 * b5 - white * 0.0168980;
-        //             output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-        //             output[i] *= 0.11; // (roughly) compensate for gain
-        //             b6 = white * 0.115926;
-        //         }
-        //     }
-        //     return node;
-        // })();
 
         var BASE_FREQUENCY = 164.82;
         function detuned(freq, centsOffset) {
@@ -164,7 +170,7 @@
         filter.connect(filter2);
         filter2.connect(filterGain);
 
-        noiseGain.connect(audioContext.destination);
+        noiseFilter.connect(audioContext.destination);
         filterGain.connect(audioContext.destination);
         return {
             sourceGain: sourceGain,
@@ -176,11 +182,12 @@
             setFrequency: function(freq) {
                 filter.frequency.value = freq;
                 filter2.frequency.value = freq;
+                noiseFilter.frequency.value = 100 + freq * 4;
                 lfoGain.gain.value = freq * .06;
             },
             setVolume: function(volume) {
                 sourceGain.gain.value = volume;
-                noiseGain.gain.value = volume;
+                noiseGain.gain.value = volume * 0.04;
             }
         };
     }
@@ -298,7 +305,7 @@
         var normalizedVarianceLength = varianceLength / (0.28866 * (canvas.width + canvas.height) / 2);
 
         audioGroup.lfo.frequency.value = flatRatio;
-        audioGroup.setFrequency(111 / normalizedVarianceLength);
+        audioGroup.setFrequency(222 / normalizedVarianceLength);
         audioGroup.setVolume(Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0));
 
         // console.log(audioGroup.filter.frequency.value, audioGroup.sourceGain.gain.value);
