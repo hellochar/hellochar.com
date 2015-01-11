@@ -59,19 +59,22 @@
 
     function createAudioGroup() {
 
-        // // white noise
-        // var source = (function() {
-        //     var node = audioContext.createBufferSource()
-        //     , buffer = audioContext.createBuffer(1, audioContext.sampleRate * 5, audioContext.sampleRate)
-        //     , data = buffer.getChannelData(0);
-        //     for (var i = 0; i < buffer.length; i++) {
-        //         data[i] = Math.random();
-        //     }
-        //     node.buffer = buffer;
-        //     node.loop = true;
-        //     node.start(0);
-        //     return node;
-        // })();
+        // white noise
+        var noise = (function() {
+            var node = audioContext.createBufferSource()
+            , buffer = audioContext.createBuffer(1, audioContext.sampleRate * 5, audioContext.sampleRate)
+            , data = buffer.getChannelData(0);
+            for (var i = 0; i < buffer.length; i++) {
+                data[i] = Math.random();
+            }
+            node.buffer = buffer;
+            node.loop = true;
+            node.start(0);
+            return node;
+        })();
+        var noiseGain = audioContext.createGain();
+        noiseGain.gain.value = 0;
+        noise.connect(noiseGain);
 
 
         // // pink noise from http://noisehack.com/generate-noise-web-audio-api/
@@ -161,6 +164,7 @@
         filter.connect(filter2);
         filter2.connect(filterGain);
 
+        noiseGain.connect(audioContext.destination);
         filterGain.connect(audioContext.destination);
         return {
             sourceGain: sourceGain,
@@ -176,6 +180,7 @@
             },
             setVolume: function(volume) {
                 sourceGain.gain.value = volume;
+                noiseGain.gain.value = volume;
             }
         };
     }
