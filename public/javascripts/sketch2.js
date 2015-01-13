@@ -1,6 +1,7 @@
 (function () {
 
     var NUM_PARTICLES = 10000;
+    var NUM_STARS = 100;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
@@ -13,6 +14,7 @@
     var lastAutoAttractPromise;
     var particles = [];
     var returnToStartPower = 0;
+    var stars = [];
 
     function beginAutoAttract() {
         if (lastAutoAttractPromise != null) {
@@ -228,6 +230,27 @@
             };
         }
 
+        var starTexture = PIXI.Texture.fromImage("star.png");
+        for (var i = 0; i < NUM_STARS; i++) {
+            var scale = Math.pow(Math.map(i, 0, NUM_STARS, Math.pow(0.01, 1/3), Math.pow(0.3, 1/3)), 3);
+            var moveScale = Math.map(Math.random(), 0, 1, 0.5, 1.25);
+
+            var starSprite = new PIXI.Sprite(starTexture);
+            starSprite.anchor.x = 0.5;
+            starSprite.anchor.y = 0.5;
+            starSprite.scale.x = scale;
+            starSprite.scale.y = scale;
+            starSprite.rotation = Math.random() * Math.PI * 2;
+            stage.addChild(starSprite);
+            stars[i] = {
+                x: Math.map(Math.random(), 0, 1, -100, canvas.width + 100),
+                y: Math.map(Math.random(), 0, 1, -100, canvas.height + 100),
+                moveScale: moveScale,
+                scale: scale,
+                sprite: starSprite
+            };
+        }
+
         beginAutoAttract();
     }
 
@@ -267,6 +290,26 @@
             averageX += particle.x;
             averageY += particle.y;
             averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
+        }
+        for (var i = 0; i < NUM_STARS; i++) {
+            var star = stars[i];
+            if (attractor != null) {
+                var dx = attractor.x - star.x;
+                var dy = attractor.y - star.y;
+                var length = Math.sqrt(dx*dx + dy*dy);
+                star.x += dx / length * star.scale * star.moveScale;
+                star.y += dy / length * star.scale * star.moveScale;
+            } else {
+                star.x += 1 * star.scale * star.moveScale;
+            }
+
+
+            if (star.x > canvas.width + 100) {
+                star.x = -100;
+                star.y = Math.map(Math.random(), 0, 1, -100, canvas.height + 100);
+            }
+            star.sprite.position.x = star.x;
+            star.sprite.position.y = star.y;
         }
         averageX /= NUM_PARTICLES;
         averageY /= NUM_PARTICLES;
