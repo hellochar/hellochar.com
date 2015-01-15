@@ -201,15 +201,15 @@
         var filter = audioContext.createBiquadFilter();
         filter.type = "bandpass";
         filter.frequency.value = 0;
-        filter.Q.value = 3.18;
+        filter.Q.value = 2.18;
 
         var filter2 = audioContext.createBiquadFilter();
         filter2.type = "bandpass";
         filter2.frequency.value = 0;
-        filter2.Q.value = 3.18;
+        filter2.Q.value = 2.18;
 
         var filterGain = audioContext.createGain();
-        filterGain.gain.value = 0.5;
+        filterGain.gain.value = 0.4;
 
         chordSource.connect(sourceGain);
         source1.connect(sourceGain);
@@ -221,9 +221,37 @@
         filter.connect(filter2);
         filter2.connect(filterGain);
 
-        noiseGain.connect(audioContext.destination);
-        filterGain.connect(audioContext.destination);
+        var audioGain = audioContext.createGain();
+        audioGain.gain.value = 1.0;
+
+        noiseGain.connect(audioGain);
+        filterGain.connect(audioGain);
+
+        var analyser = audioContext.createAnalyser();
+        audioGain.connect(analyser);
+
+        var compressor = audioContext.createDynamicsCompressor();
+        compressor.threshold.value = -50;
+        compressor.knee.value = 12;
+        compressor.ratio.value = 2;
+        analyser.connect(compressor);
+
+        var highAttenuation = audioContext.createBiquadFilter();
+        highAttenuation.type = "highshelf";
+        highAttenuation.frequency.value = BASE_FREQUENCY * 4;
+        highAttenuation.gain.value = -6;
+        compressor.connect(highAttenuation);
+
+        var highAttenuation2 = audioContext.createBiquadFilter();
+        highAttenuation2.type = "highshelf";
+        highAttenuation2.frequency.value = BASE_FREQUENCY * 8;
+        highAttenuation2.gain.value = -6;
+        highAttenuation.connect(highAttenuation2);
+
+        highAttenuation2.connect(audioContext.destination);
+
         return {
+            analyser: analyser,
             chordGain: chordSource,
             sourceGain: sourceGain,
             sourceLfo: sourceLfo,
@@ -382,18 +410,24 @@
         var varianceX2 = 0;
         var varianceY2 = 0;
         var varianceVel22 = 0;
+        var entropy = 0;
         var numLeft = 0, numRight = 0;
         for (var i = 0; i < NUM_PARTICLES; i++) {
             var particle = particles[i];
-            varianceX2 += Math.pow(particle.x - averageX, 2);
-            varianceY2 += Math.pow(particle.y - averageY, 2);
+            var dx2 = Math.pow(particle.x - averageX, 2),
+                dy2 = Math.pow(particle.y - averageY, 2);
+            varianceX2 += dx2;
+            varianceY2 += dy2;
             varianceVel22 += Math.pow(particle.dx * particle.dx + particle.dy * particle.dy - averageVel2, 2);
+            var length = Math.sqrt(dx2 + dy2);
+            entropy += length * Math.log(length);
             if (particle.x < averageX) {
                 numLeft++;
             } else {
                 numRight++;
             }
         }
+        entropy /= NUM_PARTICLES;
         varianceX2 /= NUM_PARTICLES;
         varianceY2 /= NUM_PARTICLES;
         varianceVel22 /= NUM_PARTICLES;
@@ -411,22 +445,18 @@
         // flatRatio is low (near 0) -> vertically thin
         var flatRatio = varianceX / varianceY;
 
-        // TODO divide velocity and length by canvas dimensions so that size of canvas has no effect
-
         // in reset formation, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
         // magicNumber is experimentally found to be 1.3938
         // AKA varianceLength = 0.28866 * canvasWidth
         var normalizedVarianceLength = varianceLength / (0.28866 * canvas.width);
         var normalizedAverageVel = averageVel / (canvas.width);
+        var normalizedEntropy = entropy / (canvas.width * 1.383870349);
 
-        console.log(normalizedVarianceLength);
         audioGroup.sourceLfo.frequency.value = flatRatio;
-        audioGroup.setFrequency(222 / normalizedVarianceLength);
+        audioGroup.setFrequency(222 / normalizedEntropy);
         var noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
         audioGroup.setNoiseFrequency(noiseFreq);
         audioGroup.setVolume(Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0));
-
-        // console.log(audioGroup.filter.frequency.value, audioGroup.sourceGain.gain.value);
 
         renderer.render(stage);
     }
