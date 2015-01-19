@@ -89,6 +89,7 @@
         function animateAndRequestAnimFrame() {
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
+                audioContextGain.gain.value = 1;
                 if (usePixi) {
                     animate($sketchElement, stage, renderer);
                 } else {
@@ -100,13 +101,25 @@
                 // console.log(sketchId, 1000 / elapsed);
             } else {
                 $sketchElement.addClass("disabled");
+                audioContextGain.gain.value = 0;
             }
             requestAnimFrame(animateAndRequestAnimFrame);
         }
+
+        var audioContext = new AudioContext();
+        var audioContextGain = audioContext.createGain();
+        audioContextGain.connect(audioContext.destination);
+        audioContext.gain = audioContextGain;
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden) {
+                audioContextGain.gain.value = 0;
+            }
+        });
+
         if (usePixi) {
-            init($sketchElement, stage, renderer);
+            init($sketchElement, stage, renderer, audioContext);
         } else {
-            init($sketchElement, $canvas[0].getContext('2d'));
+            init($sketchElement, $canvas[0].getContext('2d'), audioContext);
         }
         animateAndRequestAnimFrame();
     }
