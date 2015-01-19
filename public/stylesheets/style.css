@@ -33,6 +33,14 @@ body {
     display: inline-block;
     margin-right: -4px; /* remove space from inline-block */
 }
+
+.header .title:after {
+    content: "|";
+    position: relative;
+    padding-left: 10px;
+    top: 2px;
+}
+
 .header .nav li {
     transition: background 0.15s;
     display: inline-block;

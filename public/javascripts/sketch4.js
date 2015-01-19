@@ -231,8 +231,10 @@
             var originalY = canvas.height / 2;
             createParticle(originalX, originalY, false);
         }
-        for (var x = -25; x < canvas.width + 25; x += 25) {
-            for (var y = -25; y < canvas.height + 25; y += 25) {
+        var EXTENT = 10;
+        var GRID_SIZE = 25;
+        for (var x = -EXTENT * GRID_SIZE; x < canvas.width + EXTENT * GRID_SIZE; x += GRID_SIZE) {
+            for (var y = -EXTENT * GRID_SIZE; y < canvas.height + EXTENT * GRID_SIZE; y += GRID_SIZE) {
                 createParticle(x, y, true, 0.9);
                 createParticle(x, y, true, 0.92);
                 createParticle(x, y, true, 0.88);
@@ -374,6 +376,6 @@
         mouseup: mouseup,
         usePixi: true
     };
-    initializeSketch(sketch4, "sketch4");
+    initializeSketch(sketch4, "dots");
 })();
 

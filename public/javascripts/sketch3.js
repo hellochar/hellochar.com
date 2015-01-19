@@ -103,6 +103,6 @@
         mousedown: mousedown,
         resize: resize
     };
-    initializeSketch(sketch3, "sketch3");
+    initializeSketch(sketch3, "sphere");
 })();
 

@@ -1,11 +1,11 @@
-#sketch2 .topbar {
+#line .topbar {
 }
 
-#sketch2 canvas {
+#line canvas {
     background: black;
 }
 
-#sketch2 .reset {
+#line .reset {
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
     transition: background 0.15s;
     background: #ddd;
@@ -16,12 +16,12 @@
     box-shadow: 0 0 2px rgba(0,0,0,0.15);
 }
 
-#sketch2 .reset:hover {
+#line .reset:hover {
     background: #ccc;
     box-shadow: 0 0 2px rgba(0,0,0,0.15);
 }
 
-#sketch2 .reset:active {
+#line .reset:active {
     background: #c2c2c2;
     box-shadow: 0 0 2px inset rgba(0, 0, 0, 0.15);
 }
