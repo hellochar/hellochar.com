@@ -1,7 +1,6 @@
 (function () {
 
     var NUM_PARTICLES = 10000;
-    var NUM_STARS = 00;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
@@ -11,44 +10,9 @@
     var attractor = null;
     var canvas;
     var dragConstant = INERTIAL_DRAG_CONSTANT;
-    var lastAutoAttractPromise;
     var particles = [];
     var returnToStartPower = 0;
     var stars = [];
-
-    function beginAutoAttract() {
-        if (lastAutoAttractPromise != null) {
-            endAutoAttract();
-        }
-        function createAutoAttractLoop() {
-            var iteration = P.delay(8000).cancellable()
-            .then(function () {
-                attractor = {
-                    x: Math.map(Math.random(), 0, 1, canvas.width / 4, canvas.width * 3 / 4),
-                    y: Math.map(Math.random(), 0, 1, canvas.height / 4, canvas.height * 3 / 4)
-                }
-            }).then(function () {
-                return P.delay(3000);
-            }).then(function () {
-                attractor = null;
-            }).then(function () {
-                return createAutoAttractLoop();
-            });
-            return iteration;
-        }
-
-        lastAutoAttractPromise = P.delay(5000).cancellable().then(function () { return createAutoAttractLoop(); });
-        return lastAutoAttractPromise;
-    }
-
-    function endAutoAttract() {
-        if (lastAutoAttractPromise != null) {
-            // catch the cancellation exception
-            lastAutoAttractPromise.catch(function() { });
-            lastAutoAttractPromise.cancel();
-            lastAutoAttractPromise = null;
-        }
-    }
 
     var audioGroup;
 
@@ -275,20 +239,9 @@
 
     function init($sketchElement, stage, renderer, audioContext) {
         canvas = $sketchElement.find("canvas")[0];
-
         audioGroup = createAudioGroup(audioContext);
-
-        var particleCanvas = $("<canvas>").attr("width", 3).attr("height", 3)[0];
-        var particleCanvasContext = particleCanvas.getContext('2d');
-        particleCanvasContext.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        particleCanvasContext.fillRect(0.5, 0.5, 2, 2);
-        particleCanvasContext.fillRect(1, 1, 1, 1);
         stage.setBackgroundColor(0x000000);
-
-        var particleTexture = PIXI.Texture.fromCanvas(particleCanvas);
-
         var starTexture = PIXI.Texture.fromImage("star.png");
-
         var container = new PIXI.SpriteBatch();
         stage.addChild(container);
 
@@ -301,18 +254,13 @@
         });
 
         for( var i = 0; i < NUM_PARTICLES; i++ ) {
-            // var particleSprite = new PIXI.Sprite(particleTexture);
-
             var particleSprite = new PIXI.Sprite(starTexture);
             particleSprite.anchor.x = 0.5;
             particleSprite.anchor.y = 0.5;
             particleSprite.alpha = 0.80;
-
-            var scale = 0.10;
-            particleSprite.scale.x = scale;
-            particleSprite.scale.y = scale;
+            particleSprite.scale.x = 0.10;
+            particleSprite.scale.y = 0.10;
             particleSprite.rotation = Math.random() * Math.PI * 2;
-
             container.addChild(particleSprite);
             particles[i] = {
                 x: i * canvas.width / NUM_PARTICLES,
@@ -322,28 +270,6 @@
                 sprite: particleSprite
             };
         }
-
-        for (var i = 0; i < NUM_STARS; i++) {
-            var scale = Math.pow(Math.map(i, 0, NUM_STARS, Math.pow(0.01, 1/3), Math.pow(0.3, 1/3)), 3);
-            var moveScale = Math.map(Math.random(), 0, 1, 0.5, 1.25);
-
-            var starSprite = new PIXI.Sprite(starTexture);
-            starSprite.anchor.x = 0.5;
-            starSprite.anchor.y = 0.5;
-            starSprite.scale.x = scale;
-            starSprite.scale.y = scale;
-            starSprite.rotation = Math.random() * Math.PI * 2;
-            stage.addChild(starSprite);
-            stars[i] = {
-                x: Math.map(Math.random(), 0, 1, -100, canvas.width + 100),
-                y: Math.map(Math.random(), 0, 1, -100, canvas.height + 100),
-                moveScale: moveScale,
-                scale: scale,
-                sprite: starSprite
-            };
-        }
-
-        beginAutoAttract();
     }
 
     function animate($sketchElement, stage, renderer) {
@@ -382,26 +308,6 @@
             averageX += particle.x;
             averageY += particle.y;
             averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
-        }
-        for (var i = 0; i < NUM_STARS; i++) {
-            var star = stars[i];
-            if (attractor != null) {
-                var dx = attractor.x - star.x;
-                var dy = attractor.y - star.y;
-                var length = Math.sqrt(dx*dx + dy*dy);
-                star.x += dx / length * star.scale * star.moveScale;
-                star.y += dy / length * star.scale * star.moveScale;
-            } else {
-                star.x += 1 * star.scale * star.moveScale;
-            }
-
-
-            if (star.x > canvas.width + 100) {
-                star.x = -100;
-                star.y = Math.map(Math.random(), 0, 1, -100, canvas.height + 100);
-            }
-            star.sprite.position.x = star.x;
-            star.sprite.position.y = star.y;
         }
         averageX /= NUM_PARTICLES;
         averageY /= NUM_PARTICLES;
@@ -466,7 +372,6 @@
         attractor = { x: mouseX, y : mouseY };
         dragConstant = PULLING_DRAG_CONSTANT;
         returnToStartPower = 0;
-        endAutoAttract();
     }
 
     function mousemove(event) {
@@ -476,13 +381,11 @@
             attractor.x = mouseX;
             attractor.y = mouseY;
         }
-        endAutoAttract();
     }
 
     function mouseup(event) {
         dragConstant = INERTIAL_DRAG_CONSTANT;
         attractor = null;
-        beginAutoAttract();
     }
 
     var sketch2 = {
