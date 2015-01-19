@@ -50,16 +50,14 @@
         }
     }
 
-    var audioContext = new AudioContext();
     var audioGroup;
-
 
     // When the dots are all spread out and particle-y, it should sound like wind/noise (maybe swishy)
     // When the dots are coming together the audio should turn into a specific tone at a medium distance,
     // and go up in harmonics as the sound gets closer and closer
     // there should always be some background audio that has the base frequency in it
 
-    function createAudioGroup() {
+    function createAudioGroup(audioContext) {
 
         // white noise
         var noise = (function() {
@@ -119,7 +117,7 @@
         noiseGain.gain.value = 1.0;
         noiseShelf.connect(noiseGain);
 
-        var BASE_FREQUENCY = 164.82;
+        var BASE_FREQUENCY = 320;
         function detuned(freq, centsOffset) {
             return freq * Math.pow(2, centsOffset / 1200);
         }
@@ -248,7 +246,7 @@
         highAttenuation2.gain.value = -6;
         highAttenuation.connect(highAttenuation2);
 
-        highAttenuation2.connect(audioContext.destination);
+        highAttenuation2.connect(audioContext.gain);
 
         return {
             analyser: analyser,
@@ -269,16 +267,17 @@
             },
             setVolume: function(volume) {
                 sourceGain.gain.value = volume;
-                noiseSourceGain.gain.value = volume * 0.03;
+                noiseSourceGain.gain.value = volume * 0.05;
                 chordSource.gain.value = 0.5;
             }
         };
     }
 
-    audioGroup = createAudioGroup();
-
-    function init($sketchElement, stage, renderer) {
+    function init($sketchElement, stage, renderer, audioContext) {
         canvas = $sketchElement.find("canvas")[0];
+
+        audioGroup = createAudioGroup(audioContext);
+
         var particleCanvas = $("<canvas>").attr("width", 3).attr("height", 3)[0];
         var particleCanvasContext = particleCanvas.getContext('2d');
         particleCanvasContext.fillStyle = 'rgba(255, 255, 255, 0.3)';
@@ -307,7 +306,7 @@
             var particleSprite = new PIXI.Sprite(starTexture);
             particleSprite.anchor.x = 0.5;
             particleSprite.anchor.y = 0.5;
-            particleSprite.alpha = 0.25;
+            particleSprite.alpha = 0.80;
 
             var scale = 0.10;
             particleSprite.scale.x = scale;
