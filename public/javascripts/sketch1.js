@@ -156,5 +156,5 @@
         animate: animate,
         html: html
     };
-    initializeSketch(sketch1, "sketch1");
+    // initializeSketch(sketch1, "sketch1");
 })();
