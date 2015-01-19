@@ -494,5 +494,5 @@
         mouseup: mouseup,
         usePixi: true
     };
-    initializeSketch(sketch2, "sketch2");
+    initializeSketch(sketch2, "line");
 })();
