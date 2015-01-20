@@ -91,9 +91,9 @@
                 $sketchElement.removeClass("disabled");
                 audioContextGain.gain.value = 1;
                 if (usePixi) {
-                    animate($sketchElement, stage, renderer);
+                    animate($sketchElement, stage, renderer, audioContext);
                 } else {
-                    animate($sketchElement, $canvas[0].getContext('2d'));
+                    animate($sketchElement, $canvas[0].getContext('2d'), audioContext);
                 }
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
