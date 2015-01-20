@@ -252,7 +252,7 @@
                 sourceGain.gain.value = volume / 15;
                 noiseSourceGain.gain.value = volume * 0.05;
                 chordSource.gain.value = 0.02;
-                chordHigh.gain.value = volume / 10;
+                chordHigh.gain.value = volume / 20;
             }
         };
     }
