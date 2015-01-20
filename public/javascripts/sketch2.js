@@ -8,7 +8,9 @@
     var INERTIAL_DRAG_CONSTANT = 0.73913643334;
 
     var attractor = null;
+    var filter;
     var canvas;
+    var container;
     var dragConstant = INERTIAL_DRAG_CONSTANT;
     var particles = [];
     var returnToStartPower = 0;
@@ -73,7 +75,7 @@
 
         var noiseShelf = audioContext.createBiquadFilter();
         noiseShelf.type = "lowshelf";
-        noiseShelf.frequency.value = 1200;
+        noiseShelf.frequency.value = 2200;
         noiseShelf.gain.value = 8;
         noiseFilter.connect(noiseShelf);
 
@@ -113,7 +115,20 @@
             return gain;
         })();
 
-        var chordSource = (function() {
+        var sourceLow = (function() {
+            var node = audioContext.createOscillator();
+            node.frequency.value = BASE_FREQUENCY / 4;
+            node.type = "sawtooth";
+            node.start(0);
+
+            var gain = audioContext.createGain();
+            gain.gain.value = 0.60;
+            node.connect(gain);
+
+            return gain;
+        })();
+
+        function makeChordSource(BASE_FREQUENCY) {
             var base = audioContext.createOscillator();
             base.frequency.value = BASE_FREQUENCY;
             base.start(0);
@@ -146,7 +161,9 @@
             fourth.connect(gain);
 
             return gain;
-        })();
+        }
+        var chordSource = makeChordSource(BASE_FREQUENCY);
+        var chordHigh = makeChordSource(BASE_FREQUENCY * 8);
 
         var sourceGain = audioContext.createGain();
         sourceGain.gain.value = 0.0;
@@ -176,6 +193,8 @@
         chordSource.connect(sourceGain);
         source1.connect(sourceGain);
         source2.connect(sourceGain);
+        sourceLow.connect(sourceGain);
+        chordHigh.connect(filter);
         sourceGain.connect(filter);
 
         lfoGain.connect(filter.frequency);
@@ -230,20 +249,104 @@
                 noiseFilter.frequency.value = freq;
             },
             setVolume: function(volume) {
-                sourceGain.gain.value = volume;
+                sourceGain.gain.value = volume / 15;
                 noiseSourceGain.gain.value = volume * 0.05;
-                chordSource.gain.value = 0.5;
+                chordSource.gain.value = 0.02;
+                chordHigh.gain.value = volume / 10;
             }
         };
+    }
+
+    function GravityFilter(canvas) {
+        PIXI.AbstractFilter.call(this);
+        this.passes = [this];
+
+        this.uniforms = {
+            iGlobalTime: {type: '1f', value: 0.0},
+            iMouse: {type: '2f', value: {x: 0.0, y: 0.0}},
+            iResolution: {type: '2f', value: {x: canvas.width, y: canvas.height}},
+            G: {type: '1f', value: 0},
+        };
+        this.fragmentSrc = [
+            "precision mediump float;",
+            "uniform float iGlobalTime;",
+            "uniform vec2 iMouse;",
+            "uniform vec2 iResolution;",
+            "uniform sampler2D uSampler;",
+            "varying vec2 vTextureCoord;",
+            "uniform float G;",
+
+            "vec2 gravity(vec2 p, vec2 m) {",
+            "    float mass1 = 1.0;",
+            "    float mass2 = 1.0;",
+            "    ",
+            "    float GRAVITATIONAL_CONSTANT = G;",
+            "    return (m - p) * GRAVITATIONAL_CONSTANT * mass1 * mass2 / pow(length(p - m), 2.0);",
+            "}",
+
+            "vec2 coolGravity(vec2 p, vec2 m) {",
+            "    float angle = atan((p - m).y, (p - m).x);",
+            "    return cos(angle * 4.0 + iGlobalTime / 2.0) * gravity(p, m);",
+            "}",
+
+            "float horizLine(float y, vec2 p, vec2 m) {",
+            "    vec2 horizP = vec2(p.x, y);",
+            "    vec2 newP = horizP + gravity(horizP, m);",
+            "    return 1.0 / length(newP - p);",
+            "}",
+
+            "float vertLine(float x, vec2 p, vec2 m) {",
+            "    vec2 vertP = vec2(x, p.y);",
+            "    vec2 newP = vertP + gravity(vertP, m);",
+            "    return 1.0 / length(newP - p);",
+            "}",
+
+            "vec4 equality(vec2 p, vec2 m) {",
+            "    float total = 0.0;",
+            "    vec2 incomingP = p;",
+            "    vec2 outgoingP = p;",
+            "    vec4 c = vec4(0.0);",
+            "    for( float i = 1.0; i < 10.0; i += 1.0) {",
+            "       incomingP = incomingP - gravity(incomingP, m);",
+            "       outgoingP = outgoingP + gravity(outgoingP, m);",
+            "       c += texture2D(uSampler, incomingP / iResolution) / (i*i + 4.0);",
+            "       c += texture2D(uSampler, outgoingP / iResolution) / (i*i + 4.0);",
+            "    }",
+            "    return c;",
+            "}",
+
+            "void main(void)",
+            "{",
+            "    vec2 uv = gl_FragCoord.xy;",
+            "    vec2 uvM = iMouse.xy;",
+            "    vec4 c = texture2D(uSampler, vTextureCoord);",
+            "    vec4 c2 = equality(uv, uvM);",
+            "    gl_FragColor = c + c2;",
+            "}"
+        ];
+    }
+    GravityFilter.prototype = Object.create( PIXI.AbstractFilter.prototype );
+    GravityFilter.prototype.constructor = GravityFilter;
+    GravityFilter.prototype.set = function(varName, value) {
+        this.dirty = true;
+        this.uniforms[varName].value = value;
     }
 
     function init($sketchElement, stage, renderer, audioContext) {
         canvas = $sketchElement.find("canvas")[0];
         audioGroup = createAudioGroup(audioContext);
+        filter = new GravityFilter(canvas);
         stage.setBackgroundColor(0x000000);
         var starTexture = PIXI.Texture.fromImage("star.png");
-        var container = new PIXI.SpriteBatch();
+
+        var background = new PIXI.Sprite(starTexture);
+        background.alpha = 0.0;
+        background.scale.set(1000, 1000);
+
+        container = new PIXI.SpriteBatch();
+        stage.addChild(background);
         stage.addChild(container);
+        stage.filters = [filter];
 
         $sketchElement.find(".reset").click(function() {
             for (var i = 0; i < NUM_PARTICLES; i++) {
@@ -257,7 +360,7 @@
             var particleSprite = new PIXI.Sprite(starTexture);
             particleSprite.anchor.x = 0.5;
             particleSprite.anchor.y = 0.5;
-            particleSprite.alpha = 0.80;
+            particleSprite.alpha = 0.30;
             particleSprite.scale.x = 0.10;
             particleSprite.scale.y = 0.10;
             particleSprite.rotation = Math.random() * Math.PI * 2;
@@ -272,7 +375,7 @@
         }
     }
 
-    function animate($sketchElement, stage, renderer) {
+    function animate($sketchElement, stage, renderer, audioContext) {
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
         }
@@ -361,8 +464,15 @@
         audioGroup.setFrequency(222 / normalizedEntropy);
         var noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
         audioGroup.setNoiseFrequency(noiseFreq);
-        audioGroup.setVolume(Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0));
+        var groupedUpness = Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0.0);
+        audioGroup.setVolume(groupedUpness);
 
+        filter.set('iGlobalTime', audioContext.currentTime / 1000);
+        filter.set('G', groupedUpness * 4000);
+        filter.set('iMouse', {x: averageX, y: canvas.height - averageY});
+        filter.set('iResolution', {x: canvas.width, y: canvas.height});
+
+        window.stage = stage;
         renderer.render(stage);
     }
 
@@ -381,6 +491,7 @@
             attractor.x = mouseX;
             attractor.y = mouseY;
         }
+        // backgroundSprite.shader.set('iMouse', {x: mouseX, y: canvas.height - mouseY});
     }
 
     function mouseup(event) {
