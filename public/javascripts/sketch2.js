@@ -249,9 +249,9 @@
                 noiseFilter.frequency.value = freq;
             },
             setVolume: function(volume) {
-                sourceGain.gain.value = volume / 15;
+                sourceGain.gain.value = volume / 9;
                 noiseSourceGain.gain.value = volume * 0.05;
-                chordSource.gain.value = 0.02;
+                chordSource.gain.value = 0.05;
                 chordHigh.gain.value = volume / 20;
             }
         };
