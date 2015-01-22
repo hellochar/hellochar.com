@@ -98,7 +98,7 @@
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
-                // console.log(sketchId, 1000 / elapsed);
+                console.log(sketchId, 1000 / elapsed);
             } else {
                 $sketchElement.addClass("disabled");
                 audioContextGain.gain.value = 0;

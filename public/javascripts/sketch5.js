@@ -1,27 +1,12 @@
 (function () {
 
-    var NUM_PARTICLES = 10000;
+    var NUM_PARTICLES = 3;
     var TIME_STEP = 1 / 20;
-    var GRAVITY_CONSTANT = 100;
-    // speed becomes this percentage of its original speed every second
-    var PULLING_DRAG_CONSTANT = 0.96075095702;
-    var INERTIAL_DRAG_CONSTANT = 0.73913643334;
 
-    var attractor = null;
-    var filter;
     var canvas;
-    var container;
-    var dragConstant = INERTIAL_DRAG_CONSTANT;
     var particles = [];
-    var returnToStartPower = 0;
-    var stars = [];
 
     var audioGroup;
-
-    // When the dots are all spread out and particle-y, it should sound like wind/noise (maybe swishy)
-    // When the dots are coming together the audio should turn into a specific tone at a medium distance,
-    // and go up in harmonics as the sound gets closer and closer
-    // there should always be some background audio that has the base frequency in it
 
     function createAudioGroup(audioContext) {
 
@@ -260,39 +245,22 @@
     function init($sketchElement, stage, renderer, audioContext) {
         canvas = $sketchElement.find("canvas")[0];
         audioGroup = createAudioGroup(audioContext);
-        filter = new GravityFilter();
         stage.setBackgroundColor(0x000000);
         var starTexture = PIXI.Texture.fromImage("star.png");
 
-        var background = new PIXI.Sprite(starTexture);
-        background.alpha = 0.0;
-        background.scale.set(1000, 1000);
-
         container = new PIXI.SpriteBatch();
-        stage.addChild(background);
         stage.addChild(container);
-        stage.filters = [filter];
-
-        $sketchElement.find(".reset").click(function() {
-            for (var i = 0; i < NUM_PARTICLES; i++) {
-                particles[i].dx = 0;
-                particles[i].dy = 0;
-            }
-            returnToStartPower = 0.01;
-        });
 
         for( var i = 0; i < NUM_PARTICLES; i++ ) {
             var particleSprite = new PIXI.Sprite(starTexture);
             particleSprite.anchor.x = 0.5;
             particleSprite.anchor.y = 0.5;
-            particleSprite.alpha = 0.30;
-            particleSprite.scale.x = 0.10;
-            particleSprite.scale.y = 0.10;
+            particleSprite.alpha = 0.80;
             particleSprite.rotation = Math.random() * Math.PI * 2;
             container.addChild(particleSprite);
             particles[i] = {
-                x: i * canvas.width / NUM_PARTICLES,
-                y: canvas.height / 2,
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
                 dx: 0,
                 dy: 0,
                 sprite: particleSprite
@@ -301,137 +269,60 @@
     }
 
     function animate($sketchElement, stage, renderer, audioContext) {
-        if (returnToStartPower > 0 && returnToStartPower < 1) {
-            returnToStartPower *= 1.01;
-        }
-        var averageX = 0, averageY = 0;
-        var averageVel2 = 0;
         for (var i = 0; i < NUM_PARTICLES; i++) {
             var particle = particles[i];
-            if (attractor != null) {
-                var dx = attractor.x - particle.x;
-                var dy = attractor.y - particle.y;
-                var length2 = Math.sqrt(dx*dx + dy*dy);
-                var forceX = GRAVITY_CONSTANT * dx / length2;
-                var forceY = GRAVITY_CONSTANT * dy / length2;
-
-                particle.dx += forceX * TIME_STEP;
-                particle.dy += forceY * TIME_STEP;
+            var closestParticle = null;
+            var closestDist2 = Infinity;
+            for (var j = 0; j < NUM_PARTICLES; j++) {
+                if (i === j) continue;
+                var tempParticle = particles[j];
+                var dx = tempParticle.x - particle.x;
+                var dy = tempParticle.y - particle.y;
+                var dist2 = dx*dx+dy*dy;
+                if(closestDist2 > dist2) {
+                    closestDist2 = dist2;
+                    closestParticle = tempParticle;
+                }
             }
-            particle.dx *= Math.pow(dragConstant, TIME_STEP);
-            particle.dy *= Math.pow(dragConstant, TIME_STEP);
 
+            particle.dx += 10 * (closestParticle.x - particle.x) / (1 + Math.sqrt(closestDist2));
+            particle.dy += 10 * (closestParticle.y - particle.y) / (1 + Math.sqrt(closestDist2));
+
+            particle.dx *= Math.pow(0.99, TIME_STEP);
+            particle.dy *= Math.pow(0.99, TIME_STEP);
             particle.x += particle.dx * TIME_STEP;
             particle.y += particle.dy * TIME_STEP;
 
-            var wantedX = i * canvas.width / NUM_PARTICLES;
-            var wantedY = canvas.height / 2;
-            if (returnToStartPower > 0) {
-                particle.x -= (particle.x - wantedX) * returnToStartPower;
-                particle.y -= (particle.y - wantedY) * returnToStartPower;
-            }
+            particle.x = particle.x % (canvas.width + 50);
+            particle.y = particle.y % (canvas.height + 50);
 
             particle.sprite.position.x = particle.x;
             particle.sprite.position.y = particle.y;
-            averageX += particle.x;
-            averageY += particle.y;
-            averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
         }
-        averageX /= NUM_PARTICLES;
-        averageY /= NUM_PARTICLES;
-        averageVel2 /= NUM_PARTICLES;
-        var varianceX2 = 0;
-        var varianceY2 = 0;
-        var varianceVel22 = 0;
-        var entropy = 0;
-        var numLeft = 0, numRight = 0;
-        for (var i = 0; i < NUM_PARTICLES; i++) {
-            var particle = particles[i];
-            var dx2 = Math.pow(particle.x - averageX, 2),
-                dy2 = Math.pow(particle.y - averageY, 2);
-            varianceX2 += dx2;
-            varianceY2 += dy2;
-            varianceVel22 += Math.pow(particle.dx * particle.dx + particle.dy * particle.dy - averageVel2, 2);
-            var length = Math.sqrt(dx2 + dy2);
-            entropy += length * Math.log(length);
-            if (particle.x < averageX) {
-                numLeft++;
-            } else {
-                numRight++;
-            }
-        }
-        entropy /= NUM_PARTICLES;
-        varianceX2 /= NUM_PARTICLES;
-        varianceY2 /= NUM_PARTICLES;
-        varianceVel22 /= NUM_PARTICLES;
-
-        var varianceX = Math.sqrt(varianceX2);
-        var varianceY = Math.sqrt(varianceY2);
-        var varianceVel2 = Math.sqrt(varianceVel22);
-
-        var varianceLength = Math.sqrt(varianceX2 + varianceY2);
-        var varianceVel = Math.sqrt(varianceVel2);
-        var averageVel = Math.sqrt(averageVel2);
-
-        // flatRatio = 1 -> perfectly circular
-        // flatRatio is high (possibly Infinity) -> extremely horizontally flat
-        // flatRatio is low (near 0) -> vertically thin
-        var flatRatio = varianceX / varianceY;
-
-        // in reset formation, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
-        // magicNumber is experimentally found to be 1.3938
-        // AKA varianceLength = 0.28866 * canvasWidth
-        var normalizedVarianceLength = varianceLength / (0.28866 * canvas.width);
-        var normalizedAverageVel = averageVel / (canvas.width);
-        var normalizedEntropy = entropy / (canvas.width * 1.383870349);
-
-        audioGroup.sourceLfo.frequency.value = flatRatio;
-        audioGroup.setFrequency(222 / normalizedEntropy);
-        var noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
-        audioGroup.setNoiseFrequency(noiseFreq);
-        var groupedUpness = Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0.0);
-        audioGroup.setVolume(groupedUpness);
-
-        filter.set('iResolution', {x: canvas.width, y: canvas.height});
-        filter.set('iGlobalTime', audioContext.currentTime / 1000);
-        filter.set('G', groupedUpness * 4000);
-        filter.set('iMouse', {x: averageX, y: canvas.height - averageY});
-
-        window.stage = stage;
         renderer.render(stage);
     }
 
     function mousedown(event) {
         var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        attractor = { x: mouseX, y : mouseY };
-        dragConstant = PULLING_DRAG_CONSTANT;
-        returnToStartPower = 0;
     }
 
     function mousemove(event) {
         var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        if (attractor != null) {
-            attractor.x = mouseX;
-            attractor.y = mouseY;
-        }
-        // backgroundSprite.shader.set('iMouse', {x: mouseX, y: canvas.height - mouseY});
     }
 
     function mouseup(event) {
-        dragConstant = INERTIAL_DRAG_CONSTANT;
-        attractor = null;
     }
 
-    var sketch2 = {
+    var sketch5 = {
         init: init,
         animate: animate,
-        html: '<div class="topbar">Click for gravity.<button class="reset">Reset</button></div><canvas></canvas>',
         mousedown: mousedown,
         mousemove: mousemove,
         mouseup: mouseup,
         usePixi: true
     };
-    initializeSketch(sketch2, "line");
+    // initializeSketch(sketch5, "forcefield");
 })();
+
