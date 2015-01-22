@@ -1,6 +1,6 @@
 (function () {
 
-    var NUM_FREE_PARTICLES = 0000;
+    var NUM_FREE_PARTICLES;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
     var STATIONARY_CONSTANT = 0.01;
@@ -11,6 +11,7 @@
     var attractor = null;
     var canvas;
     var dragConstant = INERTIAL_DRAG_CONSTANT;
+    var filter;
     var lastAutoAttractPromise;
     var particles = [];
     var returnToStartPower = 0;
@@ -181,7 +182,7 @@
             },
             setVolume: function(volume) {
                 sourceGain.gain.value = volume;
-                noiseGain.gain.value = volume;
+                noiseGain.gain.value = volume * 0.05;
             }
         };
     }
@@ -190,17 +191,26 @@
 
     function init($sketchElement, stage, renderer) {
         canvas = $sketchElement.find("canvas")[0];
+
         var particleCanvas = $("<canvas>").attr("width", 3).attr("height", 3)[0];
         var particleCanvasContext = particleCanvas.getContext('2d');
         particleCanvasContext.fillStyle = 'rgba(255, 255, 255, 0.3)';
         particleCanvasContext.fillRect(0.5, 0.5, 2, 2);
         particleCanvasContext.fillRect(1, 1, 1, 1);
-        stage.setBackgroundColor(0x000000);
-
         var particleTexture = PIXI.Texture.fromCanvas(particleCanvas);
 
+        var background = PIXI.Sprite.fromImage("star.png");
+        background.alpha = 0.0;
+        background.scale.set(1000, 1000);
+
         var container = new PIXI.SpriteBatch();
+
+        filter = new ExplodeFilter(canvas);
+
+        stage.setBackgroundColor(0x000000);
         stage.addChild(container);
+        stage.addChild(background);
+        stage.filters = [filter];
 
         $sketchElement.find(".reset").click(function() {
             for (var i = 0; i < NUM_FREE_PARTICLES; i++) {
@@ -226,22 +236,14 @@
             });
         }
 
-        for (var i = 0; i < NUM_FREE_PARTICLES; i++) {
-            var originalX = i * canvas.width / NUM_FREE_PARTICLES;
-            var originalY = canvas.height / 2;
-            createParticle(originalX, originalY, false);
-        }
         var EXTENT = 10;
-        var GRID_SIZE = 25;
+        var GRID_SIZE = 10;
         for (var x = -EXTENT * GRID_SIZE; x < canvas.width + EXTENT * GRID_SIZE; x += GRID_SIZE) {
             for (var y = -EXTENT * GRID_SIZE; y < canvas.height + EXTENT * GRID_SIZE; y += GRID_SIZE) {
                 createParticle(x, y, true, 0.9);
-                createParticle(x, y, true, 0.92);
-                createParticle(x, y, true, 0.88);
-                createParticle(x, y - 1, true, 0.87);
-                createParticle(x, y + 1, true, 0.86);
             }
         }
+        NUM_FREE_PARTICLES = particles.length;
 
         beginAutoAttract();
     }
@@ -337,7 +339,8 @@
         audioGroup.setFrequency(111 / normalizedVarianceLength);
         audioGroup.setVolume(Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0));
 
-        // console.log(audioGroup.filter.frequency.value, audioGroup.sourceGain.gain.value);
+        filter.set('iMouse', {x: window.mouseX / canvas.width, y: (canvas.height - window.mouseY) / canvas.height});
+        filter.set('iResolution', {x: canvas.width, y: canvas.height});
 
         renderer.render(stage);
     }
@@ -354,6 +357,8 @@
     function mousemove(event) {
         var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        window.mouseX = mouseX;
+        window.mouseY = mouseY;
         if (attractor != null) {
             attractor.x = mouseX;
             attractor.y = mouseY;

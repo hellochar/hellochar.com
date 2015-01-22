@@ -50,18 +50,58 @@
         }
     }
 
-    function init($sketchElement, context) {
-        canvas = $sketchElement.find("canvas")[0];
+    var BASE_FREQUENCY = 141;
+
+    function createAudioGroup(audioContext) {
+        var osc = audioContext.createOscillator();
+        osc.frequency.value = BASE_FREQUENCY;
+        osc.type = "sawtooth";
+        osc.start(0);
+
+        function makeLowpass() {
+            var lowpass = audioContext.createBiquadFilter();
+            lowpass.type = "lowpass";
+            lowpass.frequency.value = 110;
+            lowpass.Q.value = 1.0;
+            return lowpass;
+        }
+
+        var lp1 = makeLowpass();
+        osc.connect(lp1);
+
+        var lp2 = makeLowpass();
+        lp1.connect(lp2);
+
+        var gain = audioContext.createGain();
+        gain.gain.value = 1.0;
+        lp2.connect(gain);
+
+        gain.connect(audioContext.gain);
+
+        return {
+            osc: osc,
+            lp2: lp2,
+            gain: gain
+        };
     }
 
-    function animate($sketchElement, context) {
+    var audio;
+
+    function init($sketchElement, context, audioContext) {
+        canvas = $sketchElement.find("canvas")[0];
+        // audio = createAudioGroup(audioContext);
+    }
+
+    function animate($sketchElement, context, audioContext) {
         frame++;
         width = canvas.width;
         height = canvas.height;
 
         if (frame % 1000 < 500) {
+            // audio.osc.frequency.value = BASE_FREQUENCY - (frame % 500 / 500 * 60);
             context.fillStyle = "rgba(13,7,5,0.04)";
         } else {
+            // audio.osc.frequency.value = BASE_FREQUENCY / 2 * Math.pow(2, 7 / 12);
             context.fillStyle = "rgba(252,252,252,0.04)";
         }
         context.beginPath();
