@@ -1,6 +1,5 @@
 (function () {
-
-    var NUM_PARTICLES = 10000;
+    var NUM_PARTICLES = 50000;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
@@ -8,15 +7,9 @@
     var INERTIAL_DRAG_CONSTANT = 0.73913643334;
 
     var attractor = null;
-    var filter;
-    var canvas;
-    var container;
     var dragConstant = INERTIAL_DRAG_CONSTANT;
     var particles = [];
     var returnToStartPower = 0;
-    var stars = [];
-
-    var audioGroup;
 
     // When the dots are all spread out and particle-y, it should sound like wind/noise (maybe swishy)
     // When the dots are coming together the audio should turn into a specific tone at a medium distance,
@@ -257,50 +250,62 @@
         };
     }
 
-    function init($sketchElement, stage, renderer, audioContext) {
-        canvas = $sketchElement.find("canvas")[0];
+    function reset() {
+        for (var i = 0; i < NUM_PARTICLES; i++) {
+            particles[i].dx = 0;
+            particles[i].dy = 0;
+        }
+        returnToStartPower = 0.01;
+    }
+
+    var audioGroup;
+    var canvas;
+
+    // threejs stuff
+    var camera;
+    var geometry;
+    var pointCloud;
+    var renderer;
+    var scene;
+
+    function init(_renderer, audioContext) {
         audioGroup = createAudioGroup(audioContext);
-        filter = new GravityFilter();
-        stage.setBackgroundColor(0x000000);
-        var starTexture = PIXI.Texture.fromImage("star.png");
+        canvas = _renderer.domElement;
 
-        var background = new PIXI.Sprite(starTexture);
-        background.alpha = 0.0;
-        background.scale.set(1000, 1000);
+        scene = new THREE.Scene();
+        renderer = _renderer;
+        camera = new THREE.OrthographicCamera(-canvas.width/2, canvas.width/2, -canvas.height/2, canvas.height/2, 1, 1000);
+        camera.position.z = 500;
+        camera.position.x = canvas.width/2;
+        camera.position.y = canvas.height/2;
 
-        container = new PIXI.SpriteBatch();
-        stage.addChild(background);
-        stage.addChild(container);
-        stage.filters = [filter];
-
-        $sketchElement.find(".reset").click(function() {
-            for (var i = 0; i < NUM_PARTICLES; i++) {
-                particles[i].dx = 0;
-                particles[i].dy = 0;
-            }
-            returnToStartPower = 0.01;
-        });
-
-        for( var i = 0; i < NUM_PARTICLES; i++ ) {
-            var particleSprite = new PIXI.Sprite(starTexture);
-            particleSprite.anchor.x = 0.5;
-            particleSprite.anchor.y = 0.5;
-            particleSprite.alpha = 0.30;
-            particleSprite.scale.x = 0.10;
-            particleSprite.scale.y = 0.10;
-            particleSprite.rotation = Math.random() * Math.PI * 2;
-            container.addChild(particleSprite);
+        geometry = new THREE.Geometry();
+        for(var i = 0; i < NUM_PARTICLES; i++) {
+            var vertex = new THREE.Vector3();
+            geometry.vertices.push(vertex);
             particles[i] = {
                 x: i * canvas.width / NUM_PARTICLES,
                 y: canvas.height / 2,
                 dx: 0,
                 dy: 0,
-                sprite: particleSprite
+                vertex: vertex
             };
         }
+
+        var starTexture = THREE.ImageUtils.loadTexture("star.png");
+        starTexture.minFilter = THREE.NearestFilter;
+        var material = new THREE.PointCloudMaterial({
+            size: 12,
+            sizeAttenuation: false,
+            map: starTexture,
+            opacity: 0.2,
+            transparent: true
+        });
+        pointCloud = new THREE.PointCloud(geometry, material);
+        scene.add(pointCloud);
     }
 
-    function animate($sketchElement, stage, renderer, audioContext) {
+    function animate() {
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
         }
@@ -331,8 +336,8 @@
                 particle.y -= (particle.y - wantedY) * returnToStartPower;
             }
 
-            particle.sprite.position.x = particle.x;
-            particle.sprite.position.y = particle.y;
+            particle.vertex.x = particle.x;
+            particle.vertex.y = particle.y;
             averageX += particle.x;
             averageY += particle.y;
             averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
@@ -392,34 +397,62 @@
         var groupedUpness = Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0.0);
         audioGroup.setVolume(groupedUpness);
 
-        filter.set('iResolution', {x: canvas.width, y: canvas.height});
-        filter.set('iGlobalTime', audioContext.currentTime / 1000);
-        filter.set('G', groupedUpness * 4000);
-        filter.set('iMouse', {x: averageX, y: canvas.height - averageY});
+        // filter.set('iResolution', {x: canvas.width, y: canvas.height});
+        // filter.set('iGlobalTime', audioContext.currentTime / 1000);
+        // filter.set('G', groupedUpness * 4000);
+        // filter.set('iMouse', {x: averageX, y: canvas.height - averageY});
 
-        window.stage = stage;
-        renderer.render(stage);
+        geometry.verticesNeedUpdate = true;
+        camera.lookAt( scene.position.clone().add(new THREE.Vector3(canvas.width/2, canvas.height/2, 0)) );
+        renderer.render(scene, camera);
+    }
+
+    function touchstart(event) {
+        var touchX = event.originalEvent.touches[0].clientX;
+        var touchY = event.originalEvent.touches[0].clientY;
+        createAttractor(touchX, touchY);
+    }
+
+    function touchmove(event) {
+        var touchX = event.originalEvent.touches[0].clientX;
+        var touchY = event.originalEvent.touches[0].clientY;
+        moveAttractor(touchX, touchY);
+    }
+
+    function touchend(event) {
+        removeAttractor();
     }
 
     function mousedown(event) {
         var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        attractor = { x: mouseX, y : mouseY };
-        dragConstant = PULLING_DRAG_CONSTANT;
-        returnToStartPower = 0;
+        createAttractor(mouseX, mouseY);
     }
 
     function mousemove(event) {
         var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        if (attractor != null) {
-            attractor.x = mouseX;
-            attractor.y = mouseY;
-        }
-        // backgroundSprite.shader.set('iMouse', {x: mouseX, y: canvas.height - mouseY});
+        moveAttractor(mouseX, mouseY);
     }
 
     function mouseup(event) {
+        removeAttractor();
+    }
+
+    function createAttractor(x, y) {
+        attractor = { x: x, y : y };
+        dragConstant = PULLING_DRAG_CONSTANT;
+        returnToStartPower = 0;
+    }
+
+    function moveAttractor(x, y) {
+        if (attractor != null) {
+            attractor.x = x;
+            attractor.y = y;
+        }
+    }
+
+    function removeAttractor() {
         dragConstant = INERTIAL_DRAG_CONSTANT;
         attractor = null;
     }
@@ -427,11 +460,12 @@
     var sketch2 = {
         init: init,
         animate: animate,
-        html: '<div class="topbar">Click for gravity.<button class="reset">Reset</button></div><canvas></canvas>',
         mousedown: mousedown,
         mousemove: mousemove,
         mouseup: mouseup,
-        usePixi: true
+        touchstart: touchstart,
+        touchmove: touchmove,
+        touchend: touchend
     };
     initializeSketch(sketch2, "line");
 })();

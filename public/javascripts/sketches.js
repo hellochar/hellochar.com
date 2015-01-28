@@ -3,8 +3,6 @@
     var $navbarElement = $(".nav");
     var $window = $(window);
 
-    var DEFAULT_SKETCH_HTML = '<canvas></canvas>';
-
     function isElementOnScreen(element) {
         var scrollTop = $window.scrollTop(),
             scrollBottom = scrollTop + $window.height();
@@ -16,23 +14,25 @@
         return scrollTop < elementMiddle && elementMiddle < scrollBottom;
     }
 
-    function setCanvasDimensions($canvasOrRenderer) {
-        if ($canvasOrRenderer instanceof PIXI.CanvasRenderer || $canvasOrRenderer instanceof PIXI.WebGLRenderer) {
-            var renderer = $canvasOrRenderer;
-            renderer.resize($window.width() * 0.9, $window.height() * 0.9 - 55);
-        } else {
-            var $canvas = $canvasOrRenderer;
-            $canvas.attr("width", $window.width() * 0.9)
-                   .attr("height", $window.height() * 0.9 - 55);
-        }
+    function setCanvasDimensions(renderer) {
+        renderer.setSize($window.width() * 0.9, $window.height() * 0.9 - 110);
     }
 
+    // properties:
+    //   sketchObj: {
+    //      animate: function($sketchElement, canvasContext, audioContext),
+    //      html: html string to add to the sketchElement,,
+    //      init: function($sketchElement, canvasContext, audioContext),
+    //      mousedown, mouseup, mousemove: function(event) || [function(event)]
+    //      resize: function(width, height),
+    //      usePixi: false
+    //   },
+    //   sketchId: string
     function initializeSketch(sketchObj, sketchId) {
         var init = sketchObj.init;
-        var animate = sketchObj.animate;
-        var sketchHtml = sketchObj.html || DEFAULT_SKETCH_HTML;
-        var sketchResizeCallback = sketchObj.resize;
-        var usePixi = sketchObj.usePixi || false;
+
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
 
         // add sketch element to nav
         var $navElement = $('<li></li>');
@@ -46,11 +46,18 @@
         // add sketch element to body
         var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketchId);
         $allSketches.append($sketchElement);
-        $sketchElement.append(sketchHtml);
+        $sketchElement.append(renderer.domElement);
+        setCanvasDimensions(renderer);
+        $window.resize(function() {
+            setCanvasDimensions(renderer);
+            if (sketchResizeCallback != null) {
+                sketchResizeCallback($window.width(), $window.height());
+            }
+        });
 
         // canvas setup
         var $canvas = $sketchElement.find("canvas:first-of-type");
-        ["mousedown", "mouseup", "mousemove"].forEach(function (eventName) {
+        ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend"].forEach(function (eventName) {
             if (sketchObj[eventName] != null) {
                 var eventCallbacks;
                 if (!_.isArray(sketchObj[eventName])) {
@@ -59,30 +66,10 @@
                     eventCallbacks = sketchObj[eventName];
                 }
                 eventCallbacks.forEach(function(cb) {
-                    $canvas[eventName](cb);
+                    $canvas.on(eventName, cb);
                 });
             }
         });
-
-        $window.resize(function() {
-            if (sketchResizeCallback != null) {
-                sketchResizeCallback($window.width(), $window.height());
-            }
-        });
-
-        var stage, renderer;
-        if (usePixi) {
-            stage = new PIXI.Stage(0xfcfcfc);
-            renderer = PIXI.autoDetectRenderer(1, 1, {
-                antialias: true,
-                view: $canvas[0]
-            });
-            setCanvasDimensions(renderer);
-            $window.resize(function() { setCanvasDimensions(renderer); });
-        } else {
-            setCanvasDimensions($canvas);
-            $window.resize(function() { setCanvasDimensions($canvas); });
-        }
 
         // initialize and run sketch
         var lastAnimate = (new Date()).getTime();
@@ -90,20 +77,16 @@
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
                 audioContextGain.gain.value = 1;
-                if (usePixi) {
-                    animate($sketchElement, stage, renderer, audioContext);
-                } else {
-                    animate($sketchElement, $canvas[0].getContext('2d'), audioContext);
-                }
+                sketchObj.animate();
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
-                console.log(sketchId, 1000 / elapsed);
+                // console.log(sketchId, 1000 / elapsed);
             } else {
                 $sketchElement.addClass("disabled");
                 audioContextGain.gain.value = 0;
             }
-            requestAnimFrame(animateAndRequestAnimFrame);
+            requestAnimationFrame(animateAndRequestAnimFrame);
         }
 
         var audioContext = new AudioContext();
@@ -116,11 +99,7 @@
             }
         });
 
-        if (usePixi) {
-            init($sketchElement, stage, renderer, audioContext);
-        } else {
-            init($sketchElement, $canvas[0].getContext('2d'), audioContext);
-        }
+        init(renderer, audioContext);
         animateAndRequestAnimFrame();
     }
 
