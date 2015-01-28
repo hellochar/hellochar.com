@@ -50,8 +50,8 @@
         setCanvasDimensions(renderer);
         $window.resize(function() {
             setCanvasDimensions(renderer);
-            if (sketchResizeCallback != null) {
-                sketchResizeCallback($window.width(), $window.height());
+            if (sketchObj.resize != null) {
+                sketchObj.resize($window.width(), $window.height());
             }
         });
 
