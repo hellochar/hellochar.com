@@ -258,17 +258,21 @@
         returnToStartPower = 0.01;
     }
 
+    var audioContext;
     var audioGroup;
     var canvas;
 
     // threejs stuff
     var camera;
+    var composer;
+    var filter;
     var geometry;
     var pointCloud;
     var renderer;
     var scene;
 
-    function init(_renderer, audioContext) {
+    function init(_renderer, _audioContext) {
+        audioContext = _audioContext;
         audioGroup = createAudioGroup(audioContext);
         canvas = _renderer.domElement;
 
@@ -298,11 +302,18 @@
             size: 12,
             sizeAttenuation: false,
             map: starTexture,
-            opacity: 0.25,
+            opacity: 0.125,
             transparent: true
         });
         pointCloud = new THREE.PointCloud(geometry, material);
         scene.add(pointCloud);
+
+        composer = new THREE.EffectComposer(renderer);
+        composer.addPass(new THREE.RenderPass(scene, camera));
+        filter = new THREE.ShaderPass(GravityShader);
+        filter.uniforms['iResolution'].value = new THREE.Vector2(canvas.width, canvas.height);
+        filter.renderToScreen = true;
+        composer.addPass(filter);
     }
 
     function animate() {
@@ -397,14 +408,14 @@
         var groupedUpness = Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0.0);
         audioGroup.setVolume(groupedUpness);
 
-        // filter.set('iResolution', {x: canvas.width, y: canvas.height});
-        // filter.set('iGlobalTime', audioContext.currentTime / 1000);
-        // filter.set('G', groupedUpness * 4000);
-        // filter.set('iMouse', {x: averageX, y: canvas.height - averageY});
+        filter.uniforms['iResolution'].value = new THREE.Vector2(canvas.width, canvas.height);
+        filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1000;
+        filter.uniforms['G'].value = groupedUpness * 5000;
+        filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
 
         geometry.verticesNeedUpdate = true;
         camera.lookAt( scene.position.clone().add(new THREE.Vector3(canvas.width/2, canvas.height/2, 0)) );
-        renderer.render(scene, camera);
+        composer.render();
     }
 
     function touchstart(event) {
