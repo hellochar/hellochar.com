@@ -1,5 +1,5 @@
 (function () {
-    var NUM_PARTICLES = 30000;
+    var NUM_PARTICLES = 70000;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
@@ -283,30 +283,16 @@
         camera.position.x = canvas.width/2;
         camera.position.y = canvas.height/2;
 
-        geometry = new THREE.Geometry();
         for(var i = 0; i < NUM_PARTICLES; i++) {
-            var vertex = new THREE.Vector3();
-            geometry.vertices.push(vertex);
             particles[i] = {
                 x: i * canvas.width / NUM_PARTICLES,
                 y: canvas.height / 2,
                 dx: 0,
                 dy: 0,
-                vertex: vertex
+                vertex: null
             };
         }
-
-        var starTexture = THREE.ImageUtils.loadTexture("star.png");
-        starTexture.minFilter = THREE.NearestFilter;
-        var material = new THREE.PointCloudMaterial({
-            size: 12,
-            sizeAttenuation: false,
-            map: starTexture,
-            opacity: 0.125,
-            transparent: true
-        });
-        pointCloud = new THREE.PointCloud(geometry, material);
-        scene.add(pointCloud);
+        instantiatePointCloudAndGeometry();
 
         composer = new THREE.EffectComposer(renderer);
         composer.addPass(new THREE.RenderPass(scene, camera));
@@ -487,6 +473,42 @@
         camera.updateProjectionMatrix();
     }
 
+    function reduceProcessingSize(percentageOfOriginal) {
+        console.log("Reducing to", percentageOfOriginal.toFixed(2)*100, "%");
+        var newNumParticles = NUM_PARTICLES * percentageOfOriginal;
+
+        var start = Date.now();
+        particles.splice(newNumParticles, NUM_PARTICLES - newNumParticles);
+        NUM_PARTICLES = newNumParticles;
+        instantiatePointCloudAndGeometry();
+        console.log("set to", particles.length, "in", (Date.now() - start), "ms");
+    }
+
+    function instantiatePointCloudAndGeometry() {
+        if (pointCloud != null) {
+            scene.remove(pointCloud);
+        }
+        geometry = new THREE.Geometry();
+        for(var i = 0; i < NUM_PARTICLES; i++) {
+            var particle = particles[i];
+            var vertex = new THREE.Vector3(particle.x, particle.y, 0);
+            geometry.vertices.push(vertex);
+            particles[i].vertex = vertex;
+        }
+
+        var starTexture = THREE.ImageUtils.loadTexture("star.png");
+        starTexture.minFilter = THREE.NearestFilter;
+        var material = new THREE.PointCloudMaterial({
+            size: 12,
+            sizeAttenuation: false,
+            map: starTexture,
+            opacity: 0.125,
+            transparent: true
+        });
+        pointCloud = new THREE.PointCloud(geometry, material);
+        scene.add(pointCloud);
+    }
+
     var sketch2 = {
         init: init,
         animate: animate,
@@ -494,6 +516,7 @@
         mousemove: mousemove,
         mouseup: mouseup,
         resize: resize,
+        reduceProcessingSize: reduceProcessingSize,
         touchstart: touchstart,
         touchmove: touchmove,
         touchend: touchend
