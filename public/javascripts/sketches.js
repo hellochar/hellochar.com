@@ -32,7 +32,7 @@
         var init = sketchObj.init;
 
         var renderer = new THREE.WebGLRenderer();
-        renderer.setPixelRatio(window.devicePixelRatio);
+        // renderer.setPixelRatio(window.devicePixelRatio);
 
         // add sketch element to nav
         var $navElement = $('<li></li>');
