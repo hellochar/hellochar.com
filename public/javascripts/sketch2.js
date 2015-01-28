@@ -408,7 +408,6 @@
         var groupedUpness = Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0.0);
         audioGroup.setVolume(groupedUpness);
 
-        filter.uniforms['iResolution'].value = new THREE.Vector2(canvas.width, canvas.height);
         filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1000;
         filter.uniforms['G'].value = groupedUpness * 5000;
         filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
@@ -468,12 +467,26 @@
         attractor = null;
     }
 
+    function resize(width, height) {
+        console.log("resizing to", width, height);
+        camera.left = -width/2;
+        camera.right = width/2;
+        camera.top = -height/2;
+        camera.bottom = height/2;
+        camera.position.x = width/2;
+        camera.position.y = height/2;
+        filter.uniforms['iResolution'].value = new THREE.Vector2(width, height);
+
+        camera.updateProjectionMatrix();
+    }
+
     var sketch2 = {
         init: init,
         animate: animate,
         mousedown: mousedown,
         mousemove: mousemove,
         mouseup: mouseup,
+        resize: resize,
         touchstart: touchstart,
         touchmove: touchmove,
         touchend: touchend

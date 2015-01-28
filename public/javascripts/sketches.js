@@ -49,9 +49,8 @@
         $sketchElement.append(renderer.domElement);
         setCanvasDimensions(renderer);
         $window.resize(function() {
-            setCanvasDimensions(renderer);
             if (sketchObj.resize != null) {
-                sketchObj.resize($window.width(), $window.height());
+                sketchObj.resize(renderer.domElement.width, renderer.domElement.height);
             }
         });
 
