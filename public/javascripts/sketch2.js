@@ -1,5 +1,5 @@
 (function () {
-    var NUM_PARTICLES = 50000;
+    var NUM_PARTICLES = 30000;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
@@ -298,7 +298,7 @@
             size: 12,
             sizeAttenuation: false,
             map: starTexture,
-            opacity: 0.2,
+            opacity: 0.25,
             transparent: true
         });
         pointCloud = new THREE.PointCloud(geometry, material);

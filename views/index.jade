@@ -12,8 +12,15 @@ html
     script(src='/bower_components/threejs/build/three.js')
     script(src='/bower_components/bluebird/js/browser/bluebird.js')
     // endbower
+    script(src='/threejs/postprocessing/EffectComposer.js')
+    script(src='/threejs/postprocessing/MaskPass.js')
+    script(src='/threejs/postprocessing/RenderPass.js')
+    script(src='/threejs/postprocessing/ShaderPass.js')
+    script(src='/threejs/shaders/DotScreenShader.js')
+    script(src='/threejs/shaders/CopyShader.js')
+
     script(src="/javascripts/math.js")
-    script(src="/javascripts/filters/gravity_filter.js")
+    script(src="/javascripts/GravityShader.js")
     script(src="/javascripts/filters/explode_filter.js")
   body
     .header
