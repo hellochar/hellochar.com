@@ -245,7 +245,7 @@
                 sourceGain.gain.value = volume / 9;
                 noiseSourceGain.gain.value = volume * 0.05;
                 chordSource.gain.value = 0.05;
-                chordHigh.gain.value = volume / 20;
+                chordHigh.gain.value = volume / 30;
             }
         };
     }
@@ -409,7 +409,7 @@
         audioGroup.setVolume(groupedUpness);
 
         filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1000;
-        filter.uniforms['G'].value = groupedUpness * 5000;
+        filter.uniforms['G'].value = groupedUpness * 5000 / window.devicePixelRatio;
         filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
 
         geometry.verticesNeedUpdate = true;
@@ -418,14 +418,21 @@
     }
 
     function touchstart(event) {
-        var touchX = event.originalEvent.touches[0].clientX;
-        var touchY = event.originalEvent.touches[0].clientY;
+        var canvasOffset = $(canvas).offset();
+        var touch = event.originalEvent.touches[0];
+        var touchX = touch.clientX - canvasOffset.left;
+        var touchY = touch.clientY - canvasOffset.top;
+        // offset the touchY by its radius so the attractor is above the thumb
+        touchY -= 100;
         createAttractor(touchX, touchY);
     }
 
     function touchmove(event) {
-        var touchX = event.originalEvent.touches[0].clientX;
-        var touchY = event.originalEvent.touches[0].clientY;
+        var canvasOffset = $(canvas).offset();
+        var touch = event.originalEvent.touches[0];
+        var touchX = touch.clientX - canvasOffset.left;
+        var touchY = touch.clientY - canvasOffset.top;
+        touchY -= 100;
         moveAttractor(touchX, touchY);
     }
 
