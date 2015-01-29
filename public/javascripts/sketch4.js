@@ -1,5 +1,4 @@
 (function () {
-
     var NUM_FREE_PARTICLES;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
@@ -7,59 +6,10 @@
     // speed becomes this percentage of its original speed every second
     var PULLING_DRAG_CONSTANT = 0.96075095702;
     var INERTIAL_DRAG_CONSTANT = 0.73913643334;
+    var EXTENT = 10;
+    var GRID_SIZE = 5;
 
-    var attractor = null;
-    var canvas;
-    var dragConstant = INERTIAL_DRAG_CONSTANT;
-    var filter;
-    var lastAutoAttractPromise;
-    var particles = [];
-    var returnToStartPower = 0;
-
-    function beginAutoAttract() {
-        if (lastAutoAttractPromise != null) {
-            endAutoAttract();
-        }
-        function createAutoAttractLoop() {
-            var iteration = P.delay(8000).cancellable()
-            .then(function () {
-                attractor = {
-                    x: Math.map(Math.random(), 0, 1, canvas.width / 4, canvas.width * 3 / 4),
-                    y: Math.map(Math.random(), 0, 1, canvas.height / 4, canvas.height * 3 / 4)
-                }
-            }).then(function () {
-                return P.delay(3000);
-            }).then(function () {
-                attractor = null;
-            }).then(function () {
-                return createAutoAttractLoop();
-            });
-            return iteration;
-        }
-
-        lastAutoAttractPromise = P.delay(5000).cancellable().then(function () { return createAutoAttractLoop(); });
-        return lastAutoAttractPromise;
-    }
-
-    function endAutoAttract() {
-        if (lastAutoAttractPromise != null) {
-            // catch the cancellation exception
-            lastAutoAttractPromise.catch(function() { });
-            lastAutoAttractPromise.cancel();
-            lastAutoAttractPromise = null;
-        }
-    }
-
-    var audioContext = new AudioContext();
-    var audioGroup;
-
-
-    // When the dots are all spread out and particle-y, it should sound like wind/noise (maybe swishy)
-    // When the dots are coming together the audio should turn into a specific tone at a medium distance,
-    // and go up in harmonics as the sound gets closer and closer
-    // there should always be some background audio that has the base frequency in it
-
-    function createAudioGroup() {
+    function createAudioGroup(audioContext) {
 
         // white noise
         var noise = (function() {
@@ -187,42 +137,34 @@
         };
     }
 
-    audioGroup = createAudioGroup();
+    var audioGroup;
+    var attractor = null;
+    var dragConstant = INERTIAL_DRAG_CONSTANT;
+    var mouseX, mouseY;
+    var particles = [];
 
-    function init($sketchElement, stage, renderer) {
-        canvas = $sketchElement.find("canvas")[0];
+    // threejs stuff
+    var camera;
+    var composer;
+    var filter;
+    var geometry;
+    var pointCloud;
+    var renderer;
+    var scene;
 
-        var particleCanvas = $("<canvas>").attr("width", 3).attr("height", 3)[0];
-        var particleCanvasContext = particleCanvas.getContext('2d');
-        particleCanvasContext.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        particleCanvasContext.fillRect(0.5, 0.5, 2, 2);
-        particleCanvasContext.fillRect(1, 1, 1, 1);
-        var particleTexture = PIXI.Texture.fromCanvas(particleCanvas);
+    function init(_renderer, _audioContext) {
+        audioContext = _audioContext;
+        audioGroup = createAudioGroup(audioContext);
+        canvas = _renderer.domElement;
 
-        var background = PIXI.Sprite.fromImage("star.png");
-        background.alpha = 0.0;
-        background.scale.set(1000, 1000);
-
-        var container = new PIXI.SpriteBatch();
-
-        filter = new ExplodeFilter(canvas);
-
-        stage.setBackgroundColor(0x000000);
-        stage.addChild(container);
-        stage.addChild(background);
-        stage.filters = [filter];
-
-        $sketchElement.find(".reset").click(function() {
-            for (var i = 0; i < NUM_FREE_PARTICLES; i++) {
-                particles[i].dx = 0;
-                particles[i].dy = 0;
-            }
-            returnToStartPower = 0.01;
-        });
+        scene = new THREE.Scene();
+        renderer = _renderer;
+        camera = new THREE.OrthographicCamera(-canvas.width/2, canvas.width/2, -canvas.height/2, canvas.height/2, 1, 1000);
+        camera.position.z = 500;
+        camera.position.x = canvas.width/2;
+        camera.position.y = canvas.height/2;
 
         function createParticle(originalX, originalY, isStationary, dragRatio) {
-            var particleSprite = new PIXI.Sprite(particleTexture);
-            container.addChild(particleSprite);
             particles.push({
                 dragRatio: dragRatio,
                 dx: 0,
@@ -230,28 +172,32 @@
                 isStationary: isStationary,
                 originalX: originalX,
                 originalY: originalY,
-                sprite: particleSprite,
                 x: originalX,
-                y: originalY
+                y: originalY,
+                vertex: null
             });
         }
 
-        var EXTENT = 10;
-        var GRID_SIZE = 10;
         for (var x = -EXTENT * GRID_SIZE; x < canvas.width + EXTENT * GRID_SIZE; x += GRID_SIZE) {
             for (var y = -EXTENT * GRID_SIZE; y < canvas.height + EXTENT * GRID_SIZE; y += GRID_SIZE) {
                 createParticle(x, y, true, 0.9);
+                // createParticle(x, y, true, 0.88);
+                // createParticle(x, y, true, 0.86);
+                // createParticle(x, y, true, 0.84);
+                // createParticle(x, y, true, 0.82);
             }
         }
         NUM_FREE_PARTICLES = particles.length;
-
-        beginAutoAttract();
+        instantiatePointCloudAndGeometry();
+        composer = new THREE.EffectComposer(renderer);
+        composer.addPass(new THREE.RenderPass(scene, camera));
+        filter = new THREE.ShaderPass(ExplodeShader);
+        filter.uniforms['iResolution'].value = new THREE.Vector2(canvas.width, canvas.height);
+        filter.renderToScreen = true;
+        composer.addPass(filter);
     }
 
-    function animate($sketchElement, stage, renderer) {
-        if (returnToStartPower > 0 && returnToStartPower < 1) {
-            returnToStartPower *= 1.01;
-        }
+    function animate() {
         var averageX = 0, averageY = 0;
         var averageVel2 = 0;
         for (var i = 0; i < particles.length; i++) {
@@ -276,6 +222,11 @@
 
                 particle.dx += forceX * TIME_STEP;
                 particle.dy += forceY * TIME_STEP;
+
+                if (attractor == null) {
+                    particle.originalX -= dx * 0.05;
+                    particle.originalY -= dy * 0.05;
+                }
             }
 
             var thisParticleDragConstant = dragConstant;
@@ -288,13 +239,8 @@
             particle.x += particle.dx * TIME_STEP;
             particle.y += particle.dy * TIME_STEP;
 
-            if (returnToStartPower > 0) {
-                particle.x -= (particle.x - particle.originalX) * returnToStartPower;
-                particle.y -= (particle.y - particle.originalY) * returnToStartPower;
-            }
-
-            particle.sprite.position.x = particle.x;
-            particle.sprite.position.y = particle.y;
+            particle.vertex.x = particle.x;
+            particle.vertex.y = particle.y;
             averageX += particle.x;
             averageY += particle.y;
             averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
@@ -335,51 +281,130 @@
         // AKA varianceLength = 0.28866 * canvasWidth
         var normalizedVarianceLength = varianceLength / (0.28866 * (canvas.width + canvas.height) / 2);
 
+        var groupedUpness = Math.sqrt(averageVel / varianceLength);
         audioGroup.lfo.frequency.value = flatRatio;
         audioGroup.setFrequency(111 / normalizedVarianceLength);
-        audioGroup.setVolume(Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0));
+        audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
+        console.log(groupedUpness);
 
-        filter.set('iMouse', {x: window.mouseX / canvas.width, y: (canvas.height - window.mouseY) / canvas.height});
-        filter.set('iResolution', {x: canvas.width, y: canvas.height});
+        filter.uniforms['iMouse'].value = new THREE.Vector2(mouseX / canvas.width, (canvas.height - mouseY) / canvas.height);
+        // when groupedUpness is 0, shrinkFactor should be 0.98
+        // when groupedUpness is 1, shrinkFactor should be 1.0
+        // filter.uniforms['shrinkFactor'].value = 0.98 + groupedUpness * 0.03;
 
-        renderer.render(stage);
+        geometry.verticesNeedUpdate = true;
+        composer.render();
+    }
+
+    function touchstart(event) {
+        var canvasOffset = $(canvas).offset();
+        var touch = event.originalEvent.touches[0];
+        var touchX = touch.clientX - canvasOffset.left;
+        var touchY = touch.clientY - canvasOffset.top;
+        // offset the touchY by its radius so the attractor is above the thumb
+        touchY -= 100;
+        createAttractor(touchX, touchY);
+        mouseX = touchX;
+        mouseY = touchY;
+    }
+
+    function touchmove(event) {
+        var canvasOffset = $(canvas).offset();
+        var touch = event.originalEvent.touches[0];
+        var touchX = touch.clientX - canvasOffset.left;
+        var touchY = touch.clientY - canvasOffset.top;
+        touchY -= 100;
+        moveAttractor(touchX, touchY);
+        mouseX = touchX;
+        mouseY = touchY;
+    }
+
+    function touchend(event) {
+        removeAttractor();
     }
 
     function mousedown(event) {
-        var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-        var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        attractor = { x: mouseX, y : mouseY };
-        dragConstant = PULLING_DRAG_CONSTANT;
-        returnToStartPower = 0;
-        endAutoAttract();
+        mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+        mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        createAttractor(mouseX, mouseY);
     }
 
     function mousemove(event) {
-        var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-        var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        window.mouseX = mouseX;
-        window.mouseY = mouseY;
-        if (attractor != null) {
-            attractor.x = mouseX;
-            attractor.y = mouseY;
-        }
-        endAutoAttract();
+        mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+        mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        moveAttractor(mouseX, mouseY);
     }
 
     function mouseup(event) {
+        removeAttractor();
+    }
+
+    function createAttractor(x, y) {
+        attractor = { x: x, y : y };
+        dragConstant = PULLING_DRAG_CONSTANT;
+        returnToStartPower = 0;
+    }
+
+    function moveAttractor(x, y) {
+        if (attractor != null) {
+            attractor.x = x;
+            attractor.y = y;
+        }
+    }
+
+    function removeAttractor() {
         dragConstant = INERTIAL_DRAG_CONSTANT;
         attractor = null;
-        beginAutoAttract();
+    }
+
+    function resize(width, height) {
+        console.log("resizing to", width, height);
+        camera.left = -width/2;
+        camera.right = width/2;
+        camera.top = -height/2;
+        camera.bottom = height/2;
+        camera.position.x = width/2;
+        camera.position.y = height/2;
+        filter.uniforms['iResolution'].value = new THREE.Vector2(width, height);
+
+        camera.updateProjectionMatrix();
+    }
+
+    function instantiatePointCloudAndGeometry() {
+        if (pointCloud != null) {
+            scene.remove(pointCloud);
+        }
+        geometry = new THREE.Geometry();
+        for(var i = 0; i < NUM_FREE_PARTICLES; i++) {
+            var particle = particles[i];
+            var vertex = new THREE.Vector3(particle.x, particle.y, 0);
+            geometry.vertices.push(vertex);
+            particles[i].vertex = vertex;
+        }
+
+        var starTexture = THREE.ImageUtils.loadTexture("star.png");
+        starTexture.minFilter = THREE.NearestFilter;
+        var material = new THREE.PointCloudMaterial({
+            size: 12,
+            sizeAttenuation: false,
+            map: starTexture,
+            opacity: 0.18,
+            transparent: true
+        });
+        pointCloud = new THREE.PointCloud(geometry, material);
+        scene.add(pointCloud);
     }
 
     var sketch4 = {
         init: init,
         animate: animate,
-        html: '<div class="topbar">Click for gravity.<button class="reset">Reset</button></div><canvas></canvas>',
         mousedown: mousedown,
         mousemove: mousemove,
         mouseup: mouseup,
-        usePixi: true
+        resize: resize,
+        touchstart: touchstart,
+        touchmove: touchmove,
+        touchend: touchend
     };
     initializeSketch(sketch4, "dots");
 })();
