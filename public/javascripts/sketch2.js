@@ -1,20 +1,10 @@
 (function () {
-    var NUM_PARTICLES = 70000;
+    var NUM_PARTICLES = 20000;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
     var PULLING_DRAG_CONSTANT = 0.96075095702;
     var INERTIAL_DRAG_CONSTANT = 0.73913643334;
-
-    var attractor = null;
-    var dragConstant = INERTIAL_DRAG_CONSTANT;
-    var particles = [];
-    var returnToStartPower = 0;
-
-    // When the dots are all spread out and particle-y, it should sound like wind/noise (maybe swishy)
-    // When the dots are coming together the audio should turn into a specific tone at a medium distance,
-    // and go up in harmonics as the sound gets closer and closer
-    // there should always be some background audio that has the base frequency in it
 
     function createAudioGroup(audioContext) {
 
@@ -258,9 +248,13 @@
         returnToStartPower = 0.01;
     }
 
+    var attractor = null;
     var audioContext;
     var audioGroup;
     var canvas;
+    var dragConstant = INERTIAL_DRAG_CONSTANT;
+    var particles = [];
+    var returnToStartPower = 0;
 
     // threejs stuff
     var camera;
@@ -394,9 +388,10 @@
         var groupedUpness = Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0.0);
         audioGroup.setVolume(groupedUpness);
 
-        filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1000;
+        filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1;
         filter.uniforms['G'].value = groupedUpness * 5000 / window.devicePixelRatio;
-        filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
+        // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
+        filter.uniforms['iMouse'].value = new THREE.Vector2(canvas.width/2, canvas.height/2);
 
         geometry.verticesNeedUpdate = true;
         camera.lookAt( scene.position.clone().add(new THREE.Vector3(canvas.width/2, canvas.height/2, 0)) );
@@ -502,7 +497,7 @@
             size: 12,
             sizeAttenuation: false,
             map: starTexture,
-            opacity: 0.125,
+            opacity: 0.185,
             transparent: true
         });
         pointCloud = new THREE.PointCloud(geometry, material);

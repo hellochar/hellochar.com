@@ -83,7 +83,7 @@
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
-                var thisFramerate = 1000 / elapsed;
+                var thisFramerate = elapsed >0 ? 1000 / elapsed : 200;
                 var newRunningAverageFramerate = 0.75 * runningAverageFramerate + 0.25 * thisFramerate;
                 var thisDeltaFrameRate = Math.abs(runningAverageFramerate - newRunningAverageFramerate);
                 var newDeltaFrameRate = 0.9 * runningAverageDeltaFramerate + 0.1 * thisDeltaFrameRate;
