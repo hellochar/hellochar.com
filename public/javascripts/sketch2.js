@@ -1,5 +1,6 @@
 (function () {
-    var NUM_PARTICLES = 20000;
+    // cheap mobile detection
+    var NUM_PARTICLES = (window.screen.width > 1024) ? 30000 : 5000;
     var TIME_STEP = 1 / 20;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
