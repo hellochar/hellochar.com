@@ -72,9 +72,6 @@
 
         // initialize and run sketch
         var lastAnimate = (new Date()).getTime();
-        var runningAverageFramerate = 60;
-        // a measure of how settled the framerate has gotten
-        var runningAverageDeltaFramerate = 10.0;
         function animateAndRequestAnimFrame() {
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
@@ -83,25 +80,7 @@
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
-                var thisFramerate = elapsed >0 ? 1000 / elapsed : 200;
-                var newRunningAverageFramerate = 0.75 * runningAverageFramerate + 0.25 * thisFramerate;
-                var thisDeltaFrameRate = Math.abs(runningAverageFramerate - newRunningAverageFramerate);
-                var newDeltaFrameRate = 0.9 * runningAverageDeltaFramerate + 0.1 * thisDeltaFrameRate;
-                runningAverageDeltaFramerate = newDeltaFrameRate;
-                runningAverageFramerate = newRunningAverageFramerate;
-                console.log(sketchId, runningAverageFramerate, "delta", newDeltaFrameRate);
-                if (runningAverageFramerate < 40 && newDeltaFrameRate < 1.2) {
-                    var targetFrameRate = 60;
-                    var percentageOfOriginal = runningAverageFramerate / targetFrameRate;
-                    // try to get halfway there
-                    if (sketchObj.reduceProcessingSize) {
-                        sketchObj.reduceProcessingSize(percentageOfOriginal);
-
-                        // reset collection data so it's not tainted by old values
-                        runningAverageFramerate = 60;
-                        runningAverageDeltaFramerate = 10.0;
-                    }
-                }
+                // console.log(sketchId, 1000 / elapsed);
             } else {
                 $sketchElement.addClass("disabled");
                 audioContextGain.gain.value = 0;
