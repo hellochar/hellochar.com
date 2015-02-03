@@ -55,7 +55,11 @@
         });
 
         // canvas setup
-        var $canvas = $sketchElement.find("canvas:first-of-type");
+        var $canvas = $(renderer.domElement);
+        // disable right-click on canvas
+        $canvas.on('contextmenu', function (e) {
+            return false;
+        });
         ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend"].forEach(function (eventName) {
             if (sketchObj[eventName] != null) {
                 var eventCallbacks;
