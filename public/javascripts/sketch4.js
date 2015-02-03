@@ -358,7 +358,6 @@
     }
 
     function resize(width, height) {
-        console.log("resizing to", width, height);
         camera.left = -width/2;
         camera.right = width/2;
         camera.top = -height/2;
