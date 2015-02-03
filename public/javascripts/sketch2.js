@@ -301,6 +301,8 @@
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
         }
+        var sizeScaledGravityConstant = GRAVITY_CONSTANT * Math.min(Math.pow(2, canvas.width / 836 - 1), 1);
+
         var averageX = 0, averageY = 0;
         var averageVel2 = 0;
         for (var i = 0; i < NUM_PARTICLES; i++) {
@@ -309,8 +311,8 @@
                 var dx = attractor.x - particle.x;
                 var dy = attractor.y - particle.y;
                 var length2 = Math.sqrt(dx*dx + dy*dy);
-                var forceX = GRAVITY_CONSTANT * dx / length2;
-                var forceY = GRAVITY_CONSTANT * dy / length2;
+                var forceX = sizeScaledGravityConstant * dx / length2;
+                var forceY = sizeScaledGravityConstant * dy / length2;
 
                 particle.dx += forceX * TIME_STEP;
                 particle.dy += forceY * TIME_STEP;
