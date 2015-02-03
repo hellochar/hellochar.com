@@ -469,17 +469,6 @@
         camera.updateProjectionMatrix();
     }
 
-    function reduceProcessingSize(percentageOfOriginal) {
-        console.log("Reducing to", percentageOfOriginal.toFixed(2)*100, "%");
-        var newNumParticles = NUM_PARTICLES * percentageOfOriginal;
-
-        var start = Date.now();
-        particles.splice(newNumParticles, NUM_PARTICLES - newNumParticles);
-        NUM_PARTICLES = newNumParticles;
-        instantiatePointCloudAndGeometry();
-        console.log("set to", particles.length, "in", (Date.now() - start), "ms");
-    }
-
     function instantiatePointCloudAndGeometry() {
         if (pointCloud != null) {
             scene.remove(pointCloud);
@@ -512,7 +501,6 @@
         mousemove: mousemove,
         mouseup: mouseup,
         resize: resize,
-        reduceProcessingSize: reduceProcessingSize,
         touchstart: touchstart,
         touchmove: touchmove,
         touchend: touchend
