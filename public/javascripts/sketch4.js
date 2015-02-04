@@ -395,6 +395,7 @@
     }
 
     var sketch4 = {
+        id: "dots",
         init: init,
         animate: animate,
         mousedown: mousedown,
@@ -405,6 +406,6 @@
         touchmove: touchmove,
         touchend: touchend
     };
-    initializeSketch(sketch4, "dots");
+    initializeSketch(sketch4);
 })();
 

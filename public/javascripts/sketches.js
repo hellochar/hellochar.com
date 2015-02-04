@@ -21,14 +21,13 @@
     // properties:
     //   sketch: {
     //      animate: function($sketchElement, canvasContext, audioContext),
-    //      html: html string to add to the sketchElement,,
+    //      id: unique string representing the name of this sketch,
     //      init: function($sketchElement, canvasContext, audioContext),
     //      mousedown, mouseup, mousemove: function(event) || [function(event)]
     //      resize: function(width, height),
     //      usePixi: false
     //   },
-    //   sketchId: string
-    function initializeSketch(sketch, sketchId) {
+    function initializeSketch(sketch) {
         var init = sketch.init;
 
         var renderer = new THREE.WebGLRenderer();
@@ -37,14 +36,14 @@
         // add sketch element to nav
         var $navElement = $('<li></li>');
         $navElement
-            .text(sketchId)
+            .text(sketch.id)
             .click(function () {
                 $('html, body').animate({ scrollTop: $sketchElement.offset().top }, 600);
             })
             .appendTo($navbarElement);
 
         // add sketch element to body
-        var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketchId);
+        var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
         $allSketches.append($sketchElement);
         $sketchElement.append(renderer.domElement);
         setCanvasDimensions(renderer);
@@ -85,7 +84,7 @@
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
-                // console.log(sketchId, 1000 / elapsed);
+                // console.log(sketch.id, 1000 / elapsed);
             } else {
                 $sketchElement.addClass("disabled");
                 audioContextGain.gain.value = 0;
