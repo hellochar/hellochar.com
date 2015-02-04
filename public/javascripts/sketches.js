@@ -30,7 +30,8 @@
     function initializeSketch(sketch) {
         var init = sketch.init;
 
-        var renderer = new THREE.WebGLRenderer();
+        var renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
+
         // renderer.setPixelRatio(window.devicePixelRatio);
 
         // add sketch element to nav
