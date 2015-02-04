@@ -496,6 +496,7 @@
     }
 
     var sketch2 = {
+        id: "line",
         init: init,
         animate: animate,
         mousedown: mousedown,
@@ -506,5 +507,5 @@
         touchmove: touchmove,
         touchend: touchend
     };
-    initializeSketch(sketch2, "line");
+    initializeSketch(sketch2);
 })();
