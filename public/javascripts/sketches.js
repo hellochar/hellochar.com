@@ -19,7 +19,7 @@
     }
 
     // properties:
-    //   sketchObj: {
+    //   sketch: {
     //      animate: function($sketchElement, canvasContext, audioContext),
     //      html: html string to add to the sketchElement,,
     //      init: function($sketchElement, canvasContext, audioContext),
@@ -28,8 +28,8 @@
     //      usePixi: false
     //   },
     //   sketchId: string
-    function initializeSketch(sketchObj, sketchId) {
-        var init = sketchObj.init;
+    function initializeSketch(sketch, sketchId) {
+        var init = sketch.init;
 
         var renderer = new THREE.WebGLRenderer();
         // renderer.setPixelRatio(window.devicePixelRatio);
@@ -50,8 +50,8 @@
         setCanvasDimensions(renderer);
         $window.resize(function() {
             setCanvasDimensions(renderer);
-            if (sketchObj.resize != null) {
-                sketchObj.resize(renderer.domElement.width, renderer.domElement.height);
+            if (sketch.resize != null) {
+                sketch.resize(renderer.domElement.width, renderer.domElement.height);
             }
         });
 
@@ -62,12 +62,12 @@
             return false;
         });
         ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend"].forEach(function (eventName) {
-            if (sketchObj[eventName] != null) {
+            if (sketch[eventName] != null) {
                 var eventCallbacks;
-                if (!_.isArray(sketchObj[eventName])) {
-                    eventCallbacks = [sketchObj[eventName]];
+                if (!_.isArray(sketch[eventName])) {
+                    eventCallbacks = [sketch[eventName]];
                 } else {
-                    eventCallbacks = sketchObj[eventName];
+                    eventCallbacks = sketch[eventName];
                 }
                 eventCallbacks.forEach(function(cb) {
                     $canvas.on(eventName, cb);
@@ -81,7 +81,7 @@
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
                 audioContextGain.gain.value = 1;
-                sketchObj.animate();
+                sketch.animate();
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
