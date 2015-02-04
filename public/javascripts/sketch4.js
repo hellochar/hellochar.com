@@ -152,17 +152,14 @@
     var renderer;
     var scene;
 
-    function init(_renderer, _audioContext) {
-        audioContext = _audioContext;
+    function init(_renderer, audioContext) {
         audioGroup = createAudioGroup(audioContext);
         canvas = _renderer.domElement;
 
         scene = new THREE.Scene();
         renderer = _renderer;
-        camera = new THREE.OrthographicCamera(-canvas.width/2, canvas.width/2, -canvas.height/2, canvas.height/2, 1, 1000);
+        camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;
-        camera.position.x = canvas.width/2;
-        camera.position.y = canvas.height/2;
 
         function createParticle(originalX, originalY, isStationary, dragRatio) {
             particles.push({
@@ -358,12 +355,8 @@
     }
 
     function resize(width, height) {
-        camera.left = -width/2;
-        camera.right = width/2;
-        camera.top = -height/2;
-        camera.bottom = height/2;
-        camera.position.x = width/2;
-        camera.position.y = height/2;
+        camera.right = width;
+        camera.bottom = height;
         filter.uniforms['iResolution'].value = new THREE.Vector2(width, height);
 
         camera.updateProjectionMatrix();
