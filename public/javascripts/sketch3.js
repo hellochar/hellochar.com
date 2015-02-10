@@ -1,6 +1,5 @@
 (function () {
     var frame = 0;
-    var gridOffset = 0;
     var drawMode = 7;
     var canvas;
 
@@ -95,11 +94,44 @@
     var scene;
 
     // a map indexed by [(pixel x coordinate).toString()+(pixel y coordinate).toString()] of the mesh that lives there
-    var lines;
-    var lineMaterial;
+    var lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.04 });
+
+    function LineStrip(offsetX, offsetY, gridSize) {
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.lines = {};
+        this.gridOffset = 0;
+        this.gridSize = gridSize;
+        for (var x = -this.gridSize * 2; x < canvas.width + this.gridSize; x += this.gridSize) {
+            for (var y = -this.gridSize * 2; y < canvas.height + this.gridSize; y += this.gridSize) {
+                var geometry = permutedLine(x, y, x + offsetX, y + offsetY);
+                var lineMesh = new THREE.Line(geometry, lineMaterial);
+                lineMesh.frustumCulled = false;
+
+                this.lines[x.toString()+y.toString()] = lineMesh;
+                scene.add(lineMesh);
+            }
+        }
+    }
+
+    LineStrip.prototype.update = function(delta) {
+        this.gridOffset = (this.gridOffset + delta) % this.gridSize;
+        for (var x = -this.gridSize * 2; x < width + this.gridSize; x += this.gridSize) {
+            for (var y = -this.gridSize * 2; y < height + this.gridSize; y += this.gridSize) {
+                var geometry = this.lines[x.toString()+y.toString()].geometry;
+                permutedLine(x + this.gridOffset,                y + this.gridOffset,
+                             x + this.gridOffset + this.offsetX, y + this.gridOffset + this.offsetY,
+                             geometry);
+                geometry.verticesNeedUpdate = true;
+            }
+        }
+    }
+
+    var lineStripVertical;
+    var lineStripHorizontal;
+    var lineStripDiagonal;
 
     function init(_renderer, audioContext) {
-        // audioGroup = createAudioGroup(audioContext);
         renderer = _renderer;
 
         renderer.autoClearColor = false;
@@ -110,18 +142,9 @@
         camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;
 
-        lineMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.04 });
-        lines = {};
-        var GRIDSIZE = 50;
-        for (var x = -GRIDSIZE; x < canvas.width + GRIDSIZE; x += GRIDSIZE) {
-            for (var y = -GRIDSIZE; y < canvas.height + GRIDSIZE; y += GRIDSIZE) {
-                var lineGeometry = permutedLine(x, y, x + GRIDSIZE, y + GRIDSIZE);
-                var lineMesh = new THREE.Line(lineGeometry, lineMaterial);
-
-                lines[x.toString()+y.toString()] = lineMesh;
-                scene.add(lineMesh);
-            }
-        }
+        lineStripDiagonal = new LineStrip(50, 50, 250);
+        lineStripVertical = new LineStrip(0, 50, 50);
+        lineStripHorizontal = new LineStrip(50, 0, 250);
     }
 
     function animate() {
@@ -129,26 +152,15 @@
         width = canvas.width;
         height = canvas.height;
 
-        window.lineMaterial = lineMaterial;
         if (frame % 1000 < 500) {
-            // audio.osc.frequency.value = BASE_FREQUENCY - (frame % 500 / 500 * 60);
-            lineMaterial.color.set("rgb(13, 7, 5)");
+            lineMaterial.color.set("rgb(50, 12, 12)");
         } else {
-            // audio.osc.frequency.value = BASE_FREQUENCY / 2 * Math.pow(2, 7 / 12);
             lineMaterial.color.set("rgb(252, 252, 252)");
         }
-        var GRIDSIZE = 50;
-        gridOffset = (gridOffset + Math.map(mouseX, 0, width, 0.6, 1.5)) % GRIDSIZE;
-        for (var x = -GRIDSIZE; x < width + GRIDSIZE; x += GRIDSIZE) {
-            for (var y = -GRIDSIZE; y < height + GRIDSIZE; y += GRIDSIZE) {
-                var lineGeometry = lines[x.toString()+y.toString()].geometry;
-                permutedLine(x + gridOffset,            y + gridOffset,
-                             x + gridOffset + GRIDSIZE, y + gridOffset + GRIDSIZE,
-                             lineGeometry);
-                lineGeometry.verticesNeedUpdate = true;
-            }
-        }
-
+        var delta = Math.map(mouseX, 0, width, 0.6, 1.5);
+        // lineStripDiagonal.update(delta);
+        lineStripVertical.update(delta);
+        // lineStripHorizontal.update(delta);
         renderer.render(scene, camera);
     }
 
