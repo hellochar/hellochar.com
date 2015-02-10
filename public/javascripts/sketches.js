@@ -30,7 +30,7 @@
     function initializeSketch(sketch) {
         var init = sketch.init;
 
-        var renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
+        var renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
 
         // renderer.setPixelRatio(window.devicePixelRatio);
 
