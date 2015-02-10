@@ -1,6 +1,5 @@
 (function () {
     var frame = 0;
-    var drawMode = 7;
     var canvas;
 
     var width, height;
@@ -96,33 +95,48 @@
     // a map indexed by [(pixel x coordinate).toString()+(pixel y coordinate).toString()] of the mesh that lives there
     var lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.04 });
 
-    function LineStrip(offsetX, offsetY, gridSize) {
+    function LineStrip(width, height, offsetX, offsetY, gridSize) {
         this.offsetX = offsetX;
         this.offsetY = offsetY;
-        this.lines = {};
-        this.gridOffset = 0;
         this.gridSize = gridSize;
-        for (var x = -this.gridSize * 2; x < canvas.width + this.gridSize; x += this.gridSize) {
-            for (var y = -this.gridSize * 2; y < canvas.height + this.gridSize; y += this.gridSize) {
-                var geometry = permutedLine(x, y, x + offsetX, y + offsetY);
-                var lineMesh = new THREE.Line(geometry, lineMaterial);
-                lineMesh.frustumCulled = false;
+        this.gridOffset = 0;
 
-                this.lines[x.toString()+y.toString()] = lineMesh;
-                scene.add(lineMesh);
-            }
-        }
+        this.resize(width, height);
     }
 
     LineStrip.prototype.update = function(delta) {
         this.gridOffset = (this.gridOffset + delta) % this.gridSize;
-        for (var x = -this.gridSize * 2; x < width + this.gridSize; x += this.gridSize) {
-            for (var y = -this.gridSize * 2; y < height + this.gridSize; y += this.gridSize) {
+        for (var x = -this.gridSize * 2; x < this.width + this.gridSize; x += this.gridSize) {
+            for (var y = -this.gridSize * 2; y < this.height + this.gridSize; y += this.gridSize) {
                 var geometry = this.lines[x.toString()+y.toString()].geometry;
                 permutedLine(x + this.gridOffset,                y + this.gridOffset,
                              x + this.gridOffset + this.offsetX, y + this.gridOffset + this.offsetY,
                              geometry);
                 geometry.verticesNeedUpdate = true;
+            }
+        }
+    }
+
+    LineStrip.prototype.resize = function(width, height) {
+        this.width = width;
+        this.height = height;
+        // delete old lines
+        if (this.lines != null) {
+            $.each(this.lines, function(id, mesh) {
+                scene.remove(mesh);
+            });
+        }
+
+        this.lines = {};
+        this.gridOffset = 0;
+        for (var x = -this.gridSize * 2; x < this.width + this.gridSize; x += this.gridSize) {
+            for (var y = -this.gridSize * 2; y < this.height + this.gridSize; y += this.gridSize) {
+                var geometry = permutedLine(x, y, x + this.offsetX, y + this.offsetY);
+                var lineMesh = new THREE.Line(geometry, lineMaterial);
+                lineMesh.frustumCulled = false;
+
+                this.lines[x.toString()+y.toString()] = lineMesh;
+                scene.add(lineMesh);
             }
         }
     }
@@ -142,9 +156,9 @@
         camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;
 
-        lineStripDiagonal = new LineStrip(50, 50, 250);
-        lineStripVertical = new LineStrip(0, 50, 50);
-        lineStripHorizontal = new LineStrip(50, 0, 250);
+        lineStripDiagonal = new LineStrip(canvas.width, canvas.height, 50, 50, 50);
+        lineStripVertical = new LineStrip(canvas.width, canvas.height, 0, 50, 50);
+        lineStripHorizontal = new LineStrip(canvas.width, canvas.height, 50, 0, 50);
     }
 
     function animate() {
@@ -158,9 +172,9 @@
             lineMaterial.color.set("rgb(252, 252, 252)");
         }
         var delta = Math.map(mouseX, 0, width, 0.6, 1.5);
-        // lineStripDiagonal.update(delta);
+        lineStripDiagonal.update(delta);
         lineStripVertical.update(delta);
-        // lineStripHorizontal.update(delta);
+        //lineStripHorizontal.update(delta);
         renderer.render(scene, camera);
     }
 
@@ -172,22 +186,32 @@
     }
 
     function mousedown(event) {
-        // 4 lines to draw, cycle through all 16 permutations
-        drawMode = (drawMode + 1) % 16;
     }
 
-    function resize(windowX, windowY) {
+    function resize(width, height) {
+        camera.right = width;
+        camera.bottom = height;
+        camera.updateProjectionMatrix();
+
+        renderer.setClearColor(0xfcfcfc, 1);
+        renderer.clear();
+
         // draw black again
         frame = 0;
+
+        lineStripDiagonal.resize(width, height);
+        lineStripVertical.resize(width, height);
+        lineStripHorizontal.resize(width, height);
     }
 
     var sketch3 = {
+        id: "waves",
         init: init,
         animate: animate,
         mousemove: mousemove,
         mousedown: mousedown,
         resize: resize
     };
-    initializeSketch(sketch3, "sphere");
+    initializeSketch(sketch3);
 })();
 

@@ -458,9 +458,9 @@
     function resize(width, height) {
         camera.right = width;
         camera.bottom = height;
-        filter.uniforms['iResolution'].value = new THREE.Vector2(width, height);
-
         camera.updateProjectionMatrix();
+
+        filter.uniforms['iResolution'].value = new THREE.Vector2(width, height);
     }
 
     function instantiatePointCloudAndGeometry() {
