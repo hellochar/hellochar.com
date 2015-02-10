@@ -7,16 +7,15 @@
     var mouseX = 0;
     var mouseY = 0;
 
-    var fnCosLengthScalar = 1.0;
-    var fnFrameDivider = 25;
     function fn(x, y) {
         var dx = (x - width/2);
         var dy = (y - height/2);
         var length2 = dx*dx + dy*dy;
         var z1 = 23000 / (1 + Math.exp(-length2 / 10000));
-        var z2 = 600 * Math.cos(length2 / 25000 * fnCosLengthScalar + frame / fnFrameDivider);
+        var z2 = 600 * Math.cos(length2 / 25000 + frame / 25);
+        var z3 = 40 * Math.cos(Math.sqrt(Math.pow(x - mouseX, 2) + Math.pow(y - mouseY, 2)) / 20 + frame / 25);
 
-        return Math.lerp(z1, z2, (1+Math.sin(frame / 100))/2);
+        return Math.lerp(z1, z2, (1+Math.sin(frame / 100))/2) + z3;
     }
 
     function gradient(x, y) {
@@ -93,24 +92,30 @@
     var scene;
 
     // a map indexed by [(pixel x coordinate).toString()+(pixel y coordinate).toString()] of the mesh that lives there
-    var lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.04 });
+    var lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.03 });
 
     function LineStrip(width, height, offsetX, offsetY, gridSize) {
+        // where each individual line in the linestrip travels towards
         this.offsetX = offsetX;
         this.offsetY = offsetY;
+
         this.gridSize = gridSize;
-        this.gridOffset = 0;
+
+        // the specific offset of the entire line for this frame
+        this.gridOffsetX = 0;
+        this.gridOffsetY = 0;
 
         this.resize(width, height);
     }
 
-    LineStrip.prototype.update = function(delta) {
-        this.gridOffset = (this.gridOffset + delta) % this.gridSize;
+    LineStrip.prototype.update = function(dx, dy) {
+        this.gridOffsetX = ((this.gridOffsetX + dx) % this.gridSize + this.gridSize) % this.gridSize;
+        this.gridOffsetY = ((this.gridOffsetY + dy) % this.gridSize + this.gridSize) % this.gridSize;
         for (var x = -this.gridSize * 2; x < this.width + this.gridSize; x += this.gridSize) {
             for (var y = -this.gridSize * 2; y < this.height + this.gridSize; y += this.gridSize) {
                 var geometry = this.lines[x.toString()+y.toString()].geometry;
-                permutedLine(x + this.gridOffset,                y + this.gridOffset,
-                             x + this.gridOffset + this.offsetX, y + this.gridOffset + this.offsetY,
+                permutedLine(x + this.gridOffsetX,                y + this.gridOffsetY,
+                             x + this.gridOffsetX + this.offsetX, y + this.gridOffsetY + this.offsetY,
                              geometry);
                 geometry.verticesNeedUpdate = true;
             }
@@ -144,10 +149,12 @@
     var lineStripVertical;
     var lineStripHorizontal;
     var lineStripDiagonal;
+    var lineStripCounterDiagonal;
 
     function init(_renderer, audioContext) {
         renderer = _renderer;
 
+        renderer.setPixelRatio(window.devicePixelRatio);
         renderer.autoClearColor = false;
         renderer.setClearColor(0xfcfcfc, 1);
         renderer.clear();
@@ -157,35 +164,52 @@
         camera.position.z = 500;
 
         lineStripDiagonal = new LineStrip(canvas.width, canvas.height, 50, 50, 50);
+        lineStripCounterDiagonal = new LineStrip(canvas.width, canvas.height, 50, -50, 50);
         lineStripVertical = new LineStrip(canvas.width, canvas.height, 0, 50, 50);
         lineStripHorizontal = new LineStrip(canvas.width, canvas.height, 50, 0, 50);
     }
 
     function animate() {
-        frame++;
         width = canvas.width;
         height = canvas.height;
+
+        var opacityChangeFactor = 0.1;
+        if (isMouseDown) {
+            lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.25 * opacityChangeFactor;
+            frame += 5;
+        } else {
+            lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.03 * opacityChangeFactor;
+            frame += 1;
+        }
 
         if (frame % 1000 < 500) {
             lineMaterial.color.set("rgb(50, 12, 12)");
         } else {
-            lineMaterial.color.set("rgb(252, 252, 252)");
+            lineMaterial.color.set("rgb(252, 247, 243)");
         }
-        var delta = Math.map(mouseX, 0, width, 0.6, 1.5);
-        lineStripDiagonal.update(delta);
-        lineStripVertical.update(delta);
-        //lineStripHorizontal.update(delta);
+
+        // var delta = Math.map(mouseX, 0, width, 0.6, 1.5);
+        var dx = Math.map(mouseX, 0, width, -1, 1) * 4.0;
+        var dy = Math.map(mouseY, 0, height, -1, 1) * 4.0;
+        lineStripDiagonal.update(dx, dy);
+        lineStripCounterDiagonal.update(dx, dy);
+        lineStripVertical.update(dx, dy);
+        lineStripHorizontal.update(dx, dy);
         renderer.render(scene, camera);
     }
 
     function mousemove(event) {
         mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        fnCosLengthScalar = Math.map(mouseX, 0, width, 0.9, 1.1);
-        fnFrameDivider = Math.map(mouseX, 0, width, 43, 11);
     }
 
+    var isMouseDown = false;
     function mousedown(event) {
+        isMouseDown = true;
+    }
+
+    function mouseup(event) {
+        isMouseDown = false;
     }
 
     function resize(width, height) {
@@ -200,6 +224,7 @@
         frame = 0;
 
         lineStripDiagonal.resize(width, height);
+        lineStripCounterDiagonal.resize(width, height);
         lineStripVertical.resize(width, height);
         lineStripHorizontal.resize(width, height);
     }
@@ -210,6 +235,7 @@
         animate: animate,
         mousemove: mousemove,
         mousedown: mousedown,
+        mouseup: mouseup,
         resize: resize
     };
     initializeSketch(sketch3);

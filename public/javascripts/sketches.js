@@ -32,8 +32,6 @@
 
         var renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
 
-        // renderer.setPixelRatio(window.devicePixelRatio);
-
         // add sketch element to nav
         var $navElement = $('<li></li>');
         $navElement
@@ -85,7 +83,7 @@
                 var now = (new Date()).getTime();
                 var elapsed = now - lastAnimate;
                 lastAnimate = now;
-                console.log(sketch.id, 1000 / elapsed);
+                // console.log(sketch.id, 1000 / elapsed);
             } else {
                 $sketchElement.addClass("disabled");
                 audioContextGain.gain.value = 0;
