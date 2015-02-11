@@ -2,14 +2,14 @@
     var frame = 0;
     var canvas;
 
-    var width, height;
+    var canvasWidth, canvasHeight;
 
     var mouseX = 0;
     var mouseY = 0;
 
     function fn(x, y) {
-        var dx = (x - width/2);
-        var dy = (y - height/2);
+        var dx = (x - canvasWidth/2);
+        var dy = (y - canvasHeight/2);
         var length2 = dx*dx + dy*dy;
         var z1 = 23000 / (1 + Math.exp(-length2 / 10000));
         var z2 = 600 * Math.cos(length2 / 25000 + frame / 25);
@@ -180,8 +180,8 @@
         renderer.setClearColor(0xfcfcfc, 1);
         renderer.clear();
         canvas = renderer.domElement;
-        width = canvas.width;
-        height = canvas.height;
+        canvasWidth = canvas.width;
+        canvasHeight = canvas.height;
         scene = new THREE.Scene();
         camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;
@@ -193,9 +193,6 @@
     }
 
     function animate() {
-        width = canvas.width;
-        height = canvas.height;
-
         var opacityChangeFactor = 0.1;
         if (isMouseDown) {
             lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.25 * opacityChangeFactor;
@@ -211,8 +208,8 @@
             lineMaterial.color.set("rgb(252, 247, 243)");
         }
 
-        var dx = Math.map(mouseX, 0, width, -1, 1) * 1.0;
-        var dy = Math.map(mouseY, 0, height, -1, 1) * 1.0;
+        var dx = Math.map(mouseX, 0, canvasWidth, -1, 1) * 2.0;
+        var dy = Math.map(mouseY, 0, canvasHeight, -1, 1) * 2.0;
         lineStrips.forEach(function (lineStrip) {
             lineStrip.update(dx, dy);
         });
@@ -234,6 +231,8 @@
     }
 
     function resize(width, height) {
+        canvasWidth = width;
+        canvasHeight = height;
         camera.right = width;
         camera.bottom = height;
         camera.updateProjectionMatrix();
