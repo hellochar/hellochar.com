@@ -28,7 +28,8 @@
     }
 
     function permutedLine(ox, oy, nx, ny, geometry) {
-        var STEPS = 4;
+        var distance = Math.sqrt(Math.pow(ox-nx, 2) + Math.pow(oy-ny, 2));
+        var STEPS = distance / 11;
         if (geometry == null) {
             geometry = new THREE.Geometry();
             for( var t = 0; t <= STEPS; t++) {
@@ -47,6 +48,10 @@
                          oy + (ny - oy) * percentage, t);
         }
         return geometry;
+    }
+
+    function signum(x) {
+        return x / Math.abs(x);
     }
 
     var BASE_FREQUENCY = 141;
@@ -94,11 +99,10 @@
     // a map indexed by [(pixel x coordinate).toString()+(pixel y coordinate).toString()] of the mesh that lives there
     var lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.03 });
 
+    // offsetX and offsetY define the vector that the line draws on (the inline direction). the direction that
+    // the vector offsets to repeat itself is the traversal direction. The two are always orthogonal.
     function LineStrip(width, height, offsetX, offsetY, gridSize) {
-        // where each individual line in the linestrip travels towards
-        this.offsetX = offsetX;
-        this.offsetY = offsetY;
-
+        this.inlineAngle = Math.atan(offsetY / offsetX);
         this.gridSize = gridSize;
 
         // the specific offset of the entire line for this frame
@@ -111,15 +115,19 @@
     LineStrip.prototype.update = function(dx, dy) {
         this.gridOffsetX = ((this.gridOffsetX + dx) % this.gridSize + this.gridSize) % this.gridSize;
         this.gridOffsetY = ((this.gridOffsetY + dy) % this.gridSize + this.gridSize) % this.gridSize;
-        for (var x = -this.gridSize * 2; x < this.width + this.gridSize; x += this.gridSize) {
-            for (var y = -this.gridSize * 2; y < this.height + this.gridSize; y += this.gridSize) {
-                var geometry = this.lines[x.toString()+y.toString()].geometry;
-                permutedLine(x + this.gridOffsetX,                y + this.gridOffsetY,
-                             x + this.gridOffsetX + this.offsetX, y + this.gridOffsetY + this.offsetY,
-                             geometry);
-                geometry.verticesNeedUpdate = true;
-            }
-        }
+        this.lines.forEach(function(lineMesh) {
+            var x = lineMesh.x;
+            var y = lineMesh.y;
+            var inlineOffsetX = lineMesh.inlineOffsetX;
+            var inlineOffsetY = lineMesh.inlineOffsetY;
+            var geometry = lineMesh.geometry;
+            permutedLine(x + this.gridOffsetX - inlineOffsetX,
+                         y + this.gridOffsetY - inlineOffsetY,
+                         x + this.gridOffsetX + inlineOffsetX,
+                         y + this.gridOffsetY + inlineOffsetY,
+                         geometry);
+            geometry.verticesNeedUpdate = true;
+        }.bind(this));
     }
 
     LineStrip.prototype.resize = function(width, height) {
@@ -127,46 +135,61 @@
         this.height = height;
         // delete old lines
         if (this.lines != null) {
-            $.each(this.lines, function(id, mesh) {
+            this.lines.forEach(function(mesh) {
                 scene.remove(mesh);
             });
         }
 
-        this.lines = {};
+        this.lines = [];
         this.gridOffset = 0;
-        for (var x = -this.gridSize * 2; x < this.width + this.gridSize; x += this.gridSize) {
-            for (var y = -this.gridSize * 2; y < this.height + this.gridSize; y += this.gridSize) {
-                var geometry = permutedLine(x, y, x + this.offsetX, y + this.offsetY);
-                var lineMesh = new THREE.Line(geometry, lineMaterial);
-                lineMesh.frustumCulled = false;
 
-                this.lines[x.toString()+y.toString()] = lineMesh;
-                scene.add(lineMesh);
-            }
+        var diagLength = Math.sqrt(this.width*this.width + this.height*this.height) + 2 * this.gridSize;
+
+        // create and add a Line mesh to the lines array
+        var createAndAddLine = function(x, y) {
+            var inlineOffsetX = Math.cos(this.inlineAngle) * diagLength / 2;
+            var inlineOffsetY = Math.sin(this.inlineAngle) * diagLength / 2;
+            var geometry = permutedLine(x - inlineOffsetX, y - inlineOffsetY, x + inlineOffsetX, y + inlineOffsetY);
+            var lineMesh = new THREE.Line(geometry, lineMaterial);
+            lineMesh.frustumCulled = false;
+            this.lines.push(lineMesh);
+            scene.add(lineMesh);
+            lineMesh.x = x;
+            lineMesh.y = y;
+            lineMesh.inlineOffsetX = inlineOffsetX;
+            lineMesh.inlineOffsetY = inlineOffsetY;
+        }.bind(this);
+
+        var midX = this.width/2;
+        var midY = this.height/2;
+        var traversalAngle = this.inlineAngle + Math.PI / 2;
+        for (var d = -diagLength/2; d < diagLength/2; d += this.gridSize) {
+            var lineX = midX + Math.cos(traversalAngle) * d;
+            var lineY = midY + Math.sin(traversalAngle) * d;
+            createAndAddLine(lineX, lineY);
         }
     }
 
-    var lineStripVertical;
-    var lineStripHorizontal;
-    var lineStripDiagonal;
-    var lineStripCounterDiagonal;
+    var lineStrips = [];
 
     function init(_renderer, audioContext) {
         renderer = _renderer;
 
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio((window.devicePixelRatio + 1) / 2);
         renderer.autoClearColor = false;
         renderer.setClearColor(0xfcfcfc, 1);
         renderer.clear();
         canvas = renderer.domElement;
+        width = canvas.width;
+        height = canvas.height;
         scene = new THREE.Scene();
         camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;
 
-        lineStripDiagonal = new LineStrip(canvas.width, canvas.height, 50, 50, 50);
-        lineStripCounterDiagonal = new LineStrip(canvas.width, canvas.height, 50, -50, 50);
-        lineStripVertical = new LineStrip(canvas.width, canvas.height, 0, 50, 50);
-        lineStripHorizontal = new LineStrip(canvas.width, canvas.height, 50, 0, 50);
+        // lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, 50, 50));
+        lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, -50, 50));
+        lineStrips.push(new LineStrip(canvas.width, canvas.height, 0, 50, 50));
+        // lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, 0, 50));
     }
 
     function animate() {
@@ -176,7 +199,7 @@
         var opacityChangeFactor = 0.1;
         if (isMouseDown) {
             lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.25 * opacityChangeFactor;
-            frame += 5;
+            frame += 4;
         } else {
             lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.03 * opacityChangeFactor;
             frame += 1;
@@ -188,13 +211,11 @@
             lineMaterial.color.set("rgb(252, 247, 243)");
         }
 
-        // var delta = Math.map(mouseX, 0, width, 0.6, 1.5);
-        var dx = Math.map(mouseX, 0, width, -1, 1) * 4.0;
-        var dy = Math.map(mouseY, 0, height, -1, 1) * 4.0;
-        lineStripDiagonal.update(dx, dy);
-        lineStripCounterDiagonal.update(dx, dy);
-        lineStripVertical.update(dx, dy);
-        lineStripHorizontal.update(dx, dy);
+        var dx = Math.map(mouseX, 0, width, -1, 1) * 1.0;
+        var dy = Math.map(mouseY, 0, height, -1, 1) * 1.0;
+        lineStrips.forEach(function (lineStrip) {
+            lineStrip.update(dx, dy);
+        });
         renderer.render(scene, camera);
     }
 
@@ -223,10 +244,9 @@
         // draw black again
         frame = 0;
 
-        lineStripDiagonal.resize(width, height);
-        lineStripCounterDiagonal.resize(width, height);
-        lineStripVertical.resize(width, height);
-        lineStripHorizontal.resize(width, height);
+        lineStrips.forEach(function (lineStrip) {
+            lineStrip.resize(width, height);
+        });
     }
 
     var sketch3 = {
