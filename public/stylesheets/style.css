@@ -52,23 +52,6 @@ body {
     background-color: #cc1a3c;
 }
 
-.footer {
-  height: 1px;
-}
-
-.sketch-wrapper {
-  transition: opacity 0.25s;
-  width: 90%;
-  margin: 108px auto;
-  position: relative;
-
-  -moz-user-select: none;
-  -khtml-user-select: none;
-  -webkit-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-}
-
 .sketch-wrapper.disabled {
     opacity: 0.25;
 }
@@ -78,9 +61,19 @@ body {
   position: relative;
 }
 
-.sketch-wrapper:first-of-type {
-  margin-top: 110px;
+.sketch-wrapper {
+  transition: opacity 0.25s;
+  width: calc(100% - 110px);
+  margin: 110px auto;
+  position: relative;
+
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -o-user-select: none;
+  user-select: none;
 }
+
 .sketch-wrapper:last-of-type {
   margin-bottom: 55px;
 }

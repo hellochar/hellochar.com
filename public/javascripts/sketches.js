@@ -15,7 +15,7 @@
     }
 
     function setCanvasDimensions(renderer) {
-        renderer.setSize($window.width() * 0.9, $window.height() * 0.9 - 110);
+        renderer.setSize($window.width() - 110, $window.height() - 55*3);
     }
 
     // properties:
