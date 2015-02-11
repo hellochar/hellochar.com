@@ -109,13 +109,15 @@
         this.gridOffsetX = 0;
         this.gridOffsetY = 0;
 
+        this.object = new THREE.Object3D();
+
         this.resize(width, height);
     }
 
     LineStrip.prototype.update = function(dx, dy) {
         this.gridOffsetX = ((this.gridOffsetX + dx) % this.gridSize + this.gridSize) % this.gridSize;
         this.gridOffsetY = ((this.gridOffsetY + dy) % this.gridSize + this.gridSize) % this.gridSize;
-        this.lines.forEach(function(lineMesh) {
+        this.object.children.forEach(function(lineMesh) {
             var x = lineMesh.x;
             var y = lineMesh.y;
             var inlineOffsetX = lineMesh.inlineOffsetX;
@@ -133,18 +135,12 @@
     LineStrip.prototype.resize = function(width, height) {
         this.width = width;
         this.height = height;
-        // delete old lines
-        if (this.lines != null) {
-            this.lines.forEach(function(mesh) {
-                scene.remove(mesh);
-            });
-        }
-
-        this.lines = [];
         this.gridOffset = 0;
 
-        var diagLength = Math.sqrt(this.width*this.width + this.height*this.height) + 2 * this.gridSize;
+        // delete old lines
+        this.object.remove.apply(this.object, this.object.children);
 
+        var diagLength = Math.sqrt(this.width*this.width + this.height*this.height) + 2 * this.gridSize;
         // create and add a Line mesh to the lines array
         var createAndAddLine = function(x, y) {
             var inlineOffsetX = Math.cos(this.inlineAngle) * diagLength / 2;
@@ -152,8 +148,7 @@
             var geometry = permutedLine(x - inlineOffsetX, y - inlineOffsetY, x + inlineOffsetX, y + inlineOffsetY);
             var lineMesh = new THREE.Line(geometry, lineMaterial);
             lineMesh.frustumCulled = false;
-            this.lines.push(lineMesh);
-            scene.add(lineMesh);
+            this.object.add(lineMesh);
             lineMesh.x = x;
             lineMesh.y = y;
             lineMesh.inlineOffsetX = inlineOffsetX;
@@ -186,10 +181,14 @@
         camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;
 
-        // lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, 50, 50));
+        lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, 50, 50));
         lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, -50, 50));
         lineStrips.push(new LineStrip(canvas.width, canvas.height, 0, 50, 50));
-        // lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, 0, 50));
+        lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, 0, 50));
+
+        lineStrips.forEach(function (lineStrip) {
+            scene.add(lineStrip.object);
+        });
     }
 
     function animate() {
