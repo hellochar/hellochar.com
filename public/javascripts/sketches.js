@@ -60,17 +60,14 @@
             return false;
         });
         ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend"].forEach(function (eventName) {
-            if (sketch[eventName] != null) {
-                var eventCallbacks;
-                if (!_.isArray(sketch[eventName])) {
-                    eventCallbacks = [sketch[eventName]];
-                } else {
-                    eventCallbacks = sketch[eventName];
-                }
-                eventCallbacks.forEach(function(cb) {
-                    $canvas.on(eventName, cb);
-                });
+            var callback = sketch[eventName];
+            if (callback != null) {
+                $canvas.on(eventName, callback);
             }
+        });
+        // prevent scrolling the viewport
+        $canvas.on("touchmove", function(event) {
+            event.preventDefault();
         });
 
         // initialize and run sketch
