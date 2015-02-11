@@ -37,7 +37,7 @@
         $navElement
             .text(sketch.id)
             .click(function () {
-                $('html, body').animate({ scrollTop: $sketchElement.offset().top }, 600);
+                $('html, body').animate({ scrollTop: $sketchElement.position().top }, 600);
             })
             .appendTo($navbarElement);
 

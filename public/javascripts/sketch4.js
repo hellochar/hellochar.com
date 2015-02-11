@@ -282,7 +282,6 @@
         audioGroup.lfo.frequency.value = flatRatio;
         audioGroup.setFrequency(111 / normalizedVarianceLength);
         audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
-        console.log(groupedUpness);
 
         filter.uniforms['iMouse'].value = new THREE.Vector2(mouseX / canvas.width, (canvas.height - mouseY) / canvas.height);
         // when groupedUpness is 0, shrinkFactor should be 0.98
