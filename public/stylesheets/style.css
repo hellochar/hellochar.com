@@ -9,6 +9,10 @@ html, body {
   height: 100%;
 }
 
+html {
+    overflow: visible;
+}
+
 body {
   background-color: #e9eaed;
   font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
