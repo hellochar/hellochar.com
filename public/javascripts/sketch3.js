@@ -115,8 +115,9 @@
     }
 
     LineStrip.prototype.update = function(dx, dy) {
-        this.gridOffsetX = ((this.gridOffsetX + dx) % this.gridSize + this.gridSize) % this.gridSize;
-        this.gridOffsetY = ((this.gridOffsetY + dy) % this.gridSize + this.gridSize) % this.gridSize;
+        this.gridOffsetX = (this.gridOffsetX + dx) % this.gridSize;
+        this.gridOffsetY = (this.gridOffsetY + dy) % this.gridSize;
+        console.log(this.gridOffsetX, this.gridOffsetY);
         this.object.children.forEach(function(lineMesh) {
             var x = lineMesh.x;
             var y = lineMesh.y;
@@ -157,11 +158,15 @@
 
         var midX = this.width/2;
         var midY = this.height/2;
+
+        createAndAddLine(midX, midY);
+
         var traversalAngle = this.inlineAngle + Math.PI / 2;
-        for (var d = -diagLength/2; d < diagLength/2; d += this.gridSize) {
-            var lineX = midX + Math.cos(traversalAngle) * d;
-            var lineY = midY + Math.sin(traversalAngle) * d;
-            createAndAddLine(lineX, lineY);
+        for (var d = this.gridSize; d < diagLength/2; d += this.gridSize) {
+            createAndAddLine(midX + Math.cos(traversalAngle) * d,
+                             midY + Math.sin(traversalAngle) * d);
+            createAndAddLine(midX - Math.cos(traversalAngle) * d,
+                             midY - Math.sin(traversalAngle) * d);
         }
     }
 
@@ -177,14 +182,16 @@
         canvas = renderer.domElement;
         canvasWidth = canvas.width;
         canvasHeight = canvas.height;
+        mouseX = canvasWidth/2;
+        mouseY = canvasHeight/2;
         scene = new THREE.Scene();
         camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;
 
-        lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, 50, 50));
-        lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, -50, 50));
-        lineStrips.push(new LineStrip(canvas.width, canvas.height, 0, 50, 50));
-        lineStrips.push(new LineStrip(canvas.width, canvas.height, 50, 0, 50));
+        // lineStrips.push(new LineStrip(canvas.width, canvas.height, 1, 1, 50));
+        lineStrips.push(new LineStrip(canvas.width, canvas.height, 1, -1, 50));
+        lineStrips.push(new LineStrip(canvas.width, canvas.height, 0, 1, 50));
+        // lineStrips.push(new LineStrip(canvas.width, canvas.height, 1, 0, 50));
 
         lineStrips.forEach(function (lineStrip) {
             scene.add(lineStrip.object);
@@ -194,7 +201,7 @@
     function animate() {
         var opacityChangeFactor = 0.1;
         if (isMouseDown) {
-            lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.25 * opacityChangeFactor;
+            lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.23 * opacityChangeFactor;
             frame += 4;
         } else {
             lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.03 * opacityChangeFactor;
@@ -207,8 +214,8 @@
             lineMaterial.color.set("rgb(252, 247, 243)");
         }
 
-        var dx = Math.map(mouseX, 0, canvasWidth, -1, 1) * 2.0;
-        var dy = Math.map(mouseY, 0, canvasHeight, -1, 1) * 2.0;
+        var dx = Math.map(mouseX, 0, canvasWidth, -1, 1) * 2.20;
+        var dy = Math.map(mouseY, 0, canvasHeight, -1, 1) * 2.20;
         lineStrips.forEach(function (lineStrip) {
             lineStrip.update(dx, dy);
         });
