@@ -7,7 +7,7 @@
     var PULLING_DRAG_CONSTANT = 0.96075095702;
     var INERTIAL_DRAG_CONSTANT = 0.73913643334;
     var EXTENT = 10;
-    var GRID_SIZE = 5;
+    var GRID_SIZE = 7;
 
     function createAudioGroup(audioContext) {
 
@@ -116,8 +116,8 @@
         filter.connect(filter2);
         filter2.connect(filterGain);
 
-        noiseGain.connect(audioContext.destination);
-        filterGain.connect(audioContext.destination);
+        noiseGain.connect(audioContext.gain);
+        filterGain.connect(audioContext.gain);
         return {
             sourceGain: sourceGain,
             lfo: lfo,
@@ -376,7 +376,7 @@
         var starTexture = THREE.ImageUtils.loadTexture("star.png");
         starTexture.minFilter = THREE.NearestFilter;
         var material = new THREE.PointCloudMaterial({
-            size: 12,
+            size: 15,
             sizeAttenuation: false,
             map: starTexture,
             opacity: 0.18,

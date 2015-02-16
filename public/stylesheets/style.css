@@ -16,6 +16,7 @@ html {
 body {
   background-color: #e9eaed;
   font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  width: 100%;
 }
 
 .header {
@@ -56,20 +57,37 @@ body {
     background-color: #cc1a3c;
 }
 
-.sketch-wrapper.disabled {
-    opacity: 0.25;
+
+.container {
+    margin: 55px;
+    height: 100%;
 }
 
-.sketch-wrapper canvas {
-  background: #fafafa;
-  position: relative;
+.container .toptext {
+    margin: auto;
 }
 
-.sketch-wrapper {
+.container .toptext .title {
+    padding-top: 0.50em;
+    padding-bottom: 0.25em;
+    text-align: center;
+}
+
+.container .toptext .title .small {
+    font-weight: normal;
+    font-size: 0.75em;
+}
+
+.container .all-sketches {
+    height: calc(100% - 55px);
+}
+
+.container .sketch-wrapper {
   transition: opacity 0.25s;
-  width: calc(100% - 110px);
-  margin: 110px auto;
+  margin-top: 55px;
+  margin-bottom: 55px;
   position: relative;
+  height: calc(100% - 165px);
 
   -moz-user-select: none;
   -khtml-user-select: none;
@@ -78,8 +96,13 @@ body {
   user-select: none;
 }
 
-.sketch-wrapper:last-of-type {
-  margin-bottom: 55px;
+.container .sketch-wrapper.disabled {
+    opacity: 0.25;
+}
+
+.container .sketch-wrapper canvas {
+  background: #fafafa;
+  position: relative;
 }
 
 /* https://color.adobe.com/create/color-wheel/?base=2&rule=Compound&selected=0&name=My%20Color%20Theme&mode=rgb&rgbvalues=0.07999999999999999,0.5946747250313638,0.8,0.24,0.4973373625156819,0.6,0,1,0.7406588226733675,1,0.31748377417886786,0.25,0.8,0.10246771211019282,0.2360470610908914&swatchOrder=0,1,2,3,4 */
