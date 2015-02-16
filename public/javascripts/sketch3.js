@@ -54,51 +54,6 @@
         return x / Math.abs(x);
     }
 
-    var BASE_FREQUENCY = 141;
-
-    function createAudioGroup(audioContext) {
-        var osc = audioContext.createOscillator();
-        osc.frequency.value = BASE_FREQUENCY;
-        osc.type = "sawtooth";
-        osc.start(0);
-
-        function makeLowpass() {
-            var lowpass = audioContext.createBiquadFilter();
-            lowpass.type = "lowpass";
-            lowpass.frequency.value = 110;
-            lowpass.Q.value = 1.0;
-            return lowpass;
-        }
-
-        var lp1 = makeLowpass();
-        osc.connect(lp1);
-
-        var lp2 = makeLowpass();
-        lp1.connect(lp2);
-
-        var gain = audioContext.createGain();
-        gain.gain.value = 1.0;
-        lp2.connect(gain);
-
-        gain.connect(audioContext.gain);
-
-        return {
-            osc: osc,
-            lp2: lp2,
-            gain: gain
-        };
-    }
-
-    var audioGroup;
-
-    // threejs stuff
-    var camera;
-    var renderer;
-    var scene;
-
-    // a map indexed by [(pixel x coordinate).toString()+(pixel y coordinate).toString()] of the mesh that lives there
-    var lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.03 });
-
     // offsetX and offsetY define the vector that the line draws on (the inline direction). the direction that
     // the vector offsets to repeat itself is the traversal direction. The two are always orthogonal.
     function LineStrip(width, height, offsetX, offsetY, gridSize) {
@@ -170,9 +125,78 @@
         }
     }
 
+    function createAudioGroup(audioContext) {
+        var noise = (function() {
+            var node = audioContext.createBufferSource()
+            , buffer = audioContext.createBuffer(1, audioContext.sampleRate * 5, audioContext.sampleRate)
+            , data = buffer.getChannelData(0);
+            for (var i = 0; i < buffer.length; i++) {
+                data[i] = Math.random();
+            }
+            node.buffer = buffer;
+            node.loop = true;
+            node.start(0);
+            return node;
+        })();
+        var noiseGain = audioContext.createGain();
+        noiseGain.gain.value = 0.05;
+        noise.connect(noiseGain);
+
+        function setBiquadParameters(node, time) {
+            node.a0 = Math.map(Math.sin(time * 1.1 * Math.PI * 2), -1, 1, 0.3, 1.0);
+            node.a1 = -0.0;
+            node.a2 = 0;
+            node.b1 = -0.72;
+            node.b2 = 0;
+        }
+
+        var biquadFilter = (function() {
+            var bufferSize = 4096;
+            var node = audioContext.createScriptProcessor(undefined, 1, 1);
+            node.a0 = 1;
+            node.a1 = 0.0;
+            node.a2 = 0;
+            node.b1 = 0;
+            node.b2 = 0;
+            node.onaudioprocess = function(e) {
+                var input = e.inputBuffer.getChannelData(0);
+                var output = e.outputBuffer.getChannelData(0);
+                for (var n = 0; n < bufferSize; n++) {
+                    var time = e.playbackTime + n / audioContext.sampleRate;
+                    setBiquadParameters(node, time);
+                    var x = input[n];
+                    var x1 = input[n - 1] || 0;
+                    var x2 = input[n - 2] || 0;
+                    var y1 = output[n - 1] || 0;
+                    var y2 = output[n - 2] || 0;
+                    output[n] = node.a0 * x + 
+                                node.a1 * x1 +
+                                node.a2 * x2 -
+                                node.b1 * y1 -
+                                node.b2 * y2;
+                }
+            }
+            return node;
+        })();
+        noiseGain.connect(biquadFilter);
+
+        biquadFilter.connect(audioContext.gain);
+        return {
+            biquadFilter: biquadFilter
+        };
+    }
+
+    var audioGroup;
     var lineStrips = [];
 
+    // threejs stuff
+    var camera;
+    var lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.03 });
+    var renderer;
+    var scene;
+
     function init(_renderer, audioContext) {
+        audioGroup = createAudioGroup(audioContext);
         renderer = _renderer;
 
         renderer.setPixelRatio((window.devicePixelRatio + 1) / 2);
@@ -182,8 +206,8 @@
         canvas = renderer.domElement;
         canvasWidth = canvas.width;
         canvasHeight = canvas.height;
-        mouseX = canvasWidth/2;
-        mouseY = canvasHeight/2;
+        mouseX = canvasWidth;
+        mouseY = canvasHeight;
         scene = new THREE.Scene();
         camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;

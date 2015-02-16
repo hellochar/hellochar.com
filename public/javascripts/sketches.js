@@ -14,8 +14,8 @@
         return scrollTop < elementMiddle && elementMiddle < scrollBottom;
     }
 
-    function setCanvasDimensions(renderer) {
-        renderer.setSize($window.width() - 110, $window.height() - 55*3);
+    function setCanvasDimensions(renderer, sketchElement) {
+        renderer.setSize(sketchElement.width(), sketchElement.height());
     }
 
     // properties:
@@ -37,7 +37,7 @@
         $navElement
             .text(sketch.id)
             .click(function () {
-                $('html, body').animate({ scrollTop: $sketchElement.position().top }, 600);
+                $('html, body').animate({ scrollTop: $sketchElement.offset().top - 55 }, 600);
             })
             .appendTo($navbarElement);
 
@@ -45,9 +45,9 @@
         var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
         $allSketches.append($sketchElement);
         $sketchElement.append(renderer.domElement);
-        setCanvasDimensions(renderer);
+        setCanvasDimensions(renderer, $sketchElement);
         $window.resize(function() {
-            setCanvasDimensions(renderer);
+            setCanvasDimensions(renderer, $sketchElement);
             if (sketch.resize != null) {
                 sketch.resize(renderer.domElement.width, renderer.domElement.height);
             }
