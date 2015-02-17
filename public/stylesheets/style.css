@@ -19,6 +19,9 @@ body {
   width: 100%;
 }
 
+hr {
+}
+
 .header {
   background-color: #ff5140;
   box-shadow: 0 0 4px rgba(0,0,0,0.5);
@@ -65,17 +68,19 @@ body {
 
 .container .toptext {
     margin: auto;
+    max-width: 1280px;
+    min-width: 300px;
 }
 
 .container .toptext .title {
     padding-top: 0.50em;
-    padding-bottom: 0.25em;
+    padding-bottom: 0.50em;
     text-align: center;
 }
 
 .container .toptext .title .small {
     font-weight: normal;
-    font-size: 0.75em;
+    font-size: 0.5em;
 }
 
 .container .all-sketches {
@@ -87,7 +92,9 @@ body {
   padding-top: 55px;
   padding-bottom: 55px;
   position: relative;
+  width: 100%;
   height: 100%;
+  float: left;
 
   -moz-user-select: none;
   -khtml-user-select: none;
@@ -103,6 +110,14 @@ body {
 .container .sketch-wrapper canvas {
   background: #fafafa;
   position: relative;
+}
+
+.container .footer {
+    text-align: center;
+}
+
+.container .footer .copyright {
+    padding: 0.5em;
 }
 
 @media (max-width: 600px) {
