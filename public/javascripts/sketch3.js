@@ -1,4 +1,6 @@
 (function () {
+    var LINE_SEGMENT_LENGTH = (window.screen.width > 1024) ? 11 : 22;
+
     var HeightMap = {
         width: 1200,
         height: 1200,
@@ -6,8 +8,8 @@
         /**
          * How wavy the heightmap is, from [0..1]. 0 means not wavy at all (only bulbous); 1.0 means only wavy.
          */
-        getWaviness: function() {
-            return (1+Math.sin(HeightMap.frame / 100))/2;
+        getWaviness: function(frame) {
+            return (1+Math.sin(frame / 100))/2;
         },
         evaluate: function(x, y) {
             var length2 = x*x+y*y;
@@ -18,7 +20,7 @@
             // z3 is a smaller radial wave shape that is centered towards the mouse
             var z3 = 100 * Math.cos(Math.sqrt(Math.pow(x - HeightMap.width, 2) + Math.pow(y - HeightMap.height, 2)) / 20 + HeightMap.frame / 25);
 
-            return Math.lerp(z1, z2, HeightMap.getWaviness()) + z3;
+            return Math.lerp(z1, z2, HeightMap.getWaviness(HeightMap.frame)) + z3;
         },
         gradient: function (x,y) {
             var fnxy = HeightMap.evaluate(x, y);
@@ -33,10 +35,10 @@
     function permutedLine(ox, oy, nx, ny, geometry) {
         var distance = Math.sqrt(Math.pow(ox-nx, 2) + Math.pow(oy-ny, 2));
         // about 11 units per line segment
-        var STEPS = distance / 11;
+        var steps = distance / LINE_SEGMENT_LENGTH;
         if (geometry == null) {
             geometry = new THREE.Geometry();
-            for( var t = 0; t <= STEPS; t++) {
+            for( var t = 0; t <= steps; t++) {
                 geometry.vertices.push(new THREE.Vector3());
             }
         }
@@ -46,8 +48,8 @@
             geometry.vertices[idx].set(x + grad[0], y + grad[1], 0);
         }
 
-        for( var t = 0; t <= STEPS; t++) {
-            var percentage = t / STEPS;
+        for( var t = 0; t <= steps; t++) {
+            var percentage = t / steps;
             permutePoint(ox + (nx - ox) * percentage,
                          oy + (ny - oy) * percentage, t);
         }
@@ -134,7 +136,7 @@
         $("body").append(backgroundAudio);
 
         var backgroundAudioGain = audioContext.createGain();
-        backgroundAudioGain.gain.value = 1.0;
+        backgroundAudioGain.gain.value = 0.0;
         sourceNode.connect(backgroundAudioGain);
         backgroundAudioGain.connect(audioContext.gain);
 
@@ -154,40 +156,27 @@
         var biquadFilter = (function() {
             var node = audioContext.createScriptProcessor(undefined, 1, 1);
             node.a0 = 1;
-            node.a1 = 0.0;
-            node.a2 = 0;
             node.b1 = 0;
-            node.b2 = 0;
 
-            function setBiquadParameters() {
-                // node.a0 = Math.map(Math.sin(time * 1.1 * Math.PI * 2), -1, 1, 0.3, 1.0);
-                // var gridOffsetPercentage = lineStrips[0].gridOffsetX / lineStrips[0].gridSize;
-                // var gridOffsetFactor = Math.cos(gridOffsetPercentage * Math.PI);
-                node.a0 = getDarkness(HeightMap.frame + 10) * 0.8;
-                node.a1 = 0;
-                node.a2 = 0;
-                node.b1 = Math.map(Math.pow(HeightMap.getWaviness(), 2), 0, 1, -0.91, -0.27);
-                node.b2 = 0;
-                backgroundAudioGain.gain.value = Math.map(getDarkness(HeightMap.frame + 10), 0, 1, 1, 0.8);
+            function setBiquadParameters(node, frame) {
+                node.a0 = getDarkness(frame + 10) * 0.8;
+                node.b1 = Math.map(Math.pow(HeightMap.getWaviness(frame), 2), 0, 1, -0.92, -0.27);
+                backgroundAudioGain.gain.value = Math.map(getDarkness(frame + 10), 0, 1, 1, 0.8);
             }
 
             node.onaudioprocess = function(e) {
-                // console.log(getDarkness(HeightMap.frame));
                 var input = e.inputBuffer.getChannelData(0);
                 var output = e.outputBuffer.getChannelData(0);
-                setBiquadParameters(node);
+                var framesPerSecond = isTimeFast ? 60*4 : 60;
                 for (var n = 0; n < e.inputBuffer.length; n++) {
-                    var time = e.playbackTime + n / audioContext.sampleRate;
+                    if (n % 512 === 0) {
+                        var frameOffset = n / audioContext.sampleRate * framesPerSecond;
+                        setBiquadParameters(node, HeightMap.frame + frameOffset);
+                    }
                     var x = input[n];
-                    var x1 = input[n - 1] || 0;
-                    var x2 = input[n - 2] || 0;
                     var y1 = output[n - 1] || 0;
-                    var y2 = output[n - 2] || 0;
-                    output[n] = node.a0 * x + 
-                                node.a1 * x1 +
-                                node.a2 * x2 -
-                                node.b1 * y1 -
-                                node.b2 * y2;
+
+                    output[n] = node.a0 * x - node.b1 * y1;
                 }
             }
             return node;
@@ -223,10 +212,12 @@
         camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
         camera.position.z = 500;
 
-        // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 1, 50));
-        lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, -1, 50));
-        lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 0, 1, 50));
-        // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 0, 50));
+        // cheap mobile detection
+        var gridSize = (window.screen.width > 1024) ? 50 : 100;
+        // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 1, gridSize));
+        lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, -1, gridSize));
+        lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 0, 1, gridSize));
+        // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 0, gridSize));
 
         lineStrips.forEach(function (lineStrip) {
             scene.add(lineStrip.object);
