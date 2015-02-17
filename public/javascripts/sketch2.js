@@ -399,10 +399,12 @@
     }
 
     function touchstart(event) {
+        // prevent emulated mouse events from occuring
+        event.preventDefault();
         var canvasOffset = $(canvas).offset();
         var touch = event.originalEvent.touches[0];
-        var touchX = touch.clientX - canvasOffset.left;
-        var touchY = touch.clientY - canvasOffset.top;
+        var touchX = touch.pageX - canvasOffset.left;
+        var touchY = touch.pageY - canvasOffset.top;
         // offset the touchY by its radius so the attractor is above the thumb
         touchY -= 100;
         createAttractor(touchX, touchY);
@@ -411,8 +413,8 @@
     function touchmove(event) {
         var canvasOffset = $(canvas).offset();
         var touch = event.originalEvent.touches[0];
-        var touchX = touch.clientX - canvasOffset.left;
-        var touchY = touch.clientY - canvasOffset.top;
+        var touchX = touch.pageX - canvasOffset.left;
+        var touchY = touch.pageY - canvasOffset.top;
         touchY -= 100;
         moveAttractor(touchX, touchY);
     }
