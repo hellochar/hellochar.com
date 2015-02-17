@@ -300,7 +300,7 @@
         var touchX = touch.pageX - canvasOffset.left;
         var touchY = touch.pageY - canvasOffset.top;
         // offset the touchY by its radius so the attractor is above the thumb
-        touchY -= 100;
+        // touchY -= 100;
         createAttractor(touchX, touchY);
         mouseX = touchX;
         mouseY = touchY;
@@ -311,7 +311,7 @@
         var touch = event.originalEvent.touches[0];
         var touchX = touch.pageX - canvasOffset.left;
         var touchY = touch.pageY - canvasOffset.top;
-        touchY -= 100;
+        // touchY -= 100;
         moveAttractor(touchX, touchY);
         mouseX = touchX;
         mouseY = touchY;
