@@ -1,10 +1,7 @@
 (function () {
-    var mouseX = 0;
-    var mouseY = 0;
-
     var HeightMap = {
-        width: 1000,
-        height: 1000,
+        width: 1200,
+        height: 1200,
         frame: 0,
         /**
          * How wavy the heightmap is, from [0..1]. 0 means not wavy at all (only bulbous); 1.0 means only wavy.
@@ -13,15 +10,13 @@
             return (1+Math.sin(HeightMap.frame / 100))/2;
         },
         evaluate: function(x, y) {
-            var dx = (x - HeightMap.width/2);
-            var dy = (y - HeightMap.height/2);
-            var length2 = dx*dx + dy*dy;
+            var length2 = x*x+y*y;
             // z1 creates the bulb shape at the center (using a logistic function)
             var z1 = 23000 / (1 + Math.exp(-length2 / 10000));
             // z2 creates the radial wave shapes from the center
             var z2 = 600 * Math.cos(length2 / 25000 + HeightMap.frame / 25);
             // z3 is a smaller radial wave shape that is centered towards the mouse
-            var z3 = 100 * Math.cos(Math.sqrt(Math.pow(x - mouseX, 2) + Math.pow(y - mouseY, 2)) / 20 + HeightMap.frame / 25);
+            var z3 = 100 * Math.cos(Math.sqrt(Math.pow(x - HeightMap.width, 2) + Math.pow(y - HeightMap.height, 2)) / 20 + HeightMap.frame / 25);
 
             return Math.lerp(z1, z2, HeightMap.getWaviness()) + z3;
         },
@@ -37,6 +32,7 @@
 
     function permutedLine(ox, oy, nx, ny, geometry) {
         var distance = Math.sqrt(Math.pow(ox-nx, 2) + Math.pow(oy-ny, 2));
+        // about 11 units per line segment
         var STEPS = distance / 11;
         if (geometry == null) {
             geometry = new THREE.Geometry();
@@ -117,17 +113,14 @@
             lineMesh.inlineOffsetY = inlineOffsetY;
         }.bind(this);
 
-        var midX = this.width/2;
-        var midY = this.height/2;
-
-        createAndAddLine(midX, midY);
+        createAndAddLine(0, 0);
 
         var traversalAngle = this.inlineAngle + Math.PI / 2;
         for (var d = this.gridSize; d < diagLength/2; d += this.gridSize) {
-            createAndAddLine(midX + Math.cos(traversalAngle) * d,
-                             midY + Math.sin(traversalAngle) * d);
-            createAndAddLine(midX - Math.cos(traversalAngle) * d,
-                             midY - Math.sin(traversalAngle) * d);
+            createAndAddLine(+Math.cos(traversalAngle) * d,
+                             +Math.sin(traversalAngle) * d);
+            createAndAddLine(-Math.cos(traversalAngle) * d,
+                             -Math.sin(traversalAngle) * d);
         }
     }
 
@@ -227,7 +220,7 @@
         renderer.autoClearColor = false;
 
         scene = new THREE.Scene();
-        camera = new THREE.OrthographicCamera(0, HeightMap.width, 0, HeightMap.height, 1, 1000);
+        camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
         camera.position.z = 500;
 
         // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 1, 50));
@@ -241,8 +234,6 @@
 
         resize(_renderer.domElement.width, _renderer.domElement.height);
         // set a default x/y for the mouse so the wave travels to the bottom-right by default
-        mouseX = HeightMap.width;
-        mouseY = HeightMap.height;
     }
 
     function animate() {
@@ -261,8 +252,8 @@
             lineMaterial.color.set("rgb(252, 247, 243)");
         }
 
-        // var scale = Math.map(Math.sin(HeightMap.frame / 400), -1, 1, 1, 0.5);
-        // camera.scale.set(scale, scale, 1);
+        var scale = Math.map(Math.sin(HeightMap.frame / 550), -1, 1, 1, 0.8);
+        camera.scale.set(scale, scale, 1);
         lineStrips.forEach(function (lineStrip) {
             lineStrip.update();
         });
@@ -300,14 +291,16 @@
 
     function resize(width, height) {
         if (width > height) {
-            HeightMap.height = 1000;
-            HeightMap.width = 1000 * width / height;
+            HeightMap.height = 1200;
+            HeightMap.width = 1200 * width / height;
         } else {
-            HeightMap.width = 1000;
-            HeightMap.height = 1000 * height / width;
+            HeightMap.width = 1200;
+            HeightMap.height = 1200 * height / width;
         }
-        camera.bottom = HeightMap.height;
-        camera.right = HeightMap.width;
+        camera.left = -HeightMap.width / 2;
+        camera.top = -HeightMap.height / 2;
+        camera.bottom = HeightMap.height / 2;
+        camera.right = HeightMap.width / 2;
         camera.updateProjectionMatrix();
 
         renderer.setClearColor(0xfcfcfc, 1);
@@ -335,7 +328,6 @@
 
     function touchend(event) {
         isTimeFast = false;
-        setVelocityFromTouchEvent(event);
     }
 
     function setVelocityFromTouchEvent(event) {
