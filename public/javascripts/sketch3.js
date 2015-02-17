@@ -1,7 +1,10 @@
 (function () {
+    var mouseX = 0;
+    var mouseY = 0;
+
     var HeightMap = {
-        canvasWidth: null,
-        canvasHeight: null,
+        width: 1000,
+        height: 1000,
         frame: 0,
         /**
          * How wavy the heightmap is, from [0..1]. 0 means not wavy at all (only bulbous); 1.0 means only wavy.
@@ -10,8 +13,8 @@
             return (1+Math.sin(HeightMap.frame / 100))/2;
         },
         evaluate: function(x, y) {
-            var dx = (x - HeightMap.canvasWidth/2);
-            var dy = (y - HeightMap.canvasHeight/2);
+            var dx = (x - HeightMap.width/2);
+            var dy = (y - HeightMap.height/2);
             var length2 = dx*dx + dy*dy;
             // z1 creates the bulb shape at the center (using a logistic function)
             var z1 = 23000 / (1 + Math.exp(-length2 / 10000));
@@ -31,9 +34,6 @@
             return [ddx, ddy];
         }
     }
-
-    var mouseX = 0;
-    var mouseY = 0;
 
     function permutedLine(ox, oy, nx, ny, geometry) {
         var distance = Math.sqrt(Math.pow(ox-nx, 2) + Math.pow(oy-ny, 2));
@@ -63,6 +63,8 @@
     function LineStrip(width, height, offsetX, offsetY, gridSize) {
         this.inlineAngle = Math.atan(offsetY / offsetX);
         this.gridSize = gridSize;
+        this.dx = 1;
+        this.dy = 1;
 
         // the specific offset of the entire line for this frame
         this.gridOffsetX = 0;
@@ -73,9 +75,9 @@
         this.resize(width, height);
     }
 
-    LineStrip.prototype.update = function(dx, dy) {
-        this.gridOffsetX = ((this.gridOffsetX + dx) % this.gridSize + this.gridSize) % this.gridSize;
-        this.gridOffsetY = ((this.gridOffsetY + dy) % this.gridSize + this.gridSize) % this.gridSize;
+    LineStrip.prototype.update = function() {
+        this.gridOffsetX = ((this.gridOffsetX + this.dx) % this.gridSize + this.gridSize) % this.gridSize;
+        this.gridOffsetY = ((this.gridOffsetY + this.dy) % this.gridSize + this.gridSize) % this.gridSize;
         // console.log(this.gridOffsetX, this.gridOffsetY);
         this.object.children.forEach(function(lineMesh) {
             var x = lineMesh.x;
@@ -130,6 +132,19 @@
     }
 
     function createAudioGroup(audioContext) {
+        var backgroundAudio = $("<audio autoplay loop>")
+                                .append('<source src="audio/waves_background.mp3" type="audio/mp3">')
+                                .append('<source src="audio/waves_background.ogg" type="audio/ogg">');
+
+        var sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
+        window.sourceNode = sourceNode;
+        $("body").append(backgroundAudio);
+
+        var backgroundAudioGain = audioContext.createGain();
+        backgroundAudioGain.gain.value = 1.0;
+        sourceNode.connect(backgroundAudioGain);
+        backgroundAudioGain.connect(audioContext.gain);
+
         var noise = (function() {
             var node = audioContext.createBufferSource()
             , buffer = audioContext.createBuffer(1, audioContext.sampleRate * 5, audioContext.sampleRate)
@@ -143,31 +158,33 @@
             return node;
         })();
 
-        function setBiquadParameters(node, time) {
-            // node.a0 = Math.map(Math.sin(time * 1.1 * Math.PI * 2), -1, 1, 0.3, 1.0);
-            // var gridOffsetPercentage = lineStrips[0].gridOffsetX / lineStrips[0].gridSize;
-            // var gridOffsetFactor = Math.cos(gridOffsetPercentage * Math.PI);
-            node.a0 = getDarkness(HeightMap.frame + 10);
-            node.a1 = 0;
-            node.a2 = 0;
-            node.b1 = Math.map(Math.pow(HeightMap.getWaviness(), 2), 0, 1, -0.93, -0.3);
-            node.b2 = 0;
-        }
-
         var biquadFilter = (function() {
-            var node = audioContext.createScriptProcessor(1024, 1, 1);
+            var node = audioContext.createScriptProcessor(undefined, 1, 1);
             node.a0 = 1;
             node.a1 = 0.0;
             node.a2 = 0;
             node.b1 = 0;
             node.b2 = 0;
+
+            function setBiquadParameters() {
+                // node.a0 = Math.map(Math.sin(time * 1.1 * Math.PI * 2), -1, 1, 0.3, 1.0);
+                // var gridOffsetPercentage = lineStrips[0].gridOffsetX / lineStrips[0].gridSize;
+                // var gridOffsetFactor = Math.cos(gridOffsetPercentage * Math.PI);
+                node.a0 = getDarkness(HeightMap.frame + 10) * 0.8;
+                node.a1 = 0;
+                node.a2 = 0;
+                node.b1 = Math.map(Math.pow(HeightMap.getWaviness(), 2), 0, 1, -0.91, -0.27);
+                node.b2 = 0;
+                backgroundAudioGain.gain.value = Math.map(getDarkness(HeightMap.frame + 10), 0, 1, 1, 0.8);
+            }
+
             node.onaudioprocess = function(e) {
                 // console.log(getDarkness(HeightMap.frame));
                 var input = e.inputBuffer.getChannelData(0);
                 var output = e.outputBuffer.getChannelData(0);
+                setBiquadParameters(node);
                 for (var n = 0; n < e.inputBuffer.length; n++) {
                     var time = e.playbackTime + n / audioContext.sampleRate;
-                    setBiquadParameters(node, time);
                     var x = input[n];
                     var x1 = input[n - 1] || 0;
                     var x2 = input[n - 2] || 0;
@@ -185,7 +202,7 @@
         noise.connect(biquadFilter);
 
         var biquadFilterGain = audioContext.createGain();
-        biquadFilterGain.gain.value = 0.05;
+        biquadFilterGain.gain.value = 0.01;
         biquadFilter.connect(biquadFilterGain);
 
         biquadFilterGain.connect(audioContext.gain);
@@ -196,6 +213,7 @@
 
     var audioGroup;
     var lineStrips = [];
+    var isTimeFast = false;
 
     // threejs stuff
     var camera;
@@ -206,33 +224,30 @@
     function init(_renderer, audioContext) {
         audioGroup = createAudioGroup(audioContext);
         renderer = _renderer;
-
-        renderer.setPixelRatio((window.devicePixelRatio + 1) / 2);
         renderer.autoClearColor = false;
-        renderer.setClearColor(0xfcfcfc, 1);
-        renderer.clear();
-        var canvas = renderer.domElement;
-        HeightMap.canvasWidth = canvas.width;
-        HeightMap.canvasHeight = canvas.height;
-        mouseX = canvas.width;
-        mouseY = canvas.height;
+
         scene = new THREE.Scene();
-        camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
+        camera = new THREE.OrthographicCamera(0, HeightMap.width, 0, HeightMap.height, 1, 1000);
         camera.position.z = 500;
 
-        // lineStrips.push(new LineStrip(canvas.width, canvas.height, 1, 1, 50));
-        lineStrips.push(new LineStrip(canvas.width, canvas.height, 1, -1, 50));
-        lineStrips.push(new LineStrip(canvas.width, canvas.height, 0, 1, 50));
-        // lineStrips.push(new LineStrip(canvas.width, canvas.height, 1, 0, 50));
+        // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 1, 50));
+        lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, -1, 50));
+        lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 0, 1, 50));
+        // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 0, 50));
 
         lineStrips.forEach(function (lineStrip) {
             scene.add(lineStrip.object);
         });
+
+        resize(_renderer.domElement.width, _renderer.domElement.height);
+        // set a default x/y for the mouse so the wave travels to the bottom-right by default
+        mouseX = HeightMap.width;
+        mouseY = HeightMap.height;
     }
 
     function animate() {
         var opacityChangeFactor = 0.1;
-        if (isMouseDown) {
+        if (isTimeFast) {
             lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.23 * opacityChangeFactor;
             HeightMap.frame += 4;
         } else {
@@ -246,10 +261,10 @@
             lineMaterial.color.set("rgb(252, 247, 243)");
         }
 
-        var dx = Math.map(mouseX, 0, HeightMap.canvasWidth, -1, 1) * 2.20;
-        var dy = Math.map(mouseY, 0, HeightMap.canvasHeight, -1, 1) * 2.20;
+        // var scale = Math.map(Math.sin(HeightMap.frame / 400), -1, 1, 1, 0.5);
+        // camera.scale.set(scale, scale, 1);
         lineStrips.forEach(function (lineStrip) {
-            lineStrip.update(dx, dy);
+            lineStrip.update();
         });
         renderer.render(scene, camera);
     }
@@ -264,24 +279,35 @@
     }
 
     function mousemove(event) {
-        mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-        mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        setVelocityFromMouseEvent(event);
     }
 
-    var isMouseDown = false;
     function mousedown(event) {
-        isMouseDown = true;
+        isTimeFast = true;
+        setVelocityFromMouseEvent(event);
     }
 
     function mouseup(event) {
-        isMouseDown = false;
+        isTimeFast = false;
+        setVelocityFromMouseEvent(event);
+    }
+
+    function setVelocityFromMouseEvent(event) {
+        var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+        var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        setVelocityFromCanvasCoordinates(mouseX, mouseY);
     }
 
     function resize(width, height) {
-        HeightMap.canvasWidth = width;
-        HeightMap.canvasHeight = height;
-        camera.right = width;
-        camera.bottom = height;
+        if (width > height) {
+            HeightMap.height = 1000;
+            HeightMap.width = 1000 * width / height;
+        } else {
+            HeightMap.width = 1000;
+            HeightMap.height = 1000 * height / width;
+        }
+        camera.bottom = HeightMap.height;
+        camera.right = HeightMap.width;
         camera.updateProjectionMatrix();
 
         renderer.setClearColor(0xfcfcfc, 1);
@@ -291,7 +317,42 @@
         HeightMap.frame = 0;
 
         lineStrips.forEach(function (lineStrip) {
-            lineStrip.resize(width, height);
+            lineStrip.resize(HeightMap.width, HeightMap.height);
+        });
+    }
+
+    function touchstart(event) {
+        // prevent emulated mouse events from occuring
+        event.preventDefault();
+
+        isTimeFast = true;
+        setVelocityFromTouchEvent(event);
+    }
+
+    function touchmove(event) {
+        setVelocityFromTouchEvent(event);
+    }
+
+    function touchend(event) {
+        isTimeFast = false;
+        setVelocityFromTouchEvent(event);
+    }
+
+    function setVelocityFromTouchEvent(event) {
+        var canvasOffset = $(renderer.domElement).offset();
+        var touch = event.originalEvent.touches[0];
+        var touchX = touch.pageX - canvasOffset.left;
+        var touchY = touch.pageY - canvasOffset.top;
+
+        setVelocityFromCanvasCoordinates(touchX, touchY);
+    }
+
+    function setVelocityFromCanvasCoordinates(canvasX, canvasY) {
+        var dx = Math.map(canvasX, 0, renderer.domElement.width, -1, 1) * 2.20;
+        var dy = Math.map(canvasY, 0, renderer.domElement.height, -1, 1) * 2.20;
+        lineStrips.forEach(function (lineStrip) {
+            lineStrip.dx = dx;
+            lineStrip.dy = dy;
         });
     }
 
@@ -302,7 +363,10 @@
         mousemove: mousemove,
         mousedown: mousedown,
         mouseup: mouseup,
-        resize: resize
+        resize: resize,
+        touchstart: touchstart,
+        touchmove: touchmove,
+        touchend: touchend
     };
     initializeSketch(sketch3);
 })();
