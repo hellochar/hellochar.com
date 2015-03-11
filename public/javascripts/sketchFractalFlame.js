@@ -11,6 +11,15 @@
         },
         Polar: function(point) {
             point.set(Math.atan2(point.y, point.x) / Math.PI, point.length() - 1, 0);
+        },
+        interpolated: function(variationA, variationB, interpolationFn) {
+            return function(pointA) {
+                var pointB = pointA.clone();
+                variationA(pointA);
+                variationB(pointB);
+                var interpolatedAmount = interpolationFn();
+                pointA.lerp(pointB, interpolatedAmount);
+            };
         }
     };
 
@@ -23,7 +32,7 @@
         var weight = Math.random() * this.totalWeight;
         var chosenAffine = null;
         this.affines.reduce(function (oldWeightSum, thisAffine) {
-            if (oldWeightSum < weight && weight < thisAffine.weight + oldWeightSum) {
+            if (oldWeightSum < weight && weight <= thisAffine.weight + oldWeightSum + 1e-10) {
                 chosenAffine = thisAffine;
             };
             return thisAffine.weight + oldWeightSum;
@@ -31,15 +40,22 @@
         return chosenAffine;
     }
 
-    AffineSet.prototype.step = function(point) {
+    AffineSet.prototype.step = function(point, color) {
         var affine = this.choose();
+        // apply the affine transform to the point
         affine.transform(point);
+
+        // apply the nonlinear variation to the point
         affine.variation(point);
-        return point;
+
+        // interpolate towards the affine color
+        // color.lerp(affine.color, 0.5);
+        color.add(affine.color);
     }
 
     var SERPINSKI_TRIANGLE = new AffineSet([
         {
+            color: new THREE.Color(0xff8888),
             weight: 1,
             transform: function(point) {
                 point.set((cX + point.x) / 2, (cY+point.y) / 2, 0);
@@ -47,6 +63,7 @@
             variation: VARIATIONS.Linear
         },
         {
+            color: new THREE.Color("green"),
             weight: 1,
             transform: function(point) {
                 point.set( (-1 + point.x) / 2, (-1 + point.y) / 2, 0);
@@ -54,6 +71,7 @@
             variation: VARIATIONS.Spherical
         },
         {
+            color: new THREE.Color("blue"),
             weight: 1,
             transform: function(point) {
                 point.set( (1 + point.x) / 2, (-1 + point.y) / 2, 0);
@@ -68,9 +86,6 @@
         scene = new THREE.Scene();
 
         renderer = _renderer;
-        renderer.autoClearColor = false;
-        renderer.setClearColor(0xfcfcfc, 1);
-        renderer.clear();
 
         var aspectRatio = renderer.domElement.height / renderer.domElement.width;
         camera = new THREE.OrthographicCamera(-1.1, 1.1, -1.1*aspectRatio, 1.1*aspectRatio, 1, 1000);
@@ -79,14 +94,14 @@
         geometry = new THREE.Geometry();
         for(var i = 0; i < 3000; i++) {
             var position = new THREE.Vector3(Math.random()*2 - 1, Math.random()*2 - 1, 0);
+            var color = new THREE.Color();
             geometry.vertices.push(position);
+            geometry.colors.push(color);
         }
 
         var material = new THREE.PointCloudMaterial({
-            color: 0x000000,
+            vertexColors: THREE.VertexColors,
             size: 1,
-            opacity: 0.25,
-            transparent: true,
             sizeAttenuation: false
         });
 
@@ -95,8 +110,10 @@
     }
 
     function animate() {
-        geometry.vertices.forEach(function (point) {
-            SERPINSKI_TRIANGLE.step(point);
+        geometry.vertices.forEach(function (point, idx) {
+            var color = geometry.colors[idx];
+            color.setRGB(0,0,0);
+            SERPINSKI_TRIANGLE.step(point, color);
         });
         geometry.verticesNeedUpdate = true;
         renderer.render(scene, camera);
