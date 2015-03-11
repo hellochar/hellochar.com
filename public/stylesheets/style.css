@@ -66,19 +66,19 @@ hr {
     height: 100%;
 }
 
-.container .toptext {
+.container .section {
     margin: auto;
     max-width: 1280px;
     min-width: 300px;
 }
 
-.container .toptext .title {
+.container .section .title {
     padding-top: 0.50em;
     padding-bottom: 0.50em;
     text-align: center;
 }
 
-.container .toptext .title .small {
+.container .section .title .small {
     font-weight: normal;
     font-size: 0.5em;
 }
@@ -114,9 +114,6 @@ hr {
 
 .container .footer {
     text-align: center;
-}
-
-.container .footer .copyright {
     padding: 0.5em;
 }
 
