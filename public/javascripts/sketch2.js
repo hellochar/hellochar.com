@@ -297,7 +297,6 @@
 
     function animate(millisElapsed) {
         var timeStep = millisElapsed / 1000 * SIMULATION_SPEED;
-        console.log(timeStep);
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
         }
