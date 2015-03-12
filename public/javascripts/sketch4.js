@@ -392,6 +392,7 @@
     var sketch4 = {
         id: "dots",
         init: init,
+        instructions: "Click, drag, release, look, listen.",
         animate: animate,
         mousedown: mousedown,
         mousemove: mousemove,
