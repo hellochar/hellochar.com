@@ -494,6 +494,7 @@
     var sketch2 = {
         id: "line",
         init: init,
+        instructions: "Click, drag, look, listen.",
         animate: animate,
         mousedown: mousedown,
         mousemove: mousemove,

@@ -44,7 +44,12 @@
         // add sketch element to body
         var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
         $allSketches.append($sketchElement);
+
         $sketchElement.append(renderer.domElement);
+
+        var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions);
+        $sketchElement.append($instructionsElement);
+
         setCanvasDimensions(renderer, $sketchElement);
         $window.resize(function() {
             setCanvasDimensions(renderer, $sketchElement);
@@ -58,6 +63,9 @@
         // disable right-click on canvas
         $canvas.on('contextmenu', function (e) {
             return false;
+        });
+        $canvas.one("mousedown touchstart", function (e) {
+            $instructionsElement.addClass("interacted");
         });
         ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend"].forEach(function (eventName) {
             var callback = sketch[eventName];
