@@ -1,7 +1,7 @@
 (function () {
     // cheap mobile detection
-    var NUM_PARTICLES = (window.screen.width > 1024) ? 30000 : 5000;
-    var TIME_STEP = 1 / 20;
+    var NUM_PARTICLES = (window.screen.width > 1024) ? 15000 : 5000;
+    var SIMULATION_SPEED = 3;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
     var PULLING_DRAG_CONSTANT = 0.96075095702;
@@ -295,7 +295,9 @@
         composer.addPass(filter);
     }
 
-    function animate() {
+    function animate(millisElapsed) {
+        var timeStep = millisElapsed / 1000 * SIMULATION_SPEED;
+        console.log(timeStep);
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
         }
@@ -312,14 +314,14 @@
                 var forceX = sizeScaledGravityConstant * dx / length2;
                 var forceY = sizeScaledGravityConstant * dy / length2;
 
-                particle.dx += forceX * TIME_STEP;
-                particle.dy += forceY * TIME_STEP;
+                particle.dx += forceX * timeStep;
+                particle.dy += forceY * timeStep;
             }
-            particle.dx *= Math.pow(dragConstant, TIME_STEP);
-            particle.dy *= Math.pow(dragConstant, TIME_STEP);
+            particle.dx *= Math.pow(dragConstant, timeStep);
+            particle.dy *= Math.pow(dragConstant, timeStep);
 
-            particle.x += particle.dx * TIME_STEP;
-            particle.y += particle.dy * TIME_STEP;
+            particle.x += particle.dx * timeStep;
+            particle.y += particle.dy * timeStep;
 
             var wantedX = i * canvas.width / NUM_PARTICLES;
             var wantedY = canvas.height / 2;
