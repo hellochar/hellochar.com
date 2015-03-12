@@ -70,17 +70,15 @@
             event.preventDefault();
         });
 
+        var lastTimestamp = 0;
         // initialize and run sketch
-        var lastAnimate = (new Date()).getTime();
-        function animateAndRequestAnimFrame() {
+        function animateAndRequestAnimFrame(timestamp) {
+            var millisElapsed = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
                 audioContextGain.gain.value = 1;
-                sketch.animate();
-                var now = (new Date()).getTime();
-                var elapsed = now - lastAnimate;
-                lastAnimate = now;
-                // console.log(sketch.id, 1000 / elapsed);
+                sketch.animate(millisElapsed);
             } else {
                 $sketchElement.addClass("disabled");
                 audioContextGain.gain.value = 0;
@@ -99,7 +97,7 @@
         });
 
         init(renderer, audioContext);
-        animateAndRequestAnimFrame();
+        requestAnimationFrame(animateAndRequestAnimFrame);
     }
 
     window.initializeSketch = initializeSketch;
