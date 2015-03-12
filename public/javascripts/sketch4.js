@@ -1,6 +1,6 @@
 (function () {
     var NUM_FREE_PARTICLES;
-    var TIME_STEP = 1 / 20;
+    var SIMULATION_SPEED = 3;
     var GRAVITY_CONSTANT = 100;
     var STATIONARY_CONSTANT = 0.01;
     // speed becomes this percentage of its original speed every second
@@ -194,7 +194,8 @@
         composer.addPass(filter);
     }
 
-    function animate() {
+    function animate(millisElapsed) {
+        var timeStep = millisElapsed / 1000 * SIMULATION_SPEED;
         var averageX = 0, averageY = 0;
         var averageVel2 = 0;
         for (var i = 0; i < particles.length; i++) {
@@ -206,8 +207,8 @@
                 var forceX = GRAVITY_CONSTANT * dx / length2;
                 var forceY = GRAVITY_CONSTANT * dy / length2;
 
-                particle.dx += forceX * TIME_STEP;
-                particle.dy += forceY * TIME_STEP;
+                particle.dx += forceX * timeStep;
+                particle.dy += forceY * timeStep;
             }
 
             if (particle.isStationary) {
@@ -217,8 +218,8 @@
                 var forceX = STATIONARY_CONSTANT * dx * length2;
                 var forceY = STATIONARY_CONSTANT * dy * length2;
 
-                particle.dx += forceX * TIME_STEP;
-                particle.dy += forceY * TIME_STEP;
+                particle.dx += forceX * timeStep;
+                particle.dy += forceY * timeStep;
 
                 if (attractor == null) {
                     particle.originalX -= dx * 0.05;
@@ -230,11 +231,11 @@
             if (particle.dragRatio) {
                 thisParticleDragConstant *= particle.dragRatio;
             }
-            particle.dx *= Math.pow(thisParticleDragConstant, TIME_STEP);
-            particle.dy *= Math.pow(thisParticleDragConstant, TIME_STEP);
+            particle.dx *= Math.pow(thisParticleDragConstant, timeStep);
+            particle.dy *= Math.pow(thisParticleDragConstant, timeStep);
 
-            particle.x += particle.dx * TIME_STEP;
-            particle.y += particle.dy * TIME_STEP;
+            particle.x += particle.dx * timeStep;
+            particle.y += particle.dy * timeStep;
 
             particle.vertex.x = particle.x;
             particle.vertex.y = particle.y;
