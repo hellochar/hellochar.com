@@ -38,10 +38,10 @@ GravityShader = {
         "    vec4 outgoingColorFactor = vec4(0.93, 1.0, 1.0 / 0.93, 1.0);",
         "    vec4 incomingColorFactor = vec4(1.0 / 0.88, 1.0, 0.88, 1.0);",
         "    for( float i = 1.0; i < 12.0; i += 1.0) {",
-        "       incomingP = incomingP - gravity(incomingP, m, G);",
-        "       outgoingP = outgoingP + gravity(outgoingP, m, G * 2.0);",
-        "       c += texture2D(tDiffuse, incomingP / iResolution) / (i*i + 4.8) * pow(incomingColorFactor, vec4(i));",
-        "       c += texture2D(tDiffuse, outgoingP / iResolution) / (i*i + 4.8) * pow(outgoingColorFactor, vec4(i));",
+        "       incomingP = incomingP - gravity(incomingP, m, G * 2.0);",
+        "       outgoingP = outgoingP + gravity(outgoingP, m, G * 20.0);",
+        "       c += texture2D(tDiffuse, incomingP / iResolution) / (i*i + 2.8) * pow(incomingColorFactor, vec4(i));",
+        "       c += texture2D(tDiffuse, outgoingP / iResolution) / (i*i + 2.8) * pow(outgoingColorFactor, vec4(i));",
         "    }",
         "    return c;",
         "}",
@@ -52,7 +52,7 @@ GravityShader = {
         "    vec2 uvM = iMouse.xy;",
         "    vec4 c = texture2D(tDiffuse, vTextureCoord);",
         "    vec4 c2 = equality(uv, uvM);",
-        "    gl_FragColor = pow(c + c2, vec4(5.0/6.0));",
+        "    gl_FragColor = pow(c + c2, vec4(3.5/6.0));",
         "}"
     ].join("\n")
 }

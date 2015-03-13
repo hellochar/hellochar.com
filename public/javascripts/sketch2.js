@@ -279,7 +279,7 @@
         for(var i = 0; i < NUM_PARTICLES; i++) {
             particles[i] = {
                 x: i * canvas.width / NUM_PARTICLES,
-                y: canvas.height / 2,
+                y: canvas.height / 2 + (i % 3) - 1,
                 dx: 0,
                 dy: 0,
                 vertex: null
@@ -481,10 +481,10 @@
         var starTexture = THREE.ImageUtils.loadTexture("star.png");
         starTexture.minFilter = THREE.NearestFilter;
         var material = new THREE.PointCloudMaterial({
-            size: 12,
+            size: 9,
             sizeAttenuation: false,
             map: starTexture,
-            opacity: 0.185,
+            opacity: 0.2,
             transparent: true
         });
         pointCloud = new THREE.PointCloud(geometry, material);
