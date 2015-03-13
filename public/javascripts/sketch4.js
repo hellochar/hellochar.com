@@ -376,12 +376,9 @@
             particles[i].vertex = vertex;
         }
 
-        var starTexture = THREE.ImageUtils.loadTexture("star.png");
-        starTexture.minFilter = THREE.NearestFilter;
         var material = new THREE.PointCloudMaterial({
-            size: 15,
+            size: 2,
             sizeAttenuation: false,
-            map: starTexture,
             opacity: 0.18,
             transparent: true
         });
