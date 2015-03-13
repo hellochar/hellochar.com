@@ -387,13 +387,13 @@
         audioGroup.setFrequency(222 / normalizedEntropy);
         var noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
         audioGroup.setNoiseFrequency(noiseFreq);
-        var groupedUpness = Math.max(Math.sqrt(averageVel / varianceLength) - 0.05, 0.0);
-        audioGroup.setVolume(groupedUpness);
+        var groupedUpness = Math.sqrt(averageVel / varianceLength);
+        audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
         filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1;
-        filter.uniforms['G'].value = groupedUpness * 5000 / window.devicePixelRatio;
+        filter.uniforms['G'].value = (groupedUpness + 0.05) * 5000 / window.devicePixelRatio;
+        filter.uniforms['iMouseFactor'].value = (1/15) / (groupedUpness + 1);
         // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
-        filter.uniforms['iMouse'].value = new THREE.Vector2(canvas.width/2, canvas.height/2);
 
         geometry.verticesNeedUpdate = true;
         composer.render();
@@ -442,11 +442,13 @@
 
     function createAttractor(x, y) {
         attractor = { x: x, y : y };
+        filter.uniforms['iMouse'].value.set(x, renderer.domElement.height - y);
         dragConstant = PULLING_DRAG_CONSTANT;
         returnToStartPower = 0;
     }
 
     function moveAttractor(x, y) {
+        filter.uniforms['iMouse'].value.set(x, renderer.domElement.height - y);
         if (attractor != null) {
             attractor.x = x;
             attractor.y = y;
