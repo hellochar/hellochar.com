@@ -391,7 +391,7 @@
         audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
         filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1;
-        filter.uniforms['G'].value = (groupedUpness + 0.05) * 5000 / window.devicePixelRatio;
+        filter.uniforms['G'].value = (groupedUpness + 0.05) * 2000;
         filter.uniforms['iMouseFactor'].value = (1/15) / (groupedUpness + 1);
         // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
 

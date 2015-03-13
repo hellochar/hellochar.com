@@ -146,7 +146,8 @@
     }
 
     function animate() {
-        superPoint.point.set(cX, cY, 0);
+        // superPoint.point.set(cX, cY, 0);
+        superPoint.point.set(0,0,0);
         superPoint.updateSubtree(SERPINSKI_TRIANGLE, 9);
         // geometry.vertices.forEach(function (point, idx) {
         //     var color = geometry.colors[idx];
@@ -162,11 +163,16 @@
         var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
 
-        cX = Math.map(mouseX, 0, renderer.domElement.width, -1, 1);
-        cY = Math.map(mouseY, 0, renderer.domElement.height, -1, 1);
+        cX = Math.pow(Math.map(mouseX, 0, renderer.domElement.width, -4, 4), 3);
+        cY = Math.pow(Math.map(mouseY, 0, renderer.domElement.height, 4, -4), 3);
     }
 
     function mousedown(event) {
+    }
+
+    function resize() {
+        camera.aspect = renderer.domElement.width / camera.domElement.height;
+        camera.updateProjectionMatrix();
     }
 
     var sketchFractalFlame = {
@@ -174,7 +180,8 @@
         init: init,
         animate: animate,
         mousemove: mousemove,
-        mousedown: mousedown
+        mousedown: mousedown,
+        resize: resize
     };
     initializeSketch(sketchFractalFlame);
 })();

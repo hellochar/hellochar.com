@@ -66,23 +66,6 @@ hr {
     height: 100%;
 }
 
-.container .section {
-    margin: auto;
-    max-width: 1280px;
-    min-width: 300px;
-}
-
-.container .section .title {
-    padding-top: 0.50em;
-    padding-bottom: 0.50em;
-    text-align: center;
-}
-
-.container .section .title .small {
-    font-weight: normal;
-    font-size: 0.5em;
-}
-
 .container .all-sketches {
     height: calc(100% - 55px);
 }
@@ -149,6 +132,37 @@ hr {
 .container .sketch-wrapper canvas {
   background: #fafafa;
   position: relative;
+}
+
+.container .section {
+    margin: auto;
+    max-width: 1280px;
+    min-width: 300px;
+}
+
+.container .section.intro {
+    padding-top: 25%;
+    clear: both;
+}
+
+.container .section.intro .title {
+    padding-top: 0.50em;
+    padding-bottom: 1.50em;
+    text-align: center;
+}
+
+.container .section.intro .title .small {
+    font-weight: normal;
+    font-size: 0.5em;
+}
+
+.container .section.portfolio .title {
+    padding-top: 15%;
+    padding-bottom: 0.5em;
+}
+
+.container .section.portfolio .past-work-item {
+    padding: 1em;
 }
 
 .container .footer {
