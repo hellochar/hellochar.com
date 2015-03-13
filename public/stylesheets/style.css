@@ -109,6 +109,7 @@ hr {
 }
 
 .container .sketch-wrapper .instructions {
+    font-size: 2em;
     position: absolute;
     top: 55px;
     left: 25%;
