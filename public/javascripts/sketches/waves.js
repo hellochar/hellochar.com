@@ -265,13 +265,17 @@
     }
 
     function mousedown(event) {
-        isTimeFast = true;
-        setVelocityFromMouseEvent(event);
+        if (event.which === 1) {
+            isTimeFast = true;
+            setVelocityFromMouseEvent(event);
+        }
     }
 
     function mouseup(event) {
-        isTimeFast = false;
-        setVelocityFromMouseEvent(event);
+        if (event.which === 1) {
+            isTimeFast = false;
+            setVelocityFromMouseEvent(event);
+        }
     }
 
     function setVelocityFromMouseEvent(event) {

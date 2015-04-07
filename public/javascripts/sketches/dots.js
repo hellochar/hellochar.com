@@ -323,9 +323,11 @@
     }
 
     function mousedown(event) {
-        mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-        mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        createAttractor(mouseX, mouseY);
+        if (event.which === 1) {
+            mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+            mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+            createAttractor(mouseX, mouseY);
+        }
     }
 
     function mousemove(event) {
@@ -335,7 +337,9 @@
     }
 
     function mouseup(event) {
-        removeAttractor();
+        if (event.which === 1) {
+            removeAttractor();
+        }
     }
 
     function createAttractor(x, y) {

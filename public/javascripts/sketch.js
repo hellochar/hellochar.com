@@ -60,10 +60,6 @@
 
         // canvas setup
         var $canvas = $(renderer.domElement);
-        // disable right-click on canvas
-        $canvas.on('contextmenu', function (e) {
-            return false;
-        });
         $canvas.one("mousedown touchstart", function (e) {
             $instructionsElement.addClass("interacted");
         });
