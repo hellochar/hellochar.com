@@ -425,9 +425,11 @@
     }
 
     function mousedown(event) {
-        var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-        var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        createAttractor(mouseX, mouseY);
+        if (event.which === 1) {
+            var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+            var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+            createAttractor(mouseX, mouseY);
+        }
     }
 
     function mousemove(event) {
@@ -437,7 +439,9 @@
     }
 
     function mouseup(event) {
-        removeAttractor();
+        if (event.which === 1) {
+            removeAttractor();
+        }
     }
 
     function createAttractor(x, y) {
