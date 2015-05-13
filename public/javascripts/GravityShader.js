@@ -1,5 +1,6 @@
 GravityShader = {
     uniforms: {
+        gamma:       { type: 'f', value: 3.6/6.0 },
         iGlobalTime: { type: 'f', value: 0 },
         iMouse:      { type: 'v2', value: new THREE.Vector2(0, 0) },
         iMouseFactor:{ type: 'f', value: 1/15 },
@@ -24,6 +25,7 @@ GravityShader = {
         "uniform sampler2D tDiffuse;",
         "varying vec2 vTextureCoord;",
         "uniform float G;",
+        "uniform float gamma;",
 
         "vec2 gravity(vec2 p, vec2 attractionCenter, float g) {",
         "    float mass1 = 1.0;",
@@ -55,7 +57,7 @@ GravityShader = {
         "    vec2 uv = gl_FragCoord.xy;",
         "    vec4 c = texture2D(tDiffuse, vTextureCoord);",
         "    vec4 c2 = equality(uv, iResolution/2.0);",
-        "    gl_FragColor = pow(c + c2, vec4(4.2/6.0));",
+        "    gl_FragColor = pow(c + c2, vec4(gamma));",
         "}"
     ].join("\n")
 }
