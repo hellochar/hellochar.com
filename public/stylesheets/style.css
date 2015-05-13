@@ -9,76 +9,17 @@ html, body {
   height: 100%;
 }
 
-html {
-    overflow: visible;
-}
-
 body {
   background-color: #e9eaed;
   font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
   width: 100%;
 }
 
-hr {
-}
-
-.header {
-  background-color: #ff5140;
-  box-shadow: 0 0 4px rgba(0,0,0,0.5);
-  color: #333;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  height: 55px;
-  line-height: 55px;
-  vertical-align: middle;
-  text-align: center;
-  z-index: 1;
-}
-
-.header .nav {
-    display: inline-block;
-    margin-right: -4px; /* remove space from inline-block */
-}
-
-.header .title:after {
-    content: "|";
-    position: relative;
-    padding-left: 10px;
-    top: 2px;
-}
-
-.header .nav li {
-    transition: background 0.15s;
-    display: inline-block;
-    margin-right: -4px; /* remove space from inline-block */
-    padding: 0 10px;
-    cursor: pointer;
-}
-.header .nav li:hover {
-    background-color: #cc1a3c;
-}
-
-
-.container {
-    margin: 55px;
-    height: 100%;
-}
-
-.container .all-sketches {
-    height: calc(100% - 55px);
-}
-
-.container .sketch-wrapper {
-  transition: opacity 0.25s;
-  padding-top: 55px;
-  padding-bottom: 55px;
-  position: relative;
+.sketch-wrapper {
   width: 100%;
   height: 100%;
-  float: left;
   text-align: center;
+  position: relative;
 
   -moz-user-select: none;
   -khtml-user-select: none;
@@ -87,11 +28,18 @@ hr {
   user-select: none;
 }
 
-.container .sketch-wrapper.disabled {
+.sketch-wrapper.disabled {
     opacity: 0.25;
 }
 
-.container .sketch-wrapper .instructions {
+.sketch-wrapper canvas {
+  background: #fafafa;
+  display: block;
+  position: relative;
+}
+
+
+.sketch-wrapper .instructions {
     font-size: 2em;
     position: absolute;
     top: 55px;
@@ -104,9 +52,9 @@ hr {
     animation: pulsing 1s linear infinite alternate;
 }
 
-.container .sketch-wrapper .instructions.interacted {
-    animation: none;
+.sketch-wrapper .instructions.interacted {
     -webkit-animation: none;
+    animation: none;
     opacity: 0;
     display: none;
 }
@@ -129,76 +77,3 @@ hr {
     }
 }
 
-.container .sketch-wrapper canvas {
-  background: #fafafa;
-  position: relative;
-}
-
-.container .section {
-    margin: auto;
-    max-width: 1280px;
-    min-width: 300px;
-}
-
-.container .section.intro {
-    padding-top: 25%;
-    clear: both;
-}
-
-.container .section.intro .title {
-    padding-top: 0.50em;
-    padding-bottom: 1.50em;
-    text-align: center;
-}
-
-.container .section.intro .title .small {
-    font-weight: normal;
-    font-size: 0.5em;
-}
-
-.container .section.portfolio .title {
-    padding-top: 15%;
-    padding-bottom: 0.5em;
-}
-
-.container .section.portfolio .past-work-item {
-    padding: 1em;
-}
-
-.container .footer {
-    text-align: center;
-    padding: 0.5em;
-}
-
-@media (max-width: 600px) {
-    .container {
-        margin-left: 42px;
-        margin-right: 42px;
-    }
-
-    .container .sketch-wrapper {
-        padding-top: 42px;
-        padding-bottom: 42px;
-    }
-}
-
-/* https://color.adobe.com/create/color-wheel/?base=2&rule=Compound&selected=0&name=My%20Color%20Theme&mode=rgb&rgbvalues=0.07999999999999999,0.5946747250313638,0.8,0.24,0.4973373625156819,0.6,0,1,0.7406588226733675,1,0.31748377417886786,0.25,0.8,0.10246771211019282,0.2360470610908914&swatchOrder=0,1,2,3,4 */
-.teal {
-  color: #1498cc;
-}
-
-.darkteal {
-  color: #3d7f99;
-}
-
-.lightteal {
-  color: #00ffbd;
-}
-
-.darkorange {
-  color: #ff5140;
-}
-
-.darkred {
-  color: #cc1a3c;
-}

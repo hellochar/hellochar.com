@@ -1,0 +1,39 @@
+doctype html
+html
+  head
+    title Line - Xiaohan Zhang
+    meta(name="viewport",content="initial-scale=0.75, user-scalable=no")
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    link(rel='stylesheet', href='/stylesheets/sketch2.css')
+    // bower:js
+    script(src='/bower_components/jquery/dist/jquery.js')
+    script(src='/bower_components/lodash/dist/lodash.js')
+    script(src='/bower_components/threejs/build/three.js')
+    // endbower
+    script(src='/threejs/postprocessing/EffectComposer.js')
+    script(src='/threejs/postprocessing/MaskPass.js')
+    script(src='/threejs/postprocessing/RenderPass.js')
+    script(src='/threejs/postprocessing/ShaderPass.js')
+    script(src='/threejs/shaders/DotScreenShader.js')
+    script(src='/threejs/shaders/CopyShader.js')
+    script(src='/threejs/controls/OrbitControls.js')
+
+    script(src="/javascripts/math.js")
+    script(src="/javascripts/GravityShader.js")
+    script(src="/javascripts/ExplodeShader.js")
+    script.
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-59922576-1', 'auto');
+      ga('send', 'pageview');
+  body
+    script(src="/javascripts/sketch.js")
+    script(src="/javascripts/sketches/line.js")
+    script.
+        window.initializeSketch(window.getSketch("line"), $("body"), {
+            showInstructions: false
+        });
+
