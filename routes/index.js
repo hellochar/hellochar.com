@@ -5,8 +5,9 @@ router.get('/', function(req, res) {
   res.render('index');
 });
 
-router.get('/line', function(req, res) {
-  res.render('line');
+router.get(/\w+/, function(req, res) {
+  var sketchName = /\w+/.exec(req.url)[0];
+  res.render('singleSketch', { sketchName: sketchName });
 });
 
 module.exports = router;

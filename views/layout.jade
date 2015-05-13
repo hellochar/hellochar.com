@@ -1,7 +1,8 @@
 doctype html
 html
   head
-    title Line - Xiaohan Zhang
+    block title
+      title Xiaohan Zhang
     meta(name="viewport",content="initial-scale=0.75, user-scalable=no")
     link(rel='stylesheet', href='/stylesheets/style.css')
     link(rel='stylesheet', href='/stylesheets/sketch2.css')
@@ -29,10 +30,12 @@ html
 
       ga('create', 'UA-59922576-1', 'auto');
       ga('send', 'pageview');
+    block head
+
   body
+    block body
     script(src="/javascripts/sketch.js")
     script(src="/javascripts/sketches/line.js")
-    script.
-        window.initializeSketch(window.getSketch("line"), $("body"), {
-            showInstructions: false
-        });
+    script(src="/javascripts/sketches/dots.js")
+    script(src="/javascripts/sketches/waves.js")
+    block script
