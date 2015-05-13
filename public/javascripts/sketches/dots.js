@@ -406,6 +406,6 @@
         touchmove: touchmove,
         touchend: touchend
     };
-    initializeSketch(sketch4);
+    window.registerSketch(sketch4);
 })();
 

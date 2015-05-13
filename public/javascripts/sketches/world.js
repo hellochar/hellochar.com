@@ -126,10 +126,10 @@
         renderer.render(scene, camera);
     }
 
-    var sketch = {
+    var sketchWorld = {
         id: "world",
         init: init,
         animate: animate
     };
-    initializeSketch(sketch);
+    window.registerSketch(sketchWorld);
 })();

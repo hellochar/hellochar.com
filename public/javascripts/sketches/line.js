@@ -510,5 +510,5 @@
         touchmove: touchmove,
         touchend: touchend
     };
-    initializeSketch(sketch2);
+    window.registerSketch(sketch2);
 })();
