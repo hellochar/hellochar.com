@@ -49,8 +49,8 @@
 
         $sketchElement.append(renderer.domElement);
 
+        var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions);
         if (options.showInstructions) {
-            var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions);
             $sketchElement.append($instructionsElement);
         }
 
