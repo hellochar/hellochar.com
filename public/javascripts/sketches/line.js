@@ -1,6 +1,8 @@
 (function () {
+
     // cheap mobile detection
-    var NUM_PARTICLES = (window.screen.width > 1024) ? 15000 : 5000;
+    var NUM_PARTICLES = window.queryParams.p ? parseInt(window.queryParams.p) :
+                        (window.screen.width > 1024) ? 15000 : 5000;
     var SIMULATION_SPEED = 3;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
@@ -308,6 +310,9 @@
         composer.addPass(new THREE.RenderPass(scene, camera));
         filter = new THREE.ShaderPass(GravityShader);
         filter.uniforms['iResolution'].value = new THREE.Vector2(canvas.width, canvas.height);
+        if (window.queryParams.gamma) {
+            filter.uniforms['gamma'].value = parseFloat(window.queryParams.gamma);
+        }
         filter.renderToScreen = true;
         composer.addPass(filter);
     }

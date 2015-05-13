@@ -118,6 +118,15 @@
         return sketches[name];
     }
 
+    window.queryParams = new (function (sSearch) {
+      if (sSearch.length > 1) {
+        for (var aItKey, nKeyId = 0, aCouples = sSearch.substr(1).split("&"); nKeyId < aCouples.length; nKeyId++) {
+          aItKey = aCouples[nKeyId].split("=");
+          this[decodeURIComponent(aItKey[0])] = aItKey.length > 1 ? decodeURIComponent(aItKey[1]) : "";
+        }
+      }
+    })(window.location.search);
+
     window.registerSketch = registerSketch;
     window.getSketch = getSketch;
     window.initializeSketch = initializeSketch;
