@@ -1,6 +1,4 @@
 (function (window) {
-    var $allSketches = $(".all-sketches");
-    var $navbarElement = $(".nav");
     var $window = $(window);
 
     function isElementOnScreen(element) {
@@ -27,23 +25,14 @@
     //      resize: function(width, height),
     //      usePixi: false
     //   },
-    function initializeSketch(sketch) {
+    function initializeSketch(sketch, $sketchParent) {
         var init = sketch.init;
 
         var renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
 
-        // add sketch element to nav
-        var $navElement = $('<li></li>');
-        $navElement
-            .text(sketch.id)
-            .click(function () {
-                $('body').animate({ scrollTop: $sketchElement.offset().top - 55 }, 600);
-            })
-            .appendTo($navbarElement);
-
         // add sketch element to body
         var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
-        $allSketches.append($sketchElement);
+        $sketchParent.append($sketchElement);
 
         $sketchElement.append(renderer.domElement);
 
@@ -102,7 +91,19 @@
 
         init(renderer, audioContext);
         requestAnimationFrame(animateAndRequestAnimFrame);
+        return $sketchElement;
     }
 
+    var sketches = {};
+    function registerSketch(sketch) {
+        sketches[sketch.id] = sketch;
+    }
+
+    function getSketch(name) {
+        return sketches[name];
+    }
+
+    window.registerSketch = registerSketch;
+    window.getSketch = getSketch;
     window.initializeSketch = initializeSketch;
 })(window);

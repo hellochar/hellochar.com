@@ -183,6 +183,6 @@
         mousedown: mousedown,
         resize: resize
     };
-    initializeSketch(sketchFractalFlame);
+    window.registerSketch(sketchFractalFlame);
 })();
 
