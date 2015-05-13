@@ -44,8 +44,8 @@ GravityShader = {
         "       outgoingP = outgoingP + gravity(outgoingP, attractionCenter, G * 10.0);",
         "       incomingP -= (iMouse - p) * iMouseFactor;",
         "       outgoingP += (iMouse - p) * iMouseFactor;",
-        "       c += texture2D(tDiffuse, incomingP / iResolution) / (i*i + 3.5) * pow(incomingColorFactor, vec4(i));",
-        "       c += texture2D(tDiffuse, outgoingP / iResolution) / (i*i + 3.5) * pow(outgoingColorFactor, vec4(i));",
+        "       c += texture2D(tDiffuse, incomingP / iResolution) / (i*i + 6.5) * pow(incomingColorFactor, vec4(i));",
+        "       c += texture2D(tDiffuse, outgoingP / iResolution) / (i*i + 6.5) * pow(outgoingColorFactor, vec4(i));",
         "    }",
         "    return c;",
         "}",
@@ -55,7 +55,7 @@ GravityShader = {
         "    vec2 uv = gl_FragCoord.xy;",
         "    vec4 c = texture2D(tDiffuse, vTextureCoord);",
         "    vec4 c2 = equality(uv, iResolution/2.0);",
-        "    gl_FragColor = pow(c + c2, vec4(3.2/6.0));",
+        "    gl_FragColor = pow(c + c2, vec4(4.2/6.0));",
         "}"
     ].join("\n")
 }

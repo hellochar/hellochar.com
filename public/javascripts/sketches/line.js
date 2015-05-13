@@ -8,6 +8,18 @@
     var INERTIAL_DRAG_CONSTANT = 0.73913643334;
 
     function createAudioGroup(audioContext) {
+        var backgroundAudio = $("<audio autoplay loop>")
+                                .append('<source src="audio/line_background.ogg" type="audio/ogg">')
+                                .append('<source src="audio/line_background.mp3" type="audio/mp3">');
+
+        var sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
+        window.sourceNode = sourceNode;
+        $("body").append(backgroundAudio);
+
+        var backgroundAudioGain = audioContext.createGain();
+        backgroundAudioGain.gain.value = 0.5;
+        sourceNode.connect(backgroundAudioGain);
+        backgroundAudioGain.connect(audioContext.gain);
 
         // white noise
         var noise = (function() {
@@ -237,6 +249,9 @@
                 noiseSourceGain.gain.value = volume * 0.05;
                 chordSource.gain.value = 0.05;
                 chordHigh.gain.value = volume / 30;
+            },
+            setBackgroundVolume: function(volume) {
+                backgroundAudioGain.gain.value = volume;
             }
         };
     }
@@ -256,6 +271,8 @@
     var dragConstant = INERTIAL_DRAG_CONSTANT;
     var particles = [];
     var returnToStartPower = 0;
+
+    var mouseX = 0, mouseY = 0;
 
     // threejs stuff
     var camera;
@@ -385,10 +402,17 @@
 
         audioGroup.sourceLfo.frequency.value = flatRatio;
         audioGroup.setFrequency(222 / normalizedEntropy);
+
         var noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
         audioGroup.setNoiseFrequency(noiseFreq);
+
         var groupedUpness = Math.sqrt(averageVel / varianceLength);
         audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
+
+        var mouseDistanceToCenter = Math.sqrt(Math.pow(mouseX - averageX, 2) + Math.pow(mouseY - averageY, 2));
+        var normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(canvas.width * canvas.height);
+        var backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
+        audioGroup.setBackgroundVolume(backgroundVolume);
 
         filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1;
         filter.uniforms['G'].value = (groupedUpness + 0.05) * 2000;
@@ -408,6 +432,9 @@
         var touchY = touch.pageY - canvasOffset.top;
         // offset the touchY by its radius so the attractor is above the thumb
         touchY -= 100;
+
+        mouseX = touchX;
+        mouseY = touchY;
         createAttractor(touchX, touchY);
     }
 
@@ -417,6 +444,9 @@
         var touchX = touch.pageX - canvasOffset.left;
         var touchY = touch.pageY - canvasOffset.top;
         touchY -= 100;
+
+        mouseX = touchX;
+        mouseY = touchY;
         moveAttractor(touchX, touchY);
     }
 
@@ -426,15 +456,15 @@
 
     function mousedown(event) {
         if (event.which === 1) {
-            var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-            var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+            mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+            mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
             createAttractor(mouseX, mouseY);
         }
     }
 
     function mousemove(event) {
-        var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-        var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
+        mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
         moveAttractor(mouseX, mouseY);
     }
 
