@@ -16,16 +16,29 @@
         renderer.setSize(sketchElement.width(), sketchElement.height());
     }
 
-    // properties:
-    //   sketch: {
-    //      animate: function($sketchElement, canvasContext, audioContext),
-    //      id: unique string representing the name of this sketch,
-    //      init: function($sketchElement, canvasContext, audioContext),
-    //      mousedown, mouseup, mousemove: function(event) || [function(event)]
-    //      resize: function(width, height),
-    //      usePixi: false
-    //   },
-    function initializeSketch(sketch, $sketchParent) {
+    var DEFAULT_SKETCH_OPTIONS = {
+        showInstructions: true
+    };
+
+    /**
+     *
+     * Initializes the sketch object passed to it.
+     *
+     * @param sketch: {
+     *     animate: function($sketchElement, canvasContext, audioContext),
+     *     id: unique string representing the name of this sketch,
+     *     init: function($sketchElement, canvasContext, audioContext),
+     *     instructions: string,
+     *     mousedown, mouseup, mousemove: function(event) || [function(event)]
+     *     resize: function(width, height),
+     * }
+     * @param $sketchParent: JQuery element to place the sketch on.
+     * @param options: {
+     *     showInstructions: boolean
+     * }
+     */
+    function initializeSketch(sketch, $sketchParent, options) {
+        options = $.extend({}, DEFAULT_SKETCH_OPTIONS, options);
         var init = sketch.init;
 
         var renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
@@ -36,8 +49,10 @@
 
         $sketchElement.append(renderer.domElement);
 
-        var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions);
-        $sketchElement.append($instructionsElement);
+        if (options.showInstructions) {
+            var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions);
+            $sketchElement.append($instructionsElement);
+        }
 
         setCanvasDimensions(renderer, $sketchElement);
         $window.resize(function() {
