@@ -7,7 +7,7 @@
     var PULLING_DRAG_CONSTANT = 0.96075095702;
     var INERTIAL_DRAG_CONSTANT = 0.23913643334;
     var EXTENT = 10;
-    var GRID_SIZE = 7;
+    var GRID_SIZE = window.queryParams.gridSize ? parseInt(window.queryParams.gridSize) : 7;
 
     function createAudioGroup(audioContext) {
 

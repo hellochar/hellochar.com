@@ -1,0 +1,10 @@
+extends ./layout.jade
+
+block title
+  title #{sketchName} - Xiaohan Zhang
+
+block script
+  script.
+    window.initializeSketch(window.getSketch("#{sketchName}"), $("body"), {
+        showInstructions: false
+    });
