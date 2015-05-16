@@ -5,9 +5,8 @@ router.get('/', function(req, res) {
   res.render('index');
 });
 
-router.get(/\w+/, function(req, res) {
-  var sketchName = /\w+/.exec(req.url)[0];
-  res.render('singleSketch', { sketchName: sketchName });
+router.get('/:sketchName', function(req, res) {
+  res.render('singleSketch', { sketchName: req.params.sketchName });
 });
 
 module.exports = router;
