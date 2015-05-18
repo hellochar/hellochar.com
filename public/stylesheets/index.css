@@ -56,6 +56,11 @@ html {
   float: left;
 }
 
+.container .sketch-wrapper .new-window {
+    position: absolute;
+    right: -20px;
+}
+
 .container .section {
     margin: auto;
     max-width: 1280px;
@@ -63,7 +68,6 @@ html {
 }
 
 .container .section.intro {
-    padding-top: 25%;
     clear: both;
 }
 
@@ -79,7 +83,6 @@ html {
 }
 
 .container .section.portfolio .title {
-    padding-top: 15%;
     padding-bottom: 0.5em;
 }
 
