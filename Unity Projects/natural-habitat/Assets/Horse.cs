@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class Horse : MonoBehaviour {
-	public Behavior currentBehavior;
+	private Behavior currentBehavior;
 	private Animator animator;
 	private List<Horse> allHorses;
 
@@ -14,8 +14,7 @@ public class Horse : MonoBehaviour {
 			allHorses.Add (horseScript);
 		}
 		animator = GetComponent<Animator>();
-//		currentBehavior = new IdleBehavior (this);
-		currentBehavior = new RunToTargetBehavior (this);
+		currentBehavior = new IdleBehavior (this);
 		animator.SetFloat ("Speed", 0);
 	}
 
@@ -35,7 +34,7 @@ public class Horse : MonoBehaviour {
 	}
 
 	public void turnTowards(Vector3 point) {
-		Vector3 newDir = Vector3.RotateTowards (getFlatDirection (), point - getFlatDirection(), 0.25f, 0f);
+		Vector3 newDir = Vector3.RotateTowards (getFlatDirection (), point - getFlatPosition(), 0.25f, 0f);
 		transform.rotation = Quaternion.LookRotation (newDir);
 	}
 
@@ -65,8 +64,8 @@ public class Horse : MonoBehaviour {
 		Vector3 backFeetGlobalPosition = transform.TransformPoint (new Vector3(0, 0, backFeetZ));
 		Vector3 frontFeetGlobalPosition = transform.TransformPoint (new Vector3(0, 0, frontFeetZ));
 		float feetDistance = (backFeetGlobalPosition - frontFeetGlobalPosition).magnitude;
-		backFeetGlobalPosition.y += 10;
-		frontFeetGlobalPosition.y += 10;
+		backFeetGlobalPosition.y += 100;
+		frontFeetGlobalPosition.y += 100;
 		RaycastHit rcHitBack, rcHitFront;
 		Physics.Raycast (backFeetGlobalPosition, Vector3.down, out rcHitBack, 1 << 8);
 		Physics.Raycast (frontFeetGlobalPosition, Vector3.down, out rcHitFront, 1 << 8);
@@ -121,20 +120,18 @@ public class Horse : MonoBehaviour {
 	}
 
 	public class RunToTargetBehavior : Behavior {
-//		public Vector3 targetFlatLocation = new Vector3 (Random.Range(-28f, 14f), 0, Random.Range(8f, 45f));
-		public Vector3 targetFlatLocation = new Vector3 (0, 0, 15f);
-		public float speed = Random.Range(2.3f, 3.8f);
+		private Vector3 targetFlatLocation = new Vector3 (Random.Range(-28f, 14f), 0, Random.Range(8f, 45f));
+		private float speed = Random.Range(2.3f, 3.8f);
 
 		public RunToTargetBehavior(Horse horse) : base(horse) {}
 
 		public override void update() {
 			Vector3 targetDir = targetFlatLocation - horse.getFlatPosition();
-			Debug.Log (targetDir.magnitude);
 			if (targetDir.magnitude < 1f) {
 				horse.currentBehavior = new IdleBehavior(horse);
 			} else {
 				horse.turnTowards(targetFlatLocation);
-//				horse.moveForward(speed);
+				horse.moveForward(speed);
 			}
 		}
 	}
