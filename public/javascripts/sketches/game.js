@@ -35,7 +35,7 @@
                 new THREE.Face3(0, 2, 3)
             );
             // small epsilon to ensure transparency isn't hit
-            var e = 0.07;
+            var e = 0.10;
             geometry.faceVertexUvs[0].push(
                 [
                     new THREE.Vector2(e + 17*x     , e + 17*y     ),
@@ -69,7 +69,7 @@
     })();
 
     var GameObjects = {
-        makeShrub: function(position) {
+        makeGrass: function(position) {
             var shrub = Math.random() < 0.5 ?
                         SpriteSheet.getLandscapeMesh(22, 19) :
                         SpriteSheet.getLandscapeMesh(22, 20);
@@ -79,21 +79,109 @@
         makePerson: function(position) {
             var person = SpriteSheet.getCharacterMesh(0, 0);
             person.position.copy(position);
+            person.target = position.clone();
+            person.animate = function(millisElapsed) {
+                this.position.x = this.position.x * 0.7 + this.target.x * 0.3;
+                this.position.y = this.position.y * 0.7 + this.target.y * 0.3;
+            }
             return person;
+        },
+        makeEnemy: function(position) {
+            var person = SpriteSheet.getCharacterMesh(1, 10);
+            person.position.copy(position);
+            person.target = position.clone();
+            person.animate = function(millisElapsed) {
+                this.position.x = this.position.x * 0.7 + this.target.x * 0.3;
+                this.position.y = this.position.y * 0.7 + this.target.y * 0.3;
+            }
+            return person;
+        },
+        makeFlower: function(position) {
+            var tileMesh = SpriteSheet.getLandscapeMesh(3, 17);
+            tileMesh.position.copy(position);
+            tileMesh.time = 0;
+            tileMesh.animate = function(millisElapsed) {
+                this.time += millisElapsed;
+                if (Math.sin((position.x+position.y) / 5 + this.time / 900) < 0) {
+                    this.position.x = position.x - 0.02;
+                    this.position.y = position.y - 0.02;
+                } else {
+                    this.position.x = position.x + 0.02;
+                    this.position.y = position.y + 0.02;
+                }
+            }
+            return tileMesh;
+        },
+        makeLandscape: function(width, height) {
+            return landscape;
         }
     };
 
     var Sound = (function() {
         var walkAudio = new Audio();
         walkAudio.src = "/audio/game_character_walk.wav";
-        function playWalkSound(volume) {
-            volume = volume || 1;
-            walkAudio.volume = volume;
+        function playWalkSound() {
             walkAudio.play();
         }
 
+        //play ambient immediately
+        var outdoorsAmbientAudio = new Audio();
+        outdoorsAmbientAudio.src = "/audio/game_outdoors_ambient.mp3";
+        outdoorsAmbientAudio.loop = true;
+        outdoorsAmbientAudio.play();
+
         return {
             playWalkSound: playWalkSound
+        };
+    })();
+
+    var Map = (function() {
+        function buildLandscapeSprites(baseLayer, floorLayer, objectLayer, overheadLayer) {
+            var width = 15;
+            var height = 8;
+            var PADDING = 14;
+
+            for (var x = -width - PADDING; x < width + PADDING; x++) {
+                for (var y = -height - PADDING; y < height + PADDING; y++) {
+                    var base = SpriteSheet.getLandscapeMesh(3, 14);
+                    base.position.x = x;
+                    base.position.y = y;
+                    baseLayer.add(base);
+                }
+            }
+
+            for (var x = -width - PADDING; x < width + PADDING; x++) {
+                for (var y = -height - PADDING + (x%2); y < height + PADDING; y += 2) {
+                    if ((x < -width || x > width) ||
+                        (y < -height || y > height)) {
+                        var treeBottom = SpriteSheet.getLandscapeMesh(13, 19);
+                        treeBottom.position.x = x;
+                        treeBottom.position.y = y;
+                        var treeTop = SpriteSheet.getLandscapeMesh(13, 20);
+                        treeTop.position.x = x;
+                        treeTop.position.y = y + 1;
+                        treeTop.position.z = 1;
+                        objectLayer.add(treeBottom);
+                        overheadLayer.add(treeTop);
+                    }
+                }
+            }
+
+            function flowerExists(x, y) {
+                return Math.sin((x+25)*(y+93) / 2) < -0.5;
+            }
+            for (var x = -width; x < width; x++) {
+                for (var y = -height; y < height; y++) {
+                    if (flowerExists(x, y)) {
+                        var flower = GameObjects.makeFlower(new THREE.Vector3(x, y, 0));
+                        floorLayer.add(flower);
+                    }
+                }
+            }
+        }
+
+        return {
+            buildLandscapeSprites: buildLandscapeSprites
         };
     })();
 
@@ -125,8 +213,14 @@
     var renderer;
     var scene;
 
-    var landscape;
-    var shrub;
+    // base: bottom-level tile texture
+    // floor: decorations on the base like grass and flowers
+    // object: people, items, chairs, rocks
+    // overhead: tree tops
+    var baseLayer = new THREE.Object3D(),
+        floorLayer = new THREE.Object3D(),
+        objectLayer = new THREE.Object3D(),
+        overheadLayer = new THREE.Object3D();
 
     var personMesh;
 
@@ -141,65 +235,23 @@
         camera.lookAt(new THREE.Vector3(0,0,0));
         setCameraDimensions(canvas.width, canvas.height);
 
-        landscape = new THREE.Object3D();
-        for (var x = -6; x < 6; x++) {
-            for (var y = -6; y < 6; y++) {
-                var tileMesh = SpriteSheet.getLandscapeMesh(10, 4);
-                tileMesh.position.x = x;
-                tileMesh.position.y = y;
-                landscape.add(tileMesh);
-            }
-        }
-        window.landscape = landscape;
-        scene.add(landscape);
+        scene.add(baseLayer);
+        scene.add(floorLayer);
+        scene.add(objectLayer);
+        scene.add(overheadLayer);
 
-        function landscape2Exists(x, y) {
-            return Math.sin((x+25)*(y+93) / 2) < -0.5;
-        }
-        var landscape2 = new THREE.Object3D();
-        /**
-         *      2
-         *
-         * 4    x    1
-         *
-         *      8
-         *
-         * add the number if that adjacent square is not part of the landscape
-         * the total sum of the adjacent squares is the key into the map below
-         */
-        // var map = {
-        //     0: [3, 14],
-        //     1: [4, 14],
-        //     2: [3, 15],
-        //     3: [4, 15],
-        //     4: [2, 14],
-        //     5: [3, 14], // tile doesn't exist
-        //     6: [2, 15],
-        //     7: [3, 14], // tile doesn't exist
-        //     8: [3, 13],
-        //     9: [4, 13],
-        //     10: [3, 14], //tile doesn't exist
-        //     11: [
-        // };
-        for (var x = -6; x < 6; x++) {
-            for (var y = -6; y < 6; y++) {
-                if (landscape2Exists(x, y)) {
-                    var tileMesh = SpriteSheet.getLandscapeMesh(3, 17);
-                    tileMesh.position.x = x;
-                    tileMesh.position.y = y;
-                    landscape2.add(tileMesh);
-                }
-            }
-        }
-        scene.add(landscape2);
+        window.scene = scene;
 
-        shrub = GameObjects.makeShrub(new THREE.Vector3(0, 0, 0));
-        scene.add(shrub);
-        shrub2 = GameObjects.makeShrub(new THREE.Vector3(1, 1, 0));
-        scene.add(shrub2);
+        Map.buildLandscapeSprites(baseLayer, floorLayer, objectLayer, overheadLayer);
+
+        scene.add(GameObjects.makeGrass(new THREE.Vector3(0, 0, 0)));
+        scene.add(GameObjects.makeGrass(new THREE.Vector3(1, 1, 0)));
 
         personMesh = GameObjects.makePerson(new THREE.Vector3(0, 0, 0));
         scene.add(personMesh);
+
+        scene.add(GameObjects.makeEnemy(new THREE.Vector3(3, 5, 0)));
+        scene.add(GameObjects.makeEnemy(new THREE.Vector3(-7, -4, 0)));
     }
 
     function animate(millisElapsed) {
@@ -250,8 +302,8 @@
     function keydown(event) {
         function moveAction(x, y) {
             return function() {
-                personMesh.position.x += x;
-                personMesh.position.y += y;
+                personMesh.target.x += x;
+                personMesh.target.y += y;
                 Sound.playWalkSound();
                 event.preventDefault();
             };
