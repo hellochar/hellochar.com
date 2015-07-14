@@ -68,6 +68,22 @@
         };
     })();
 
+    function makeCharacter(position, spritesheetX, spritesheetY) {
+        var person = SpriteSheet.getCharacterMesh(spritesheetX, spritesheetY);
+        person.position.copy(position);
+        person.target = position.clone();
+        person.inventory = [
+            GameObjects.makeWoodItem(position),
+            GameObjects.makeWoodItem(position),
+            GameObjects.makeWoodItem(position)
+        ];
+        person.animate = function(millisElapsed) {
+            this.position.x = this.position.x * 0.7 + this.target.x * 0.3;
+            this.position.y = this.position.y * 0.7 + this.target.y * 0.3;
+        }
+        return person;
+    }
+
     var GameObjects = {
         makeGrass: function(position) {
             var shrub = Math.random() < 0.5 ?
@@ -77,24 +93,10 @@
             return shrub;
         },
         makePerson: function(position) {
-            var person = SpriteSheet.getCharacterMesh(0, 0);
-            person.position.copy(position);
-            person.target = position.clone();
-            person.animate = function(millisElapsed) {
-                this.position.x = this.position.x * 0.7 + this.target.x * 0.3;
-                this.position.y = this.position.y * 0.7 + this.target.y * 0.3;
-            }
-            return person;
+            return makeCharacter(position, 0, 0);
         },
         makeEnemy: function(position) {
-            var person = SpriteSheet.getCharacterMesh(1, 10);
-            person.position.copy(position);
-            person.target = position.clone();
-            person.animate = function(millisElapsed) {
-                this.position.x = this.position.x * 0.7 + this.target.x * 0.3;
-                this.position.y = this.position.y * 0.7 + this.target.y * 0.3;
-            }
-            return person;
+            return makeCharacter(position, 1, 10);
         },
         makeFlower: function(position) {
             var tileMesh = SpriteSheet.getLandscapeMesh(3, 17);
@@ -112,16 +114,29 @@
             }
             return tileMesh;
         },
-        makeLandscape: function(width, height) {
-            return landscape;
+        makeWoodItem: function(position) {
+            var woodMesh = SpriteSheet.getLandscapeMesh(41, 20);
+            woodMesh.position.copy(position);
+            woodMesh.scale.set(0.7, 0.7, 1);
+            return woodMesh;
         }
     };
 
     var Sound = (function() {
-        var walkAudio = new Audio();
-        walkAudio.src = "/audio/game_character_walk.wav";
-        function playWalkSound() {
-            walkAudio.play();
+        function loadAudio(src) {
+            var audio = new Audio();
+            audio.src = src;
+            return audio;
+        }
+        var audioCache = {
+            "character_walk": loadAudio("/audio/game_character_walk.wav"),
+            "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav")
+        }
+
+        function play(name) {
+            if (audioCache[name]) {
+                audioCache[name].play();
+            }
         }
 
         //play ambient immediately
@@ -131,7 +146,7 @@
         outdoorsAmbientAudio.play();
 
         return {
-            playWalkSound: playWalkSound
+            play: play
         };
     })();
 
@@ -139,7 +154,7 @@
         function buildLandscapeSprites(baseLayer, floorLayer, objectLayer, overheadLayer) {
             var width = 15;
             var height = 8;
-            var PADDING = 14;
+            var PADDING = 4;
 
             for (var x = -width - PADDING; x < width + PADDING; x++) {
                 for (var y = -height - PADDING; y < height + PADDING; y++) {
@@ -222,7 +237,7 @@
         objectLayer = new THREE.Object3D(),
         overheadLayer = new THREE.Object3D();
 
-    var personMesh;
+    var playerMesh;
 
     function init(_renderer, _audioContext) {
         renderer = _renderer;
@@ -230,8 +245,8 @@
         canvas = _renderer.domElement;
 
         scene = new THREE.Scene();
-        camera = new THREE.OrthographicCamera(0, 0, 0, 0, 0, 200);
-        camera.position.z = 100;
+        camera = new THREE.OrthographicCamera(0, 0, 0, 0, 0, 1000);
+        camera.position.z = 500;
         camera.lookAt(new THREE.Vector3(0,0,0));
         setCameraDimensions(canvas.width, canvas.height);
 
@@ -247,22 +262,66 @@
         scene.add(GameObjects.makeGrass(new THREE.Vector3(0, 0, 0)));
         scene.add(GameObjects.makeGrass(new THREE.Vector3(1, 1, 0)));
 
-        personMesh = GameObjects.makePerson(new THREE.Vector3(0, 0, 0));
-        scene.add(personMesh);
+        playerMesh = GameObjects.makePerson(new THREE.Vector3(0, 0, 0));
+        scene.add(playerMesh);
 
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(3, 5, 0)));
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(-7, -4, 0)));
     }
 
     function animate(millisElapsed) {
-      camera.position.x = personMesh.position.x;
-      camera.position.y = personMesh.position.y;
+      camera.position.x = playerMesh.position.x;
+      camera.position.y = playerMesh.position.y;
       scene.traverse(function(object) {
           if (object.animate) {
               object.animate(millisElapsed);
           }
       });
       renderer.render(scene, camera);
+    }
+
+    var inventoryObject;
+    function toggleInventory() {
+        Sound.play("inventory_toggle");
+        if (inventoryObject != null) {
+            scene.remove(inventoryObject);
+            inventoryObject = null;
+        } else {
+            var WIDTH = 5;
+            var HEIGHT = 5;
+            inventoryObject = new THREE.Object3D();
+            for (var x = 0; x < WIDTH; x++) {
+                for (var y = 0; y < HEIGHT; y++) {
+                    var spritesheetX = 4;
+                    var spritesheetY = 4;
+                    if (x == 0) {
+                        spritesheetX -= 1;
+                    }
+                    if (x == WIDTH - 1) {
+                        spritesheetX += 1;
+                    }
+                    if (y == 0) {
+                        spritesheetY -= 1;
+                    }
+                    if (y == HEIGHT - 1) {
+                        spritesheetY += 1;
+                    }
+                    var paperMesh = SpriteSheet.getLandscapeMesh(spritesheetX, spritesheetY);
+                    paperMesh.position.set(x, y, 0);
+                    inventoryObject.add(paperMesh);
+                }
+            }
+            playerMesh.inventory.forEach(function(item, index) {
+                var x = index % WIDTH;
+                var y = (HEIGHT - 1) - Math.floor(index / WIDTH);
+                item.position.set(x  + 0.15, y + 0.15, 1);
+                inventoryObject.add(item);
+            });
+            inventoryObject.animate = function() {
+                this.position.set(playerMesh.position.x+1, playerMesh.position.y - (HEIGHT - 1), 100);
+            }
+            scene.add(inventoryObject);
+        }
     }
 
     function setCameraDimensions(width, height) {
@@ -302,17 +361,27 @@
     function keydown(event) {
         function moveAction(x, y) {
             return function() {
-                personMesh.target.x += x;
-                personMesh.target.y += y;
-                Sound.playWalkSound();
+                playerMesh.target.x += x;
+                playerMesh.target.y += y;
+                Sound.play("character_walk");
                 event.preventDefault();
             };
         }
         var ACTIONS = {
+            // left
             37: moveAction(-1, 0),
+
+            // up
             38: moveAction(0, 1),
+
+            // right
             39: moveAction(1, 0),
-            40: moveAction(0, -1)
+
+            // down
+            40: moveAction(0, -1),
+
+            // 'i'
+            73: toggleInventory
         }
         var action = ACTIONS[event.keyCode];
         if (action != null) {
