@@ -1,27 +1,26 @@
 (function () {
     var SpriteSheet = (function() {
-        function loadSpritesheetTexture(url, width, height) {
+        function load(url, width, height) {
             var texture = THREE.ImageUtils.loadTexture(url);
             texture.magFilter = THREE.NearestFilter;
             texture.repeat.set(1 / width, 1 / height);
-            return texture;
+
+            var material = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+
+            return material;
         }
 
-        var TEXTURE_TILES = loadSpritesheetTexture("/images/roguelikeSheet_transparent.png", 968, 526);
-        var MATERIAL_TILES = new THREE.MeshBasicMaterial({
-          map: TEXTURE_TILES,
-          transparent: true,
-          side: THREE.DoubleSide
-        });
+        var MATERIALS = {
+            "tiles": load("/images/roguelikeSheet_transparent.png", 968, 526),
+            "dungeon": load("/images/roguelikeDungeon_transparent.png", 492, 305),
+            "characters": load("/images/roguelikeChar_transparent.png", 918, 203)
+        };
 
-        var TEXTURE_CHARACTERS = loadSpritesheetTexture("/images/roguelikeChar_transparent.png", 918, 203);
-        var MATERIAL_CHARACTERS = new THREE.MeshBasicMaterial({
-          map: TEXTURE_CHARACTERS,
-          transparent: true,
-          side: THREE.DoubleSide
-        });
-
-        function getSpriteGeometry(x, y) {
+        function getGeometry(x, y) {
             var geometry = new THREE.Geometry();
             var k = 1;
             geometry.vertices.push(
@@ -51,25 +50,20 @@
             return geometry;
         }
 
-        function getLandscapeMesh(x, y) {
-            var geometry = getSpriteGeometry(x, y);
-            return new THREE.Mesh(geometry, MATERIAL_TILES);
-        }
-
-        function getCharacterMesh(x, y) {
-            var geometry = getSpriteGeometry(x, y);
-            return new THREE.Mesh(geometry, MATERIAL_CHARACTERS);
+        function getMesh(x, y, tileSet) {
+            var material = MATERIALS[tileSet || "tiles"];
+            var geometry = getGeometry(x, y);
+            return new THREE.Mesh(geometry, material);
         }
 
         return {
-            getLandscapeMesh: getLandscapeMesh,
-            getCharacterMesh: getCharacterMesh,
-            getSpriteGeometry: getSpriteGeometry
+            getMesh: getMesh,
+            getGeometry: getGeometry
         };
     })();
 
     function makeCharacter(position, spritesheetX, spritesheetY) {
-        var person = SpriteSheet.getCharacterMesh(spritesheetX, spritesheetY);
+        var person = SpriteSheet.getMesh(spritesheetX, spritesheetY, "characters");
         person.position.copy(position);
         person.target = position.clone();
         person.inventory = [
@@ -87,8 +81,8 @@
     var GameObjects = {
         makeGrass: function(position) {
             var shrub = Math.random() < 0.5 ?
-                        SpriteSheet.getLandscapeMesh(22, 19) :
-                        SpriteSheet.getLandscapeMesh(22, 20);
+                        SpriteSheet.getMesh(22, 19, "tiles") :
+                        SpriteSheet.getMesh(22, 20, "tiles");
             shrub.position.copy(position);
             return shrub;
         },
@@ -99,12 +93,12 @@
             return makeCharacter(position, 1, 10);
         },
         makeFlower: function(position) {
-            var tileMesh = SpriteSheet.getLandscapeMesh(3, 17);
+            var tileMesh = SpriteSheet.getMesh(3, 17, "tiles");
             tileMesh.position.copy(position);
             tileMesh.time = 0;
             tileMesh.animate = function(millisElapsed) {
                 this.time += millisElapsed;
-                if (Math.sin((position.x+position.y) / 5 + this.time / 900) < 0) {
+                if (Math.sin((position.x + position.y * 1.1) / 5 + this.time / 900) < 0) {
                     this.position.x = position.x - 0.02;
                     this.position.y = position.y - 0.02;
                 } else {
@@ -115,7 +109,7 @@
             return tileMesh;
         },
         makeWoodItem: function(position) {
-            var woodMesh = SpriteSheet.getLandscapeMesh(41, 20);
+            var woodMesh = SpriteSheet.getMesh(41, 20, "tiles");
             woodMesh.position.copy(position);
             woodMesh.scale.set(0.7, 0.7, 1);
             return woodMesh;
@@ -143,7 +137,15 @@
         var outdoorsAmbientAudio = new Audio();
         outdoorsAmbientAudio.src = "/audio/game_outdoors_ambient.mp3";
         outdoorsAmbientAudio.loop = true;
+        outdoorsAmbientAudio.volume = 0;
+        outdoorsAmbientAudio.controls = true;
         outdoorsAmbientAudio.play();
+        $(outdoorsAmbientAudio).css({
+            position: "absolute",
+            top: 0,
+            "z-index": 1
+        });
+        $("body").append(outdoorsAmbientAudio);
 
         return {
             play: play
@@ -151,17 +153,16 @@
     })();
 
     var Map = (function() {
-        function buildLandscapeSprites(baseLayer, floorLayer, objectLayer, overheadLayer) {
+        function buildOutdoorsLevel(layer) {
             var width = 15;
             var height = 8;
             var PADDING = 4;
 
             for (var x = -width - PADDING; x < width + PADDING; x++) {
                 for (var y = -height - PADDING; y < height + PADDING; y++) {
-                    var base = SpriteSheet.getLandscapeMesh(3, 14);
-                    base.position.x = x;
-                    base.position.y = y;
-                    baseLayer.add(base);
+                    var base = SpriteSheet.getMesh(3, 14, "tiles");
+                    base.position.set(x, y, 0);
+                    layer.add(base);
                 }
             }
 
@@ -169,15 +170,14 @@
                 for (var y = -height - PADDING + (x%2); y < height + PADDING; y += 2) {
                     if ((x < -width || x > width) ||
                         (y < -height || y > height)) {
-                        var treeBottom = SpriteSheet.getLandscapeMesh(13, 19);
-                        treeBottom.position.x = x;
-                        treeBottom.position.y = y;
-                        var treeTop = SpriteSheet.getLandscapeMesh(13, 20);
-                        treeTop.position.x = x;
-                        treeTop.position.y = y + 1;
-                        treeTop.position.z = 1;
-                        objectLayer.add(treeBottom);
-                        overheadLayer.add(treeTop);
+                        var treeBottom = SpriteSheet.getMesh(13, 19, "tiles");
+                        treeBottom.position.set(x, y, 0);
+
+                        var treeTop = SpriteSheet.getMesh(13, 20, "tiles");
+                        treeTop.position.set(x, y+1, 1);
+
+                        layer.add(treeBottom);
+                        layer.add(treeTop);
                     }
                 }
             }
@@ -189,16 +189,43 @@
                 for (var y = -height; y < height; y++) {
                     if (flowerExists(x, y)) {
                         var flower = GameObjects.makeFlower(new THREE.Vector3(x, y, 0));
-                        floorLayer.add(flower);
+                        layer.add(flower);
                     }
+                }
+            }
+
+            layer.add(GameObjects.makeGrass(new THREE.Vector3(0, 0, 0)));
+            layer.add(GameObjects.makeGrass(new THREE.Vector3(1, 1, 0)));
+        }
+
+        function buildCaveLevel(layer) {
+            var width = 15;
+            var height = 8;
+            var PADDING = 4;
+
+            for (var x = -width - PADDING; x < width + PADDING; x++) {
+                for (var y = -height - PADDING; y < height + PADDING; y++) {
+                    var spritesheetX = 17 + Math.floor(Math.random() * 2);
+                    var base = SpriteSheet.getMesh(spritesheetX, 5, "dungeon");
+                    base.position.set(x, y, 0);
+                    layer.add(base);
                 }
             }
         }
 
         return {
-            buildLandscapeSprites: buildLandscapeSprites
+            buildOutdoorsLevel: buildOutdoorsLevel,
+            buildCaveLevel: buildCaveLevel
         };
     })();
+
+    function MapLevel(mapModel) {
+        THREE.Object3D.call( this );
+        this.mapModel = mapModel;
+    }
+
+    MapLevel.prototype = Object.create( THREE.Object3D.prototype );
+    MapLevel.prototype.constructor = MapLevel;
 
     var audioContext;
 
@@ -221,21 +248,15 @@
     //     ],
     // };
 
-    // var TILE_GEOMETRIES = [SpriteSheet.getSpriteGeometry(
+    // var TILE_GEOMETRIES = [SpriteSheet.getGeometry(
 
     // threejs stuff
     var camera;
     var renderer;
     var scene;
 
-    // base: bottom-level tile texture
-    // floor: decorations on the base like grass and flowers
-    // object: people, items, chairs, rocks
-    // overhead: tree tops
-    var baseLayer = new THREE.Object3D(),
-        floorLayer = new THREE.Object3D(),
-        objectLayer = new THREE.Object3D(),
-        overheadLayer = new THREE.Object3D();
+    var outdoorsLayer = new THREE.Object3D();
+    var caveLayer = new THREE.Object3D();
 
     var playerMesh;
 
@@ -245,22 +266,18 @@
         canvas = _renderer.domElement;
 
         scene = new THREE.Scene();
+        window.scene = scene;
         camera = new THREE.OrthographicCamera(0, 0, 0, 0, 0, 1000);
         camera.position.z = 500;
         camera.lookAt(new THREE.Vector3(0,0,0));
         setCameraDimensions(canvas.width, canvas.height);
 
-        scene.add(baseLayer);
-        scene.add(floorLayer);
-        scene.add(objectLayer);
-        scene.add(overheadLayer);
+        scene.add(outdoorsLayer);
+        Map.buildOutdoorsLevel(outdoorsLayer);
 
-        window.scene = scene;
-
-        Map.buildLandscapeSprites(baseLayer, floorLayer, objectLayer, overheadLayer);
-
-        scene.add(GameObjects.makeGrass(new THREE.Vector3(0, 0, 0)));
-        scene.add(GameObjects.makeGrass(new THREE.Vector3(1, 1, 0)));
+        caveLayer.visible = false;
+        scene.add(caveLayer);
+        Map.buildCaveLevel(caveLayer);
 
         playerMesh = GameObjects.makePerson(new THREE.Vector3(0, 0, 0));
         scene.add(playerMesh);
@@ -306,7 +323,7 @@
                     if (y == HEIGHT - 1) {
                         spritesheetY += 1;
                     }
-                    var paperMesh = SpriteSheet.getLandscapeMesh(spritesheetX, spritesheetY);
+                    var paperMesh = SpriteSheet.getMesh(spritesheetX, spritesheetY, "tiles");
                     paperMesh.position.set(x, y, 0);
                     inventoryObject.add(paperMesh);
                 }
@@ -314,7 +331,7 @@
             playerMesh.inventory.forEach(function(item, index) {
                 var x = index % WIDTH;
                 var y = (HEIGHT - 1) - Math.floor(index / WIDTH);
-                item.position.set(x  + 0.15, y + 0.15, 1);
+                item.position.set(x + 0.15, y + 0.15, 1);
                 inventoryObject.add(item);
             });
             inventoryObject.animate = function() {
@@ -381,7 +398,18 @@
             40: moveAction(0, -1),
 
             // 'i'
-            73: toggleInventory
+            73: toggleInventory,
+
+            // 'j'
+            74: function() {
+                if (outdoorsLayer.visible) {
+                    outdoorsLayer.visible = false;
+                    caveLayer.visible = true;
+                } else {
+                    outdoorsLayer.visible = true;
+                    caveLayer.visible = false;
+                }
+            }
         }
         var action = ACTIONS[event.keyCode];
         if (action != null) {
