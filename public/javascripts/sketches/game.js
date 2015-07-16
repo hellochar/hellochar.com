@@ -20,14 +20,18 @@
             "characters": load("/images/roguelikeChar_transparent.png", 918, 203)
         };
 
+        var geometryCache = {};
         function getGeometry(x, y) {
-            var geometry = new THREE.Geometry();
-            var k = 1;
+            var key = x + "," + y;
+            if (geometryCache[key]) {
+                return geometryCache[key];
+            }
+            var geometry = geometryCache[key] = new THREE.Geometry();
             geometry.vertices.push(
                 new THREE.Vector3(0, 0, 0),
-                new THREE.Vector3(k, 0, 0),
-                new THREE.Vector3(k, k, 0),
-                new THREE.Vector3(0, k, 0)
+                new THREE.Vector3(1, 0, 0),
+                new THREE.Vector3(1, 1, 0),
+                new THREE.Vector3(0, 1, 0)
             );
             geometry.faces.push(
                 new THREE.Face3(0, 1, 2),
@@ -56,6 +60,14 @@
             return new THREE.Mesh(geometry, material);
         }
 
+        // offset from the "center" tile
+        function tileOffset(missingTop, missingRight, missingBottom, missingLeft) {
+            var index = missingTop + missingRight * 2 + missingBottom * 4 + missingLeft * 8;
+            var offsets = [
+                // no offset
+            ];
+        }
+
         return {
             getMesh: getMesh,
             getGeometry: getGeometry
@@ -66,15 +78,21 @@
         var person = SpriteSheet.getMesh(spritesheetX, spritesheetY, "characters");
         person.position.copy(position);
         person.target = position.clone();
+        person.depth = 0;
         person.inventory = [
             GameObjects.makeWoodItem(position),
             GameObjects.makeWoodItem(position),
             GameObjects.makeWoodItem(position)
         ];
         person.animate = function(millisElapsed) {
-            this.position.x = this.position.x * 0.7 + this.target.x * 0.3;
-            this.position.y = this.position.y * 0.7 + this.target.y * 0.3;
+            this.position.lerp(this.target, 0.3);
         }
+        person.moveDepth = function (d) {
+            this.depth += d;
+            this.target.z = -this.depth + 0.001;
+        }
+        // initialize target z
+        person.moveDepth(0);
         return person;
     }
 
@@ -111,7 +129,6 @@
         makeWoodItem: function(position) {
             var woodMesh = SpriteSheet.getMesh(41, 20, "tiles");
             woodMesh.position.copy(position);
-            woodMesh.scale.set(0.7, 0.7, 1);
             return woodMesh;
         }
     };
@@ -123,6 +140,7 @@
             return audio;
         }
         var audioCache = {
+            "character_switch_floors": loadAudio("/audio/game_character_switch_floors.wav"),
             "character_walk": loadAudio("/audio/game_character_walk.wav"),
             "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav")
         }
@@ -153,31 +171,56 @@
     })();
 
     var Map = (function() {
-        function buildOutdoorsLevel(layer) {
+        function buildLevel(depth) {
+            function getWantedZ() {
+                if (playerMesh.depth <= depth) {
+                    return -playerMesh.depth - (depth - playerMesh.depth) * 0.3;
+                } else {
+                    return -depth;
+                }
+            }
+
+            var level = new THREE.Object3D();
+            level.depth = depth;
+            level.position.z = getWantedZ();
+            level.animate = function(millisElapsed) {
+                level.position.z = 0.7 * level.position.z + 0.3 * getWantedZ();
+            }
+            return level;
+        }
+
+        function buildOutdoorsLevel() {
+            var level = buildLevel(0);
             var width = 15;
             var height = 8;
             var PADDING = 4;
 
+            function floorExists(x, y) {
+                return Math.sin(x/4)*Math.sin(y/4) > -0.5;
+            }
+
             for (var x = -width - PADDING; x < width + PADDING; x++) {
                 for (var y = -height - PADDING; y < height + PADDING; y++) {
-                    var base = SpriteSheet.getMesh(3, 14, "tiles");
-                    base.position.set(x, y, 0);
-                    layer.add(base);
+                    if (floorExists(x, y)) {
+                        var base = SpriteSheet.getMesh(3, 14, "tiles");
+                        base.position.set(x, y, 0);
+                        level.add(base);
+                    }
                 }
             }
 
             for (var x = -width - PADDING; x < width + PADDING; x++) {
                 for (var y = -height - PADDING + (x%2); y < height + PADDING; y += 2) {
-                    if ((x < -width || x > width) ||
-                        (y < -height || y > height)) {
+                    if ((x < -width || x > width || y < -height || y > height) &&
+                        floorExists(x, y)) {
                         var treeBottom = SpriteSheet.getMesh(13, 19, "tiles");
-                        treeBottom.position.set(x, y, 0);
+                        treeBottom.position.set(x, y, 0.002);
 
                         var treeTop = SpriteSheet.getMesh(13, 20, "tiles");
-                        treeTop.position.set(x, y+1, 1);
+                        treeTop.position.set(x, y+1, 0.002);
 
-                        layer.add(treeBottom);
-                        layer.add(treeTop);
+                        level.add(treeBottom);
+                        level.add(treeTop);
                     }
                 }
             }
@@ -187,35 +230,63 @@
             }
             for (var x = -width; x < width; x++) {
                 for (var y = -height; y < height; y++) {
-                    if (flowerExists(x, y)) {
+                    if (flowerExists(x, y) && floorExists(x, y)) {
                         var flower = GameObjects.makeFlower(new THREE.Vector3(x, y, 0));
-                        layer.add(flower);
+                        level.add(flower);
                     }
                 }
             }
 
-            layer.add(GameObjects.makeGrass(new THREE.Vector3(0, 0, 0)));
-            layer.add(GameObjects.makeGrass(new THREE.Vector3(1, 1, 0)));
+            level.add(GameObjects.makeGrass(new THREE.Vector3(0, 0, 0)));
+            level.add(GameObjects.makeGrass(new THREE.Vector3(1, 1, 0)));
+            return level;
         }
 
-        function buildCaveLevel(layer) {
+        function buildCaveLevel(depth) {
+            var level = buildLevel(depth);
             var width = 15;
             var height = 8;
             var PADDING = 4;
 
+            function floorExists(x, y) {
+                return Math.sin(x/5 + 1.2 + depth)*Math.sin(y/5 + 4.2391 - depth*2.1) > -0.5;
+            }
             for (var x = -width - PADDING; x < width + PADDING; x++) {
                 for (var y = -height - PADDING; y < height + PADDING; y++) {
-                    var spritesheetX = 17 + Math.floor(Math.random() * 2);
-                    var base = SpriteSheet.getMesh(spritesheetX, 5, "dungeon");
-                    base.position.set(x, y, 0);
-                    layer.add(base);
+                    if (floorExists(x, y)) {
+                        (function() {
+                            // var spritesheetX = 17 + Math.floor(Math.random() * 2);
+                            var base = SpriteSheet.getMesh(8, 20, "tiles");
+                            base.position.set(x, y, 0);
+                            level.add(base);
+                        })();
+
+                        (function() {
+                            if((1+Math.sin((x*3432394291*y*depth + 1.23 + depth)))%1 < 0.05) {
+                                var spritesheetY = Math.random() < 0.5 ? 13 : 14;
+                                var mushroom = SpriteSheet.getMesh(0, spritesheetY, "dungeon");
+                                mushroom.position.set(x, y, 0);
+                                level.add(mushroom);
+                            }
+                        })();
+                    }
                 }
             }
+
+            return level;
+        }
+
+        var Levels = [];
+        function generateLevels() {
+            Levels.push(buildOutdoorsLevel());
+            Levels.push(buildCaveLevel(1));
+            Levels.push(buildCaveLevel(2));
+            Levels.push(buildCaveLevel(3));
         }
 
         return {
-            buildOutdoorsLevel: buildOutdoorsLevel,
-            buildCaveLevel: buildCaveLevel
+            generateLevels: generateLevels,
+            Levels: Levels
         };
     })();
 
@@ -254,6 +325,8 @@
     var camera;
     var renderer;
     var scene;
+    var rendererStats;
+    var stats;
 
     var outdoorsLayer = new THREE.Object3D();
     var caveLayer = new THREE.Object3D();
@@ -265,50 +338,67 @@
         audioContext = _audioContext;
         canvas = _renderer.domElement;
 
+        rendererStats = new THREEx.RendererStats();
+        rendererStats.domElement.style.position = 'absolute';
+        rendererStats.domElement.style.left = '5px';
+        rendererStats.domElement.style.bottom = '0px';
+        document.body.appendChild( rendererStats.domElement );
+
+        stats = new Stats();
+        stats.domElement.style.position = "absolute";
+        stats.domElement.style.bottom = "0px";
+        stats.domElement.style.left = "100px";
+        document.body.appendChild( stats.domElement );
+
         scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x000000, 1, 4);
         window.scene = scene;
-        camera = new THREE.OrthographicCamera(0, 0, 0, 0, 0, 1000);
-        camera.position.z = 500;
-        camera.lookAt(new THREE.Vector3(0,0,0));
+        // camera = new THREE.OrthographicCamera(0, 0, 0, 0, 0.0001, 1000);
+        camera = new THREE.PerspectiveCamera(160, 1, 0.01, 10);
         setCameraDimensions(canvas.width, canvas.height);
 
-        scene.add(outdoorsLayer);
-        Map.buildOutdoorsLevel(outdoorsLayer);
-
-        caveLayer.visible = false;
-        scene.add(caveLayer);
-        Map.buildCaveLevel(caveLayer);
-
-        playerMesh = GameObjects.makePerson(new THREE.Vector3(0, 0, 0));
+        playerMesh = GameObjects.makePerson(new THREE.Vector3(0, 0, 0.001));
         scene.add(playerMesh);
+        playerMesh.add(camera);
+        camera.position.set(0.5, 0.5, 1);
+
+        Map.generateLevels();
+        scene.add(Map.Levels[0]);
+        scene.add(Map.Levels[1]);
+        scene.add(Map.Levels[2]);
+        scene.add(Map.Levels[3]);
 
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(3, 5, 0)));
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(-7, -4, 0)));
     }
 
     function animate(millisElapsed) {
-      camera.position.x = playerMesh.position.x;
-      camera.position.y = playerMesh.position.y;
-      scene.traverse(function(object) {
-          if (object.animate) {
-              object.animate(millisElapsed);
-          }
-      });
-      renderer.render(scene, camera);
+        stats.begin();
+            scene.traverse(function(object) {
+                if (object.animate) {
+                    object.animate(millisElapsed);
+                }
+            });
+        renderer.render(scene, camera);
+        stats.end();
+        rendererStats.update(renderer);
     }
 
     var inventoryObject;
     function toggleInventory() {
         Sound.play("inventory_toggle");
         if (inventoryObject != null) {
-            scene.remove(inventoryObject);
+            playerMesh.remove(inventoryObject);
             inventoryObject = null;
         } else {
             var WIDTH = 5;
             var HEIGHT = 5;
             inventoryObject = new THREE.Object3D();
+            inventoryObject.position.set(1.05, 0.5, 0);
+            inventoryObject.scale.set(0.5, 0.5, 1);
+            playerMesh.add(inventoryObject);
             for (var x = 0; x < WIDTH; x++) {
-                for (var y = 0; y < HEIGHT; y++) {
+                for (var y = 0; y > -HEIGHT; y--) {
                     var spritesheetX = 4;
                     var spritesheetY = 4;
                     if (x == 0) {
@@ -318,10 +408,10 @@
                         spritesheetX += 1;
                     }
                     if (y == 0) {
-                        spritesheetY -= 1;
-                    }
-                    if (y == HEIGHT - 1) {
                         spritesheetY += 1;
+                    }
+                    if (y == -(HEIGHT - 1)) {
+                        spritesheetY -= 1;
                     }
                     var paperMesh = SpriteSheet.getMesh(spritesheetX, spritesheetY, "tiles");
                     paperMesh.position.set(x, y, 0);
@@ -330,30 +420,27 @@
             }
             playerMesh.inventory.forEach(function(item, index) {
                 var x = index % WIDTH;
-                var y = (HEIGHT - 1) - Math.floor(index / WIDTH);
-                item.position.set(x + 0.15, y + 0.15, 1);
+                var y = -Math.floor(index / WIDTH);
+                item.position.set(x, y, 0.01);
                 inventoryObject.add(item);
             });
-            inventoryObject.animate = function() {
-                this.position.set(playerMesh.position.x+1, playerMesh.position.y - (HEIGHT - 1), 100);
-            }
-            scene.add(inventoryObject);
         }
     }
 
     function setCameraDimensions(width, height) {
-        var extent = 6;
-        if (width > height) {
-            camera.top = extent;
-            camera.bottom = -extent;
-            camera.left = -extent * width / height;
-            camera.right = extent * width / height;
-        } else {
-            camera.left = -extent;
-            camera.right = extent;
-            camera.top = extent * height / width;
-            camera.bottom = -extent * height / width;
-        }
+        // var extent = 6;
+        // if (width > height) {
+        //     camera.top = extent;
+        //     camera.bottom = -extent;
+        //     camera.left = -extent * width / height;
+        //     camera.right = extent * width / height;
+        // } else {
+        //     camera.left = -extent;
+        //     camera.right = extent;
+        //     camera.top = extent * height / width;
+        //     camera.bottom = -extent * height / width;
+        // }
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
     }
 
@@ -402,13 +489,14 @@
 
             // 'j'
             74: function() {
-                if (outdoorsLayer.visible) {
-                    outdoorsLayer.visible = false;
-                    caveLayer.visible = true;
-                } else {
-                    outdoorsLayer.visible = true;
-                    caveLayer.visible = false;
-                }
+                Sound.play("character_switch_floors");
+                playerMesh.moveDepth(1);
+            },
+
+            // 'k'
+            75: function() {
+                Sound.play("character_switch_floors");
+                playerMesh.moveDepth(-1);
             }
         }
         var action = ACTIONS[event.keyCode];
