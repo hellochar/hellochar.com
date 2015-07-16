@@ -61,16 +61,92 @@
         }
 
         // offset from the "center" tile
-        function tileOffset(missingTop, missingRight, missingBottom, missingLeft) {
+        /*
+         *       1
+         *
+         *   8   x   2
+         *
+         *       4
+         */
+        function getConnectorTileOffset(floorExists, x, y) {
+            var missingTop = !floorExists(x, y + 1),
+                missingRight = !floorExists(x + 1, y),
+                missingBottom = !floorExists(x, y - 1),
+                missingLeft = !floorExists(x - 1, y);
             var index = missingTop + missingRight * 2 + missingBottom * 4 + missingLeft * 8;
             var offsets = [
-                // no offset
+                // 0: no offset
+                [0, 0],
+
+                // 1: only top
+                [0, 1],
+
+                // 2: only right
+                [1, 0],
+
+                // 3: top-right
+                [1, 1],
+
+                // 4: only bottom
+                [0, -1],
+
+                // 5: top and bottom missing
+                [1, 2],
+
+                // 6: bottom and right
+                [1, -1],
+                
+                // 7: top, right, and bottom
+                [-3, -2],
+
+                // 8: left only
+                [-1, 0],
+
+                // 9: left/top
+                [-1, 1],
+
+                // 10: left/right
+                [1, 3],
+
+                // 11: left/top/right
+                [-2, -1],
+
+                // 12: left/bottom
+                [-1, -1],
+
+                // 13: left/bottom/top
+                [-2, -2],
+
+                // 14: left/bottom/right
+                [-3, -1],
+
+                // 15: left/bottom/right/top
+                [0, -2]
             ];
+
+            if (index == 0) {
+                if (!floorExists(x + 1, y + 1)) {
+                    // top-right corner missing
+                    return [-3, 0];
+                } else if (!floorExists(x + 1, y - 1)) {
+                    // bottom-right corner missing
+                    return [-3, 1];
+                } else if (!floorExists(x - 1, y - 1)) {
+                    // bottom-left corner missing
+                    return [-2, 1];
+                } else if (!floorExists(x - 1, y + 1)) {
+                    // top-left corner missing
+                    return [-2, 0];
+                }
+            }
+
+            return offsets[index];
         }
 
         return {
             getMesh: getMesh,
-            getGeometry: getGeometry
+            getGeometry: getGeometry,
+            getConnectorTileOffset: getConnectorTileOffset
         };
     })();
 
@@ -255,8 +331,8 @@
                 for (var y = -height - PADDING; y < height + PADDING; y++) {
                     if (floorExists(x, y)) {
                         (function() {
-                            // var spritesheetX = 17 + Math.floor(Math.random() * 2);
-                            var base = SpriteSheet.getMesh(8, 20, "tiles");
+                            var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
+                            var base = SpriteSheet.getMesh(8 + offset[0], 20 + offset[1], "tiles");
                             base.position.set(x, y, 0);
                             level.add(base);
                         })();
