@@ -155,6 +155,8 @@
         person.position.copy(position);
         person.target = position.clone();
         person.depth = 0;
+        person.energy = 1000;
+        person.maxEnergy = 1000;
         person.inventory = [
             GameObjects.makeWoodItem(position),
             GameObjects.makeWoodItem(position),
@@ -166,6 +168,12 @@
         person.moveDepth = function (d) {
             this.depth += d;
             this.target.z = -this.depth + 0.001;
+        }
+        person.move = function(x, y) {
+            this.target.x += x;
+            this.target.y += y;
+            this.energy -= 1;
+            HUD.updateEnergyIndicator();
         }
         // initialize target z
         person.moveDepth(0);
@@ -210,15 +218,16 @@
     };
 
     var Sound = (function() {
-        function loadAudio(src) {
+        function loadAudio(src, volume) {
+            volume = volume || 1;
             var audio = new Audio();
             audio.src = src;
             return audio;
         }
         var audioCache = {
-            "character_switch_floors": loadAudio("/audio/game_character_switch_floors.wav"),
+            "character_switch_floors": loadAudio("/audio/game_character_switch_floors.wav", 0.5),
             "character_walk": loadAudio("/audio/game_character_walk.wav"),
-            "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav")
+            "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav", 0.5)
         }
 
         function play(name) {
@@ -330,21 +339,23 @@
             for (var x = -width - PADDING; x < width + PADDING; x++) {
                 for (var y = -height - PADDING; y < height + PADDING; y++) {
                     if (floorExists(x, y)) {
+                        var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
                         (function() {
-                            var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
                             var base = SpriteSheet.getMesh(8 + offset[0], 20 + offset[1], "tiles");
                             base.position.set(x, y, 0);
                             level.add(base);
                         })();
 
-                        (function() {
-                            if((1+Math.sin((x*3432394291*y*depth + 1.23 + depth)))%1 < 0.05) {
-                                var spritesheetY = Math.random() < 0.5 ? 13 : 14;
-                                var mushroom = SpriteSheet.getMesh(0, spritesheetY, "dungeon");
-                                mushroom.position.set(x, y, 0);
-                                level.add(mushroom);
-                            }
-                        })();
+                        if (offset[0] == 0 && offset[1] == 0) {
+                            (function() {
+                                if((1+Math.sin((x*3432394291*y*depth + 1.23 + depth)))%1 < 0.05) {
+                                    var spritesheetY = Math.random() < 0.5 ? 13 : 14;
+                                    var mushroom = SpriteSheet.getMesh(0, spritesheetY, "dungeon");
+                                    mushroom.position.set(x, y, 0);
+                                    level.add(mushroom);
+                                }
+                            })();
+                        }
                     }
                 }
             }
@@ -366,6 +377,74 @@
         };
     })();
 
+    var HUD = (function() {
+        var inventoryObject;
+        function toggleInventory() {
+            Sound.play("inventory_toggle");
+            if (inventoryObject != null) {
+                playerMesh.remove(inventoryObject);
+                inventoryObject = null;
+            } else {
+                var WIDTH = 5;
+                var HEIGHT = 5;
+                inventoryObject = new THREE.Object3D();
+                inventoryObject.position.set(1.05, 0.5, 0);
+                inventoryObject.scale.set(0.5, 0.5, 1);
+                playerMesh.add(inventoryObject);
+                for (var x = 0; x < WIDTH; x++) {
+                    for (var y = 0; y > -HEIGHT; y--) {
+                        var spritesheetX = 4;
+                        var spritesheetY = 4;
+                        if (x == 0) {
+                            spritesheetX -= 1;
+                        }
+                        if (x == WIDTH - 1) {
+                            spritesheetX += 1;
+                        }
+                        if (y == 0) {
+                            spritesheetY += 1;
+                        }
+                        if (y == -(HEIGHT - 1)) {
+                            spritesheetY -= 1;
+                        }
+                        var paperMesh = SpriteSheet.getMesh(spritesheetX, spritesheetY, "tiles");
+                        paperMesh.position.set(x, y, 0);
+                        inventoryObject.add(paperMesh);
+                    }
+                }
+                playerMesh.inventory.forEach(function(item, index) {
+                    var x = index % WIDTH;
+                    var y = -Math.floor(index / WIDTH);
+                    item.position.set(x, y, 0.01);
+                    inventoryObject.add(item);
+                });
+            }
+        }
+
+        var energyIndicator;
+        function createEnergyIndicator() {
+            energyIndicator = $("<div>Energy: <span></span></div>").css({
+                position: "absolute",
+                top: 50,
+                left: 0,
+                color: "white",
+                "z-index": 1
+            });
+            document.body.appendChild( energyIndicator[0] );
+            updateEnergyIndicator();
+        }
+
+        function updateEnergyIndicator() {
+            energyIndicator.find("span").text(playerMesh.energy + " / " + playerMesh.maxEnergy);
+        }
+
+        return {
+            toggleInventory: toggleInventory,
+            createEnergyIndicator: createEnergyIndicator,
+            updateEnergyIndicator: updateEnergyIndicator
+        }
+    })();
+
     function MapLevel(mapModel) {
         THREE.Object3D.call( this );
         this.mapModel = mapModel;
@@ -375,27 +454,6 @@
     MapLevel.prototype.constructor = MapLevel;
 
     var audioContext;
-
-    // var mapModel = {
-    //     width: 10,
-    //     height: 10,
-    //     layers:
-    //     [
-    //         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    //          0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    //          [
-    //     ],
-    // };
-
-    // var TILE_GEOMETRIES = [SpriteSheet.getGeometry(
 
     // threejs stuff
     var camera;
@@ -437,6 +495,7 @@
         scene.add(playerMesh);
         playerMesh.add(camera);
         camera.position.set(0.5, 0.5, 1);
+        HUD.createEnergyIndicator();
 
         Map.generateLevels();
         scene.add(Map.Levels[0]);
@@ -448,6 +507,8 @@
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(-7, -4, 0)));
     }
 
+    var updaters = [];
+
     function animate(millisElapsed) {
         stats.begin();
             scene.traverse(function(object) {
@@ -458,49 +519,6 @@
         renderer.render(scene, camera);
         stats.end();
         rendererStats.update(renderer);
-    }
-
-    var inventoryObject;
-    function toggleInventory() {
-        Sound.play("inventory_toggle");
-        if (inventoryObject != null) {
-            playerMesh.remove(inventoryObject);
-            inventoryObject = null;
-        } else {
-            var WIDTH = 5;
-            var HEIGHT = 5;
-            inventoryObject = new THREE.Object3D();
-            inventoryObject.position.set(1.05, 0.5, 0);
-            inventoryObject.scale.set(0.5, 0.5, 1);
-            playerMesh.add(inventoryObject);
-            for (var x = 0; x < WIDTH; x++) {
-                for (var y = 0; y > -HEIGHT; y--) {
-                    var spritesheetX = 4;
-                    var spritesheetY = 4;
-                    if (x == 0) {
-                        spritesheetX -= 1;
-                    }
-                    if (x == WIDTH - 1) {
-                        spritesheetX += 1;
-                    }
-                    if (y == 0) {
-                        spritesheetY += 1;
-                    }
-                    if (y == -(HEIGHT - 1)) {
-                        spritesheetY -= 1;
-                    }
-                    var paperMesh = SpriteSheet.getMesh(spritesheetX, spritesheetY, "tiles");
-                    paperMesh.position.set(x, y, 0);
-                    inventoryObject.add(paperMesh);
-                }
-            }
-            playerMesh.inventory.forEach(function(item, index) {
-                var x = index % WIDTH;
-                var y = -Math.floor(index / WIDTH);
-                item.position.set(x, y, 0.01);
-                inventoryObject.add(item);
-            });
-        }
     }
 
     function setCameraDimensions(width, height) {
@@ -541,9 +559,8 @@
     function keydown(event) {
         function moveAction(x, y) {
             return function() {
-                playerMesh.target.x += x;
-                playerMesh.target.y += y;
                 Sound.play("character_walk");
+                playerMesh.move(x, y);
                 event.preventDefault();
             };
         }
@@ -561,7 +578,7 @@
             40: moveAction(0, -1),
 
             // 'i'
-            73: toggleInventory,
+            73: HUD.toggleInventory,
 
             // 'j'
             74: function() {
