@@ -166,14 +166,32 @@
             this.position.lerp(this.target, 0.3);
         }
         person.moveDepth = function (d) {
-            this.depth += d;
+            if (d != 0) {
+                if (this.depth + d >= levels.length || this.depth + d < 0) {
+                    return;
+                }
+                Sound.play("character_switch_floors");
+                this.depth += d;
+            }
             this.target.z = -this.depth + 0.001;
         }
         person.move = function(x, y) {
+            if (levels[this.depth].isObstructed(this.target.x + x, this.target.y + y)) {
+                Sound.play("character_walk_fail");
+                return;
+            }
+            Sound.play("character_walk");
             this.target.x += x;
             this.target.y += y;
             this.energy -= 1;
-            HUD.updateEnergyIndicator();
+            while (levels[this.depth].get(this.target.x, this.target.y) < 0) {
+                if (this.depth >= levels.length - 1) {
+                    return;
+                }
+                this.moveDepth(1);
+                this.energy -= 10;
+                HUD.updateEnergyIndicator();
+            }
         }
         // initialize target z
         person.moveDepth(0);
@@ -227,6 +245,7 @@
         var audioCache = {
             "character_switch_floors": loadAudio("/audio/game_character_switch_floors.wav", 0.2),
             "character_walk": loadAudio("/audio/game_character_walk.wav", 0.5),
+            "character_walk_fail": loadAudio("/audio/game_character_walk_fail.wav", 0.5),
             "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav", 0.05)
         }
 
@@ -285,17 +304,31 @@
             // -1 = empty space
             // 0 = normal ground
             this.grid = [];
+            this.obstructions = [];
 
             for(var i = 0; i < this.width*this.height; i++) {
                 var x = i % this.width;
                 var y = Math.floor(i / this.width);
                 this.grid[i] = generator(x, y);
+                this.obstructions[i] = false;
             }
             this.updateMesh();
         }
 
+        Level.prototype.obstruct = function(x, y) {
+            this.obstructions[y*this.width + x] = true;
+        }
+
+        Level.prototype.unobstruct = function(x, y) {
+            this.obstructions[y*this.width + x] = false;
+        }
+
+        Level.prototype.isObstructed = function(x, y) {
+            return this.obstructions[y*this.width + x];
+        }
+
         Level.prototype.get = function(x, y) {
-            return this.grid[y*width + x];
+            return this.grid[y*this.width + x];
         }
 
         Level.prototype.updateMesh = function() {
@@ -311,7 +344,7 @@
             }
         }
 
-        Level.prototype.addObjects = function(callback) {
+        Level.prototype.addObjects = function(callback, shouldObstruct) {
             for (var i = 0; i < this.width*this.height; i++) {
                 var x = i % this.width;
                 var y = Math.floor(i / this.width);
@@ -319,12 +352,15 @@
                     var objectMesh = callback(x, y);
                     if (objectMesh != null) {
                         this.mesh.add(objectMesh);
+                        if (shouldObstruct) {
+                            this.obstruct(x, y);
+                        }
                     }
                 }
             }
         }
 
-        function buildOutdoorsLevel() {
+        function buildOutdoorsLevel(width, height) {
             function generator(x, y) {
                 if ( Math.sin(x/4)*Math.sin(y/4) > -0.5 ) {
                     return 0;
@@ -337,14 +373,15 @@
                 return SpriteSheet.getMesh(3, 14, "tiles");
             }
 
-            var level = new Level(38, 24, 0, generator, getFloorMesh);
+            var level = new Level(width, height, 0, generator, getFloorMesh);
 
             level.addObjects(function(x, y) {
-                var flowerExists = Math.sin((x*3+25.2)*(y*0.9+345.3492) / 2) < -0.9;
+                var flowerExists = Math.sin((x*3+25.2)*(y*0.9+345.3492) / 2) < -0.99;
                 if (flowerExists) {
                     return GameObjects.makeFlower(new THREE.Vector3(x, y, 0));
                 }
-            });
+            }, false);
+
             level.addObjects(function(x, y) {
                 if ((x < 4 || x > 34 || y < 4 || y > 20) &&
                     (y+x)%2 == 0) {
@@ -359,14 +396,12 @@
                     tree.add(treeTop);
                     return tree;
                 }
-            });
+            }, true);
 
-            level.mesh.add(GameObjects.makeGrass(new THREE.Vector3(0, 0, 0)));
-            level.mesh.add(GameObjects.makeGrass(new THREE.Vector3(1, 1, 0)));
             return level;
         }
 
-        function buildCaveLevel(depth) {
+        function buildCaveLevel(width, height, depth) {
             function floorExists(x, y) {
                 return Math.sin(x/5 + 1.2 + depth)*Math.sin(y/5 + 4.2391 - depth*2.1) > -0.5;
             }
@@ -383,7 +418,7 @@
                 return SpriteSheet.getMesh(8 + offset[0], 20 + offset[1], "tiles");
             }
 
-            var level = new Level(38, 24, depth, generator, getFloorMesh);
+            var level = new Level(width, height, depth, generator, getFloorMesh);
 
             level.addObjects(function(x, y) {
                 var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
@@ -401,6 +436,7 @@
         }
 
         return {
+            Level: Level,
             buildOutdoorsLevel: buildOutdoorsLevel,
             buildCaveLevel: buildCaveLevel
         };
@@ -516,10 +552,10 @@
         camera.position.set(0.5, 0.5, 1);
         HUD.createEnergyIndicator();
 
-        levels.push(Map.buildOutdoorsLevel());
-        levels.push(Map.buildCaveLevel(1));
-        levels.push(Map.buildCaveLevel(2));
-        levels.push(Map.buildCaveLevel(3));
+        levels.push(Map.buildOutdoorsLevel(38, 24));
+        levels.push(Map.buildCaveLevel(38, 24, 1));
+        levels.push(Map.buildCaveLevel(38, 24, 2));
+        levels.push(Map.buildCaveLevel(38, 24, 3));
         scene.add(levels[0].mesh);
         scene.add(levels[1].mesh);
         scene.add(levels[2].mesh);
@@ -579,7 +615,6 @@
     function keydown(event) {
         function moveAction(x, y) {
             return function() {
-                Sound.play("character_walk");
                 playerMesh.move(x, y);
                 event.preventDefault();
             };
@@ -602,13 +637,11 @@
 
             // 'j'
             74: function() {
-                Sound.play("character_switch_floors");
                 playerMesh.moveDepth(1);
             },
 
             // 'k'
             75: function() {
-                Sound.play("character_switch_floors");
                 playerMesh.moveDepth(-1);
             }
         }
