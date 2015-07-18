@@ -143,9 +143,22 @@
             return offsets[index];
         }
 
+        function getBasicConnectorTileOffset(floorExists, x, y) {
+            var missingTop = !floorExists(x, y + 1),
+                missingRight = !floorExists(x + 1, y),
+                missingBottom = !floorExists(x, y - 1),
+                missingLeft = !floorExists(x - 1, y);
+
+            var dx = missingRight ? 1 : missingLeft ? -1 : 0;
+            var dy = missingTop ? 1 : missingBottom ? -1 : 0;
+
+            return [dx, dy];
+        }
+
         return {
             getMesh: getMesh,
             getGeometry: getGeometry,
+            getBasicConnectorTileOffset: getBasicConnectorTileOffset,
             getConnectorTileOffset: getConnectorTileOffset
         };
     })();
@@ -172,6 +185,7 @@
                 }
                 Sound.play("character_switch_floors");
                 this.depth += d;
+                HUD.updateDepthIndicator();
             }
             this.target.z = -this.depth + 0.001;
         }
@@ -349,14 +363,18 @@
                 var x = i % this.width;
                 var y = Math.floor(i / this.width);
                 if (this.grid[i] == 0) {
-                    var objectMesh = callback(x, y);
-                    if (objectMesh != null) {
-                        this.mesh.add(objectMesh);
-                        if (shouldObstruct) {
-                            this.obstruct(x, y);
-                        }
+                    var object = callback(x, y);
+                    if (object != null) {
+                        this.addObject(object, shouldObstruct);
                     }
                 }
+            }
+        }
+
+        Level.prototype.addObject = function(mesh, shouldObstruct) {
+            this.mesh.add(mesh);
+            if (shouldObstruct) {
+                this.obstruct(mesh.x, mesh.y);
             }
         }
 
@@ -435,10 +453,111 @@
             return level;
         }
 
+        function buildLastLevel(depth) {
+            var width = 15;
+            var height = 15;
+            function generator(x, y) {
+                return 0;
+            }
+
+            function getFloorMesh(x, y) {
+                return SpriteSheet.getMesh(6, 28, "tiles");
+            }
+
+            var level = new Level(width, height, depth, generator, getFloorMesh);
+
+            function blueMatExists(x, y) {
+                return Math.abs(x + 0.5 - width/2) < 5 && Math.abs(y + 0.5 - height/2) < 5;
+            }
+            level.addObjects(function(x, y) {
+                if (blueMatExists(x, y)) {
+                    var offset = SpriteSheet.getBasicConnectorTileOffset(blueMatExists, x, y);
+                    var blueMat = SpriteSheet.getMesh(16 + offset[0], 1 + offset[1], "tiles");
+                    blueMat.position.set(x, y, 0);
+                    return blueMat;
+                }
+            });
+
+            level.addObjects(function(x, y) {
+                if (x == 0 || x == width-1 || y == 0 || y == height - 1) {
+                    var xSide = x == 0 ? "left" : x == width - 1 ? "right" : "neither";
+                    var ySide = y == 0 ? "bottom" : y == height - 1 ? "top" : "neither";
+                    var wall = new THREE.Object3D();
+                    wall.position.set(x, y, 0);
+
+                    var wallBasePosition = {
+                        "left-bottom": [28, 15],
+                        "left-top": null,
+                        "left-neither": null,
+                        "right-bottom": [30, 15],
+                        "right-top": null,
+                        "right-neither": null,
+                        "neither-top": [27, 15],
+                        "neither-bottom": [27, 15]
+                    }[xSide + "-" + ySide];
+                    if (wallBasePosition != null) {
+                        var wallBase = SpriteSheet.getMesh(wallBasePosition[0], wallBasePosition[1], "tiles");
+                        wall.add(wallBase);
+                    }
+
+                    var wallTopPosition = {
+                        "left-bottom": [30, 17],
+                        "left-top": [30, 18],
+                        "left-neither": [29, 17],
+                        "right-bottom": [31, 17],
+                        "right-top": [31, 18],
+                        "right-neither": [29, 17],
+                        "neither-top": [28, 18],
+                        "neither-bottom": [28, 18]
+                    }[xSide + "-" + ySide];
+                    var wallTop = SpriteSheet.getMesh(wallTopPosition[0], wallTopPosition[1], "tiles");
+                    wallTop.position.set(0, 1, 0.002);
+                    wall.add(wallTop);
+
+                    return wall;
+                }
+            }, true);
+
+            var pictureObject = SpriteSheet.getMesh(30, 19, "tiles");
+            pictureObject.position.set(Math.floor(width/2), Math.floor(height/2), 0.00001);
+            level.addObject(pictureObject);
+
+            var tableLeft = SpriteSheet.getMesh(26, 26, "tiles");
+            tableLeft.position.set(Math.floor(width/2) - 1, Math.floor(height/2), 0);
+            level.addObject(tableLeft, true);
+
+            var tableMiddle = SpriteSheet.getMesh(27, 26, "tiles");
+            tableMiddle.position.set(Math.floor(width/2), Math.floor(height/2), 0);
+            level.addObject(tableMiddle, true);
+
+            var tableRight = SpriteSheet.getMesh(27, 24, "tiles");
+            tableRight.position.set(Math.floor(width/2)+1, Math.floor(height/2), 0);
+            level.addObject(tableRight, true);
+
+
+            for(var i = 0; i < 3; i++) {
+                (function() {
+                    var x = Math.floor(width/2) - 1 + i;
+                    var chairFacingDown = SpriteSheet.getMesh(19, 28, "tiles");
+                    chairFacingDown.position.set(x, Math.floor(height/2) + 1, 0);
+                    level.addObject(chairFacingDown, true);
+                })();
+
+                (function() {
+                    var y = Math.floor(height / 2) + (i - 1) * 2;
+                    var bedFacingRight = SpriteSheet.getMesh(15, 28, "tiles");
+                    bedFacingRight.position.set(2, y, 0);
+                    level.addObject(bedFacingRight);
+                })();
+            }
+            return level;
+        }
+
         return {
             Level: Level,
             buildOutdoorsLevel: buildOutdoorsLevel,
-            buildCaveLevel: buildCaveLevel
+            buildCaveLevel: buildCaveLevel,
+            buildLastLevel: buildLastLevel
         };
     })();
 
@@ -503,10 +622,33 @@
             energyIndicator.find("span").text(playerMesh.energy + " / " + playerMesh.maxEnergy);
         }
 
+        var depthIndicator;
+        function createDepthIndicator() {
+            depthIndicator = $("<div></div>").css({
+                position: "absolute",
+                top: 75,
+                left: 0,
+                color: "white",
+                "z-index": 1
+            });
+            document.body.appendChild( depthIndicator[0] );
+            updateDepthIndicator();
+        }
+
+        function updateDepthIndicator() {
+            if (playerMesh.depth === 0) {
+                depthIndicator.text("Outdoors");
+            } else {
+                depthIndicator.text("Depth " + playerMesh.depth);
+            }
+        }
+
         return {
             toggleInventory: toggleInventory,
+            createDepthIndicator: createDepthIndicator,
             createEnergyIndicator: createEnergyIndicator,
-            updateEnergyIndicator: updateEnergyIndicator
+            updateDepthIndicator: updateDepthIndicator,
+            updateEnergyIndicator: updateEnergyIndicator,
         }
     })();
 
@@ -550,19 +692,23 @@
         scene.add(playerMesh);
         playerMesh.add(camera);
         camera.position.set(0.5, 0.5, 1);
-        HUD.createEnergyIndicator();
 
         levels.push(Map.buildOutdoorsLevel(38, 24));
         levels.push(Map.buildCaveLevel(38, 24, 1));
         levels.push(Map.buildCaveLevel(38, 24, 2));
         levels.push(Map.buildCaveLevel(38, 24, 3));
+        levels.push(Map.buildLastLevel(4));
         scene.add(levels[0].mesh);
         scene.add(levels[1].mesh);
         scene.add(levels[2].mesh);
         scene.add(levels[3].mesh);
+        scene.add(levels[4].mesh);
 
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(23, 19, 0)));
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(14, 10, 0)));
+
+        HUD.createDepthIndicator();
+        HUD.createEnergyIndicator();
     }
 
     function animate(millisElapsed) {
