@@ -7,17 +7,17 @@
 
             var material = new THREE.MeshBasicMaterial({
                 map: texture,
-                transparent: true,
-                side: THREE.DoubleSide
+                transparent: true
+                // side: THREE.DoubleSide
             });
 
             return material;
         }
 
         var MATERIALS = {
-            "tiles": load("/images/roguelikeSheet_transparent.png", 912, 496),
-            "dungeon": load("/images/roguelikeDungeon_transparent.png", 464, 288),
-            "characters": load("/images/roguelikeChar_transparent.png", 864, 192)
+            "tiles": load("/images/roguelikeSheet_transparent.png", 1024, 512),
+            "dungeon": load("/images/roguelikeDungeon_transparent.png", 512, 512),
+            "characters": load("/images/roguelikeChar_transparent.png", 1024, 256)
         };
 
         var geometryCache = {};
@@ -725,12 +725,13 @@
         levels.push(Map.buildCaveLevel(w, h, 1));
         levels.push(Map.buildCaveLevel(w, h, 2));
         levels.push(Map.buildCaveLevel(w, h, 3));
-        levels.push(Map.buildLastLevel(4));
-        scene.add(levels[0].mesh);
-        scene.add(levels[1].mesh);
-        scene.add(levels[2].mesh);
-        scene.add(levels[3].mesh);
-        scene.add(levels[4].mesh);
+        levels.push(Map.buildCaveLevel(w, h, 4));
+        levels.push(Map.buildCaveLevel(w, h, 5));
+        levels.push(Map.buildCaveLevel(w, h, 6));
+        levels.push(Map.buildLastLevel(7));
+        levels.forEach(function(level) {
+            scene.add(level.mesh);
+        });
 
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(23, 19, 0)));
         scene.add(GameObjects.makeEnemy(new THREE.Vector3(14, 10, 0)));
@@ -741,11 +742,11 @@
 
     function animate(millisElapsed) {
         stats.begin();
-            scene.traverse(function(object) {
-                if (object.animate) {
-                    object.animate(millisElapsed);
-                }
-            });
+        scene.traverse(function(object) {
+            if (object.animate) {
+                object.animate(millisElapsed);
+            }
+        });
         renderer.render(scene, camera);
         stats.end();
         rendererStats.update(renderer);
