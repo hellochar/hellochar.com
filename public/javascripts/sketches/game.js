@@ -1,6 +1,6 @@
 (function () {
     var SpriteSheet = (function() {
-        function load(url, width, height) {
+        function loadMaterial(url, width, height) {
             var texture = THREE.ImageUtils.loadTexture(url);
             texture.magFilter = THREE.NearestFilter;
             texture.repeat.set(1 / width, 1 / height);
@@ -10,14 +10,38 @@
                 transparent: true
                 // side: THREE.DoubleSide
             });
+            //
+            // var material = new THREE.ShaderMaterial({
+            //     uniforms: {
+            //         spriteSheet: { type: "t", value: texture }
+            //     },
+            //     fragmentShader: [
+            //     "uniform sampler2D spriteSheet;",
+            //     "varying vec2 vUv;",
+            //     "varying vec3 vPosition;",
+            //     "void main() {",
+            //     "    vec4 pixel = texture2D(spriteSheet, vUv);",
+            //     "    gl_FragColor = pixel;",
+            //     "}"
+            //     ].join("\n"),
+            //     vertexShader: [
+            //     "varying vec2 vUv;",
+            //     "varying vec3 vPosition;",
+            //     "void main() {",
+            //     "   vPosition = position;",
+            //     "   vUv = uv;",
+            //     "   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
+            //     "}"
+            //     ].join("\n")
+            // });
 
             return material;
         }
 
         var MATERIALS = {
-            "tiles": load("/images/roguelikeSheet_transparent.png", 1024, 512),
-            "dungeon": load("/images/roguelikeDungeon_transparent.png", 512, 512),
-            "characters": load("/images/roguelikeChar_transparent.png", 1024, 256)
+            "tiles": loadMaterial("/images/roguelikeSheet_transparent.png", 1024, 512),
+            "dungeon": loadMaterial("/images/roguelikeDungeon_transparent.png", 512, 512),
+            "characters": loadMaterial("/images/roguelikeChar_transparent.png", 1024, 256)
         };
 
         var geometryCache = {};
@@ -50,6 +74,35 @@
                 ]
             );
             return geometry;
+        }
+
+        var materialCache = {};
+        function getOpaqueMaterialAt(x, y, tileSet) {
+            var key = x + "," + y;
+            if (materialCache[key]) {
+                return materialCache[key];
+            }
+
+            var canvas = $("<canvas>").attr("width", 16).attr("height", 16)[0];
+            var texture = new THREE.Texture(canvas);
+            texture.magFilter = THREE.NearestFilter;
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+
+            var sourceTexture = MATERIALS[tileSet].map;
+            sourceTexture.addEventListener("update", function() {
+                var image = sourceTexture.image;
+                var context = canvas.getContext("2d");
+                context.drawImage(image, 16*x, image.height - 16*y - 16, 16, 16, 0, 0, 16, 16);
+                texture.needsUpdate = true;
+            });
+
+            var material = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.DoubleSide
+            });
+            materialCache[key] = material;
+            return material;
         }
 
         function getMesh(x, y, tileSet) {
@@ -155,6 +208,7 @@
         }
 
         return {
+            getOpaqueMaterialAt: getOpaqueMaterialAt,
             getMesh: getMesh,
             getGeometry: getGeometry,
             getBasicConnectorTileOffset: getBasicConnectorTileOffset,
@@ -351,9 +405,6 @@
                 if (this.grid[i] >= 0) {
                     var x = i % this.width;
                     var y = Math.floor(i / this.width);
-                    var tile = this.getFloorTile(x, y);
-                    var sx = tile[0],
-                        sy = tile[1];
 
                     var vIndex = geometry.vertices.length;
                     geometry.vertices.push(
@@ -368,19 +419,21 @@
                     );
                     geometry.faceVertexUvs[0].push(
                         [
-                            new THREE.Vector2(16*sx,     16*sy    ),
-                            new THREE.Vector2(16*(sx+1), 16*sy    ),
-                            new THREE.Vector2(16*(sx+1), 16*(sy+1))
+                            new THREE.Vector2(0, 0),
+                            new THREE.Vector2(1, 0),
+                            new THREE.Vector2(1, 1)
                         ],
                         [
-                            new THREE.Vector2(16*sx,     16*sy    ),
-                            new THREE.Vector2(16*(sx+1), 16*(sy+1)),
-                            new THREE.Vector2(16*sx,     16*(sy+1))
+                            new THREE.Vector2(0, 0),
+                            new THREE.Vector2(1, 1),
+                            new THREE.Vector2(0, 1)
                         ]
                     );
                 }
             }
-            var floorMesh = new THREE.Mesh(geometry, SpriteSheet.MATERIALS["tiles"]);
+            var tile = this.getFloorTile();
+            var material = SpriteSheet.getOpaqueMaterialAt(tile[0], tile[1], "tiles");
+            var floorMesh = new THREE.Mesh(geometry, material);
             this.mesh.add(floorMesh);
         }
 
@@ -458,8 +511,9 @@
             }
 
             function getFloorTile(x, y) {
-                var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
-                return [8 + offset[0], 20 + offset[1]];
+                // var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
+                // return [8 + offset[0], 20 + offset[1]];
+                return [8, 20];
             }
 
             var level = new Level(width, height, depth, generator, getFloorTile);
@@ -711,7 +765,7 @@
         scene.fog = new THREE.Fog(0x000000, 1, 2);
         window.scene = scene;
         // camera = new THREE.OrthographicCamera(0, 0, 0, 0, 0.0001, 1000);
-        camera = new THREE.PerspectiveCamera(165, 1, 0.01, 3);
+        camera = new THREE.PerspectiveCamera(165, 1, 0.01, 2);
         setCameraDimensions(canvas.width, canvas.height);
 
         playerMesh = GameObjects.makePerson(new THREE.Vector3(20, 14, 0.001));
