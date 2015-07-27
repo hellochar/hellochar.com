@@ -322,6 +322,7 @@ module Game {
     interface LevelMesh extends GameMesh {
       depth: number;
     }
+
     module Map {
         function buildLevelMesh(depth) {
             function getWantedZ() {
@@ -341,18 +342,19 @@ module Game {
             return level;
         }
 
-        function Level(width, height, depth, generator, getFloorTile) {
-            this.width = width;
-            this.height = height;
-            this.depth = depth;
-            this.generator = generator;
-            this.getFloorTile = getFloorTile;
-            this.mesh = buildLevelMesh(depth);
+        class Level {
+          public mesh: LevelMesh;
+          // -1 = empty space
+          // 0 = normal ground
+          public grid: number[] = [];
+          public obstructions: boolean[] = [];
 
-            // -1 = empty space
-            // 0 = normal ground
-            this.grid = [];
-            this.obstructions = [];
+          constructor(public width: number,
+                      public height: number,
+                      public depth: number,
+                      public generator: (x: number, y: number) => number,
+                      public getFloorTile: () => number[]) {
+            this.mesh = buildLevelMesh(depth);
 
             for(var i = 0; i < this.width*this.height; i++) {
                 var x = i % this.width;
@@ -361,25 +363,25 @@ module Game {
                 this.obstructions[i] = false;
             }
             this.updateMesh();
-        }
+          }
 
-        Level.prototype.obstruct = function(x, y) {
+          public obstruct(x: number, y: number) {
             this.obstructions[y*this.width + x] = true;
-        }
+          }
 
-        Level.prototype.unobstruct = function(x, y) {
+          public unobstruct(x: number, y: number) {
             this.obstructions[y*this.width + x] = false;
-        }
+          }
 
-        Level.prototype.isObstructed = function(x, y) {
+          public isObstructed(x: number, y: number) {
             return this.obstructions[y*this.width + x];
-        }
+          }
 
-        Level.prototype.get = function(x, y) {
+          public get(x: number, y: number) {
             return this.grid[y*this.width + x];
-        }
+          }
 
-        Level.prototype.updateMesh = function() {
+          public updateMesh() {
             var geometry = new THREE.Geometry();
             for(var i = 0; i < this.width * this.height; i++) {
                 if (this.grid[i] >= 0) {
@@ -415,26 +417,28 @@ module Game {
             var material = SpriteSheet.getOpaqueMaterialAt(tile[0], tile[1], "tiles");
             var floorMesh = new THREE.Mesh(geometry, material);
             this.mesh.add(floorMesh);
-        }
+          }
 
-        Level.prototype.addObjects = function(callback, shouldObstruct) {
+          public addObjects(callback: (x: number, y: number) => THREE.Object3D,
+                            shouldObstruct?: boolean) {
             for (var i = 0; i < this.width*this.height; i++) {
-                var x = i % this.width;
-                var y = Math.floor(i / this.width);
-                if (this.grid[i] == 0) {
-                    var object = callback(x, y);
-                    if (object != null) {
-                        this.addObject(object, shouldObstruct);
-                    }
+              var x = i % this.width;
+              var y = Math.floor(i / this.width);
+              if (this.grid[i] == 0) {
+                var object = callback(x, y);
+                if (object != null) {
+                  this.addObject(object, shouldObstruct);
                 }
+              }
             }
-        }
+          }
 
-        Level.prototype.addObject = function(mesh, shouldObstruct) {
+          public addObject(mesh: THREE.Object3D, shouldObstruct = false) {
             this.mesh.add(mesh);
             if (shouldObstruct) {
-                this.obstruct(mesh.x, mesh.y);
+              this.obstruct(mesh.position.x, mesh.position.y);
             }
+          }
         }
 
         export function buildOutdoorsLevel(width, height) {
@@ -446,7 +450,7 @@ module Game {
                 }
             }
 
-            function getFloorTile(x, y) {
+            function getFloorTile() {
                 return [3, 14];
             }
 
@@ -490,7 +494,7 @@ module Game {
                 }
             }
 
-            function getFloorTile(x, y) {
+            function getFloorTile() {
                 // var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
                 // return [8 + offset[0], 20 + offset[1]];
                 return [8, 20];
@@ -520,7 +524,7 @@ module Game {
                 return 0;
             }
 
-            function getFloorTile(x, y) {
+            function getFloorTile() {
                 return [6, 28];
             }
 
