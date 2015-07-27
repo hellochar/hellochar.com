@@ -1,5 +1,7 @@
-(function () {
-    var SpriteSheet = (function () {
+var Game;
+(function (Game) {
+    var SpriteSheet;
+    (function (SpriteSheet) {
         function loadSpriteSheet(url, width, height) {
             var texture = THREE.ImageUtils.loadTexture(url);
             texture.magFilter = THREE.NearestFilter;
@@ -10,7 +12,8 @@
             });
             return material;
         }
-        var MATERIALS = {
+        SpriteSheet.loadSpriteSheet = loadSpriteSheet;
+        SpriteSheet.MATERIALS = {
             "tiles": loadSpriteSheet("/images/roguelikeSheet_transparent.png", 1024, 512),
             "dungeon": loadSpriteSheet("/images/roguelikeDungeon_transparent.png", 512, 512),
             "characters": loadSpriteSheet("/images/roguelikeChar_transparent.png", 1024, 256)
@@ -35,6 +38,7 @@
             ]);
             return geometry;
         }
+        SpriteSheet.getGeometry = getGeometry;
         var materialCache = {};
         function getOpaqueMaterialAt(x, y, tileSet) {
             var key = x + "," + y;
@@ -46,7 +50,7 @@
             texture.magFilter = THREE.NearestFilter;
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            var sourceTexture = MATERIALS[tileSet].map;
+            var sourceTexture = SpriteSheet.MATERIALS[tileSet].map;
             sourceTexture.addEventListener("update", function () {
                 var image = sourceTexture.image;
                 var context = canvas.getContext("2d");
@@ -60,12 +64,14 @@
             materialCache[key] = material;
             return material;
         }
+        SpriteSheet.getOpaqueMaterialAt = getOpaqueMaterialAt;
         function getMesh(x, y, tileSet) {
-            var material = MATERIALS[tileSet || "tiles"];
+            var material = SpriteSheet.MATERIALS[tileSet || "tiles"];
             var geometry = getGeometry(x, y);
             var mesh = new THREE.Mesh(geometry, material);
             return mesh;
         }
+        SpriteSheet.getMesh = getMesh;
         function getConnectorTileOffset(floorExists, x, y) {
             var missingTop = !floorExists(x, y + 1), missingRight = !floorExists(x + 1, y), missingBottom = !floorExists(x, y - 1), missingLeft = !floorExists(x - 1, y);
             var index = Number(missingTop) + Number(missingRight) * 2 + Number(missingBottom) * 4 + Number(missingLeft) * 8;
@@ -103,21 +109,15 @@
             }
             return offsets[index];
         }
+        SpriteSheet.getConnectorTileOffset = getConnectorTileOffset;
         function getBasicConnectorTileOffset(floorExists, x, y) {
             var missingTop = !floorExists(x, y + 1), missingRight = !floorExists(x + 1, y), missingBottom = !floorExists(x, y - 1), missingLeft = !floorExists(x - 1, y);
             var dx = missingRight ? 1 : missingLeft ? -1 : 0;
             var dy = missingTop ? 1 : missingBottom ? -1 : 0;
             return [dx, dy];
         }
-        return {
-            getOpaqueMaterialAt: getOpaqueMaterialAt,
-            getMesh: getMesh,
-            getGeometry: getGeometry,
-            getBasicConnectorTileOffset: getBasicConnectorTileOffset,
-            getConnectorTileOffset: getConnectorTileOffset,
-            MATERIALS: MATERIALS
-        };
-    })();
+        SpriteSheet.getBasicConnectorTileOffset = getBasicConnectorTileOffset;
+    })(SpriteSheet || (SpriteSheet = {}));
     function makeCharacter(position, spritesheetX, spritesheetY) {
         var person = SpriteSheet.getMesh(spritesheetX, spritesheetY, "characters");
         person.position.copy(position);
@@ -165,21 +165,25 @@
         person.moveDepth(0);
         return person;
     }
-    var GameObjects = {
-        makeGrass: function (position) {
+    var GameObjects;
+    (function (GameObjects) {
+        function makeGrass(position) {
             var shrub = Math.random() < 0.5 ?
                 SpriteSheet.getMesh(22, 19, "tiles") :
                 SpriteSheet.getMesh(22, 20, "tiles");
             shrub.position.copy(position);
             return shrub;
-        },
-        makePerson: function (position) {
+        }
+        GameObjects.makeGrass = makeGrass;
+        function makePerson(position) {
             return makeCharacter(position, 0, 0);
-        },
-        makeEnemy: function (position) {
+        }
+        GameObjects.makePerson = makePerson;
+        function makeEnemy(position) {
             return makeCharacter(position, 1, 10);
-        },
-        makeFlower: function (position) {
+        }
+        GameObjects.makeEnemy = makeEnemy;
+        function makeFlower(position) {
             var tileMesh = SpriteSheet.getMesh(3, 17, "tiles");
             tileMesh.position.copy(position);
             tileMesh.time = 0;
@@ -195,14 +199,17 @@
                 }
             };
             return tileMesh;
-        },
-        makeWoodItem: function (position) {
+        }
+        GameObjects.makeFlower = makeFlower;
+        function makeWoodItem(position) {
             var woodMesh = SpriteSheet.getMesh(41, 20, "tiles");
             woodMesh.position.copy(position);
             return woodMesh;
         }
-    };
-    var Sound = (function () {
+        GameObjects.makeWoodItem = makeWoodItem;
+    })(GameObjects || (GameObjects = {}));
+    var Sound;
+    (function (Sound) {
         function loadAudio(src, volume) {
             var audio = new Audio();
             audio.src = src;
@@ -220,6 +227,7 @@
                 audioCache[name].play();
             }
         }
+        Sound.play = play;
         var outdoorsAmbientAudio = new Audio();
         outdoorsAmbientAudio.src = "/audio/game_outdoors_ambient.mp3";
         outdoorsAmbientAudio.loop = true;
@@ -232,11 +240,9 @@
             "z-index": 1
         });
         $("body").append(outdoorsAmbientAudio);
-        return {
-            play: play
-        };
-    })();
-    var Map = (function () {
+    })(Sound || (Sound = {}));
+    var Map;
+    (function (Map) {
         function buildLevelMesh(depth) {
             function getWantedZ() {
                 if (playerMesh.depth <= depth) {
@@ -360,6 +366,7 @@
             }, true);
             return level;
         }
+        Map.buildOutdoorsLevel = buildOutdoorsLevel;
         function buildCaveLevel(width, height, depth) {
             function floorExists(x, y) {
                 return Math.sin(x / 5 + 1.2 + depth) * Math.sin(y / 5 + 4.2391 - depth * 2.1) > -0.5;
@@ -389,6 +396,7 @@
             });
             return level;
         }
+        Map.buildCaveLevel = buildCaveLevel;
         function buildLastLevel(depth) {
             var width = 15;
             var height = 15;
@@ -474,14 +482,10 @@
             }
             return level;
         }
-        return {
-            Level: Level,
-            buildOutdoorsLevel: buildOutdoorsLevel,
-            buildCaveLevel: buildCaveLevel,
-            buildLastLevel: buildLastLevel
-        };
-    })();
-    var HUD = (function () {
+        Map.buildLastLevel = buildLastLevel;
+    })(Map || (Map = {}));
+    var HUD;
+    (function (HUD) {
         var inventoryObject;
         function toggleInventory() {
             Sound.play("inventory_toggle");
@@ -524,6 +528,7 @@
                 });
             }
         }
+        HUD.toggleInventory = toggleInventory;
         var energyIndicator;
         function createEnergyIndicator() {
             energyIndicator = $("<div>Energy: <span></span></div>").css({
@@ -536,9 +541,11 @@
             document.body.appendChild(energyIndicator[0]);
             updateEnergyIndicator();
         }
+        HUD.createEnergyIndicator = createEnergyIndicator;
         function updateEnergyIndicator() {
             energyIndicator.find("span").text(playerMesh.energy + " / " + playerMesh.maxEnergy);
         }
+        HUD.updateEnergyIndicator = updateEnergyIndicator;
         var depthIndicator;
         function createDepthIndicator() {
             depthIndicator = $("<div></div>").css({
@@ -551,6 +558,7 @@
             document.body.appendChild(depthIndicator[0]);
             updateDepthIndicator();
         }
+        HUD.createDepthIndicator = createDepthIndicator;
         function updateDepthIndicator() {
             if (playerMesh.depth === 0) {
                 depthIndicator.text("Outdoors");
@@ -559,14 +567,8 @@
                 depthIndicator.text("Depth " + playerMesh.depth);
             }
         }
-        return {
-            toggleInventory: toggleInventory,
-            createDepthIndicator: createDepthIndicator,
-            createEnergyIndicator: createEnergyIndicator,
-            updateDepthIndicator: updateDepthIndicator,
-            updateEnergyIndicator: updateEnergyIndicator,
-        };
-    })();
+        HUD.updateDepthIndicator = updateDepthIndicator;
+    })(HUD || (HUD = {}));
     var audioContext;
     var camera;
     var renderer;
@@ -690,5 +692,5 @@
         touchend: touchend
     };
     window.registerSketch(game);
-})();
+})(Game || (Game = {}));
 //# sourceMappingURL=game.js.map

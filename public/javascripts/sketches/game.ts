@@ -1,11 +1,11 @@
-(function () {
+module Game {
     interface GameMesh extends THREE.Mesh {
       animate?: (millisElapsed: number) => void;
       time?: number;
     }
 
-    var SpriteSheet = (function() {
-        function loadSpriteSheet(url, width, height) {
+    module SpriteSheet {
+        export function loadSpriteSheet(url, width, height) {
             var texture = THREE.ImageUtils.loadTexture(url);
             texture.magFilter = THREE.NearestFilter;
             texture.repeat.set(1 / width, 1 / height);
@@ -18,14 +18,14 @@
             return material;
         }
 
-        var MATERIALS = {
+        export var MATERIALS = {
             "tiles": loadSpriteSheet("/images/roguelikeSheet_transparent.png", 1024, 512),
             "dungeon": loadSpriteSheet("/images/roguelikeDungeon_transparent.png", 512, 512),
             "characters": loadSpriteSheet("/images/roguelikeChar_transparent.png", 1024, 256)
         };
 
         var geometryCache = {};
-        function getGeometry(x, y) {
+        export function getGeometry(x, y) {
             var key = x + "," + y;
             if (geometryCache[key]) {
                 return geometryCache[key];
@@ -57,7 +57,7 @@
         }
 
         var materialCache = {};
-        function getOpaqueMaterialAt(x, y, tileSet) {
+        export function getOpaqueMaterialAt(x, y, tileSet) {
             var key = x + "," + y;
             if (materialCache[key]) {
                 return materialCache[key];
@@ -85,7 +85,7 @@
             return material;
         }
 
-        function getMesh(x, y, tileSet) {
+        export function getMesh(x, y, tileSet) {
             var material = MATERIALS[tileSet || "tiles"];
             var geometry = getGeometry(x, y);
             var mesh = <GameMesh> new THREE.Mesh(geometry, material);
@@ -100,7 +100,7 @@
          *
          *       4
          */
-        function getConnectorTileOffset(floorExists, x, y) {
+        export function getConnectorTileOffset(floorExists, x, y) {
             var missingTop = !floorExists(x, y + 1),
                 missingRight = !floorExists(x + 1, y),
                 missingBottom = !floorExists(x, y - 1),
@@ -175,7 +175,7 @@
             return offsets[index];
         }
 
-        function getBasicConnectorTileOffset(floorExists, x, y) {
+        export function getBasicConnectorTileOffset(floorExists, x, y) {
             var missingTop = !floorExists(x, y + 1),
                 missingRight = !floorExists(x + 1, y),
                 missingBottom = !floorExists(x, y - 1),
@@ -186,16 +186,7 @@
 
             return [dx, dy];
         }
-
-        return {
-            getOpaqueMaterialAt: getOpaqueMaterialAt,
-            getMesh: getMesh,
-            getGeometry: getGeometry,
-            getBasicConnectorTileOffset: getBasicConnectorTileOffset,
-            getConnectorTileOffset: getConnectorTileOffset,
-            MATERIALS: MATERIALS
-        };
-    })();
+    }
 
     interface Character extends GameMesh {
         target: THREE.Vector3;
@@ -256,21 +247,21 @@
         return person;
     }
 
-    var GameObjects = {
-        makeGrass: function(position) {
+    module GameObjects {
+        export function makeGrass(position) {
             var shrub = Math.random() < 0.5 ?
                         SpriteSheet.getMesh(22, 19, "tiles") :
                         SpriteSheet.getMesh(22, 20, "tiles");
             shrub.position.copy(position);
             return shrub;
-        },
-        makePerson: function(position) {
+        }
+        export function makePerson(position) {
             return makeCharacter(position, 0, 0);
-        },
-        makeEnemy: function(position) {
+        }
+        export function makeEnemy(position) {
             return makeCharacter(position, 1, 10);
-        },
-        makeFlower: function(position) {
+        }
+        export function makeFlower(position) {
             var tileMesh = SpriteSheet.getMesh(3, 17, "tiles");
             tileMesh.position.copy(position);
             tileMesh.time = 0;
@@ -285,15 +276,15 @@
                 }
             }
             return tileMesh;
-        },
-        makeWoodItem: function(position) {
+        }
+        export function makeWoodItem(position) {
             var woodMesh = SpriteSheet.getMesh(41, 20, "tiles");
             woodMesh.position.copy(position);
             return woodMesh;
         }
-    };
+    }
 
-    var Sound = (function() {
+    module Sound {
         function loadAudio(src, volume) {
             var audio = new Audio();
             audio.src = src;
@@ -307,7 +298,7 @@
             "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav", 0.05)
         }
 
-        function play(name) {
+        export function play(name) {
             if (audioCache[name]) {
                 audioCache[name].play();
             }
@@ -326,16 +317,12 @@
             "z-index": 1
         });
         $("body").append(outdoorsAmbientAudio);
-
-        return {
-            play: play
-        };
-    })();
+    }
 
     interface LevelMesh extends GameMesh {
       depth: number;
     }
-    var Map = (function() {
+    module Map {
         function buildLevelMesh(depth) {
             function getWantedZ() {
                 if (playerMesh.depth <= depth) {
@@ -450,7 +437,7 @@
             }
         }
 
-        function buildOutdoorsLevel(width, height) {
+        export function buildOutdoorsLevel(width, height) {
             function generator(x, y) {
                 if ( Math.sin(x/4)*Math.sin(y/4) > -0.5 ) {
                     return 0;
@@ -491,7 +478,7 @@
             return level;
         }
 
-        function buildCaveLevel(width, height, depth) {
+        export function buildCaveLevel(width, height, depth) {
             function floorExists(x, y) {
                 return Math.sin(x/5 + 1.2 + depth)*Math.sin(y/5 + 4.2391 - depth*2.1) > -0.5;
             }
@@ -526,7 +513,7 @@
             return level;
         }
 
-        function buildLastLevel(depth) {
+        export function buildLastLevel(depth) {
             var width = 15;
             var height = 15;
             function generator(x, y) {
@@ -625,18 +612,11 @@
             }
             return level;
         }
+    }
 
-        return {
-            Level: Level,
-            buildOutdoorsLevel: buildOutdoorsLevel,
-            buildCaveLevel: buildCaveLevel,
-            buildLastLevel: buildLastLevel
-        };
-    })();
-
-    var HUD = (function() {
+    module HUD {
         var inventoryObject;
-        function toggleInventory() {
+        export function toggleInventory() {
             Sound.play("inventory_toggle");
             if (inventoryObject != null) {
                 playerMesh.remove(inventoryObject);
@@ -678,7 +658,7 @@
         }
 
         var energyIndicator;
-        function createEnergyIndicator() {
+        export function createEnergyIndicator() {
             energyIndicator = $("<div>Energy: <span></span></div>").css({
                 position: "absolute",
                 top: 50,
@@ -690,12 +670,12 @@
             updateEnergyIndicator();
         }
 
-        function updateEnergyIndicator() {
+        export function updateEnergyIndicator() {
             energyIndicator.find("span").text(playerMesh.energy + " / " + playerMesh.maxEnergy);
         }
 
         var depthIndicator;
-        function createDepthIndicator() {
+        export function createDepthIndicator() {
             depthIndicator = $("<div></div>").css({
                 position: "absolute",
                 top: 75,
@@ -707,22 +687,14 @@
             updateDepthIndicator();
         }
 
-        function updateDepthIndicator() {
+        export function updateDepthIndicator() {
             if (playerMesh.depth === 0) {
                 depthIndicator.text("Outdoors");
             } else {
                 depthIndicator.text("Depth " + playerMesh.depth);
             }
         }
-
-        return {
-            toggleInventory: toggleInventory,
-            createDepthIndicator: createDepthIndicator,
-            createEnergyIndicator: createEnergyIndicator,
-            updateDepthIndicator: updateDepthIndicator,
-            updateEnergyIndicator: updateEnergyIndicator,
-        }
-    })();
+    }
 
     var audioContext;
 
@@ -897,7 +869,7 @@
         touchend: touchend
     };
     window.registerSketch(game);
-})();
+}
 
 interface Sketch {
   animate: (millisElapsed: number) => void;
