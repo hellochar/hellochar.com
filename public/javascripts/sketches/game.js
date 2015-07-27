@@ -260,78 +260,82 @@ var Game;
             };
             return level;
         }
-        function Level(width, height, depth, generator, getFloorTile) {
-            this.width = width;
-            this.height = height;
-            this.depth = depth;
-            this.generator = generator;
-            this.getFloorTile = getFloorTile;
-            this.mesh = buildLevelMesh(depth);
-            this.grid = [];
-            this.obstructions = [];
-            for (var i = 0; i < this.width * this.height; i++) {
-                var x = i % this.width;
-                var y = Math.floor(i / this.width);
-                this.grid[i] = generator(x, y);
-                this.obstructions[i] = false;
-            }
-            this.updateMesh();
-        }
-        Level.prototype.obstruct = function (x, y) {
-            this.obstructions[y * this.width + x] = true;
-        };
-        Level.prototype.unobstruct = function (x, y) {
-            this.obstructions[y * this.width + x] = false;
-        };
-        Level.prototype.isObstructed = function (x, y) {
-            return this.obstructions[y * this.width + x];
-        };
-        Level.prototype.get = function (x, y) {
-            return this.grid[y * this.width + x];
-        };
-        Level.prototype.updateMesh = function () {
-            var geometry = new THREE.Geometry();
-            for (var i = 0; i < this.width * this.height; i++) {
-                if (this.grid[i] >= 0) {
+        var Level = (function () {
+            function Level(width, height, depth, generator, getFloorTile) {
+                this.width = width;
+                this.height = height;
+                this.depth = depth;
+                this.generator = generator;
+                this.getFloorTile = getFloorTile;
+                this.grid = [];
+                this.obstructions = [];
+                this.mesh = buildLevelMesh(depth);
+                for (var i = 0; i < this.width * this.height; i++) {
                     var x = i % this.width;
                     var y = Math.floor(i / this.width);
-                    var vIndex = geometry.vertices.length;
-                    geometry.vertices.push(new THREE.Vector3(x, y, 0), new THREE.Vector3(x + 1, y, 0), new THREE.Vector3(x + 1, y + 1, 0), new THREE.Vector3(x, y + 1, 0));
-                    geometry.faces.push(new THREE.Face3(vIndex, vIndex + 1, vIndex + 2), new THREE.Face3(vIndex, vIndex + 2, vIndex + 3));
-                    geometry.faceVertexUvs[0].push([
-                        new THREE.Vector2(0, 0),
-                        new THREE.Vector2(1, 0),
-                        new THREE.Vector2(1, 1)
-                    ], [
-                        new THREE.Vector2(0, 0),
-                        new THREE.Vector2(1, 1),
-                        new THREE.Vector2(0, 1)
-                    ]);
+                    this.grid[i] = generator(x, y);
+                    this.obstructions[i] = false;
                 }
+                this.updateMesh();
             }
-            var tile = this.getFloorTile();
-            var material = SpriteSheet.getOpaqueMaterialAt(tile[0], tile[1], "tiles");
-            var floorMesh = new THREE.Mesh(geometry, material);
-            this.mesh.add(floorMesh);
-        };
-        Level.prototype.addObjects = function (callback, shouldObstruct) {
-            for (var i = 0; i < this.width * this.height; i++) {
-                var x = i % this.width;
-                var y = Math.floor(i / this.width);
-                if (this.grid[i] == 0) {
-                    var object = callback(x, y);
-                    if (object != null) {
-                        this.addObject(object, shouldObstruct);
+            Level.prototype.obstruct = function (x, y) {
+                this.obstructions[y * this.width + x] = true;
+            };
+            Level.prototype.unobstruct = function (x, y) {
+                this.obstructions[y * this.width + x] = false;
+            };
+            Level.prototype.isObstructed = function (x, y) {
+                return this.obstructions[y * this.width + x];
+            };
+            Level.prototype.get = function (x, y) {
+                return this.grid[y * this.width + x];
+            };
+            Level.prototype.updateMesh = function () {
+                var geometry = new THREE.Geometry();
+                for (var i = 0; i < this.width * this.height; i++) {
+                    if (this.grid[i] >= 0) {
+                        var x = i % this.width;
+                        var y = Math.floor(i / this.width);
+                        var vIndex = geometry.vertices.length;
+                        geometry.vertices.push(new THREE.Vector3(x, y, 0), new THREE.Vector3(x + 1, y, 0), new THREE.Vector3(x + 1, y + 1, 0), new THREE.Vector3(x, y + 1, 0));
+                        geometry.faces.push(new THREE.Face3(vIndex, vIndex + 1, vIndex + 2), new THREE.Face3(vIndex, vIndex + 2, vIndex + 3));
+                        geometry.faceVertexUvs[0].push([
+                            new THREE.Vector2(0, 0),
+                            new THREE.Vector2(1, 0),
+                            new THREE.Vector2(1, 1)
+                        ], [
+                            new THREE.Vector2(0, 0),
+                            new THREE.Vector2(1, 1),
+                            new THREE.Vector2(0, 1)
+                        ]);
                     }
                 }
-            }
-        };
-        Level.prototype.addObject = function (mesh, shouldObstruct) {
-            this.mesh.add(mesh);
-            if (shouldObstruct) {
-                this.obstruct(mesh.x, mesh.y);
-            }
-        };
+                var tile = this.getFloorTile();
+                var material = SpriteSheet.getOpaqueMaterialAt(tile[0], tile[1], "tiles");
+                var floorMesh = new THREE.Mesh(geometry, material);
+                this.mesh.add(floorMesh);
+            };
+            Level.prototype.addObjects = function (callback, shouldObstruct) {
+                for (var i = 0; i < this.width * this.height; i++) {
+                    var x = i % this.width;
+                    var y = Math.floor(i / this.width);
+                    if (this.grid[i] == 0) {
+                        var object = callback(x, y);
+                        if (object != null) {
+                            this.addObject(object, shouldObstruct);
+                        }
+                    }
+                }
+            };
+            Level.prototype.addObject = function (mesh, shouldObstruct) {
+                if (shouldObstruct === void 0) { shouldObstruct = false; }
+                this.mesh.add(mesh);
+                if (shouldObstruct) {
+                    this.obstruct(mesh.position.x, mesh.position.y);
+                }
+            };
+            return Level;
+        })();
         function buildOutdoorsLevel(width, height) {
             function generator(x, y) {
                 if (Math.sin(x / 4) * Math.sin(y / 4) > -0.5) {
@@ -341,7 +345,7 @@ var Game;
                     return -1;
                 }
             }
-            function getFloorTile(x, y) {
+            function getFloorTile() {
                 return [3, 14];
             }
             var level = new Level(width, height, 0, generator, getFloorTile);
@@ -379,7 +383,7 @@ var Game;
                     return -1;
                 }
             }
-            function getFloorTile(x, y) {
+            function getFloorTile() {
                 return [8, 20];
             }
             var level = new Level(width, height, depth, generator, getFloorTile);
@@ -403,7 +407,7 @@ var Game;
             function generator(x, y) {
                 return 0;
             }
-            function getFloorTile(x, y) {
+            function getFloorTile() {
                 return [6, 28];
             }
             var level = new Level(width, height, depth, generator, getFloorTile);
