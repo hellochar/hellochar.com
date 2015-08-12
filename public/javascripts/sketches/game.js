@@ -260,6 +260,11 @@ var Game;
             };
             return level;
         }
+        var GridCell;
+        (function (GridCell) {
+            GridCell[GridCell["EMPTY"] = -1] = "EMPTY";
+            GridCell[GridCell["GROUND"] = 0] = "GROUND";
+        })(GridCell || (GridCell = {}));
         var Level = (function () {
             function Level(width, height, depth, generator, getFloorTile) {
                 this.width = width;
@@ -293,7 +298,7 @@ var Game;
             Level.prototype.updateMesh = function () {
                 var geometry = new THREE.Geometry();
                 for (var i = 0; i < this.width * this.height; i++) {
-                    if (this.grid[i] >= 0) {
+                    if (this.grid[i] === GridCell.GROUND) {
                         var x = i % this.width;
                         var y = Math.floor(i / this.width);
                         var vIndex = geometry.vertices.length;
@@ -339,10 +344,10 @@ var Game;
         function buildOutdoorsLevel(width, height) {
             function generator(x, y) {
                 if (Math.sin(x / 4) * Math.sin(y / 4) > -0.5) {
-                    return 0;
+                    return GridCell.GROUND;
                 }
                 else {
-                    return -1;
+                    return GridCell.EMPTY;
                 }
             }
             function getFloorTile() {
@@ -377,10 +382,10 @@ var Game;
             }
             function generator(x, y) {
                 if (floorExists(x, y)) {
-                    return 0;
+                    return GridCell.GROUND;
                 }
                 else {
-                    return -1;
+                    return GridCell.EMPTY;
                 }
             }
             function getFloorTile() {
@@ -405,7 +410,7 @@ var Game;
             var width = 15;
             var height = 15;
             function generator(x, y) {
-                return 0;
+                return GridCell.GROUND;
             }
             function getFloorTile() {
                 return [6, 28];
@@ -585,11 +590,13 @@ var Game;
         renderer = _renderer;
         audioContext = _audioContext;
         var canvas = _renderer.domElement;
-        rendererStats = new THREEx.RendererStats();
-        rendererStats.domElement.style.position = 'absolute';
-        rendererStats.domElement.style.left = '5px';
-        rendererStats.domElement.style.bottom = '0px';
-        document.body.appendChild(rendererStats.domElement);
+        if (typeof window["THREEx"] !== "undefined") {
+            rendererStats = new THREEx.RendererStats();
+            rendererStats.domElement.style.position = 'absolute';
+            rendererStats.domElement.style.left = '5px';
+            rendererStats.domElement.style.bottom = '0px';
+            document.body.appendChild(rendererStats.domElement);
+        }
         stats = new Stats();
         stats.domElement.style.position = "absolute";
         stats.domElement.style.bottom = "0px";
@@ -630,7 +637,9 @@ var Game;
         });
         renderer.render(scene, camera);
         stats.end();
-        rendererStats.update(renderer);
+        if (rendererStats != null) {
+            rendererStats.update(renderer);
+        }
     }
     function setCameraDimensions(width, height) {
         camera.aspect = width / height;

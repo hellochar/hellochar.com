@@ -342,17 +342,20 @@ module Game {
             return level;
         }
 
+        enum GridCell {
+          EMPTY = -1,
+          GROUND = 0
+        }
+
         class Level {
           public mesh: LevelMesh;
-          // -1 = empty space
-          // 0 = normal ground
-          public grid: number[] = [];
+          public grid: GridCell[] = [];
           public obstructions: boolean[] = [];
 
           constructor(public width: number,
                       public height: number,
                       public depth: number,
-                      public generator: (x: number, y: number) => number,
+                      public generator: (x: number, y: number) => GridCell,
                       public getFloorTile: () => number[]) {
             this.mesh = buildLevelMesh(depth);
 
@@ -384,7 +387,7 @@ module Game {
           public updateMesh() {
             var geometry = new THREE.Geometry();
             for(var i = 0; i < this.width * this.height; i++) {
-                if (this.grid[i] >= 0) {
+                if (this.grid[i] === GridCell.GROUND) {
                     var x = i % this.width;
                     var y = Math.floor(i / this.width);
 
@@ -444,9 +447,9 @@ module Game {
         export function buildOutdoorsLevel(width, height) {
             function generator(x, y) {
                 if ( Math.sin(x/4)*Math.sin(y/4) > -0.5 ) {
-                    return 0;
+                    return GridCell.GROUND;
                 } else {
-                    return -1;
+                    return GridCell.EMPTY;
                 }
             }
 
@@ -488,9 +491,9 @@ module Game {
             }
             function generator(x, y) {
                 if( floorExists(x, y) ) {
-                    return 0;
+                    return GridCell.GROUND;
                 } else {
-                    return -1;
+                    return GridCell.EMPTY;
                 }
             }
 
@@ -521,7 +524,7 @@ module Game {
             var width = 15;
             var height = 15;
             function generator(x, y) {
-                return 0;
+                return GridCell.GROUND;
             }
 
             function getFloorTile() {
@@ -717,11 +720,13 @@ module Game {
         audioContext = _audioContext;
         const canvas = _renderer.domElement;
 
-        rendererStats = new THREEx.RendererStats();
-        rendererStats.domElement.style.position = 'absolute';
-        rendererStats.domElement.style.left = '5px';
-        rendererStats.domElement.style.bottom = '0px';
-        document.body.appendChild( rendererStats.domElement );
+        if (typeof (<any>window)["THREEx"] !== "undefined") {
+          rendererStats = new THREEx.RendererStats();
+          rendererStats.domElement.style.position = 'absolute';
+          rendererStats.domElement.style.left = '5px';
+          rendererStats.domElement.style.bottom = '0px';
+          document.body.appendChild( rendererStats.domElement );
+        }
 
         stats = new Stats();
         stats.domElement.style.position = "absolute";
@@ -770,7 +775,9 @@ module Game {
         });
         renderer.render(scene, camera);
         stats.end();
-        rendererStats.update(renderer);
+        if (rendererStats != null) {
+          rendererStats.update(renderer);
+        }
     }
 
     function setCameraDimensions(width, height) {
