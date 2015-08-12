@@ -22,7 +22,6 @@
     ],
     "files": [
         "./public/javascripts/sketches/game.ts",
-        "./public/javascripts/sketches/test.ts",
         "./typings/jquery/jquery.d.ts",
         "./typings/stats.d.ts",
         "./typings/threejs/three.d.ts",
