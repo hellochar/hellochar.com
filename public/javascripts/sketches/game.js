@@ -118,43 +118,47 @@ var Game;
         }
         SpriteSheet.getBasicConnectorTileOffset = getBasicConnectorTileOffset;
     })(SpriteSheet || (SpriteSheet = {}));
-    function makeCharacter(position, spritesheetX, spritesheetY) {
-        var person = SpriteSheet.getMesh(spritesheetX, spritesheetY, "characters");
-        person.position.copy(position);
-        person.target = position.clone();
-        person.depth = 0;
-        person.energy = 1000;
-        person.maxEnergy = 1000;
-        person.inventory = [
-            GameObjects.makeWoodItem(position),
-            GameObjects.makeWoodItem(position),
-            GameObjects.makeWoodItem(position)
-        ];
-        person.animate = function (millisElapsed) {
-            this.position.lerp(this.target, 0.3);
-        };
-        person.moveDepth = function (d) {
+    var Character = (function () {
+        function Character(position, sx, sy, maxEnergy, energy) {
+            var _this = this;
+            if (maxEnergy === void 0) { maxEnergy = 1000; }
+            if (energy === void 0) { energy = maxEnergy; }
+            this.position = position;
+            this.maxEnergy = maxEnergy;
+            this.energy = energy;
+            this.inventory = [];
+            this.inventory.push(GameObjects.makeWoodItem(position));
+            this.inventory.push(GameObjects.makeWoodItem(position));
+            this.inventory.push(GameObjects.makeWoodItem(position));
+            this.mesh = SpriteSheet.getMesh(sx, sy, "character");
+            this.mesh.position.copy(this.position);
+            this.mesh.animate = function (millisElapsed) {
+                var target = _this.position.clone();
+                target.z += .001;
+                _this.mesh.position.lerp(target, 0.3);
+            };
+        }
+        Character.prototype.moveDepth = function (d) {
             if (d != 0) {
-                if (this.depth + d >= levels.length || this.depth + d < 0) {
+                if (this.position.z + d >= levels.length || this.position.z + d < 0) {
                     return;
                 }
                 Sound.play("character_switch_floors");
-                this.depth += d;
+                this.position.z += d;
                 HUD.updateDepthIndicator();
             }
-            this.target.z = -this.depth + 0.001;
         };
-        person.move = function (x, y) {
-            if (levels[this.depth].isObstructed(this.target.x + x, this.target.y + y)) {
+        Character.prototype.move = function (x, y) {
+            if (levels[this.position.z].isObstructed(this.position.x + x, this.position.y + y)) {
                 Sound.play("character_walk_fail");
                 return;
             }
             Sound.play("character_walk");
-            this.target.x += x;
-            this.target.y += y;
+            this.position.x += x;
+            this.position.y += y;
             this.energy -= 1;
-            while (levels[this.depth].get(this.target.x, this.target.y) < 0) {
-                if (this.depth >= levels.length - 1) {
+            while (levels[this.position.z].get(this.position.x, this.position.y) < 0) {
+                if (this.position.z >= levels.length - 1) {
                     break;
                 }
                 this.moveDepth(1);
@@ -162,25 +166,16 @@ var Game;
             }
             HUD.updateEnergyIndicator();
         };
-        person.moveDepth(0);
-        return person;
-    }
+        return Character;
+    })();
     var GameObjects;
     (function (GameObjects) {
-        function makeGrass(position) {
-            var shrub = Math.random() < 0.5 ?
-                SpriteSheet.getMesh(22, 19, "tiles") :
-                SpriteSheet.getMesh(22, 20, "tiles");
-            shrub.position.copy(position);
-            return shrub;
-        }
-        GameObjects.makeGrass = makeGrass;
         function makePerson(position) {
-            return makeCharacter(position, 0, 0);
+            return new Character(position, 0, 0);
         }
         GameObjects.makePerson = makePerson;
         function makeEnemy(position) {
-            return makeCharacter(position, 1, 10);
+            return new Character(position, 1, 10);
         }
         GameObjects.makeEnemy = makeEnemy;
         function makeFlower(position) {
@@ -245,8 +240,8 @@ var Game;
     (function (Map) {
         function buildLevelMesh(depth) {
             function getWantedZ() {
-                if (playerMesh.depth <= depth) {
-                    return -playerMesh.depth - (depth - playerMesh.depth) * 0.2;
+                if (playerMesh.position.z <= depth) {
+                    return -playerMesh.position.z - (depth - playerMesh.position.z) * 0.2;
                 }
                 else {
                     return -depth;
@@ -260,11 +255,6 @@ var Game;
             };
             return level;
         }
-        var GridCell;
-        (function (GridCell) {
-            GridCell[GridCell["EMPTY"] = -1] = "EMPTY";
-            GridCell[GridCell["GROUND"] = 0] = "GROUND";
-        })(GridCell || (GridCell = {}));
         var Level = (function () {
             function Level(width, height, depth, generator, getFloorTile) {
                 this.width = width;
@@ -298,7 +288,7 @@ var Game;
             Level.prototype.updateMesh = function () {
                 var geometry = new THREE.Geometry();
                 for (var i = 0; i < this.width * this.height; i++) {
-                    if (this.grid[i] === GridCell.GROUND) {
+                    if (this.grid[i] === Game.GridCell.GROUND) {
                         var x = i % this.width;
                         var y = Math.floor(i / this.width);
                         var vIndex = geometry.vertices.length;
@@ -344,10 +334,10 @@ var Game;
         function buildOutdoorsLevel(width, height) {
             function generator(x, y) {
                 if (Math.sin(x / 4) * Math.sin(y / 4) > -0.5) {
-                    return GridCell.GROUND;
+                    return Game.GridCell.GROUND;
                 }
                 else {
-                    return GridCell.EMPTY;
+                    return Game.GridCell.EMPTY;
                 }
             }
             function getFloorTile() {
@@ -382,10 +372,10 @@ var Game;
             }
             function generator(x, y) {
                 if (floorExists(x, y)) {
-                    return GridCell.GROUND;
+                    return Game.GridCell.GROUND;
                 }
                 else {
-                    return GridCell.EMPTY;
+                    return Game.GridCell.EMPTY;
                 }
             }
             function getFloorTile() {
@@ -410,7 +400,7 @@ var Game;
             var width = 15;
             var height = 15;
             function generator(x, y) {
-                return GridCell.GROUND;
+                return Game.GridCell.GROUND;
             }
             function getFloorTile() {
                 return [6, 28];
@@ -499,7 +489,7 @@ var Game;
         function toggleInventory() {
             Sound.play("inventory_toggle");
             if (inventoryObject != null) {
-                playerMesh.remove(inventoryObject);
+                playerMesh.mesh.remove(inventoryObject);
                 inventoryObject = null;
             }
             else {
@@ -507,7 +497,7 @@ var Game;
                 var HEIGHT = 5;
                 inventoryObject = new THREE.Object3D();
                 inventoryObject.position.set(1.05, 0, 0);
-                playerMesh.add(inventoryObject);
+                playerMesh.mesh.add(inventoryObject);
                 for (var x = 0; x < WIDTH; x++) {
                     for (var y = 0; y > -HEIGHT; y--) {
                         var spritesheetX = 4;
@@ -569,11 +559,11 @@ var Game;
         }
         HUD.createDepthIndicator = createDepthIndicator;
         function updateDepthIndicator() {
-            if (playerMesh.depth === 0) {
+            if (playerMesh.position.z === 0) {
                 depthIndicator.text("Outdoors");
             }
             else {
-                depthIndicator.text("Depth " + playerMesh.depth);
+                depthIndicator.text("Depth " + playerMesh.position.z);
             }
         }
         HUD.updateDepthIndicator = updateDepthIndicator;
@@ -606,9 +596,9 @@ var Game;
         scene.fog = new THREE.Fog(0x000000, 1, 2);
         camera = new THREE.PerspectiveCamera(165, 1, 0.01, 2);
         setCameraDimensions(canvas.width, canvas.height);
-        playerMesh = GameObjects.makePerson(new THREE.Vector3(20, 14, 0.001));
+        playerMesh = GameObjects.makePerson(new THREE.Vector3(20, 14, 0.0));
         scene.add(playerMesh);
-        playerMesh.add(camera);
+        playerMesh.mesh.add(camera);
         camera.position.set(0.5, 0.5, 1);
         var w = 60;
         var h = 40;

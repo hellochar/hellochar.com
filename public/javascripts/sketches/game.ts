@@ -1,9 +1,4 @@
 module Game {
-    interface GameMesh extends THREE.Mesh {
-      animate?: (millisElapsed: number) => void;
-      time?: number;
-    }
-
     module SpriteSheet {
         export function loadSpriteSheet(url, width, height) {
             var texture = THREE.ImageUtils.loadTexture(url);
@@ -88,7 +83,7 @@ module Game {
         export function getMesh(x, y, tileSet) {
             var material = MATERIALS[tileSet || "tiles"];
             var geometry = getGeometry(x, y);
-            var mesh = <GameMesh> new THREE.Mesh(geometry, material);
+            var mesh = <IGameMesh> new THREE.Mesh(geometry, material);
             return mesh;
         }
 
@@ -188,78 +183,67 @@ module Game {
         }
     }
 
-    interface Character extends GameMesh {
-        target: THREE.Vector3;
-        depth: number;
-        energy: number;
-        maxEnergy: number;
-        inventory: THREE.Mesh[];
-        moveDepth: (depth: number) => void;
-        move: (x: number, y: number) => void;
-    }
+    class Character implements ICharacterModel {
+      public mesh: ICharacterMesh;
+      public inventory: IGameMesh[] = [];
 
-    function makeCharacter(position, spritesheetX, spritesheetY) {
-        var person = <Character> SpriteSheet.getMesh(spritesheetX, spritesheetY, "characters");
-        person.position.copy(position);
-        person.target = position.clone();
-        person.depth = 0;
-        person.energy = 1000;
-        person.maxEnergy = 1000;
-        person.inventory = [
-            GameObjects.makeWoodItem(position),
-            GameObjects.makeWoodItem(position),
-            GameObjects.makeWoodItem(position)
-        ];
-        person.animate = function(millisElapsed) {
-            this.position.lerp(this.target, 0.3);
+      constructor(public position: THREE.Vector3,
+                  sx: number,
+                  sy: number,
+                  public maxEnergy: number = 1000,
+                  public energy = maxEnergy) {
+                    this.inventory.push(GameObjects.makeWoodItem(position));
+                    this.inventory.push(GameObjects.makeWoodItem(position));
+                    this.inventory.push(GameObjects.makeWoodItem(position));
+
+                    this.mesh = <ICharacterMesh> SpriteSheet.getMesh(sx, sy, "character");
+                    this.mesh.position.copy(this.position);
+                    this.mesh.animate = (millisElapsed) => {
+                      const target = this.position.clone();
+                      target.z += .001;
+                      this.mesh.position.lerp(target, 0.3);
+                    }
+                  }
+
+
+      public moveDepth(d: number) {
+          if (d != 0) {
+              if (this.position.z + d >= levels.length || this.position.z + d < 0) {
+                  return;
+              }
+              Sound.play("character_switch_floors");
+              this.position.z += d;
+              HUD.updateDepthIndicator();
+          }
+      }
+
+      public move(x: number, y: number) {
+        if (levels[this.position.z].isObstructed(this.position.x + x, this.position.y + y)) {
+            Sound.play("character_walk_fail");
+            return;
         }
-        person.moveDepth = function (d) {
-            if (d != 0) {
-                if (this.depth + d >= levels.length || this.depth + d < 0) {
-                    return;
-                }
-                Sound.play("character_switch_floors");
-                this.depth += d;
-                HUD.updateDepthIndicator();
+        Sound.play("character_walk");
+        this.position.x += x;
+        this.position.y += y;
+        this.energy -= 1;
+        // fall down when you walk into empty space
+        while (levels[this.position.z].get(this.position.x, this.position.y) < 0) {
+            if (this.position.z >= levels.length - 1) {
+                break;
             }
-            this.target.z = -this.depth + 0.001;
+            this.moveDepth(1);
+            this.energy -= 10;
         }
-        person.move = function(x, y) {
-            if (levels[this.depth].isObstructed(this.target.x + x, this.target.y + y)) {
-                Sound.play("character_walk_fail");
-                return;
-            }
-            Sound.play("character_walk");
-            this.target.x += x;
-            this.target.y += y;
-            this.energy -= 1;
-            while (levels[this.depth].get(this.target.x, this.target.y) < 0) {
-                if (this.depth >= levels.length - 1) {
-                    break;
-                }
-                this.moveDepth(1);
-                this.energy -= 10;
-            }
-            HUD.updateEnergyIndicator();
-        }
-        // initialize target z
-        person.moveDepth(0);
-        return person;
+        HUD.updateEnergyIndicator();
+      }
     }
 
     module GameObjects {
-        export function makeGrass(position) {
-            var shrub = Math.random() < 0.5 ?
-                        SpriteSheet.getMesh(22, 19, "tiles") :
-                        SpriteSheet.getMesh(22, 20, "tiles");
-            shrub.position.copy(position);
-            return shrub;
+        export function makePerson(position: THREE.Vector3) {
+            return new Character(position, 0, 0);
         }
-        export function makePerson(position) {
-            return makeCharacter(position, 0, 0);
-        }
-        export function makeEnemy(position) {
-            return makeCharacter(position, 1, 10);
+        export function makeEnemy(position: THREE.Vector3) {
+            return new Character(position, 1, 10);
         }
         export function makeFlower(position) {
             var tileMesh = SpriteSheet.getMesh(3, 17, "tiles");
@@ -319,21 +303,17 @@ module Game {
         $("body").append(outdoorsAmbientAudio);
     }
 
-    interface LevelMesh extends GameMesh {
-      depth: number;
-    }
-
     module Map {
         function buildLevelMesh(depth) {
             function getWantedZ() {
-                if (playerMesh.depth <= depth) {
-                    return -playerMesh.depth - (depth - playerMesh.depth) * 0.2;
+                if (playerMesh.position.z <= depth) {
+                    return -playerMesh.position.z - (depth - playerMesh.position.z) * 0.2;
                 } else {
                     return -depth;
                 }
             }
 
-            var level = <LevelMesh> new THREE.Object3D();
+            var level = <ILevelMesh> new THREE.Object3D();
             level.depth = depth;
             level.position.z = getWantedZ();
             level.animate = function(millisElapsed) {
@@ -342,13 +322,8 @@ module Game {
             return level;
         }
 
-        enum GridCell {
-          EMPTY = -1,
-          GROUND = 0
-        }
-
-        class Level {
-          public mesh: LevelMesh;
+        class Level implements ILevelModel {
+          public mesh: ILevelMesh;
           public grid: GridCell[] = [];
           public obstructions: boolean[] = [];
 
@@ -626,14 +601,14 @@ module Game {
         export function toggleInventory() {
             Sound.play("inventory_toggle");
             if (inventoryObject != null) {
-                playerMesh.remove(inventoryObject);
+                playerMesh.mesh.remove(inventoryObject);
                 inventoryObject = null;
             } else {
                 var WIDTH = 5;
                 var HEIGHT = 5;
                 inventoryObject = new THREE.Object3D();
                 inventoryObject.position.set(1.05, 0, 0);
-                playerMesh.add(inventoryObject);
+                playerMesh.mesh.add(inventoryObject);
                 for (var x = 0; x < WIDTH; x++) {
                     for (var y = 0; y > -HEIGHT; y--) {
                         var spritesheetX = 4;
@@ -695,10 +670,10 @@ module Game {
         }
 
         export function updateDepthIndicator() {
-            if (playerMesh.depth === 0) {
+            if (playerMesh.position.z === 0) {
                 depthIndicator.text("Outdoors");
             } else {
-                depthIndicator.text("Depth " + playerMesh.depth);
+                depthIndicator.text("Depth " + playerMesh.position.z);
             }
         }
     }
@@ -712,7 +687,7 @@ module Game {
     var rendererStats;
     var stats;
 
-    var playerMesh;
+    var playerMesh: Character;
     var levels = [];
 
     function init(_renderer, _audioContext) {
@@ -740,9 +715,9 @@ module Game {
         camera = new THREE.PerspectiveCamera(165, 1, 0.01, 2);
         setCameraDimensions(canvas.width, canvas.height);
 
-        playerMesh = GameObjects.makePerson(new THREE.Vector3(20, 14, 0.001));
+        playerMesh = GameObjects.makePerson(new THREE.Vector3(20, 14, 0.0));
         scene.add(playerMesh);
-        playerMesh.add(camera);
+        playerMesh.mesh.add(camera);
         camera.position.set(0.5, 0.5, 1);
 
         var w = 60;
