@@ -4,13 +4,6 @@ declare module Game {
       time?: number;
     }
 
-    interface ICharacterMesh extends IGameMesh {
-    }
-
-    interface ILevelMesh extends IGameMesh {
-      depth: number;
-    }
-
     interface IObjectModel {
       position: THREE.Vector3;
     }
@@ -19,23 +12,13 @@ declare module Game {
       energy: number;
       maxEnergy: number;
       inventory: IGameMesh[];
-        moveDepth: (depth: number) => void;
-        move: (x: number, y: number) => void;
     }
 
     interface ILevelModel {
-      mesh: ILevelMesh;
-      grid: GridCell[];
+      grid: number[];
       obstructions: boolean[];
       width: number;
       height: number;
       depth: number;
-      generator: (x: number, y: number) => GridCell;
-      getFloorTile: () => number[];
-    }
-
-    export enum GridCell {
-      EMPTY = -1,
-      GROUND = 0
     }
 }

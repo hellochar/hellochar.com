@@ -84,6 +84,7 @@ module Game {
             var material = MATERIALS[tileSet || "tiles"];
             var geometry = getGeometry(x, y);
             var mesh = <IGameMesh> new THREE.Mesh(geometry, material);
+            mesh.name = `${tileSet} - ${x}, ${y}`;
             return mesh;
         }
 
@@ -184,7 +185,7 @@ module Game {
     }
 
     class Character implements ICharacterModel {
-      public mesh: ICharacterMesh;
+      public mesh: IGameMesh;
       public inventory: IGameMesh[] = [];
 
       constructor(public position: THREE.Vector3,
@@ -196,7 +197,7 @@ module Game {
                     this.inventory.push(GameObjects.makeWoodItem(position));
                     this.inventory.push(GameObjects.makeWoodItem(position));
 
-                    this.mesh = <ICharacterMesh> SpriteSheet.getMesh(sx, sy, "character");
+                    this.mesh = <IGameMesh> SpriteSheet.getMesh(sx, sy, "characters");
                     this.mesh.position.copy(this.position);
                     this.mesh.animate = (millisElapsed) => {
                       const target = this.position.clone();
@@ -304,69 +305,34 @@ module Game {
     }
 
     module Map {
-        function buildLevelMesh(depth) {
+        export enum GridCell {
+          EMPTY = -1,
+          GROUND = 0
+        }
+
+        function buildLevelMesh(level: Level, floorTile: number[]) {
             function getWantedZ() {
-                if (playerMesh.position.z <= depth) {
-                    return -playerMesh.position.z - (depth - playerMesh.position.z) * 0.2;
+                if (playerMesh.position.z <= level.depth) {
+                    return -playerMesh.position.z - (level.depth - playerMesh.position.z) * 0.2;
                 } else {
-                    return -depth;
+                    return -level.depth;
                 }
             }
 
-            var level = <ILevelMesh> new THREE.Object3D();
-            level.depth = depth;
-            level.position.z = getWantedZ();
-            level.animate = function(millisElapsed) {
-                level.position.z = 0.7 * level.position.z + 0.3 * getWantedZ();
+            const levelMesh = <IGameMesh> new THREE.Object3D();
+            levelMesh.name = "Level " + level.depth;
+            levelMesh.position.set(0, 0, getWantedZ());
+            levelMesh.animate = function(millisElapsed) {
+                levelMesh.position.z = 0.7 * levelMesh.position.z + 0.3 * getWantedZ();
             }
-            return level;
-        }
 
-        class Level implements ILevelModel {
-          public mesh: ILevelMesh;
-          public grid: GridCell[] = [];
-          public obstructions: boolean[] = [];
+            const geometry = new THREE.Geometry();
+            for(let i = 0; i < level.width * level.height; i++) {
+                if (level.grid[i] === GridCell.GROUND) {
+                    const x = i % level.width;
+                    const y = Math.floor(i / level.width);
 
-          constructor(public width: number,
-                      public height: number,
-                      public depth: number,
-                      public generator: (x: number, y: number) => GridCell,
-                      public getFloorTile: () => number[]) {
-            this.mesh = buildLevelMesh(depth);
-
-            for(var i = 0; i < this.width*this.height; i++) {
-                var x = i % this.width;
-                var y = Math.floor(i / this.width);
-                this.grid[i] = generator(x, y);
-                this.obstructions[i] = false;
-            }
-            this.updateMesh();
-          }
-
-          public obstruct(x: number, y: number) {
-            this.obstructions[y*this.width + x] = true;
-          }
-
-          public unobstruct(x: number, y: number) {
-            this.obstructions[y*this.width + x] = false;
-          }
-
-          public isObstructed(x: number, y: number) {
-            return this.obstructions[y*this.width + x];
-          }
-
-          public get(x: number, y: number) {
-            return this.grid[y*this.width + x];
-          }
-
-          public updateMesh() {
-            var geometry = new THREE.Geometry();
-            for(var i = 0; i < this.width * this.height; i++) {
-                if (this.grid[i] === GridCell.GROUND) {
-                    var x = i % this.width;
-                    var y = Math.floor(i / this.width);
-
-                    var vIndex = geometry.vertices.length;
+                    const vIndex = geometry.vertices.length;
                     geometry.vertices.push(
                         new THREE.Vector3(x,   y,   0),
                         new THREE.Vector3(x+1, y,   0),
@@ -391,10 +357,47 @@ module Game {
                     );
                 }
             }
-            var tile = this.getFloorTile();
-            var material = SpriteSheet.getOpaqueMaterialAt(tile[0], tile[1], "tiles");
-            var floorMesh = new THREE.Mesh(geometry, material);
-            this.mesh.add(floorMesh);
+            const material = SpriteSheet.getOpaqueMaterialAt(floorTile[0], floorTile[1], "tiles");
+            const floorMesh = new THREE.Mesh(geometry, material);
+            floorMesh.name = "Level " + level.depth + " floor";
+            levelMesh.add(floorMesh);
+            return levelMesh;
+        }
+
+        export class Level implements ILevelModel {
+          public mesh: IGameMesh;
+          public grid: GridCell[] = [];
+          public obstructions: boolean[] = [];
+
+          constructor(public width: number,
+                      public height: number,
+                      public depth: number,
+                      generator: (x: number, y: number) => GridCell,
+                      floorTile: number[]) {
+
+            for(var i = 0; i < this.width*this.height; i++) {
+                var x = i % this.width;
+                var y = Math.floor(i / this.width);
+                this.grid[i] = generator(x, y);
+                this.obstructions[i] = false;
+            }
+            this.mesh = buildLevelMesh(this, floorTile);
+          }
+
+          public obstruct(x: number, y: number) {
+            this.obstructions[y*this.width + x] = true;
+          }
+
+          public unobstruct(x: number, y: number) {
+            this.obstructions[y*this.width + x] = false;
+          }
+
+          public isObstructed(x: number, y: number) {
+            return this.obstructions[y*this.width + x];
+          }
+
+          public get(x: number, y: number) {
+            return this.grid[y*this.width + x];
           }
 
           public addObjects(callback: (x: number, y: number) => THREE.Object3D,
@@ -428,11 +431,7 @@ module Game {
                 }
             }
 
-            function getFloorTile() {
-                return [3, 14];
-            }
-
-            var level = new Level(width, height, 0, generator, getFloorTile);
+            var level = new Level(width, height, 0, generator, [3, 14]);
 
             level.addObjects(function(x, y) {
                 var flowerExists = Math.sin((x*3+25.2)*(y*0.9+345.3492) / 2) < -0.99;
@@ -472,13 +471,7 @@ module Game {
                 }
             }
 
-            function getFloorTile() {
-                // var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
-                // return [8 + offset[0], 20 + offset[1]];
-                return [8, 20];
-            }
-
-            var level = new Level(width, height, depth, generator, getFloorTile);
+            var level = new Level(width, height, depth, generator, [8, 20]);
 
             level.addObjects(function(x, y) {
                 var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
@@ -502,11 +495,7 @@ module Game {
                 return GridCell.GROUND;
             }
 
-            function getFloorTile() {
-                return [6, 28];
-            }
-
-            var level = new Level(width, height, depth, generator, getFloorTile);
+            var level = new Level(width, height, depth, generator, [6, 28]);
 
             function blueMatExists(x, y) {
                 return Math.abs(x + 0.5 - width/2) < 5 && Math.abs(y + 0.5 - height/2) < 5;
@@ -678,21 +667,18 @@ module Game {
         }
     }
 
-    var audioContext;
-
     // threejs stuff
-    var camera;
-    var renderer;
-    var scene;
-    var rendererStats;
-    var stats;
+    var camera: THREE.PerspectiveCamera;
+    var renderer: THREE.WebGLRenderer;
+    var scene: THREE.Scene;
+    var rendererStats: any;
+    var stats: any;
 
     var playerMesh: Character;
-    var levels = [];
+    var levels: Map.Level[] = [];
 
-    function init(_renderer, _audioContext) {
+    function init(_renderer: THREE.WebGLRenderer, _audioContext: AudioContext) {
         renderer = _renderer;
-        audioContext = _audioContext;
         const canvas = _renderer.domElement;
 
         if (typeof (<any>window)["THREEx"] !== "undefined") {
@@ -716,7 +702,7 @@ module Game {
         setCameraDimensions(canvas.width, canvas.height);
 
         playerMesh = GameObjects.makePerson(new THREE.Vector3(20, 14, 0.0));
-        scene.add(playerMesh);
+        scene.add(playerMesh.mesh);
         playerMesh.mesh.add(camera);
         camera.position.set(0.5, 0.5, 1);
 
@@ -734,8 +720,8 @@ module Game {
             scene.add(level.mesh);
         });
 
-        scene.add(GameObjects.makeEnemy(new THREE.Vector3(23, 19, 0)));
-        scene.add(GameObjects.makeEnemy(new THREE.Vector3(14, 10, 0)));
+        scene.add(GameObjects.makeEnemy(new THREE.Vector3(23, 19, 0)).mesh);
+        scene.add(GameObjects.makeEnemy(new THREE.Vector3(14, 10, 0)).mesh);
 
         HUD.createDepthIndicator();
         HUD.createEnergyIndicator();
@@ -743,7 +729,7 @@ module Game {
 
     function animate(millisElapsed) {
         stats.begin();
-        scene.traverse(function(object) {
+        scene.traverse(function(object: IGameMesh) {
             if (object.animate) {
                 object.animate(millisElapsed);
             }
