@@ -69,6 +69,7 @@ var Game;
             var material = SpriteSheet.MATERIALS[tileSet || "tiles"];
             var geometry = getGeometry(x, y);
             var mesh = new THREE.Mesh(geometry, material);
+            mesh.name = tileSet + " - " + x + ", " + y;
             return mesh;
         }
         SpriteSheet.getMesh = getMesh;
@@ -130,7 +131,7 @@ var Game;
             this.inventory.push(GameObjects.makeWoodItem(position));
             this.inventory.push(GameObjects.makeWoodItem(position));
             this.inventory.push(GameObjects.makeWoodItem(position));
-            this.mesh = SpriteSheet.getMesh(sx, sy, "character");
+            this.mesh = SpriteSheet.getMesh(sx, sy, "characters");
             this.mesh.position.copy(this.position);
             this.mesh.animate = function (millisElapsed) {
                 var target = _this.position.clone();
@@ -238,40 +239,65 @@ var Game;
     })(Sound || (Sound = {}));
     var Map;
     (function (Map) {
-        function buildLevelMesh(depth) {
+        (function (GridCell) {
+            GridCell[GridCell["EMPTY"] = -1] = "EMPTY";
+            GridCell[GridCell["GROUND"] = 0] = "GROUND";
+        })(Map.GridCell || (Map.GridCell = {}));
+        var GridCell = Map.GridCell;
+        function buildLevelMesh(level, floorTile) {
             function getWantedZ() {
-                if (playerMesh.position.z <= depth) {
-                    return -playerMesh.position.z - (depth - playerMesh.position.z) * 0.2;
+                if (playerMesh.position.z <= level.depth) {
+                    return -playerMesh.position.z - (level.depth - playerMesh.position.z) * 0.2;
                 }
                 else {
-                    return -depth;
+                    return -level.depth;
                 }
             }
-            var level = new THREE.Object3D();
-            level.depth = depth;
-            level.position.z = getWantedZ();
-            level.animate = function (millisElapsed) {
-                level.position.z = 0.7 * level.position.z + 0.3 * getWantedZ();
+            var levelMesh = new THREE.Object3D();
+            levelMesh.name = "Level " + level.depth;
+            levelMesh.position.set(0, 0, getWantedZ());
+            levelMesh.animate = function (millisElapsed) {
+                levelMesh.position.z = 0.7 * levelMesh.position.z + 0.3 * getWantedZ();
             };
-            return level;
+            var geometry = new THREE.Geometry();
+            for (var i = 0; i < level.width * level.height; i++) {
+                if (level.grid[i] === GridCell.GROUND) {
+                    var x = i % level.width;
+                    var y = Math.floor(i / level.width);
+                    var vIndex = geometry.vertices.length;
+                    geometry.vertices.push(new THREE.Vector3(x, y, 0), new THREE.Vector3(x + 1, y, 0), new THREE.Vector3(x + 1, y + 1, 0), new THREE.Vector3(x, y + 1, 0));
+                    geometry.faces.push(new THREE.Face3(vIndex, vIndex + 1, vIndex + 2), new THREE.Face3(vIndex, vIndex + 2, vIndex + 3));
+                    geometry.faceVertexUvs[0].push([
+                        new THREE.Vector2(0, 0),
+                        new THREE.Vector2(1, 0),
+                        new THREE.Vector2(1, 1)
+                    ], [
+                        new THREE.Vector2(0, 0),
+                        new THREE.Vector2(1, 1),
+                        new THREE.Vector2(0, 1)
+                    ]);
+                }
+            }
+            var material = SpriteSheet.getOpaqueMaterialAt(floorTile[0], floorTile[1], "tiles");
+            var floorMesh = new THREE.Mesh(geometry, material);
+            floorMesh.name = "Level " + level.depth + " floor";
+            levelMesh.add(floorMesh);
+            return levelMesh;
         }
         var Level = (function () {
-            function Level(width, height, depth, generator, getFloorTile) {
+            function Level(width, height, depth, generator, floorTile) {
                 this.width = width;
                 this.height = height;
                 this.depth = depth;
-                this.generator = generator;
-                this.getFloorTile = getFloorTile;
                 this.grid = [];
                 this.obstructions = [];
-                this.mesh = buildLevelMesh(depth);
                 for (var i = 0; i < this.width * this.height; i++) {
                     var x = i % this.width;
                     var y = Math.floor(i / this.width);
                     this.grid[i] = generator(x, y);
                     this.obstructions[i] = false;
                 }
-                this.updateMesh();
+                this.mesh = buildLevelMesh(this, floorTile);
             }
             Level.prototype.obstruct = function (x, y) {
                 this.obstructions[y * this.width + x] = true;
@@ -284,31 +310,6 @@ var Game;
             };
             Level.prototype.get = function (x, y) {
                 return this.grid[y * this.width + x];
-            };
-            Level.prototype.updateMesh = function () {
-                var geometry = new THREE.Geometry();
-                for (var i = 0; i < this.width * this.height; i++) {
-                    if (this.grid[i] === Game.GridCell.GROUND) {
-                        var x = i % this.width;
-                        var y = Math.floor(i / this.width);
-                        var vIndex = geometry.vertices.length;
-                        geometry.vertices.push(new THREE.Vector3(x, y, 0), new THREE.Vector3(x + 1, y, 0), new THREE.Vector3(x + 1, y + 1, 0), new THREE.Vector3(x, y + 1, 0));
-                        geometry.faces.push(new THREE.Face3(vIndex, vIndex + 1, vIndex + 2), new THREE.Face3(vIndex, vIndex + 2, vIndex + 3));
-                        geometry.faceVertexUvs[0].push([
-                            new THREE.Vector2(0, 0),
-                            new THREE.Vector2(1, 0),
-                            new THREE.Vector2(1, 1)
-                        ], [
-                            new THREE.Vector2(0, 0),
-                            new THREE.Vector2(1, 1),
-                            new THREE.Vector2(0, 1)
-                        ]);
-                    }
-                }
-                var tile = this.getFloorTile();
-                var material = SpriteSheet.getOpaqueMaterialAt(tile[0], tile[1], "tiles");
-                var floorMesh = new THREE.Mesh(geometry, material);
-                this.mesh.add(floorMesh);
             };
             Level.prototype.addObjects = function (callback, shouldObstruct) {
                 for (var i = 0; i < this.width * this.height; i++) {
@@ -331,19 +332,17 @@ var Game;
             };
             return Level;
         })();
+        Map.Level = Level;
         function buildOutdoorsLevel(width, height) {
             function generator(x, y) {
                 if (Math.sin(x / 4) * Math.sin(y / 4) > -0.5) {
-                    return Game.GridCell.GROUND;
+                    return GridCell.GROUND;
                 }
                 else {
-                    return Game.GridCell.EMPTY;
+                    return GridCell.EMPTY;
                 }
             }
-            function getFloorTile() {
-                return [3, 14];
-            }
-            var level = new Level(width, height, 0, generator, getFloorTile);
+            var level = new Level(width, height, 0, generator, [3, 14]);
             level.addObjects(function (x, y) {
                 var flowerExists = Math.sin((x * 3 + 25.2) * (y * 0.9 + 345.3492) / 2) < -0.99;
                 if (flowerExists) {
@@ -372,16 +371,13 @@ var Game;
             }
             function generator(x, y) {
                 if (floorExists(x, y)) {
-                    return Game.GridCell.GROUND;
+                    return GridCell.GROUND;
                 }
                 else {
-                    return Game.GridCell.EMPTY;
+                    return GridCell.EMPTY;
                 }
             }
-            function getFloorTile() {
-                return [8, 20];
-            }
-            var level = new Level(width, height, depth, generator, getFloorTile);
+            var level = new Level(width, height, depth, generator, [8, 20]);
             level.addObjects(function (x, y) {
                 var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
                 if (offset[0] == 0 && offset[1] == 0) {
@@ -400,12 +396,9 @@ var Game;
             var width = 15;
             var height = 15;
             function generator(x, y) {
-                return Game.GridCell.GROUND;
+                return GridCell.GROUND;
             }
-            function getFloorTile() {
-                return [6, 28];
-            }
-            var level = new Level(width, height, depth, generator, getFloorTile);
+            var level = new Level(width, height, depth, generator, [6, 28]);
             function blueMatExists(x, y) {
                 return Math.abs(x + 0.5 - width / 2) < 5 && Math.abs(y + 0.5 - height / 2) < 5;
             }
@@ -568,7 +561,6 @@ var Game;
         }
         HUD.updateDepthIndicator = updateDepthIndicator;
     })(HUD || (HUD = {}));
-    var audioContext;
     var camera;
     var renderer;
     var scene;
@@ -578,7 +570,6 @@ var Game;
     var levels = [];
     function init(_renderer, _audioContext) {
         renderer = _renderer;
-        audioContext = _audioContext;
         var canvas = _renderer.domElement;
         if (typeof window["THREEx"] !== "undefined") {
             rendererStats = new THREEx.RendererStats();
@@ -597,7 +588,7 @@ var Game;
         camera = new THREE.PerspectiveCamera(165, 1, 0.01, 2);
         setCameraDimensions(canvas.width, canvas.height);
         playerMesh = GameObjects.makePerson(new THREE.Vector3(20, 14, 0.0));
-        scene.add(playerMesh);
+        scene.add(playerMesh.mesh);
         playerMesh.mesh.add(camera);
         camera.position.set(0.5, 0.5, 1);
         var w = 60;
@@ -613,8 +604,8 @@ var Game;
         levels.forEach(function (level) {
             scene.add(level.mesh);
         });
-        scene.add(GameObjects.makeEnemy(new THREE.Vector3(23, 19, 0)));
-        scene.add(GameObjects.makeEnemy(new THREE.Vector3(14, 10, 0)));
+        scene.add(GameObjects.makeEnemy(new THREE.Vector3(23, 19, 0)).mesh);
+        scene.add(GameObjects.makeEnemy(new THREE.Vector3(14, 10, 0)).mesh);
         HUD.createDepthIndicator();
         HUD.createEnergyIndicator();
     }
