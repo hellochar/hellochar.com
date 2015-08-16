@@ -80,7 +80,7 @@ module Game {
             return material;
         }
 
-        export function getMesh(x, y, tileSet) {
+        export function getMesh(x: number, y: number, tileSet: string) {
             var material = MATERIALS[tileSet || "tiles"];
             var geometry = getGeometry(x, y);
             var mesh = <IGameMesh> new THREE.Mesh(geometry, material);
@@ -171,7 +171,7 @@ module Game {
             return offsets[index];
         }
 
-        export function getBasicConnectorTileOffset(floorExists, x, y) {
+        export function getBasicConnectorTileOffset(floorExists: (x: number, y: number) => boolean, x: number, y: number) {
             var missingTop = !floorExists(x, y + 1),
                 missingRight = !floorExists(x + 1, y),
                 missingBottom = !floorExists(x, y - 1),
@@ -246,7 +246,7 @@ module Game {
         export function makeEnemy(position: THREE.Vector3) {
             return new Character(position, 1, 10);
         }
-        export function makeFlower(position) {
+        export function makeFlower(position: THREE.Vector3) {
             var tileMesh = SpriteSheet.getMesh(3, 17, "tiles");
             tileMesh.position.copy(position);
             tileMesh.time = 0;
@@ -259,8 +259,53 @@ module Game {
                     this.position.x = position.x + 0.02;
                     this.position.y = position.y + 0.02;
                 }
-            }
-            return tileMesh;
+            };
+
+            const flower: IObjectModel = {
+              position: position.clone(),
+              mesh: tileMesh
+            };
+            return flower;
+        }
+        export function makeTree(position: THREE.Vector3) {
+            var tree = new THREE.Object3D();
+            tree.position.set(position.x, position.y, position.z + 0.002);
+
+            var treeBottom = SpriteSheet.getMesh(13, 19, "tiles");
+            var treeTop = SpriteSheet.getMesh(13, 20, "tiles");
+            treeTop.position.y = 1;
+
+            tree.add(treeBottom);
+            tree.add(treeTop);
+
+            const treeObject: IObjectModel = {
+              position: position.clone(),
+              mesh: tree
+            };
+            return treeObject;
+        }
+        export function makeMushroom(position: THREE.Vector3) {
+            var spritesheetY = Math.random() < 0.5 ? 13 : 14;
+            var mushroom = SpriteSheet.getMesh(0, spritesheetY, "dungeon");
+            mushroom.position.copy(position);
+
+            const mushroomObject: IObjectModel = {
+              position: position.clone(),
+              mesh: mushroom
+            };
+            return mushroomObject;
+        }
+        export function makeDoodad(position: THREE.Vector3, spriteX: number, spriteY: number) {
+          const mesh = SpriteSheet.getMesh(spriteX, spriteY, "tiles");
+          mesh.position.copy(position);
+          const doodad: IDoodadModel = {
+            position: position,
+            spriteX: spriteX,
+            spriteY: spriteY,
+            spriteTile: "tiles",
+            mesh: mesh
+          }
+          return doodad;
         }
         export function makeWoodItem(position) {
             var woodMesh = SpriteSheet.getMesh(41, 20, "tiles");
@@ -366,6 +411,7 @@ module Game {
 
         export class Level implements ILevelModel {
           public mesh: IGameMesh;
+          public objects: IObjectModel[] = [];
           public grid: GridCell[] = [];
           public obstructions: boolean[] = [];
 
@@ -400,7 +446,7 @@ module Game {
             return this.grid[y*this.width + x];
           }
 
-          public addObjects(callback: (x: number, y: number) => THREE.Object3D,
+          public addObjects(callback: (x: number, y: number) => IObjectModel,
                             shouldObstruct?: boolean) {
             for (var i = 0; i < this.width*this.height; i++) {
               var x = i % this.width;
@@ -414,10 +460,10 @@ module Game {
             }
           }
 
-          public addObject(mesh: THREE.Object3D, shouldObstruct = false) {
-            this.mesh.add(mesh);
+          public addObject(object: IObjectModel, shouldObstruct = false) {
+            this.mesh.add(object.mesh);
             if (shouldObstruct) {
-              this.obstruct(mesh.position.x, mesh.position.y);
+              this.obstruct(object.position.x, object.position.y);
             }
           }
         }
@@ -433,26 +479,17 @@ module Game {
 
             var level = new Level(width, height, 0, generator, [3, 14]);
 
-            level.addObjects(function(x, y) {
+            level.addObjects((x, y) => {
                 var flowerExists = Math.sin((x*3+25.2)*(y*0.9+345.3492) / 2) < -0.99;
                 if (flowerExists) {
                     return GameObjects.makeFlower(new THREE.Vector3(x, y, 0));
                 }
             }, false);
 
-            level.addObjects(function(x, y) {
+            level.addObjects((x, y) => {
                 if ((x < 4 || x > width - 4 || y < 4 || y > height -4) &&
                     (y+x)%2 == 0) {
-                    var tree = new THREE.Object3D();
-                    tree.position.set(x, y, 0.002);
-
-                    var treeBottom = SpriteSheet.getMesh(13, 19, "tiles");
-                    var treeTop = SpriteSheet.getMesh(13, 20, "tiles");
-                    treeTop.position.y = 1;
-
-                    tree.add(treeBottom);
-                    tree.add(treeTop);
-                    return tree;
+                    return GameObjects.makeTree(new THREE.Vector3(x, y, 0));
                 }
             }, true);
 
@@ -473,14 +510,11 @@ module Game {
 
             var level = new Level(width, height, depth, generator, [8, 20]);
 
-            level.addObjects(function(x, y) {
+            level.addObjects((x, y) => {
                 var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
                 if (offset[0] == 0 && offset[1] == 0) {
                     if((1+Math.sin((x*3432394291*y*depth + 1.23 + depth)))%1 < 0.05) {
-                        var spritesheetY = Math.random() < 0.5 ? 13 : 14;
-                        var mushroom = SpriteSheet.getMesh(0, spritesheetY, "dungeon");
-                        mushroom.position.set(x, y, 0);
-                        return mushroom;
+                      return GameObjects.makeMushroom(new THREE.Vector3(x, y, 0));
                     }
                 }
             });
@@ -488,7 +522,7 @@ module Game {
             return level;
         }
 
-        export function buildLastLevel(depth) {
+        export function buildLastLevel(depth: number) {
             var width = 15;
             var height = 15;
             function generator(x, y) {
@@ -497,22 +531,21 @@ module Game {
 
             var level = new Level(width, height, depth, generator, [6, 28]);
 
-            function blueMatExists(x, y) {
+            function blueMatExists(x: number, y: number) {
                 return Math.abs(x + 0.5 - width/2) < 5 && Math.abs(y + 0.5 - height/2) < 5;
             }
-            level.addObjects(function(x, y) {
+            level.addObjects((x, y) => {
                 if (blueMatExists(x, y)) {
-                    var offset = SpriteSheet.getBasicConnectorTileOffset(blueMatExists, x, y);
-                    var blueMat = SpriteSheet.getMesh(16 + offset[0], 1 + offset[1], "tiles");
-                    blueMat.position.set(x, y, 0);
-                    return blueMat;
+                    const offset = SpriteSheet.getBasicConnectorTileOffset(blueMatExists, x, y);
+                    return GameObjects.makeDoodad(new THREE.Vector3(x, y, 0), 16 + offset[0], 1 + offset[1]);
                 }
             });
 
-            level.addObjects(function(x, y) {
+            level.addObjects((x, y) => {
                 if (x == 0 || x == width-1 || y == 0 || y == height - 1) {
                     var xSide = x == 0 ? "left" : x == width - 1 ? "right" : "neither";
                     var ySide = y == 0 ? "bottom" : y == height - 1 ? "top" : "neither";
+
                     var wall = new THREE.Object3D();
                     wall.position.set(x, y, 0);
 
@@ -545,39 +578,37 @@ module Game {
                     wallTop.position.set(0, 1, 0.002);
                     wall.add(wallTop);
 
-                    return wall;
+                    const wallObject: IObjectModel = {
+                      position: new THREE.Vector3(x, y, 0),
+                      mesh: wall
+                    };
+                    return wallObject;
                 }
             }, true);
 
-            var pictureObject = SpriteSheet.getMesh(30, 19, "tiles");
-            pictureObject.position.set(Math.floor(width/2), Math.floor(height/2), 0.00001);
-            level.addObject(pictureObject);
 
-            var tableLeft = SpriteSheet.getMesh(26, 26, "tiles");
-            tableLeft.position.set(Math.floor(width/2) - 1, Math.floor(height/2), 0);
+            const cx = Math.floor(width/2),
+                  cy = Math.floor(height/2);
+            const tableLeft = GameObjects.makeDoodad(new THREE.Vector3(cx - 1, cy, 0), 26, 26);
+            const tableMiddle = GameObjects.makeDoodad(new THREE.Vector3(cx, cy, 0), 27, 26);
+            const tableRight = GameObjects.makeDoodad(new THREE.Vector3(cx + 1, cy, 0), 27, 24);
             level.addObject(tableLeft, true);
-
-            var tableMiddle = SpriteSheet.getMesh(27, 26, "tiles");
-            tableMiddle.position.set(Math.floor(width/2), Math.floor(height/2), 0);
             level.addObject(tableMiddle, true);
-
-            var tableRight = SpriteSheet.getMesh(27, 24, "tiles");
-            tableRight.position.set(Math.floor(width/2)+1, Math.floor(height/2), 0);
             level.addObject(tableRight, true);
 
+            const picture = GameObjects.makeDoodad(new THREE.Vector3(cx, cy, 0.00001), 30, 19);
+            level.addObject(picture);
 
             for(var i = 0; i < 3; i++) {
-                (function() {
-                    var x = Math.floor(width/2) - 1 + i;
-                    var chairFacingDown = SpriteSheet.getMesh(19, 28, "tiles");
-                    chairFacingDown.position.set(x, Math.floor(height/2) + 1, 0);
+                (() => {
+                    const x = cx - 1 + i;
+                    const chairFacingDown = GameObjects.makeDoodad(new THREE.Vector3(x, cy + 1, 0), 19, 28);
                     level.addObject(chairFacingDown, true);
                 })();
 
-                (function() {
-                    var y = Math.floor(height / 2) + (i - 1) * 2;
-                    var bedFacingRight = SpriteSheet.getMesh(15, 28, "tiles");
-                    bedFacingRight.position.set(2, y, 0);
+                (() => {
+                    const y = cy + (i - 1) * 2;
+                    const bedFacingRight = GameObjects.makeDoodad(new THREE.Vector3(2, y, 0), 15, 28);
                     level.addObject(bedFacingRight);
                 })();
             }

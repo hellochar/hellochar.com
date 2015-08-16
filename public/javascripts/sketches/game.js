@@ -194,9 +194,52 @@ var Game;
                     this.position.y = position.y + 0.02;
                 }
             };
-            return tileMesh;
+            var flower = {
+                position: position.clone(),
+                mesh: tileMesh
+            };
+            return flower;
         }
         GameObjects.makeFlower = makeFlower;
+        function makeTree(position) {
+            var tree = new THREE.Object3D();
+            tree.position.set(position.x, position.y, position.z + 0.002);
+            var treeBottom = SpriteSheet.getMesh(13, 19, "tiles");
+            var treeTop = SpriteSheet.getMesh(13, 20, "tiles");
+            treeTop.position.y = 1;
+            tree.add(treeBottom);
+            tree.add(treeTop);
+            var treeObject = {
+                position: position.clone(),
+                mesh: tree
+            };
+            return treeObject;
+        }
+        GameObjects.makeTree = makeTree;
+        function makeMushroom(position) {
+            var spritesheetY = Math.random() < 0.5 ? 13 : 14;
+            var mushroom = SpriteSheet.getMesh(0, spritesheetY, "dungeon");
+            mushroom.position.copy(position);
+            var mushroomObject = {
+                position: position.clone(),
+                mesh: mushroom
+            };
+            return mushroomObject;
+        }
+        GameObjects.makeMushroom = makeMushroom;
+        function makeDoodad(position, spriteX, spriteY) {
+            var mesh = SpriteSheet.getMesh(spriteX, spriteY, "tiles");
+            mesh.position.copy(position);
+            var doodad = {
+                position: position,
+                spriteX: spriteX,
+                spriteY: spriteY,
+                spriteTile: "tiles",
+                mesh: mesh
+            };
+            return doodad;
+        }
+        GameObjects.makeDoodad = makeDoodad;
         function makeWoodItem(position) {
             var woodMesh = SpriteSheet.getMesh(41, 20, "tiles");
             woodMesh.position.copy(position);
@@ -289,6 +332,7 @@ var Game;
                 this.width = width;
                 this.height = height;
                 this.depth = depth;
+                this.objects = [];
                 this.grid = [];
                 this.obstructions = [];
                 for (var i = 0; i < this.width * this.height; i++) {
@@ -323,11 +367,11 @@ var Game;
                     }
                 }
             };
-            Level.prototype.addObject = function (mesh, shouldObstruct) {
+            Level.prototype.addObject = function (object, shouldObstruct) {
                 if (shouldObstruct === void 0) { shouldObstruct = false; }
-                this.mesh.add(mesh);
+                this.mesh.add(object.mesh);
                 if (shouldObstruct) {
-                    this.obstruct(mesh.position.x, mesh.position.y);
+                    this.obstruct(object.position.x, object.position.y);
                 }
             };
             return Level;
@@ -352,14 +396,7 @@ var Game;
             level.addObjects(function (x, y) {
                 if ((x < 4 || x > width - 4 || y < 4 || y > height - 4) &&
                     (y + x) % 2 == 0) {
-                    var tree = new THREE.Object3D();
-                    tree.position.set(x, y, 0.002);
-                    var treeBottom = SpriteSheet.getMesh(13, 19, "tiles");
-                    var treeTop = SpriteSheet.getMesh(13, 20, "tiles");
-                    treeTop.position.y = 1;
-                    tree.add(treeBottom);
-                    tree.add(treeTop);
-                    return tree;
+                    return GameObjects.makeTree(new THREE.Vector3(x, y, 0));
                 }
             }, true);
             return level;
@@ -382,10 +419,7 @@ var Game;
                 var offset = SpriteSheet.getConnectorTileOffset(floorExists, x, y);
                 if (offset[0] == 0 && offset[1] == 0) {
                     if ((1 + Math.sin((x * 3432394291 * y * depth + 1.23 + depth))) % 1 < 0.05) {
-                        var spritesheetY = Math.random() < 0.5 ? 13 : 14;
-                        var mushroom = SpriteSheet.getMesh(0, spritesheetY, "dungeon");
-                        mushroom.position.set(x, y, 0);
-                        return mushroom;
+                        return GameObjects.makeMushroom(new THREE.Vector3(x, y, 0));
                     }
                 }
             });
@@ -405,9 +439,7 @@ var Game;
             level.addObjects(function (x, y) {
                 if (blueMatExists(x, y)) {
                     var offset = SpriteSheet.getBasicConnectorTileOffset(blueMatExists, x, y);
-                    var blueMat = SpriteSheet.getMesh(16 + offset[0], 1 + offset[1], "tiles");
-                    blueMat.position.set(x, y, 0);
-                    return blueMat;
+                    return GameObjects.makeDoodad(new THREE.Vector3(x, y, 0), 16 + offset[0], 1 + offset[1]);
                 }
             });
             level.addObjects(function (x, y) {
@@ -443,32 +475,31 @@ var Game;
                     var wallTop = SpriteSheet.getMesh(wallTopPosition[0], wallTopPosition[1], "tiles");
                     wallTop.position.set(0, 1, 0.002);
                     wall.add(wallTop);
-                    return wall;
+                    var wallObject = {
+                        position: new THREE.Vector3(x, y, 0),
+                        mesh: wall
+                    };
+                    return wallObject;
                 }
             }, true);
-            var pictureObject = SpriteSheet.getMesh(30, 19, "tiles");
-            pictureObject.position.set(Math.floor(width / 2), Math.floor(height / 2), 0.00001);
-            level.addObject(pictureObject);
-            var tableLeft = SpriteSheet.getMesh(26, 26, "tiles");
-            tableLeft.position.set(Math.floor(width / 2) - 1, Math.floor(height / 2), 0);
+            var cx = Math.floor(width / 2), cy = Math.floor(height / 2);
+            var tableLeft = GameObjects.makeDoodad(new THREE.Vector3(cx - 1, cy, 0), 26, 26);
+            var tableMiddle = GameObjects.makeDoodad(new THREE.Vector3(cx, cy, 0), 27, 26);
+            var tableRight = GameObjects.makeDoodad(new THREE.Vector3(cx + 1, cy, 0), 27, 24);
             level.addObject(tableLeft, true);
-            var tableMiddle = SpriteSheet.getMesh(27, 26, "tiles");
-            tableMiddle.position.set(Math.floor(width / 2), Math.floor(height / 2), 0);
             level.addObject(tableMiddle, true);
-            var tableRight = SpriteSheet.getMesh(27, 24, "tiles");
-            tableRight.position.set(Math.floor(width / 2) + 1, Math.floor(height / 2), 0);
             level.addObject(tableRight, true);
+            var picture = GameObjects.makeDoodad(new THREE.Vector3(cx, cy, 0.00001), 30, 19);
+            level.addObject(picture);
             for (var i = 0; i < 3; i++) {
                 (function () {
-                    var x = Math.floor(width / 2) - 1 + i;
-                    var chairFacingDown = SpriteSheet.getMesh(19, 28, "tiles");
-                    chairFacingDown.position.set(x, Math.floor(height / 2) + 1, 0);
+                    var x = cx - 1 + i;
+                    var chairFacingDown = GameObjects.makeDoodad(new THREE.Vector3(x, cy + 1, 0), 19, 28);
                     level.addObject(chairFacingDown, true);
                 })();
                 (function () {
-                    var y = Math.floor(height / 2) + (i - 1) * 2;
-                    var bedFacingRight = SpriteSheet.getMesh(15, 28, "tiles");
-                    bedFacingRight.position.set(2, y, 0);
+                    var y = cy + (i - 1) * 2;
+                    var bedFacingRight = GameObjects.makeDoodad(new THREE.Vector3(2, y, 0), 15, 28);
                     level.addObject(bedFacingRight);
                 })();
             }
