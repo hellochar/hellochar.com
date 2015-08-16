@@ -250,9 +250,10 @@ var Game;
     var Sound;
     (function (Sound) {
         function loadAudio(src, volume) {
+            if (volume === void 0) { volume = 1; }
             var audio = new Audio();
             audio.src = src;
-            audio.volume = volume || 1;
+            audio.volume = volume;
             return audio;
         }
         var audioCache = {
@@ -369,6 +370,7 @@ var Game;
             };
             Level.prototype.addObject = function (object, shouldObstruct) {
                 if (shouldObstruct === void 0) { shouldObstruct = false; }
+                this.objects.push(object);
                 this.mesh.add(object.mesh);
                 if (shouldObstruct) {
                     this.obstruct(object.position.x, object.position.y);
