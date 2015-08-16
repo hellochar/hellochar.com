@@ -1,6 +1,6 @@
 module Game {
     module SpriteSheet {
-        export function loadSpriteSheet(url, width, height) {
+        export function loadSpriteSheet(url: string, width: number, height: number) {
             var texture = THREE.ImageUtils.loadTexture(url);
             texture.magFilter = THREE.NearestFilter;
             texture.repeat.set(1 / width, 1 / height);
@@ -19,8 +19,8 @@ module Game {
             "characters": loadSpriteSheet("/images/roguelikeChar_transparent.png", 1024, 256)
         };
 
-        var geometryCache = {};
-        export function getGeometry(x, y) {
+        var geometryCache: { [key: string]: THREE.Geometry } = {};
+        export function getGeometry(x: number, y: number) {
             var key = x + "," + y;
             if (geometryCache[key]) {
                 return geometryCache[key];
@@ -51,8 +51,8 @@ module Game {
             return geometry;
         }
 
-        var materialCache = {};
-        export function getOpaqueMaterialAt(x, y, tileSet) {
+        var materialCache: { [key: string]: THREE.Material } = {};
+        export function getOpaqueMaterialAt(x: number, y: number, tileSet: string) {
             var key = x + "," + y;
             if (materialCache[key]) {
                 return materialCache[key];
@@ -65,7 +65,7 @@ module Game {
             texture.wrapT = THREE.RepeatWrapping;
 
             var sourceTexture = MATERIALS[tileSet].map;
-            sourceTexture.addEventListener("update", function() {
+            sourceTexture.addEventListener("update", () => {
                 var image = sourceTexture.image;
                 var context = canvas.getContext("2d");
                 context.drawImage(image, 16*x, image.height - 16*y - 16, 16, 16, 0, 0, 16, 16);
@@ -88,6 +88,10 @@ module Game {
             return mesh;
         }
 
+        interface IExistsGenerator {
+          (x: number, y: number): boolean;
+        }
+
         // offset from the "center" tile
         /*
          *       1
@@ -96,7 +100,7 @@ module Game {
          *
          *       4
          */
-        export function getConnectorTileOffset(floorExists, x, y) {
+        export function getConnectorTileOffset(floorExists: IExistsGenerator, x: number, y: number) {
             var missingTop = !floorExists(x, y + 1),
                 missingRight = !floorExists(x + 1, y),
                 missingBottom = !floorExists(x, y - 1),
@@ -171,7 +175,7 @@ module Game {
             return offsets[index];
         }
 
-        export function getBasicConnectorTileOffset(floorExists: (x: number, y: number) => boolean, x: number, y: number) {
+        export function getBasicConnectorTileOffset(floorExists: IExistsGenerator, x: number, y: number) {
             var missingTop = !floorExists(x, y + 1),
                 missingRight = !floorExists(x + 1, y),
                 missingBottom = !floorExists(x, y - 1),
@@ -250,7 +254,7 @@ module Game {
             var tileMesh = SpriteSheet.getMesh(3, 17, "tiles");
             tileMesh.position.copy(position);
             tileMesh.time = 0;
-            tileMesh.animate = function(millisElapsed) {
+            tileMesh.animate = function(millisElapsed: number) {
                 this.time += millisElapsed;
                 if (Math.sin((position.x + position.y * 1.1) / 5 + this.time / 900) < 0) {
                     this.position.x = position.x - 0.02;
@@ -307,7 +311,7 @@ module Game {
           }
           return doodad;
         }
-        export function makeWoodItem(position) {
+        export function makeWoodItem(position: THREE.Vector3) {
             var woodMesh = SpriteSheet.getMesh(41, 20, "tiles");
             woodMesh.position.copy(position);
             return woodMesh;
@@ -315,10 +319,10 @@ module Game {
     }
 
     module Sound {
-        function loadAudio(src, volume) {
+        function loadAudio(src: string, volume: number = 1) {
             var audio = new Audio();
             audio.src = src;
-            audio.volume = volume || 1;
+            audio.volume = volume;
             return audio;
         }
         var audioCache = {
@@ -328,7 +332,7 @@ module Game {
             "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav", 0.05)
         }
 
-        export function play(name) {
+        export function play(name: string) {
             if (audioCache[name]) {
                 audioCache[name].play();
             }
@@ -367,7 +371,7 @@ module Game {
             const levelMesh = <IGameMesh> new THREE.Object3D();
             levelMesh.name = "Level " + level.depth;
             levelMesh.position.set(0, 0, getWantedZ());
-            levelMesh.animate = function(millisElapsed) {
+            levelMesh.animate = function(millisElapsed: number) {
                 levelMesh.position.z = 0.7 * levelMesh.position.z + 0.3 * getWantedZ();
             }
 
@@ -461,6 +465,7 @@ module Game {
           }
 
           public addObject(object: IObjectModel, shouldObstruct = false) {
+            this.objects.push(object);
             this.mesh.add(object.mesh);
             if (shouldObstruct) {
               this.obstruct(object.position.x, object.position.y);
@@ -468,8 +473,8 @@ module Game {
           }
         }
 
-        export function buildOutdoorsLevel(width, height) {
-            function generator(x, y) {
+        export function buildOutdoorsLevel(width: number, height: number) {
+            function generator(x: number, y: number) {
                 if ( Math.sin(x/4)*Math.sin(y/4) > -0.5 ) {
                     return GridCell.GROUND;
                 } else {
@@ -496,11 +501,11 @@ module Game {
             return level;
         }
 
-        export function buildCaveLevel(width, height, depth) {
-            function floorExists(x, y) {
+        export function buildCaveLevel(width: number, height: number, depth: number) {
+            function floorExists(x: number, y: number) {
                 return Math.sin(x/5 + 1.2 + depth)*Math.sin(y/5 + 4.2391 - depth*2.1) > -0.5;
             }
-            function generator(x, y) {
+            function generator(x: number, y: number) {
                 if( floorExists(x, y) ) {
                     return GridCell.GROUND;
                 } else {
@@ -525,7 +530,7 @@ module Game {
         export function buildLastLevel(depth: number) {
             var width = 15;
             var height = 15;
-            function generator(x, y) {
+            function generator(x: number, y: number) {
                 return GridCell.GROUND;
             }
 
@@ -758,7 +763,7 @@ module Game {
         HUD.createEnergyIndicator();
     }
 
-    function animate(millisElapsed) {
+    function animate(millisElapsed: number) {
         stats.begin();
         scene.traverse(function(object: IGameMesh) {
             if (object.animate) {
@@ -772,7 +777,7 @@ module Game {
         }
     }
 
-    function setCameraDimensions(width, height) {
+    function setCameraDimensions(width: number, height: number) {
         // var extent = 6;
         // if (width > height) {
         //     camera.top = extent;
@@ -808,7 +813,7 @@ module Game {
     }
 
     function keydown(event) {
-        function moveAction(x, y) {
+        function moveAction(x: number, y: number) {
             return function() {
                 playerMesh.move(x, y);
                 event.preventDefault();
@@ -852,7 +857,7 @@ module Game {
     function keypress(event) {
     }
 
-    function resize(width, height) {
+    function resize(width: number, height: number) {
       setCameraDimensions(width, height);
     }
 
