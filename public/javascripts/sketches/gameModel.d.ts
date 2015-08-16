@@ -1,11 +1,18 @@
 declare module Game {
-    interface IGameMesh extends THREE.Mesh {
+    interface IGameMesh extends THREE.Object3D {
       animate?: (millisElapsed: number) => void;
       time?: number;
     }
 
     interface IObjectModel {
       position: THREE.Vector3;
+      mesh: IGameMesh;
+    }
+
+    interface IDoodadModel extends IObjectModel {
+      spriteX: number;
+      spriteY: number;
+      spriteTile: string;
     }
 
     interface ICharacterModel extends IObjectModel {
@@ -15,6 +22,7 @@ declare module Game {
     }
 
     interface ILevelModel {
+      objects: IObjectModel[];
       grid: number[];
       obstructions: boolean[];
       width: number;
