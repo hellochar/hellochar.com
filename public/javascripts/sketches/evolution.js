@@ -49,7 +49,31 @@ var Evolution;
             this.updateMesh();
         }
         Animal.prototype.run = function () {
+            var _this = this;
             this.health -= 1;
+            if (this.health < 500) {
+                var bestFood = this.world.plants.reduce(function (bestPlant, currentPlant) {
+                    var distToBest = _this.position.distanceTo(bestPlant.position);
+                    var distToCurr = _this.position.distanceTo(currentPlant.position);
+                    if (distToBest < distToCurr) {
+                        return bestPlant;
+                    }
+                    else {
+                        return currentPlant;
+                    }
+                });
+                var offset = bestFood.position.clone().sub(this.position);
+                if (offset.length() < 1) {
+                    this.health += 500;
+                    this.world.destroy(bestFood);
+                }
+                var speed = 0.7;
+                offset.setLength(speed);
+                this.position.add(offset);
+            }
+            if (this.health < 0) {
+                this.world.destroy(this);
+            }
         };
         Animal.prototype.updateMesh = function () {
             _super.prototype.updateMesh.call(this);
@@ -61,6 +85,7 @@ var Evolution;
     Evolution.Animal = Animal;
     var World = (function () {
         function World(scene) {
+            this.scene = scene;
             this.plants = [];
             this.animals = [];
             var extent = 100;
@@ -77,6 +102,16 @@ var Evolution;
                 scene.add(animal.mesh);
             }
         }
+        World.prototype.destroy = function (thing) {
+            if (thing instanceof Animal) {
+                this.animals.splice(this.animals.indexOf(thing), 1);
+                this.scene.remove(thing.mesh);
+            }
+            if (thing instanceof Plant) {
+                this.plants.splice(this.plants.indexOf(thing), 1);
+                this.scene.remove(thing.mesh);
+            }
+        };
         World.prototype.run = function () {
             this.plants.forEach(function (p) {
                 p.updateMesh();

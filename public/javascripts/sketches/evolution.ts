@@ -47,12 +47,34 @@ module Evolution {
         public run() {
             this.health -= 1;
             // hungry
-            /*if (this.health < 500) {
+            if (this.health < 500) {
                 // find best food and eat it
                 const bestFood = this.world.plants.reduce((bestPlant, currentPlant) => {
-                    if ()
+                    const distToBest = this.position.distanceTo(bestPlant.position);
+                    const distToCurr = this.position.distanceTo(currentPlant.position);
+                    if (distToBest < distToCurr) {
+                        return bestPlant;
+                    } else {
+                        return currentPlant;
+                    }
                 });
-            }*/
+                const offset = bestFood.position.clone().sub(this.position);
+
+                // if within 1, eat it
+                if (offset.length() < 1) {
+                    this.health += 500;
+                    this.world.destroy(bestFood);
+                }
+
+                const speed = 0.7;
+                offset.setLength(speed);
+
+                this.position.add(offset);
+            }
+
+            if (this.health < 0) {
+                this.world.destroy(this);
+            }
         }
 
         public updateMesh() {
@@ -66,7 +88,7 @@ module Evolution {
         public plants: Plant[] = [];
         public animals: Animal[] = [];
 
-        constructor(scene: THREE.Scene) {
+        constructor(public scene: THREE.Scene) {
             // create plants and animals
             const extent = 100;
             for(let i = 0; i < 25; i++) {
@@ -83,6 +105,17 @@ module Evolution {
                 const animal = new Animal(this, Math.random(), position);
                 this.animals.push(animal);
                 scene.add(animal.mesh);
+            }
+        }
+
+        public destroy(thing: Thing) {
+            if (thing instanceof Animal) {
+                this.animals.splice(this.animals.indexOf(thing), 1);
+                this.scene.remove(thing.mesh);
+            }
+            if (thing instanceof Plant) {
+                this.plants.splice(this.plants.indexOf(thing), 1);
+                this.scene.remove(thing.mesh);
             }
         }
 
