@@ -31,6 +31,7 @@ var Evolution;
         function Plant(world, hue, position) {
             _super.call(this, world, position);
             this.hue = hue;
+            this.timeToLive = 6000;
             this.time = 0;
             var geometry = new THREE.CircleGeometry(0.5);
             var color = (new THREE.Color()).setHSL(this.hue, 1, 0.5);
@@ -42,6 +43,7 @@ var Evolution;
             this.time = 800 + Math.random() * 500;
         }
         Plant.prototype.run = function () {
+            this.timeToLive -= 1;
             this.time -= 1;
             if (this.time <= 0) {
                 var position = new THREE.Vector2(this.position.x + 15 * Math.random() - 7.5, this.position.y + 15 * Math.random() - 7.5);
@@ -49,6 +51,9 @@ var Evolution;
                 var plant = new Plant(this.world, hue, position);
                 this.world.add(plant);
                 this.time = 800 + Math.random() * 500;
+            }
+            if (this.timeToLive < 0) {
+                this.world.destroy(this);
             }
         };
         return Plant;
@@ -152,14 +157,20 @@ var Evolution;
             }
         };
         World.prototype.run = function () {
-            this.plants.forEach(function (p) {
-                p.run();
-                p.updateMesh();
-            });
-            this.animals.forEach(function (a) {
-                a.run();
-                a.updateMesh();
-            });
+            var now = Date.now();
+            for (var i = 0; i < 100; i++) {
+                this.plants.forEach(function (p) {
+                    p.run();
+                    p.updateMesh();
+                });
+                this.animals.forEach(function (a) {
+                    a.run();
+                    a.updateMesh();
+                });
+                if (Date.now() - now > 8) {
+                    break;
+                }
+            }
         };
         return World;
     })();

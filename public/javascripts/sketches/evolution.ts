@@ -24,7 +24,9 @@ module Evolution {
             this.mesh.position.set(this.position.x, this.position.y, 0);
         }
     }
+
     export class Plant extends Thing {
+        public timeToLive = 6000;
         public time = 0;
         constructor(world: World,
                     public hue: number,
@@ -42,6 +44,7 @@ module Evolution {
         }
 
         public run() {
+            this.timeToLive -= 1;
             this.time -= 1;
             if (this.time <= 0) {
                 const position = new THREE.Vector2(this.position.x + 15*Math.random() - 7.5,
@@ -50,6 +53,10 @@ module Evolution {
                 const plant = new Plant(this.world, hue, position);
                 this.world.add(plant);
                 this.time = 800 + Math.random() * 500;
+            }
+
+            if (this.timeToLive < 0) {
+                this.world.destroy(this);
             }
         }
     }
@@ -171,14 +178,20 @@ module Evolution {
         }
 
         public run() {
-            this.plants.forEach((p) => {
-                p.run();
-                p.updateMesh();
-            });
-            this.animals.forEach((a) => {
-                a.run();
-                a.updateMesh();
-            });
+            let now = Date.now();
+            for (let i = 0; i < 100; i++) {
+                this.plants.forEach((p) => {
+                    p.run();
+                    p.updateMesh();
+                });
+                this.animals.forEach((a) => {
+                    a.run();
+                    a.updateMesh();
+                });
+                if (Date.now() - now > 8) {
+                    break;
+                }
+            }
         }
     }
 }
