@@ -32,6 +32,7 @@ var Evolution;
             _super.call(this, world, position);
             this.hue = hue;
             this.timeToLive = 6000;
+            this.health = 1000;
             this.time = 0;
             var geometry = new THREE.CircleGeometry(0.5);
             var color = (new THREE.Color()).setHSL(this.hue, 1, 0.5);
@@ -45,6 +46,8 @@ var Evolution;
         Plant.prototype.run = function () {
             this.timeToLive -= 1;
             this.time -= 1;
+            this.health -= 1;
+            this.health += this.world.requestNutrients(this.position, 100);
             if (this.time <= 0) {
                 var position = new THREE.Vector2(this.position.x + 15 * Math.random() - 7.5, this.position.y + 15 * Math.random() - 7.5);
                 var hue = clampHue(this.hue + 2 * (Math.random() - 0.5) * 0.05);
@@ -52,9 +55,17 @@ var Evolution;
                 this.world.add(plant);
                 this.time = 800 + Math.random() * 500;
             }
+            if (this.health < 0) {
+                this.world.destroy(this);
+            }
             if (this.timeToLive < 0) {
                 this.world.destroy(this);
             }
+        };
+        Plant.prototype.updateMesh = function () {
+            _super.prototype.updateMesh.call(this);
+            var scale = this.health / 1000;
+            this.mesh.scale.set(scale, scale, 1);
         };
         return Plant;
     })(Thing);
@@ -120,22 +131,47 @@ var Evolution;
     })(Thing);
     Evolution.Animal = Animal;
     var World = (function () {
-        function World(scene) {
+        function World(scene, extent) {
+            if (extent === void 0) { extent = 100; }
             this.scene = scene;
+            this.extent = extent;
             this.plants = [];
             this.animals = [];
-            var extent = 100;
-            for (var i = 0; i < 25; i++) {
+            this.nutrients = new Array(extent * extent);
+            for (var i = 0; i < extent * extent; i++) {
+                this.nutrients[i] = 100;
+            }
+            for (var i = 0; i < 1; i++) {
                 var position = new THREE.Vector2(Math.random() * extent - extent / 2, Math.random() * extent - extent / 2);
                 var plant = new Plant(this, Math.random(), position);
                 this.add(plant);
             }
-            for (var i = 0; i < 5; i++) {
+            for (var i = 0; i < 0; i++) {
                 var position = new THREE.Vector2(Math.random() * extent - extent / 2, Math.random() * extent - extent / 2);
                 var animal = new Animal(this, Math.random(), position);
                 this.add(animal);
             }
+            var geometry = new THREE.PlaneGeometry(extent - 1, extent - 1, extent - 1, extent - 1);
+            for (var i = 0; i < extent * extent; i++) {
+                geometry.colors.push(new THREE.Color());
+            }
+            var material = new THREE.PointCloudMaterial({
+                size: 2,
+                vertexColors: THREE.VertexColors
+            });
+            this.nutrientsObject = new THREE.PointCloud(geometry, material);
+            this.nutrientsObject.position.z = -1;
+            scene.add(this.nutrientsObject);
         }
+        World.prototype.requestNutrients = function (position, amount) {
+            var index = Math.floor(position.y) * this.extent + Math.floor(position.x);
+            if (this.nutrients[index] == null) {
+                return 0;
+            }
+            var actualAmount = Math.min(amount, this.nutrients[index]);
+            this.nutrients[index] -= actualAmount;
+            return actualAmount;
+        };
         World.prototype.add = function (thing) {
             if (thing instanceof Animal) {
                 this.animals.push(thing);
@@ -157,6 +193,7 @@ var Evolution;
             }
         };
         World.prototype.run = function () {
+            var _this = this;
             var now = Date.now();
             for (var i = 0; i < 100; i++) {
                 this.plants.forEach(function (p) {
@@ -167,10 +204,15 @@ var Evolution;
                     a.run();
                     a.updateMesh();
                 });
-                if (Date.now() - now > 8) {
+                if (Date.now() - now > 0) {
                     break;
                 }
             }
+            this.nutrientsObject.geometry.colors.forEach(function (color, index) {
+                var nutrients = _this.nutrients[index];
+                var lightness = 0.2 * nutrients / 100;
+                color.setHSL(0, 0, lightness);
+            });
         };
         return World;
     })();
@@ -202,7 +244,7 @@ var Evolution;
         scene = new THREE.Scene();
         world = new Evolution.World(scene);
         camera = new THREE.PerspectiveCamera(60, 1, 1, 1000);
-        camera.position.z = 100;
+        camera.position.z = world.extent;
         setCameraDimensions(canvas.width, canvas.height);
     }
     function animate(millisElapsed) {
