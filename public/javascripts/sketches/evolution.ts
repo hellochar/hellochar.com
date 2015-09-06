@@ -27,6 +27,7 @@ module Evolution {
 
     export class Plant extends Thing {
         public timeToLive = 6000;
+        public health = 1000;
         public time = 0;
         constructor(world: World,
                     public hue: number,
@@ -46,6 +47,8 @@ module Evolution {
         public run() {
             this.timeToLive -= 1;
             this.time -= 1;
+            this.health -= 1;
+            this.health += this.world.requestNutrients(this.position, 100);
             if (this.time <= 0) {
                 const position = new THREE.Vector2(this.position.x + 15*Math.random() - 7.5,
                                                    this.position.y + 15*Math.random() - 7.5);
@@ -55,9 +58,19 @@ module Evolution {
                 this.time = 800 + Math.random() * 500;
             }
 
+            if (this.health < 0) {
+                this.world.destroy(this);
+            }
+
             if (this.timeToLive < 0) {
                 this.world.destroy(this);
             }
+        }
+
+        public updateMesh() {
+            super.updateMesh();
+            const scale = this.health / 1000;
+            this.mesh.scale.set(scale, scale, 1);
         }
     }
 
@@ -136,23 +149,50 @@ module Evolution {
     export class World {
         public plants: Plant[] = [];
         public animals: Animal[] = [];
+        public nutrients: number[];
+        private nutrientsObject: THREE.PointCloud;
 
-        constructor(public scene: THREE.Scene) {
+        constructor(public scene: THREE.Scene, public extent: number = 100) {
+            this.nutrients = new Array(extent * extent);
+            for(let i = 0; i < extent*extent; i++) {
+                this.nutrients[i] = 100;
+            }
             // create plants and animals
-            const extent = 100;
-            for(let i = 0; i < 25; i++) {
+            for(let i = 0; i < 1; i++) {
                 const position = new THREE.Vector2(Math.random() * extent - extent/2,
                                                    Math.random() * extent - extent/2);
                 const plant = new Plant(this, Math.random(), position);
                 this.add(plant);
             }
 
-            for(let i = 0; i < 5; i++) {
+            for(let i = 0; i < 0; i++) {
                 const position = new THREE.Vector2(Math.random() * extent - extent/2,
                                                    Math.random() * extent - extent/2);
                 const animal = new Animal(this, Math.random(), position);
                 this.add(animal);
             }
+
+            const geometry = new THREE.PlaneGeometry(extent-1, extent-1, extent-1, extent-1);
+            for (let i = 0; i < extent*extent; i++) {
+                geometry.colors.push(new THREE.Color());
+            }
+            const material = new THREE.PointCloudMaterial({
+                size: 2,
+                vertexColors: THREE.VertexColors
+            })
+            this.nutrientsObject = new THREE.PointCloud(geometry, material);
+            this.nutrientsObject.position.z = -1;
+            scene.add(this.nutrientsObject);
+        }
+
+        public requestNutrients(position: THREE.Vector2, amount: number) {
+            const index = Math.floor(position.y) * this.extent + Math.floor(position.x);
+            if (this.nutrients[index] == null) {
+                return 0;
+            }
+            const actualAmount = Math.min(amount, this.nutrients[index]);
+            this.nutrients[index] -= actualAmount;
+            return actualAmount;
         }
 
         public add(thing: Thing) {
@@ -188,10 +228,15 @@ module Evolution {
                     a.run();
                     a.updateMesh();
                 });
-                if (Date.now() - now > 8) {
+                if (Date.now() - now > 0) {
                     break;
                 }
             }
+            this.nutrientsObject.geometry.colors.forEach((color, index) => {
+                const nutrients = this.nutrients[index];
+                const lightness = 0.2 * nutrients / 100;
+                color.setHSL(0, 0, lightness);
+            });
         }
     }
 }
@@ -230,7 +275,7 @@ module Evolution {
         world = new World(scene);
 
         camera = new THREE.PerspectiveCamera(60, 1, 1, 1000);
-        camera.position.z = 100;
+        camera.position.z = world.extent;
         setCameraDimensions(canvas.width, canvas.height);
     }
 
