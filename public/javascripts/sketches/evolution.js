@@ -213,6 +213,10 @@ var Evolution;
                     a.run();
                     a.updateMesh();
                 });
+                for (var j = 0; j < 10; j++) {
+                    var index = Math.floor(Math.random() * this.nutrients.length);
+                    this.nutrients[index] = Math.min(this.nutrients[index] + 10, 2000);
+                }
                 if (Date.now() - now > 0) {
                     break;
                 }
@@ -222,7 +226,7 @@ var Evolution;
             this.nutrientsObject.geometry.colors.forEach(function (color, index) {
                 var nutrients = _this.nutrients[index];
                 color.set("#906D22");
-                color.lerp(richColor, nutrients / 1000);
+                color.lerp(richColor, nutrients / 2000);
             });
             this.nutrientsObject.geometry.colorsNeedUpdate = true;
         };

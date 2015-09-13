@@ -241,6 +241,11 @@ module Evolution {
                     a.run();
                     a.updateMesh();
                 });
+                // add nutrients to 10 random spots every frame
+                for(let j = 0; j < 10; j++) {
+                    const index = Math.floor(Math.random() * this.nutrients.length);
+                    this.nutrients[index] = Math.min(this.nutrients[index] + 10, 2000);
+                }
                 if (Date.now() - now > 0) {
                     break;
                 }
@@ -250,7 +255,7 @@ module Evolution {
             this.nutrientsObject.geometry.colors.forEach((color, index) => {
                 const nutrients = this.nutrients[index];
                 color.set("#906D22");
-                color.lerp(richColor, nutrients / 1000);
+                color.lerp(richColor, nutrients / 2000);
                 /*color.setHSL(0, 0, nutrients / 1000);*/
             });
             this.nutrientsObject.geometry.colorsNeedUpdate = true;
