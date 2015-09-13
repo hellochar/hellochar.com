@@ -28,11 +28,11 @@ var Evolution;
     Evolution.Thing = Thing;
     var Plant = (function (_super) {
         __extends(Plant, _super);
-        function Plant(world, hue, position) {
+        function Plant(world, hue, position, health) {
+            if (health === void 0) { health = 1000; }
             _super.call(this, world, position);
             this.hue = hue;
-            this.timeToLive = 6000;
-            this.health = 1000;
+            this.health = health;
             this.time = 0;
             var geometry = new THREE.CircleGeometry(0.5);
             var color = (new THREE.Color()).setHSL(this.hue, 1, 0.5);
@@ -44,21 +44,23 @@ var Evolution;
             this.time = 800 + Math.random() * 500;
         }
         Plant.prototype.run = function () {
-            this.timeToLive -= 1;
             this.time -= 1;
             this.health -= 1;
-            this.health += this.world.requestNutrients(this.position, 100);
+            this.health += this.world.requestNutrients(this.position, 1);
+            this.health += this.world.requestNutrients(this.position, 0.25, 0, 1);
+            this.health += this.world.requestNutrients(this.position, 0.25, 1, 0);
+            this.health += this.world.requestNutrients(this.position, 0.25, 0, -1);
+            this.health += this.world.requestNutrients(this.position, 0.25, -1, 0);
             if (this.time <= 0) {
                 var position = new THREE.Vector2(this.position.x + 15 * Math.random() - 7.5, this.position.y + 15 * Math.random() - 7.5);
                 var hue = clampHue(this.hue + 2 * (Math.random() - 0.5) * 0.05);
-                var plant = new Plant(this.world, hue, position);
+                var newPlantHealth = this.health / 10;
+                var plant = new Plant(this.world, hue, position, newPlantHealth);
+                this.health -= newPlantHealth;
                 this.world.add(plant);
                 this.time = 800 + Math.random() * 500;
             }
             if (this.health < 0) {
-                this.world.destroy(this);
-            }
-            if (this.timeToLive < 0) {
                 this.world.destroy(this);
             }
         };
@@ -139,10 +141,10 @@ var Evolution;
             this.animals = [];
             this.nutrients = new Array(extent * extent);
             for (var i = 0; i < extent * extent; i++) {
-                this.nutrients[i] = 100;
+                this.nutrients[i] = 1000;
             }
             for (var i = 0; i < 1; i++) {
-                var position = new THREE.Vector2(Math.random() * extent - extent / 2, Math.random() * extent - extent / 2);
+                var position = new THREE.Vector2(0, 0);
                 var plant = new Plant(this, Math.random(), position);
                 this.add(plant);
             }
@@ -151,9 +153,12 @@ var Evolution;
                 var animal = new Animal(this, Math.random(), position);
                 this.add(animal);
             }
-            var geometry = new THREE.PlaneGeometry(extent - 1, extent - 1, extent - 1, extent - 1);
-            for (var i = 0; i < extent * extent; i++) {
-                geometry.colors.push(new THREE.Color());
+            var geometry = new THREE.Geometry();
+            for (var y = -extent / 2; y < extent / 2; y++) {
+                for (var x = -extent / 2; x < extent / 2; x++) {
+                    geometry.vertices.push(new THREE.Vector3(x, y, 0));
+                    geometry.colors.push(new THREE.Color());
+                }
             }
             var material = new THREE.PointCloudMaterial({
                 size: 2,
@@ -163,11 +168,15 @@ var Evolution;
             this.nutrientsObject.position.z = -1;
             scene.add(this.nutrientsObject);
         }
-        World.prototype.requestNutrients = function (position, amount) {
-            var index = Math.floor(position.y) * this.extent + Math.floor(position.x);
-            if (this.nutrients[index] == null) {
+        World.prototype.requestNutrients = function (position, amount, offsetX, offsetY) {
+            if (offsetX === void 0) { offsetX = 0; }
+            if (offsetY === void 0) { offsetY = 0; }
+            var gridX = Math.floor(position.x + offsetX + this.extent / 2), gridY = Math.floor(position.y + offsetY + this.extent / 2);
+            if (gridX < 0 || gridX >= this.extent ||
+                gridY < 0 || gridY >= this.extent) {
                 return 0;
             }
+            var index = gridY * this.extent + gridX;
             var actualAmount = Math.min(amount, this.nutrients[index]);
             this.nutrients[index] -= actualAmount;
             return actualAmount;
@@ -208,11 +217,14 @@ var Evolution;
                     break;
                 }
             }
+            var richColor = new THREE.Color("#15711E");
+            var barrenColor = new THREE.Color("#906D22");
             this.nutrientsObject.geometry.colors.forEach(function (color, index) {
                 var nutrients = _this.nutrients[index];
-                var lightness = 0.2 * nutrients / 100;
-                color.setHSL(0, 0, lightness);
+                color.set("#906D22");
+                color.lerp(richColor, nutrients / 1000);
             });
+            this.nutrientsObject.geometry.colorsNeedUpdate = true;
         };
         return World;
     })();
