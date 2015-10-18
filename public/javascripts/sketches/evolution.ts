@@ -27,44 +27,59 @@ module Evolution {
 
     export class Plant extends Thing {
         public time = 0;
+        private nutrientsConsumed = 0;
+        private static GEOMETRY = new THREE.CircleGeometry(0.5);
 
         constructor(world: World,
                     public hue: number,
                     position: THREE.Vector2,
                     public health = 1000) {
             super(world, position);
-            const geometry = new THREE.CircleGeometry(0.5);
             const color = (new THREE.Color()).setHSL(this.hue, 1, 0.5);
             const material = new THREE.MeshBasicMaterial({
                 color: color.getHex()
             });
-            this.mesh = new THREE.Mesh(geometry, material);
+            this.mesh = new THREE.Mesh(Plant.GEOMETRY, material);
             this.updateMesh();
 
+            this.resetTime();
+        }
+
+        public resetTime() {
             this.time = 800 + Math.random() * 500;
         }
 
-        public run() {
-            this.time -= 1;
-            this.health -= 1;
-            this.health += this.world.requestNutrients(this.position, 1);
-            this.health += this.world.requestNutrients(this.position, 0.25, 0, 1);
-            this.health += this.world.requestNutrients(this.position, 0.25, 1, 0);
-            this.health += this.world.requestNutrients(this.position, 0.25, 0, -1);
-            this.health += this.world.requestNutrients(this.position, 0.25, -1, 0);
-            if (this.time <= 0) {
-                const position = new THREE.Vector2(this.position.x + 15*Math.random() - 7.5,
-                                                   this.position.y + 15*Math.random() - 7.5);
-                const hue = clampHue(this.hue + 2*(Math.random() - 0.5) * 0.05);
-                const newPlantHealth = this.health / 10;
-                const plant = new Plant(this.world, hue, position, newPlantHealth);
-                this.health -= newPlantHealth;
-                this.world.add(plant);
-                this.time = 800 + Math.random() * 500;
+        public run(delta: number) {
+            this.time -= delta;
+            this.health -= delta;
+            const oldHealth = this.health;
+            this.health += this.world.requestNutrients(this.position, delta * 1);
+            this.health += this.world.requestNutrients(this.position, delta * 0.2, 0, 1);
+            this.health += this.world.requestNutrients(this.position, delta * 0.2, 1, 0);
+            this.health += this.world.requestNutrients(this.position, delta * 0.2, 0, -1);
+            this.health += this.world.requestNutrients(this.position, delta * 0.2, -1, 0);
+            this.nutrientsConsumed += (this.health - oldHealth);
+            if (this.time <= 0 && this.health > 500) {
+                for (let z = 0; z < 1; z++) {
+                    const move = 3;
+                    const position = new THREE.Vector2(this.position.x + move*(Math.random() - 0.5),
+                                                       this.position.y + move*(Math.random() - 0.5));
+                    const hue = clampHue(this.hue + 2*(Math.random() - 0.5) * 0.05);
+                    const newPlantHealth = this.health / 10;
+                    const plant = new Plant(this.world, hue, position, newPlantHealth);
+                    this.health -= newPlantHealth;
+                    this.world.add(plant);
+                }
+                this.resetTime();
             }
 
             if (this.health < 0) {
                 this.world.destroy(this);
+                this.world.requestNutrients(this.position, -this.nutrientsConsumed / 2);
+                this.world.requestNutrients(this.position, -this.nutrientsConsumed / 8, 0, 1);
+                this.world.requestNutrients(this.position, -this.nutrientsConsumed / 8, 1, 0);
+                this.world.requestNutrients(this.position, -this.nutrientsConsumed / 8, 0, -1);
+                this.world.requestNutrients(this.position, -this.nutrientsConsumed / 8, -1, 0);
             }
         }
 
@@ -76,12 +91,14 @@ module Evolution {
     }
 
     export class Animal extends Thing {
-        public health: number = 1000;
+        public static SPEED = 1;
+
         public time = 0;
 
         constructor(world: World,
                     public hue: number,
-                    position: THREE.Vector2) {
+                    position: THREE.Vector2,
+                    public health = 2000) {
             super(world, position);
 
             const geometry = new THREE.PlaneGeometry(3, 3);
@@ -92,23 +109,28 @@ module Evolution {
             this.mesh = new THREE.Mesh(geometry, material);
             this.updateMesh();
 
-            this.time = 2500 + Math.random() * 2500;
+            this.time = 5000 + Math.random() * 2500;
         }
 
-        public run() {
-            this.health -= 1;
-            this.time -= 1;
+        public run(delta: number) {
+            this.health -= delta;
+            this.time -= delta;
             // give birth
-            if (this.time <= 0) {
-                const position = new THREE.Vector2(this.position.x + 15*Math.random() - 7.5,
-                                                   this.position.y + 15*Math.random() - 7.5);
-                const animal = new Animal(this.world, this.hue, position);
+            if (this.time <= 0 && this.health > 500) {
+                const birthOffset = 3;
+                const position = new THREE.Vector2(this.position.x + birthOffset*(Math.random() - 0.5),
+                                                   this.position.y + birthOffset*(Math.random() - 0.5));
+                const childHealth = this.health / 2;
+                const animal = new Animal(this.world, this.hue, position, childHealth);
                 this.world.add(animal);
+                this.health -= childHealth;
 
-                this.time = 2500 + Math.random() * 2500;
+
+
+                this.time = 5000 + Math.random() * 2500;
             }
             // hungry
-            if (this.health < 500) {
+            if (this.health < 1000) {
                 // find best food and eat it
                 if (this.world.plants.length > 0) {
                     const bestFood = this.world.plants.reduce((bestPlant, currentPlant) => {
@@ -123,16 +145,18 @@ module Evolution {
                     const offset = bestFood.position.clone().sub(this.position);
 
                     // if within 1, eat it
-                    if (offset.length() < 1) {
-                        this.health += 500;
-                        this.world.destroy(bestFood);
+                    if (offset.length() < 1 * delta) {
+                        this.health += bestFood.health / 2;
+                        bestFood.health /= 2;
+                    } else {
+                        offset.setLength(Animal.SPEED * delta);
+                        this.position.add(offset);
                     }
-
-                    const speed = 0.7;
-                    offset.setLength(speed);
-
-                    this.position.add(offset);
                 }
+            } else {
+                const angle = Math.random() * Math.PI * 2;
+                this.position.x += Math.cos(angle) * 0.1 * delta;
+                this.position.y += Math.sin(angle) * 0.1 * delta;
             }
 
             if (this.health < 0) {
@@ -152,17 +176,18 @@ module Evolution {
         public animals: Animal[] = [];
         public nutrients: number[];
         private nutrientsObject: THREE.PointCloud;
+        private time = 0;
 
-        constructor(public scene: THREE.Scene, public extent: number = 100) {
+        constructor(public scene: THREE.Scene, public extent = 100) {
             this.nutrients = new Array(extent * extent);
             for(let i = 0; i < extent*extent; i++) {
-                this.nutrients[i] = 1000;
+                this.nutrients[i] = 2000;
             }
             // create plants and animals
-            for(let i = 0; i < 1; i++) {
-                /*const position = new THREE.Vector2(Math.random() * extent - extent/2,
-                                                   Math.random() * extent - extent/2);*/
-                const position = new THREE.Vector2(0, 0);
+            for(let i = 0; i < 10; i++) {
+                const position = new THREE.Vector2(Math.random() * extent - extent/2,
+                                                   Math.random() * extent - extent/2);
+                /*const position = new THREE.Vector2(0, 0);*/
 
                 const plant = new Plant(this, Math.random(), position);
                 this.add(plant);
@@ -204,7 +229,7 @@ module Evolution {
             }
             const index = gridY * this.extent + gridX;
             const actualAmount = Math.min(amount, this.nutrients[index]);
-            this.nutrients[index] -= actualAmount;
+            this.nutrients[index] = Math.min(this.nutrients[index] - actualAmount, 2000);
             return actualAmount;
         }
 
@@ -222,42 +247,47 @@ module Evolution {
         public destroy(thing: Thing) {
             if (thing instanceof Animal) {
                 this.animals.splice(this.animals.indexOf(thing), 1);
-                this.scene.remove(thing.mesh);
             }
             if (thing instanceof Plant) {
                 this.plants.splice(this.plants.indexOf(thing), 1);
-                this.scene.remove(thing.mesh);
             }
+            this.scene.remove(thing.mesh);
         }
 
+        public totalNutrients = 0;
+
         public run() {
-            let now = Date.now();
-            for (let i = 0; i < 100; i++) {
+            const delta = 450;
+            for (let i = 0; i < 1; i++) {
                 this.plants.forEach((p) => {
-                    p.run();
+                    p.run(delta);
                     p.updateMesh();
                 });
                 this.animals.forEach((a) => {
-                    a.run();
+                    a.run(delta);
                     a.updateMesh();
                 });
                 // add nutrients to 10 random spots every frame
-                for(let j = 0; j < 10; j++) {
+                for(let j = 0; j < 10 * delta; j++) {
                     const index = Math.floor(Math.random() * this.nutrients.length);
-                    this.nutrients[index] = Math.min(this.nutrients[index] + 10, 2000);
+                    this.nutrients[index] = Math.min(this.nutrients[index] + 10 * this.extent / 100, 2000);
                 }
-                if (Date.now() - now > 0) {
-                    break;
-                }
+
+                this.time += delta;
             }
             const richColor = new THREE.Color("#15711E");
             const barrenColor = new THREE.Color("#906D22");
+            this.totalNutrients = 0;
             this.nutrientsObject.geometry.colors.forEach((color, index) => {
                 const nutrients = this.nutrients[index];
                 color.set("#906D22");
                 color.lerp(richColor, nutrients / 2000);
+                this.totalNutrients += nutrients;
                 /*color.setHSL(0, 0, nutrients / 1000);*/
             });
+            if (this.plants.length > 0) {
+                console.log(`${this.time}, ${this.totalNutrients}`);
+            }
             this.nutrientsObject.geometry.colorsNeedUpdate = true;
         }
     }
