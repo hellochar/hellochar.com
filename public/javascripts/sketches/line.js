@@ -5,8 +5,8 @@
     var SIMULATION_SPEED = 3;
     var GRAVITY_CONSTANT = 320;
     // speed becomes this percentage of its original speed every second
-    var PULLING_DRAG_CONSTANT = 0.96075095702;
-    var INERTIAL_DRAG_CONSTANT = 0.63913643334;
+    var PULLING_DRAG_CONSTANT = 0.93075095702;
+    var INERTIAL_DRAG_CONSTANT = 0.23913643334;
 
     function createAudioGroup(audioContext) {
         var backgroundAudio = $("<audio autoplay loop>")
@@ -541,8 +541,8 @@
         frame.hands.forEach(function(hand, index) {
             var position = hand.palmPosition;
 
-            var x = map(position[0], -250, 250, 0, canvas.width);
-            var y = map(position[1], 350, 50, 0, canvas.height);
+            var x = map(position[0], -200, 200, 0, canvas.width);
+            var y = map(position[1], 350, 100, 0, canvas.height);
             mouseX = x;
             mouseY = y;
 
@@ -553,7 +553,7 @@
             attractor.mesh.position.y = y;
 
             attractor.mesh.visible = true;
-            attractor.power = Math.pow(hand.grabStrength, 2);
+            attractor.power = Math.pow(hand.pinchStrength, 2);
         });
     });
 
