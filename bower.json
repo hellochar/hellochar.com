@@ -17,6 +17,7 @@
     "lodash": "~2.4.1",
     "pixi.js": "~2.2.0",
     "bluebird": "~2.5.2",
-    "threejs": "*"
+    "threejs": "*",
+    "leapjs": "~0.6.4"
   }
 }
