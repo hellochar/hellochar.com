@@ -1,13 +1,12 @@
 (function () {
-
     // cheap mobile detection
     var NUM_PARTICLES = window.queryParams.p ? parseInt(window.queryParams.p) :
                         (window.screen.width > 1024) ? 15000 : 5000;
-    var SIMULATION_SPEED = 3;
+    var SIMULATION_SPEED = 6;
     var GRAVITY_CONSTANT = 100;
     // speed becomes this percentage of its original speed every second
     var PULLING_DRAG_CONSTANT = 0.96075095702;
-    var INERTIAL_DRAG_CONSTANT = 0.73913643334;
+    var INERTIAL_DRAG_CONSTANT = 0.63913643334;
 
     function createAudioGroup(audioContext) {
         var backgroundAudio = $("<audio autoplay loop>")
@@ -478,6 +477,30 @@
             removeAttractor();
         }
     }
+
+    Leap.loop(function(frame){
+        function map(val, minU, maxU, minV, maxV) {
+            return (val - minU) / (maxU - minU) * (maxV - minV) + minV;
+        }
+        if (frame.hands[0]) {
+            var position = frame.hands[0].palmPosition;
+
+            var x = map(position[0], -300, 300, 0, canvas.width);
+            var y = map(position[1], 350, 20, 0, canvas.height);
+            mouseX = x;
+            mouseY = y;
+            moveAttractor(x, y);
+
+            if (frame.hands[0].grabStrength > 0.9) {
+                createAttractor(x, y);
+            } else {
+                removeAttractor();
+            }
+        } else {
+            removeAttractor();
+        }
+    });
+
 
     function createAttractor(x, y) {
         attractor = { x: x, y : y };
