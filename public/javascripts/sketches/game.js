@@ -2,6 +2,14 @@ var Game;
 (function (Game) {
     var SpriteSheet;
     (function (SpriteSheet) {
+        function init() {
+            SpriteSheet.MATERIALS = {
+                "tiles": loadSpriteSheet("/images/roguelikeSheet_transparent.png", 1024, 512),
+                "dungeon": loadSpriteSheet("/images/roguelikeDungeon_transparent.png", 512, 512),
+                "characters": loadSpriteSheet("/images/roguelikeChar_transparent.png", 1024, 256)
+            };
+        }
+        SpriteSheet.init = init;
         function loadSpriteSheet(url, width, height) {
             var texture = THREE.ImageUtils.loadTexture(url);
             texture.magFilter = THREE.NearestFilter;
@@ -12,12 +20,6 @@ var Game;
             });
             return material;
         }
-        SpriteSheet.loadSpriteSheet = loadSpriteSheet;
-        SpriteSheet.MATERIALS = {
-            "tiles": loadSpriteSheet("/images/roguelikeSheet_transparent.png", 1024, 512),
-            "dungeon": loadSpriteSheet("/images/roguelikeDungeon_transparent.png", 512, 512),
-            "characters": loadSpriteSheet("/images/roguelikeChar_transparent.png", 1024, 256)
-        };
         var geometryCache = {};
         function getGeometry(x, y) {
             var key = x + "," + y;
@@ -249,6 +251,28 @@ var Game;
     })(GameObjects || (GameObjects = {}));
     var Sound;
     (function (Sound) {
+        var audioCache;
+        function init() {
+            audioCache = {
+                "character_switch_floors": loadAudio("/audio/game_character_switch_floors.wav", 0.2),
+                "character_walk": loadAudio("/audio/game_character_walk.wav", 0.5),
+                "character_walk_fail": loadAudio("/audio/game_character_walk_fail.wav", 0.5),
+                "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav", 0.05)
+            };
+            var outdoorsAmbientAudio = new Audio();
+            outdoorsAmbientAudio.src = "/audio/game_outdoors_ambient.mp3";
+            outdoorsAmbientAudio.loop = true;
+            outdoorsAmbientAudio.volume = 0;
+            outdoorsAmbientAudio.controls = true;
+            outdoorsAmbientAudio.play();
+            $(outdoorsAmbientAudio).css({
+                position: "absolute",
+                top: 0,
+                "z-index": 1
+            });
+            $("body").append(outdoorsAmbientAudio);
+        }
+        Sound.init = init;
         function loadAudio(src, volume) {
             if (volume === void 0) { volume = 1; }
             var audio = new Audio();
@@ -256,30 +280,12 @@ var Game;
             audio.volume = volume;
             return audio;
         }
-        var audioCache = {
-            "character_switch_floors": loadAudio("/audio/game_character_switch_floors.wav", 0.2),
-            "character_walk": loadAudio("/audio/game_character_walk.wav", 0.5),
-            "character_walk_fail": loadAudio("/audio/game_character_walk_fail.wav", 0.5),
-            "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav", 0.05)
-        };
         function play(name) {
             if (audioCache[name]) {
                 audioCache[name].play();
             }
         }
         Sound.play = play;
-        var outdoorsAmbientAudio = new Audio();
-        outdoorsAmbientAudio.src = "/audio/game_outdoors_ambient.mp3";
-        outdoorsAmbientAudio.loop = true;
-        outdoorsAmbientAudio.volume = 0;
-        outdoorsAmbientAudio.controls = true;
-        outdoorsAmbientAudio.play();
-        $(outdoorsAmbientAudio).css({
-            position: "absolute",
-            top: 0,
-            "z-index": 1
-        });
-        $("body").append(outdoorsAmbientAudio);
     })(Sound || (Sound = {}));
     var Map;
     (function (Map) {
@@ -604,6 +610,8 @@ var Game;
     function init(_renderer, _audioContext) {
         renderer = _renderer;
         var canvas = _renderer.domElement;
+        SpriteSheet.init();
+        Sound.init();
         if (typeof window["THREEx"] !== "undefined") {
             rendererStats = new THREEx.RendererStats();
             rendererStats.domElement.style.position = 'absolute';

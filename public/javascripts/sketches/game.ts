@@ -1,6 +1,14 @@
 module Game {
     module SpriteSheet {
-        export function loadSpriteSheet(url: string, width: number, height: number) {
+        export var MATERIALS: {[name: string]: THREE.MeshBasicMaterial};
+        export function init() {
+            MATERIALS = {
+                "tiles": loadSpriteSheet("/images/roguelikeSheet_transparent.png", 1024, 512),
+                "dungeon": loadSpriteSheet("/images/roguelikeDungeon_transparent.png", 512, 512),
+                "characters": loadSpriteSheet("/images/roguelikeChar_transparent.png", 1024, 256)
+            };
+        }
+        function loadSpriteSheet(url: string, width: number, height: number) {
             var texture = THREE.ImageUtils.loadTexture(url);
             texture.magFilter = THREE.NearestFilter;
             texture.repeat.set(1 / width, 1 / height);
@@ -12,12 +20,6 @@ module Game {
 
             return material;
         }
-
-        export var MATERIALS = {
-            "tiles": loadSpriteSheet("/images/roguelikeSheet_transparent.png", 1024, 512),
-            "dungeon": loadSpriteSheet("/images/roguelikeDungeon_transparent.png", 512, 512),
-            "characters": loadSpriteSheet("/images/roguelikeChar_transparent.png", 1024, 256)
-        };
 
         var geometryCache: { [key: string]: THREE.Geometry } = {};
         export function getGeometry(x: number, y: number) {
@@ -319,17 +321,34 @@ module Game {
     }
 
     module Sound {
+        var audioCache: { [name: string]: HTMLAudioElement };
+        export function init() {
+            audioCache = {
+                "character_switch_floors": loadAudio("/audio/game_character_switch_floors.wav", 0.2),
+                "character_walk": loadAudio("/audio/game_character_walk.wav", 0.5),
+                "character_walk_fail": loadAudio("/audio/game_character_walk_fail.wav", 0.5),
+                "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav", 0.05)
+            };
+
+            //play ambient immediately
+            var outdoorsAmbientAudio = new Audio();
+            outdoorsAmbientAudio.src = "/audio/game_outdoors_ambient.mp3";
+            outdoorsAmbientAudio.loop = true;
+            outdoorsAmbientAudio.volume = 0;
+            outdoorsAmbientAudio.controls = true;
+            outdoorsAmbientAudio.play();
+            $(outdoorsAmbientAudio).css({
+                position: "absolute",
+                top: 0,
+                "z-index": 1
+            });
+            $("body").append(outdoorsAmbientAudio);
+        }
         function loadAudio(src: string, volume: number = 1) {
             var audio = new Audio();
             audio.src = src;
             audio.volume = volume;
             return audio;
-        }
-        var audioCache = {
-            "character_switch_floors": loadAudio("/audio/game_character_switch_floors.wav", 0.2),
-            "character_walk": loadAudio("/audio/game_character_walk.wav", 0.5),
-            "character_walk_fail": loadAudio("/audio/game_character_walk_fail.wav", 0.5),
-            "inventory_toggle": loadAudio("/audio/game_inventory_toggle.wav", 0.05)
         }
 
         export function play(name: string) {
@@ -337,20 +356,6 @@ module Game {
                 audioCache[name].play();
             }
         }
-
-        //play ambient immediately
-        var outdoorsAmbientAudio = new Audio();
-        outdoorsAmbientAudio.src = "/audio/game_outdoors_ambient.mp3";
-        outdoorsAmbientAudio.loop = true;
-        outdoorsAmbientAudio.volume = 0;
-        outdoorsAmbientAudio.controls = true;
-        outdoorsAmbientAudio.play();
-        $(outdoorsAmbientAudio).css({
-            position: "absolute",
-            top: 0,
-            "z-index": 1
-        });
-        $("body").append(outdoorsAmbientAudio);
     }
 
     module Map {
@@ -716,6 +721,8 @@ module Game {
     function init(_renderer: THREE.WebGLRenderer, _audioContext: AudioContext) {
         renderer = _renderer;
         const canvas = _renderer.domElement;
+        SpriteSheet.init();
+        Sound.init();
 
         if (typeof (<any>window)["THREEx"] !== "undefined") {
             rendererStats = new THREEx.RendererStats();
@@ -877,14 +884,4 @@ module Game {
         touchend: touchend
     };
     window.registerSketch(game);
-}
-
-interface Sketch {
-    animate: (millisElapsed: number) => void;
-    id: string;
-    init: (renderer: THREE.Renderer, audioContext: AudioContext) => void;
-}
-
-interface Window {
-    registerSketch(sketch: Sketch): void;
 }
