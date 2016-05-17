@@ -6,7 +6,7 @@
     var GRAVITY_CONSTANT = 320;
     // speed becomes this percentage of its original speed every second
     var PULLING_DRAG_CONSTANT = 0.93075095702;
-    var INERTIAL_DRAG_CONSTANT = 0.23913643334;
+    var INERTIAL_DRAG_CONSTANT = 0.33913643334;
 
     function createAudioGroup(audioContext) {
         var backgroundAudio = $("<audio autoplay loop>")
@@ -377,6 +377,7 @@
         var averageX = 0, averageY = 0;
         var averageVel2 = 0;
         var nonzeroAttractors = attractors.filter(function(attractor) { return attractor.power > 0; });
+
         for (var i = 0; i < NUM_PARTICLES; i++) {
             var particle = particles[i];
             nonzeroAttractors.forEach(function (attractor) {
@@ -394,6 +395,11 @@
 
             particle.x += particle.dx * timeStep;
             particle.y += particle.dy * timeStep;
+            if (particle.x < 0 || particle.x > canvas.width || particle.y < 0 || particle.y > canvas.height) {
+                particle.x = Math.random() * canvas.width;
+                particle.y = canvas.height / 2;
+                particle.dx = particle.dy = 0;
+            }
 
             var wantedX = i * canvas.width / NUM_PARTICLES;
             var wantedY = canvas.height / 2;
@@ -471,12 +477,17 @@
         audioGroup.setBackgroundVolume(backgroundVolume);
 
         filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1;
-        filter.uniforms['G'].value = (groupedUpness + 0.05) * 2000;
+        filter.uniforms['G'].value = triangleWaveApprox(audioContext.currentTime / 2) * (groupedUpness + 0.50) * 15000;
         filter.uniforms['iMouseFactor'].value = (1/15) / (groupedUpness + 1);
         // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
 
         geometry.verticesNeedUpdate = true;
         composer.render();
+    }
+
+    // 3 orders of fft for triangle wave
+    function triangleWaveApprox(t) {
+        return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
     }
 
     function touchstart(event) {
@@ -542,7 +553,7 @@
             var position = hand.palmPosition;
 
             var x = map(position[0], -200, 200, 0, canvas.width);
-            var y = map(position[1], 350, 100, 0, canvas.height);
+            var y = map(position[1], 350, 40, 0, canvas.height);
             mouseX = x;
             mouseY = y;
 
