@@ -1,6 +1,6 @@
 GravityShader = {
     uniforms: {
-        gamma:       { type: 'f', value: 3.6/6.0 },
+        gamma:       { type: 'f', value: 2.6/6.0 },
         iGlobalTime: { type: 'f', value: 0 },
         iMouse:      { type: 'v2', value: new THREE.Vector2(0, 0) },
         iMouseFactor:{ type: 'f', value: 1/15 },
@@ -42,8 +42,8 @@ GravityShader = {
         "    vec4 outgoingColorFactor = vec4(0.93, 1.0, 1.0 / 0.93, 1.0);",
         "    vec4 incomingColorFactor = vec4(1.0 / 0.88, 1.0, 0.88, 1.0);",
         "    for( float i = 1.0; i < 12.0; i += 1.0) {",
-        "       incomingP = incomingP - gravity(incomingP, attractionCenter, G * 1.0);",
-        "       outgoingP = outgoingP + gravity(outgoingP, attractionCenter, G * 10.0);",
+        "       incomingP = incomingP - gravity(incomingP, attractionCenter, G);",
+        "       outgoingP = outgoingP + gravity(outgoingP, attractionCenter, G);",
         "       incomingP -= (iMouse - p) * iMouseFactor;",
         "       outgoingP += (iMouse - p) * iMouseFactor;",
         "       c += texture2D(tDiffuse, incomingP / iResolution) / (i*i + 6.5) * pow(incomingColorFactor, vec4(i));",

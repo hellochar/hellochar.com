@@ -1,13 +1,12 @@
 (function () {
-
     // cheap mobile detection
     var NUM_PARTICLES = window.queryParams.p ? parseInt(window.queryParams.p) :
                         (window.screen.width > 1024) ? 15000 : 5000;
     var SIMULATION_SPEED = 3;
-    var GRAVITY_CONSTANT = 100;
+    var GRAVITY_CONSTANT = 320;
     // speed becomes this percentage of its original speed every second
-    var PULLING_DRAG_CONSTANT = 0.96075095702;
-    var INERTIAL_DRAG_CONSTANT = 0.73913643334;
+    var PULLING_DRAG_CONSTANT = 0.93075095702;
+    var INERTIAL_DRAG_CONSTANT = 0.33913643334;
 
     function createAudioGroup(audioContext) {
         var backgroundAudio = $("<audio autoplay loop>")
@@ -266,11 +265,43 @@
         returnToStartPower = 0.01;
     }
 
-    var attractor = null;
+    var attractorGeometry = new THREE.RingGeometry(15, 18, 32);
+    var attractorMaterial = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, color: 0xffffff, transparent: true, opacity: 0.3});
+
+    function makeAttractor(x, y, power) {
+        x = x || 0;
+        y = y || 0;
+        power = power || 0;
+        var mesh = new THREE.Object3D();
+        mesh.position.set(x, y, -100);
+        for (var i = 0; i < 10; i++) {
+            var ring = new THREE.Mesh(attractorGeometry, attractorMaterial);
+            var scale = 1 + Math.pow(i/10, 2) * 2;
+            ring.scale.set(scale, scale, scale);
+            mesh.add(ring);
+        }
+        mesh.visible = false;
+
+        return {
+            x: x,
+            y: y,
+            mesh: mesh,
+            power: power
+        };
+    }
+
+    var attractors = [
+        makeAttractor(),
+        makeAttractor(),
+        makeAttractor(),
+        makeAttractor(),
+        makeAttractor()
+    ];
+
     var audioContext;
     var audioGroup;
     var canvas;
-    var dragConstant = INERTIAL_DRAG_CONSTANT;
+    var dragConstant;
     var particles = [];
     var returnToStartPower = 0;
 
@@ -295,6 +326,13 @@
         camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
         camera.position.z = 500;
 
+        // attractors.push(makeAttractor(30, canvas.height/2, 1));
+        // attractors.push(makeAttractor(canvas.width - 30, canvas.height/2, 1));
+
+        attractors.forEach(function(attractor) {
+            scene.add(attractor.mesh);
+        });
+
         for(var i = 0; i < NUM_PARTICLES; i++) {
             particles[i] = {
                 x: i * canvas.width / NUM_PARTICLES,
@@ -318,6 +356,18 @@
     }
 
     function animate(millisElapsed) {
+        var allAttractorPowers = attractors.reduce(function(b, a) { return a.power + b; }, 0);
+        dragConstant = (allAttractorPowers > 0.1) ? PULLING_DRAG_CONSTANT : INERTIAL_DRAG_CONSTANT;
+
+        attractors.forEach(function (attractor) {
+            attractor.mesh.position.z = -100;
+            attractor.mesh.children.forEach(function(child, idx) {
+                child.rotation.y += (10 - idx) / 20 * attractor.power;
+            });
+            attractor.mesh.rotation.x = attractor.power;
+        });
+
+        filter.uniforms['iMouse'].value.set(attractors[0].x, renderer.domElement.height - attractors[0].y);
         var timeStep = millisElapsed / 1000 * SIMULATION_SPEED;
         if (returnToStartPower > 0 && returnToStartPower < 1) {
             returnToStartPower *= 1.01;
@@ -326,23 +376,30 @@
 
         var averageX = 0, averageY = 0;
         var averageVel2 = 0;
+        var nonzeroAttractors = attractors.filter(function(attractor) { return attractor.power > 0; });
+
         for (var i = 0; i < NUM_PARTICLES; i++) {
             var particle = particles[i];
-            if (attractor != null) {
+            nonzeroAttractors.forEach(function (attractor) {
                 var dx = attractor.x - particle.x;
                 var dy = attractor.y - particle.y;
                 var length2 = Math.sqrt(dx*dx + dy*dy);
-                var forceX = sizeScaledGravityConstant * dx / length2;
-                var forceY = sizeScaledGravityConstant * dy / length2;
+                var forceX = attractor.power * sizeScaledGravityConstant * dx / length2;
+                var forceY = attractor.power * sizeScaledGravityConstant * dy / length2;
 
                 particle.dx += forceX * timeStep;
                 particle.dy += forceY * timeStep;
-            }
+            });
             particle.dx *= Math.pow(dragConstant, timeStep);
             particle.dy *= Math.pow(dragConstant, timeStep);
 
             particle.x += particle.dx * timeStep;
             particle.y += particle.dy * timeStep;
+            if (particle.x < 0 || particle.x > canvas.width || particle.y < 0 || particle.y > canvas.height) {
+                particle.x = Math.random() * canvas.width;
+                particle.y = canvas.height / 2;
+                particle.dx = particle.dy = 0;
+            }
 
             var wantedX = i * canvas.width / NUM_PARTICLES;
             var wantedY = canvas.height / 2;
@@ -420,12 +477,17 @@
         audioGroup.setBackgroundVolume(backgroundVolume);
 
         filter.uniforms['iGlobalTime'].value = audioContext.currentTime / 1;
-        filter.uniforms['G'].value = (groupedUpness + 0.05) * 2000;
+        filter.uniforms['G'].value = triangleWaveApprox(audioContext.currentTime / 2) * (groupedUpness + 0.50) * 15000;
         filter.uniforms['iMouseFactor'].value = (1/15) / (groupedUpness + 1);
         // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
 
         geometry.verticesNeedUpdate = true;
         composer.render();
+    }
+
+    // 3 orders of fft for triangle wave
+    function triangleWaveApprox(t) {
+        return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
     }
 
     function touchstart(event) {
@@ -440,7 +502,7 @@
 
         mouseX = touchX;
         mouseY = touchY;
-        createAttractor(touchX, touchY);
+        enableFirstAttractor(touchX, touchY);
     }
 
     function touchmove(event) {
@@ -452,51 +514,80 @@
 
         mouseX = touchX;
         mouseY = touchY;
-        moveAttractor(touchX, touchY);
+        moveFirstAttractor(touchX, touchY);
     }
 
     function touchend(event) {
-        removeAttractor();
+        disableFirstAttractor();
     }
 
     function mousedown(event) {
         if (event.which === 1) {
             mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
             mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-            createAttractor(mouseX, mouseY);
+            enableFirstAttractor(mouseX, mouseY);
         }
     }
 
     function mousemove(event) {
         mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
         mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
-        moveAttractor(mouseX, mouseY);
+        moveFirstAttractor(mouseX, mouseY);
     }
 
     function mouseup(event) {
         if (event.which === 1) {
-            removeAttractor();
+            disableFirstAttractor();
         }
     }
 
-    function createAttractor(x, y) {
-        attractor = { x: x, y : y };
+    Leap.loop(function(frame){
+        function map(val, minU, maxU, minV, maxV) {
+            return (val - minU) / (maxU - minU) * (maxV - minV) + minV;
+        }
+        attractors.forEach(function(attractor) {
+            attractor.mesh.visible = false;
+            attractor.power = 0;
+        });
+        frame.hands.forEach(function(hand, index) {
+            var position = hand.palmPosition;
+
+            var x = map(position[0], -200, 200, 0, canvas.width);
+            var y = map(position[1], 350, 40, 0, canvas.height);
+            mouseX = x;
+            mouseY = y;
+
+            var attractor = attractors[index];
+            attractor.x = x;
+            attractor.y = y;
+            attractor.mesh.position.x = x;
+            attractor.mesh.position.y = y;
+
+            attractor.mesh.visible = true;
+            attractor.power = Math.pow(hand.pinchStrength, 2);
+        });
+    });
+
+
+    function enableFirstAttractor(x, y) {
+        var attractor = attractors[0];
+        attractor.x = x;
+        attractor.y = y;
+        attractor.power = 1;
         filter.uniforms['iMouse'].value.set(x, renderer.domElement.height - y);
-        dragConstant = PULLING_DRAG_CONSTANT;
         returnToStartPower = 0;
     }
 
-    function moveAttractor(x, y) {
-        filter.uniforms['iMouse'].value.set(x, renderer.domElement.height - y);
-        if (attractor != null) {
-            attractor.x = x;
-            attractor.y = y;
-        }
+    function moveFirstAttractor(x, y) {
+        var attractor = attractors[0];
+        attractor.x = x;
+        attractor.y = y;
+        attractor.mesh.position.set(x, y, 0);
     }
 
-    function removeAttractor() {
-        dragConstant = INERTIAL_DRAG_CONSTANT;
-        attractor = null;
+    function disableFirstAttractor() {
+        var attractor = attractors[0];
+        attractor.power = 0;
     }
 
     function resize(width, height) {
