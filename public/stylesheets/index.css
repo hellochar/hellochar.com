@@ -75,11 +75,6 @@ html {
     padding-top: 0.50em;
     padding-bottom: 1.50em;
     text-align: center;
-    font-size: 3em;
-}
-
-.intro-text {
-  font-size: 2em;
 }
 
 .container .section.intro .title .small {
@@ -93,10 +88,6 @@ html {
 
 .container .section.portfolio .past-work-item {
     padding: 1em;
-}
-
-.container .section.portfolio .past-work-img {
-  margin: auto;
 }
 
 .container .footer {
@@ -120,5 +111,3 @@ html {
         padding-bottom: 42px;
     }
 }
-
-
