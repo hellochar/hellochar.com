@@ -1,5 +1,6 @@
 (function (window) {
     var $window = $(window);
+    var HAS_SOUND = true;
 
     function isElementOnScreen(element) {
         var scrollTop = $window.scrollTop(),
@@ -88,7 +89,9 @@
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
                 $canvas.focus();
-                audioContextGain.gain.value = 1;
+                if (HAS_SOUND) {
+                    audioContextGain.gain.value = 1;
+                }
                 sketch.animate(millisElapsed);
             } else {
                 $sketchElement.addClass("disabled");
@@ -102,6 +105,9 @@
         var audioContextGain = audioContext.createGain();
         audioContextGain.connect(audioContext.destination);
         audioContext.gain = audioContextGain;
+        if (!HAS_SOUND) {
+            audioContextGain.gain.value = 0;
+        }
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
                 audioContextGain.gain.value = 0;
