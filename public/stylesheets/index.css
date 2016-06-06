@@ -95,6 +95,11 @@ html {
     padding: 0.5em;
 }
 
+.copyright {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
 @media (max-width: 600px) {
     .container {
         margin-left: 42px;
@@ -106,5 +111,3 @@ html {
         padding-bottom: 42px;
     }
 }
-
-

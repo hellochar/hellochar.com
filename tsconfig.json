@@ -1,0 +1,36 @@
+{
+    "version": "1.5.0-beta",
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "isolatedModules": false,
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "suppressImplicitAnyIndexErrors": true
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "./**/*.tsx",
+        "!./node_modules/**/*"
+    ],
+    "files": [
+        "./public/javascripts/sketches/evolution.ts",
+        "./public/javascripts/sketches/game.ts",
+        "./public/javascripts/sketches/gameModel.d.ts",
+        "./public/javascripts/sketches/sketch.d.ts",
+        "./typings/jquery/jquery.d.ts",
+        "./typings/stats.d.ts",
+        "./typings/threejs/three.d.ts",
+        "./typings/threex.d.ts",
+        "./typings/tsd.d.ts",
+        "./typings/webaudioapi/waa.d.ts",
+        "./typings/webrtc/MediaStream.d.ts"
+    ]
+}

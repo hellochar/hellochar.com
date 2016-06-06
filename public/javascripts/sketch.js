@@ -1,5 +1,6 @@
 (function (window) {
     var $window = $(window);
+    var HAS_SOUND = true;
 
     function isElementOnScreen(element) {
         var scrollTop = $window.scrollTop(),
@@ -47,6 +48,7 @@
         var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
         $sketchParent.append($sketchElement);
 
+        // allow canvas to be selectable
         $sketchElement.append(renderer.domElement);
 
         var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions);
@@ -64,10 +66,11 @@
 
         // canvas setup
         var $canvas = $(renderer.domElement);
+        $canvas.attr("tabindex", 1);
         $canvas.one("mousedown touchstart", function (e) {
             $instructionsElement.addClass("interacted");
         });
-        ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend"].forEach(function (eventName) {
+        ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend", "keyup", "keydown", "keypress"].forEach(function (eventName) {
             var callback = sketch[eventName];
             if (callback != null) {
                 $canvas.on(eventName, callback);
@@ -85,10 +88,14 @@
             lastTimestamp = timestamp;
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
-                audioContextGain.gain.value = 1;
+                $canvas.focus();
+                if (HAS_SOUND) {
+                    audioContextGain.gain.value = 1;
+                }
                 sketch.animate(millisElapsed);
             } else {
                 $sketchElement.addClass("disabled");
+                $canvas.blur();
                 audioContextGain.gain.value = 0;
             }
             requestAnimationFrame(animateAndRequestAnimFrame);
@@ -98,6 +105,9 @@
         var audioContextGain = audioContext.createGain();
         audioContextGain.connect(audioContext.destination);
         audioContext.gain = audioContextGain;
+        if (!HAS_SOUND) {
+            audioContextGain.gain.value = 0;
+        }
         document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
                 audioContextGain.gain.value = 0;
