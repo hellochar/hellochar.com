@@ -47,6 +47,7 @@
         var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
         $sketchParent.append($sketchElement);
 
+        // allow canvas to be selectable
         $sketchElement.append(renderer.domElement);
 
         var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions);
@@ -64,10 +65,11 @@
 
         // canvas setup
         var $canvas = $(renderer.domElement);
+        $canvas.attr("tabindex", 1);
         $canvas.one("mousedown touchstart", function (e) {
             $instructionsElement.addClass("interacted");
         });
-        ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend"].forEach(function (eventName) {
+        ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend", "keyup", "keydown", "keypress"].forEach(function (eventName) {
             var callback = sketch[eventName];
             if (callback != null) {
                 $canvas.on(eventName, callback);
@@ -85,10 +87,12 @@
             lastTimestamp = timestamp;
             if (isElementOnScreen($sketchElement)) {
                 $sketchElement.removeClass("disabled");
+                $canvas.focus();
                 audioContextGain.gain.value = 1;
                 sketch.animate(millisElapsed);
             } else {
                 $sketchElement.addClass("disabled");
+                $canvas.blur();
                 audioContextGain.gain.value = 0;
             }
             requestAnimationFrame(animateAndRequestAnimFrame);
