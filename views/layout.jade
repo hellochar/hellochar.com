@@ -13,13 +13,15 @@ html
     script(src='/bower_components/lodash/dist/lodash.js')
     script(src='/bower_components/threejs/build/three.js')
     // endbower
+    script(src='/threejs/controls/OrbitControls.js')
     script(src='/threejs/postprocessing/EffectComposer.js')
     script(src='/threejs/postprocessing/MaskPass.js')
     script(src='/threejs/postprocessing/RenderPass.js')
     script(src='/threejs/postprocessing/ShaderPass.js')
     script(src='/threejs/shaders/DotScreenShader.js')
     script(src='/threejs/shaders/CopyShader.js')
-    script(src='/threejs/controls/OrbitControls.js')
+    script(src="/threejs/stats.min.js")
+    script(src="https://rawgit.com/jeromeetienne/threex.rendererstats/master/threex.rendererstats.js")
 
     script(src="/javascripts/math.js")
     script(src="/javascripts/GravityShader.js")
@@ -39,5 +41,8 @@ html
     script(src="/javascripts/sketch.js")
     script(src="/javascripts/sketches/line.js")
     script(src="/javascripts/sketches/dots.js")
+    script(src="/javascripts/sketches/game.js")
     script(src="/javascripts/sketches/waves.js")
+    script(src="/javascripts/sketches/evolution.js")
+    script(src="/javascripts/sketches/webcam.js")
     block script
