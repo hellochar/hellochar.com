@@ -119,7 +119,7 @@
             node.start(0);
 
             var gain = audioContext.createGain();
-            gain.gain.value = 0.60;
+            gain.gain.value = 0.90;
             node.connect(gain);
 
             return gain;
@@ -249,7 +249,7 @@
                 sourceGain.gain.value = volume / 9;
                 noiseSourceGain.gain.value = volume * 0.05;
                 chordSource.gain.value = 0.05;
-                chordHigh.gain.value = volume / 30;
+                chordHigh.gain.value = volume / 40;
             },
             setBackgroundVolume: function(volume) {
                 backgroundAudioGain.gain.value = volume;
@@ -266,16 +266,23 @@
     }
 
     var attractorGeometry = new THREE.RingGeometry(15, 18, 32);
-    var attractorMaterial = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, color: 0xffffff, transparent: true, opacity: 0.3});
+    var attractorMaterialSolid = new THREE.MeshBasicMaterial({
+        side: THREE.DoubleSide,
+        color: 0xe2cfb3,
+        transparent: true,
+        opacity: 0.6
+    });
 
     function makeAttractor(x, y, power) {
         x = x || 0;
         y = y || 0;
         power = power || 0;
+
         var mesh = new THREE.Object3D();
         mesh.position.set(x, y, -100);
         for (var i = 0; i < 10; i++) {
-            var ring = new THREE.Mesh(attractorGeometry, attractorMaterial);
+            // var ring = THREE.SceneUtils.createMultiMaterialObject(attractorGeometry, [attractorMaterialSolid, attractorMaterialStroke]);
+            var ring = new THREE.Mesh(attractorGeometry, attractorMaterialSolid);
             var scale = 1 + Math.pow(i/10, 2) * 2;
             ring.scale.set(scale, scale, scale);
             mesh.add(ring);
@@ -285,6 +292,7 @@
         return {
             x: x,
             y: y,
+            handMesh: null,
             mesh: mesh,
             power: power
         };
@@ -362,9 +370,11 @@
         attractors.forEach(function (attractor) {
             attractor.mesh.position.z = -100;
             attractor.mesh.children.forEach(function(child, idx) {
-                child.rotation.y += (10 - idx) / 20 * attractor.power;
+                child.rotation.y += (10 - idx) / 20;
             });
             attractor.mesh.rotation.x = attractor.power;
+            const scale = attractor.power * 0.7 + 0.3;
+            attractor.mesh.scale.set(scale, scale, scale);
         });
 
         filter.uniforms['iMouse'].value.set(attractors[0].x, renderer.domElement.height - attractors[0].y);
@@ -454,6 +464,7 @@
         // flatRatio is high (possibly Infinity) -> extremely horizontally flat
         // flatRatio is low (near 0) -> vertically thin
         var flatRatio = varianceX / varianceY;
+        if (varianceY === 0) flatRatio = 1;
 
         // in reset formation, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
         // magicNumber is experimentally found to be 1.3938
@@ -542,18 +553,17 @@
     }
 
     Leap.loop(function(frame){
-        function map(val, minU, maxU, minV, maxV) {
-            return (val - minU) / (maxU - minU) * (maxV - minV) + minV;
-        }
         attractors.forEach(function(attractor) {
+            if (attractor.handMesh != null) attractor.handMesh.visible = false;
             attractor.mesh.visible = false;
             attractor.power = 0;
         });
-        frame.hands.forEach(function(hand, index) {
-            var position = hand.palmPosition;
+        frame.hands.filter(function (hand) { return hand.valid; }).forEach(function(hand, index) {
+            var position = hand.indexFinger.bones[3].center();
 
-            var x = map(position[0], -200, 200, 0, canvas.width);
-            var y = map(position[1], 350, 40, 0, canvas.height);
+            var threePosition = mapLeapToThreePosition(position);
+            var x = threePosition.x;
+            var y = threePosition.y;
             mouseX = x;
             mouseY = y;
 
@@ -564,10 +574,69 @@
             attractor.mesh.position.y = y;
 
             attractor.mesh.visible = true;
-            attractor.power = Math.pow(hand.pinchStrength, 2);
+            if (hand.indexFinger.extended) {
+                attractor.power = 1; //Math.pow(hand.pinchStrength, 2);
+            } else {
+                attractor.power = 0;
+            }
+
+            updateHandMesh(attractor, hand);
+            attractor.handMesh.visible = true;
         });
     });
 
+    const boneGeometry = new THREE.SphereGeometry(10, 3, 3);
+    const boneMaterial = new THREE.MeshBasicMaterial({
+        color: 0xefeffb,
+        wireframe: true,
+        wireframeLinewidth: 5,
+        transparent: true,
+        opacity: 0.15
+    });
+    function updateHandMesh(attractor, hand) {
+        if (attractor.handMesh == null) {
+            var handMesh = new THREE.Object3D();
+            attractor.handMesh = handMesh;
+            scene.add(handMesh);
+        }
+        var handMesh = attractor.handMesh;
+        hand.fingers.forEach(function(finger) {
+            if (handMesh["finger"+finger.type] == null) {
+                var fingerLine = new THREE.Line(new THREE.Geometry(), boneMaterial);
+                handMesh["finger"+finger.type] = fingerLine;
+                handMesh.add(fingerLine);
+            }
+            fingerGeometry = handMesh["finger"+finger.type].geometry;
+            finger.bones.forEach(function(bone) {
+                // create sphere for every bone
+                const id = finger.type + ',' + bone.type;
+                if (handMesh[id] == null) {
+                    var boneMesh = new THREE.Mesh(boneGeometry, boneMaterial);
+                    handMesh[id] = boneMesh;
+                    handMesh.add(boneMesh);
+                }
+                const position = mapLeapToThreePosition(bone.center());
+                handMesh[id].position.copy(position);
+
+                // create a line for every finger
+                if (fingerGeometry.vertices[bone.type] == null) {
+                    fingerGeometry.vertices.push(new THREE.Vector3());
+                }
+                fingerGeometry.vertices[bone.type].copy(position);
+                fingerGeometry.verticesNeedUpdate = true;
+            });
+        });
+    }
+
+    function mapLeapToThreePosition(position) {
+        function map(val, minU, maxU, minV, maxV) {
+            return (val - minU) / (maxU - minU) * (maxV - minV) + minV;
+        }
+        var x = map(position[0], -200, 200, 0, canvas.width);
+        var y = map(position[1], 350, 40, 0, canvas.height);
+        var z = -100;
+        return new THREE.Vector3(x, y, z);
+    }
 
     function enableFirstAttractor(x, y) {
         var attractor = attractors[0];
@@ -613,10 +682,10 @@
         var starTexture = THREE.ImageUtils.loadTexture("star.png");
         starTexture.minFilter = THREE.NearestFilter;
         var material = new THREE.PointCloudMaterial({
-            size: 9,
+            size: 15,
             sizeAttenuation: false,
             map: starTexture,
-            opacity: 0.2,
+            opacity: 0.4,
             transparent: true
         });
         pointCloud = new THREE.PointCloud(geometry, material);
