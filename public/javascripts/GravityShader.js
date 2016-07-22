@@ -1,6 +1,6 @@
 GravityShader = {
     uniforms: {
-        gamma:       { type: 'f', value: 2.6/6.0 },
+        gamma:       { type: 'f', value: 6.0/6.0 },
         iGlobalTime: { type: 'f', value: 0 },
         iMouse:      { type: 'v2', value: new THREE.Vector2(0, 0) },
         iMouseFactor:{ type: 'f', value: 1/15 },
