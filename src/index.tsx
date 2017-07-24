@@ -6,6 +6,7 @@ document.body.appendChild(root);
 
 ReactDOM.render(
     <div>
-        Hello world!
+        Hello world 123!
     </div>,
-    root);
+    root
+);

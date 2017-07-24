@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "build": "webpack",
-    "start": "webpack-dev-server"
+    "dev": "webpack-dev-server",
+    "prod": "npm-run-all prod:build prod:server",
+    "prod:build": "webpack --config webpack.config.prod.js || true",
+    "prod:server": "node ./bin/www"
   },
   "dependencies": {
     "@types/react": "^15.0.38",
@@ -24,6 +27,7 @@
     "wiredep": "^2.1.0"
   },
   "devDependencies": {
+    "npm-run-all": "^4.0.2",
     "ts-loader": "^2.3.1",
     "webpack": "^3.3.0",
     "webpack-dev-server": "^2.6.1"
