@@ -312,7 +312,7 @@ var audioContext: SketchAudioContext;
 var audioGroup: any;
 var canvas: HTMLCanvasElement;
 var dragConstant;
-var particles: Particle[] = [];
+var particles: IParticle[] = [];
 var returnToStartPower = 0;
 
 var mouseX = 0, mouseY = 0;
@@ -325,6 +325,14 @@ var geometry: THREE.Geometry;
 var pointCloud: THREE.PointCloud;
 var renderer: THREE.WebGLRenderer;
 var scene: THREE.Scene;
+
+interface IParticle {
+    x: number;
+    y: number;
+    dx: number;
+    dy: number;
+    vertex: THREE.Vertex | null;
+}
 
 function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
     audioContext = _audioContext;
@@ -421,8 +429,8 @@ function animate(millisElapsed: number) {
             particle.y -= (particle.y - wantedY) * returnToStartPower;
         }
 
-        particle.vertex.x = particle.x;
-        particle.vertex.y = particle.y;
+        particle.vertex!.x = particle.x;
+        particle.vertex!.y = particle.y;
         averageX += particle.x;
         averageY += particle.y;
         averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
