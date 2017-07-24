@@ -1,4 +1,4 @@
-GravityShader = {
+export const GravityShader = {
     uniforms: {
         gamma:       { type: 'f', value: 6.0/6.0 },
         iGlobalTime: { type: 'f', value: 0 },
@@ -60,4 +60,4 @@ GravityShader = {
         "    gl_FragColor = pow(c + c2, vec4(gamma));",
         "}"
     ].join("\n")
-}
+};

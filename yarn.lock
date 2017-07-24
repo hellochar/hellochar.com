@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@types/jquery@^3.2.9":
+  version "3.2.9"
+  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.2.9.tgz#38e8b5d9eac75f6a0b15b839f7f6559fb0923bda"
+
 "@types/react-dom@^15.5.1":
   version "15.5.1"
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-15.5.1.tgz#f3c3e14c682785923c7d64583537df319442dec1"
@@ -11,6 +15,16 @@
 "@types/react@*", "@types/react@^15.0.38":
   version "15.0.38"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-15.0.38.tgz#6afea31a9fe66304af474106ba372ddaba449995"
+
+"@types/three@^0.84.18":
+  version "0.84.18"
+  resolved "https://registry.yarnpkg.com/@types/three/-/three-0.84.18.tgz#761f62a08845a280fea78d05a5b524c18c3ec390"
+  dependencies:
+    "@types/webvr-api" "*"
+
+"@types/webvr-api@*":
+  version "0.0.31"
+  resolved "https://registry.yarnpkg.com/@types/webvr-api/-/webvr-api-0.0.31.tgz#f6061fe88a035d34a8b6a0c55f8758901ec8a08e"
 
 abbrev@1:
   version "1.1.0"
@@ -1903,6 +1917,10 @@ jade@~1.6.0:
     void-elements "~1.0.0"
     with "~3.0.0"
 
+jquery@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.2.1.tgz#5c4d9de652af6cd0a770154a631bba12b015c787"
+
 js-tokens@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
@@ -3291,6 +3309,10 @@ tar@^2.2.1:
     block-stream "*"
     fstream "^1.0.2"
     inherits "2"
+
+three@^0.70.1:
+  version "0.70.1"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.70.1.tgz#459e5eabf2240bda58ea4ba412c14d0b3e4a250d"
 
 through2@^0.6.1:
   version "0.6.5"

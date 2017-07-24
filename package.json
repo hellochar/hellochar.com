@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "build": "webpack",
-    "dev": "webpack-dev-server",
+    "start": "webpack-dev-server",
     "prod": "npm-run-all prod:build prod:server",
     "prod:build": "webpack --config webpack.config.prod.js || true",
     "prod:server": "node ./bin/www"
   },
   "dependencies": {
+    "@types/jquery": "^3.2.9",
     "@types/react": "^15.0.38",
     "@types/react-dom": "^15.5.1",
+    "@types/three": "^0.84.18",
     "body-parser": "~1.8.1",
     "cookie-parser": "~1.3.3",
     "debug": "~2.0.0",
@@ -19,10 +21,12 @@
     "grunt": "^0.4.5",
     "grunt-wiredep": "^1.9.0",
     "jade": "~1.6.0",
+    "jquery": "^3.2.1",
     "morgan": "~1.3.0",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "serve-favicon": "~2.1.3",
+    "three": "^0.70.1",
     "typescript": "^2.4.2",
     "wiredep": "^2.1.0"
   },
