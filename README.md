@@ -1,2 +1,1 @@
-# Milestones
-1. Put on hellochar.com
+Personal website dedicated to creative code, past work, etc.
