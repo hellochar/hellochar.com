@@ -5,45 +5,57 @@ const $window = $(window);
 var HAS_SOUND = true;
 
 function isElementOnScreen(element: JQuery) {
-    var scrollTop = $window.scrollTop(),
-        scrollBottom = scrollTop + $window.height();
+    var scrollTop = $window.scrollTop()!,
+        scrollBottom = scrollTop + $window.height()!;
 
-    var elementTop = element.offset().top;
-    var elementBottom = elementTop + element.height();
+    var elementTop = element.offset()!.top;
+    var elementBottom = elementTop + element.height()!;
     var elementMiddle = (elementBottom + elementTop) / 2;
 
     return scrollTop < elementMiddle && elementMiddle < scrollBottom;
 }
 
-function setCanvasDimensions(renderer, sketchElement) {
-    renderer.setSize(sketchElement.width(), sketchElement.height());
+function setCanvasDimensions(renderer: THREE.WebGLRenderer, sketchElement: JQuery) {
+    renderer.setSize(sketchElement.width()!, sketchElement.height()!);
 }
 
-var DEFAULT_SKETCH_OPTIONS = {
+const DEFAULT_SKETCH_OPTIONS: ISketchOptions = {
     showInstructions: true
 };
+
+export type IEventCallback<T> = (event: JQueryEventObject) => void;
+
+export interface ISketch {
+    animate(millisElapsed: number): void;
+    id: string;
+    init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext): void;
+    instructions?: string;
+
+    mousedown?: IEventCallback<MouseEvent>;
+    mouseup?: IEventCallback<MouseEvent>;
+    mousemove?: IEventCallback<MouseEvent>;
+
+    touchstart?: IEventCallback<TouchEvent>;
+    touchmove?: IEventCallback<TouchEvent>;
+    touchend?: IEventCallback<TouchEvent>;
+
+    resize(width: number, height: number): void;
+}
+
+export interface SketchAudioContext extends AudioContext {
+    gain: GainNode;
+}
 
 /**
  *
  * Initializes the sketch object passed to it.
  *
- * @param sketch: {
- *     animate: function($sketchElement, canvasContext, audioContext),
- *     id: unique string representing the name of this sketch,
- *     init: function($sketchElement, canvasContext, audioContext),
- *     instructions: string,
- *     mousedown, mouseup, mousemove: function(event) || [function(event)]
- *     resize: function(width, height),
- * }
+ * @param sketch
  * @param $sketchParent: JQuery element to place the sketch on.
- * @param options: {
- *     showInstructions: boolean
- * }
+ * @param options: 
+ * 
  */
-export function initializeSketch(sketch, $sketchParent, options) {
-    options = $.extend({}, DEFAULT_SKETCH_OPTIONS, options);
-    var init = sketch.init;
-
+export function initializeSketch(sketch: ISketch, $sketchParent: JQuery, options: ISketchOptions = DEFAULT_SKETCH_OPTIONS) {
     var renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
 
     // add sketch element to body
@@ -53,7 +65,7 @@ export function initializeSketch(sketch, $sketchParent, options) {
     // allow canvas to be selectable
     $sketchElement.append(renderer.domElement);
 
-    var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions);
+    var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions!);
     if (options.showInstructions) {
         $sketchElement.append($instructionsElement);
     }
@@ -83,9 +95,9 @@ export function initializeSketch(sketch, $sketchParent, options) {
         event.preventDefault();
     });
 
-    var lastTimestamp = 0;
+    let lastTimestamp = 0;
     // initialize and run sketch
-    function animateAndRequestAnimFrame(timestamp) {
+    function animateAndRequestAnimFrame(timestamp: number) {
         var millisElapsed = timestamp - lastTimestamp;
         lastTimestamp = timestamp;
         if (isElementOnScreen($sketchElement)) {
@@ -103,7 +115,7 @@ export function initializeSketch(sketch, $sketchParent, options) {
         requestAnimationFrame(animateAndRequestAnimFrame);
     }
 
-    var audioContext = new AudioContext();
+    const audioContext = new AudioContext() as SketchAudioContext;
     var audioContextGain = audioContext.createGain();
     audioContextGain.connect(audioContext.destination);
     audioContext.gain = audioContextGain;
@@ -116,25 +128,11 @@ export function initializeSketch(sketch, $sketchParent, options) {
         }
     });
 
-    init(renderer, audioContext);
+    sketch.init(renderer, audioContext);
     requestAnimationFrame(animateAndRequestAnimFrame);
     return $sketchElement;
 }
 
-var sketches = {};
-export function registerSketch(sketch) {
-    sketches[sketch.id] = sketch;
+export interface ISketchOptions {
+    showInstructions?: boolean;
 }
-
-export function getSketch(name) {
-    return sketches[name];
-}
-
-window.queryParams = new (function (sSearch) {
-    if (sSearch.length > 1) {
-    for (var aItKey, nKeyId = 0, aCouples = sSearch.substr(1).split("&"); nKeyId < aCouples.length; nKeyId++) {
-        aItKey = aCouples[nKeyId].split("=");
-        this[decodeURIComponent(aItKey[0])] = aItKey.length > 1 ? decodeURIComponent(aItKey[1]) : "";
-    }
-    }
-})(window.location.search);
