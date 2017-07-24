@@ -3,9 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "build": "webpack",
+    "start": "webpack-dev-server"
   },
   "dependencies": {
+    "@types/react": "^15.0.38",
+    "@types/react-dom": "^15.5.1",
     "body-parser": "~1.8.1",
     "cookie-parser": "~1.3.3",
     "debug": "~2.0.0",
@@ -14,7 +17,15 @@
     "grunt-wiredep": "^1.9.0",
     "jade": "~1.6.0",
     "morgan": "~1.3.0",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1",
     "serve-favicon": "~2.1.3",
+    "typescript": "^2.4.2",
     "wiredep": "^2.1.0"
+  },
+  "devDependencies": {
+    "ts-loader": "^2.3.1",
+    "webpack": "^3.3.0",
+    "webpack-dev-server": "^2.6.1"
   }
 }
