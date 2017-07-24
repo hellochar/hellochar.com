@@ -1,24 +1,26 @@
-import * as THREE from "three";
 import * as $ from "jquery";
+import { parse } from "query-string";
+import * as THREE from "three";
 
 import { GravityShader } from "./gravityShader";
+import { ISketch, SketchAudioContext } from "../sketch";
 
-// cheap mobile detection
-var NUM_PARTICLES = window.queryParams.p ? parseInt(window.queryParams.p) :
-    (window.screen.width > 1024) ? 15000 : 5000;
+
+const NUM_PARTICLES = parse(location.search).p ||
+    // cheap mobile detection
+    (screen.width > 1024 ? 15000 : 5000);
 var SIMULATION_SPEED = 3;
 var GRAVITY_CONSTANT = 320;
 // speed becomes this percentage of its original speed every second
 var PULLING_DRAG_CONSTANT = 0.93075095702;
 var INERTIAL_DRAG_CONSTANT = 0.33913643334;
 
-function createAudioGroup(audioContext) {
-    var backgroundAudio = $("<audio autoplay loop>")
+function createAudioGroup(audioContext: SketchAudioContext) {
+    const backgroundAudio = $("<audio autoplay loop>")
         .append('<source src="audio/line_background.ogg" type="audio/ogg">')
-        .append('<source src="audio/line_background.mp3" type="audio/mp3">');
+        .append('<source src="audio/line_background.mp3" type="audio/mp3">') as JQuery<HTMLMediaElement>;
 
     var sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
-    window.sourceNode = sourceNode;
     $("body").append(backgroundAudio);
 
     var backgroundAudioGain = audioContext.createGain();
@@ -85,10 +87,10 @@ function createAudioGroup(audioContext) {
     noiseShelf.connect(noiseGain);
 
     var BASE_FREQUENCY = 320;
-    function detuned(freq, centsOffset) {
+    function detuned(freq: number, centsOffset: number) {
         return freq * Math.pow(2, centsOffset / 1200);
     }
-    function semitone(freq, semitoneOffset) {
+    function semitone(freq: number, semitoneOffset: number) {
         return detuned(freq, semitoneOffset * 100);
     }
     var source1 = (function () {
@@ -129,7 +131,7 @@ function createAudioGroup(audioContext) {
         return gain;
     })();
 
-    function makeChordSource(BASE_FREQUENCY) {
+    function makeChordSource(BASE_FREQUENCY: number) {
         var base = audioContext.createOscillator();
         base.frequency.value = BASE_FREQUENCY;
         base.start(0);
@@ -241,21 +243,21 @@ function createAudioGroup(audioContext) {
         filter: filter,
         filter2: filter2,
         filterGain: filterGain,
-        setFrequency: function (freq) {
+        setFrequency: function (freq: number) {
             filter.frequency.value = freq;
             filter2.frequency.value = freq;
             lfoGain.gain.value = freq * .06;
         },
-        setNoiseFrequency: function (freq) {
+        setNoiseFrequency: function (freq: number) {
             noiseFilter.frequency.value = freq;
         },
-        setVolume: function (volume) {
+        setVolume: function (volume: number) {
             sourceGain.gain.value = volume / 9;
             noiseSourceGain.gain.value = volume * 0.05;
             chordSource.gain.value = 0.05;
             chordHigh.gain.value = volume / 40;
         },
-        setBackgroundVolume: function (volume) {
+        setBackgroundVolume: function (volume: number) {
             backgroundAudioGain.gain.value = volume;
         }
     };
@@ -277,12 +279,8 @@ var attractorMaterialSolid = new THREE.MeshBasicMaterial({
     opacity: 0.6
 });
 
-function makeAttractor(x, y, power) {
-    x = x || 0;
-    y = y || 0;
-    power = power || 0;
-
-    var mesh = new THREE.Object3D();
+function makeAttractor(x = 0, y = 0, power = 0) {
+    const mesh = new THREE.Object3D();
     mesh.position.set(x, y, -100);
     for (var i = 0; i < 10; i++) {
         // var ring = THREE.SceneUtils.createMultiMaterialObject(attractorGeometry, [attractorMaterialSolid, attractorMaterialStroke]);
@@ -310,25 +308,25 @@ var attractors = [
     makeAttractor()
 ];
 
-var audioContext;
-var audioGroup;
-var canvas;
+var audioContext: SketchAudioContext;
+var audioGroup: any;
+var canvas: HTMLCanvasElement;
 var dragConstant;
-var particles = [];
+var particles: Particle[] = [];
 var returnToStartPower = 0;
 
 var mouseX = 0, mouseY = 0;
 
 // threejs stuff
-var camera;
-var composer;
-var filter;
-var geometry;
-var pointCloud;
-var renderer;
-var scene;
+var camera: THREE.OrthographicCamera;
+var composer: THREE.EffectComposer;
+var filter: THREE.ShaderPass;
+var geometry: THREE.Geometry;
+var pointCloud: THREE.PointCloud;
+var renderer: THREE.WebGLRenderer;
+var scene: THREE.Scene;
 
-function init(_renderer, _audioContext) {
+function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
     audioContext = _audioContext;
     audioGroup = createAudioGroup(audioContext);
     canvas = _renderer.domElement;
@@ -360,14 +358,15 @@ function init(_renderer, _audioContext) {
     composer.addPass(new THREE.RenderPass(scene, camera));
     filter = new THREE.ShaderPass(GravityShader);
     filter.uniforms['iResolution'].value = new THREE.Vector2(canvas.width, canvas.height);
-    if (window.queryParams.gamma) {
-        filter.uniforms['gamma'].value = parseFloat(window.queryParams.gamma);
+    const gamma = parse(location.search).gamma;
+    if (gamma) {
+        filter.uniforms['gamma'].value = gamma;
     }
     filter.renderToScreen = true;
     composer.addPass(filter);
 }
 
-function animate(millisElapsed) {
+function animate(millisElapsed: number) {
     var allAttractorPowers = attractors.reduce(function (b, a) { return a.power + b; }, 0);
     dragConstant = (allAttractorPowers > 0.1) ? PULLING_DRAG_CONSTANT : INERTIAL_DRAG_CONSTANT;
 
@@ -501,15 +500,15 @@ function animate(millisElapsed) {
 }
 
 // 3 orders of fft for triangle wave
-function triangleWaveApprox(t) {
+function triangleWaveApprox(t: number) {
     return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
 }
 
-function touchstart(event) {
+function touchstart(event: JQueryEventObject) {
     // prevent emulated mouse events from occuring
     event.preventDefault();
-    var canvasOffset = $(canvas).offset();
-    var touch = event.originalEvent.touches[0];
+    var canvasOffset = $(canvas).offset()!;
+    var touch = (event.originalEvent as TouchEvent).touches[0];
     var touchX = touch.pageX - canvasOffset.left;
     var touchY = touch.pageY - canvasOffset.top;
     // offset the touchY by its radius so the attractor is above the thumb
@@ -520,9 +519,9 @@ function touchstart(event) {
     enableFirstAttractor(touchX, touchY);
 }
 
-function touchmove(event) {
-    var canvasOffset = $(canvas).offset();
-    var touch = event.originalEvent.touches[0];
+function touchmove(event: JQueryEventObject) {
+    var canvasOffset = $(canvas).offset()!;
+    var touch = (event.originalEvent as TouchEvent).touches[0];
     var touchX = touch.pageX - canvasOffset.left;
     var touchY = touch.pageY - canvasOffset.top;
     touchY -= 100;
@@ -532,25 +531,25 @@ function touchmove(event) {
     moveFirstAttractor(touchX, touchY);
 }
 
-function touchend(event) {
+function touchend(event: JQueryEventObject) {
     disableFirstAttractor();
 }
 
-function mousedown(event) {
+function mousedown(event: JQueryEventObject) {
     if (event.which === 1) {
-        mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-        mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+        mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+        mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
         enableFirstAttractor(mouseX, mouseY);
     }
 }
 
-function mousemove(event) {
-    mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-    mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+function mousemove(event: JQueryEventObject) {
+    mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+    mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
     moveFirstAttractor(mouseX, mouseY);
 }
 
-function mouseup(event) {
+function mouseup(event: JQueryEventObject) {
     if (event.which === 1) {
         disableFirstAttractor();
     }
@@ -642,7 +641,7 @@ function mapLeapToThreePosition(position) {
     return new THREE.Vector3(x, y, z);
 }
 
-function enableFirstAttractor(x, y) {
+function enableFirstAttractor(x: number, y: number) {
     var attractor = attractors[0];
     attractor.x = x;
     attractor.y = y;
@@ -651,7 +650,7 @@ function enableFirstAttractor(x, y) {
     returnToStartPower = 0;
 }
 
-function moveFirstAttractor(x, y) {
+function moveFirstAttractor(x: number, y: number) {
     var attractor = attractors[0];
     attractor.x = x;
     attractor.y = y;
@@ -663,7 +662,7 @@ function disableFirstAttractor() {
     attractor.power = 0;
 }
 
-function resize(width, height) {
+function resize(width: number, height: number) {
     camera.right = width;
     camera.bottom = height;
     camera.updateProjectionMatrix();
@@ -696,7 +695,7 @@ function instantiatePointCloudAndGeometry() {
     scene.add(pointCloud);
 }
 
-export const sketch2 = {
+export const sketch2: ISketch = {
     id: "line",
     init: init,
     instructions: "Click, drag, look, listen.",
