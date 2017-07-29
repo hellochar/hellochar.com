@@ -2,7 +2,7 @@ import * as $ from "jquery";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import "./bootstrapWindowHack";
+import "./monkeypatchThree";
 import * as Sketch from "./sketch";
 import * as Line from "./line/";
 import { initializeSketch, ISketch } from "./sketch";

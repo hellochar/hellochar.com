@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 export const ExplodeShader = {
     uniforms: {
         iMouse:      { type: 'v2', value: new THREE.Vector2(0, 0) },
@@ -54,4 +56,3 @@ export const ExplodeShader = {
         "}"
     ].join("\n")
 };
-

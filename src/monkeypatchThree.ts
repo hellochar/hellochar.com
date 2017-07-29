@@ -1,5 +1,7 @@
 import * as THREE from "three";
-window.THREE = THREE;
+
+// HACK monkeypatch the old features that requires THREE on the global namespace
+(window as any).THREE = THREE;
 import "../public/threejs/controls/OrbitControls";
 import "../public/threejs/postprocessing/EffectComposer";
 import "../public/threejs/postprocessing/MaskPass";
