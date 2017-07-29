@@ -1,4 +1,4 @@
-ExplodeShader = {
+export const ExplodeShader = {
     uniforms: {
         iMouse:      { type: 'v2', value: new THREE.Vector2(0, 0) },
         iResolution: { type: 'v2', value: new THREE.Vector2(100, 100) },
@@ -53,5 +53,5 @@ ExplodeShader = {
         "    gl_FragColor = col + original;",
         "}"
     ].join("\n")
-}
+};
 
