@@ -416,7 +416,7 @@ function instantiatePointCloudAndGeometry() {
     scene.add(pointCloud);
 }
 
-export const sketch4: ISketch = {
+export const Dots: ISketch = {
     id: "dots",
     init: init,
     instructions: "Click, drag, release, look, listen.",
