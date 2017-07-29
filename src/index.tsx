@@ -6,8 +6,8 @@ import "./monkeypatchThree";
 import { Dots } from "./dots/index";
 import { Line } from "./line/index";
 import { Waves } from "./waves/index";
-import { Index } from "./routes/index";
-import { SketchRoute } from "./routes/sketch";
+import { HomePage } from "./routes/homePage";
+import { FullPageSketch } from "./routes/fullPageSketch";
 
 import "./index.scss";
 
@@ -16,10 +16,10 @@ document.body.appendChild(root);
 ReactDOM.render(
     <BrowserRouter>
         <Switch>
-            <Route path="/sketch/line" component={() => <SketchRoute sketch={Line} />} />
-            <Route path="/sketch/dots" component={() => <SketchRoute sketch={Dots} />} />
-            <Route path="/sketch/waves" component={() => <SketchRoute sketch={Waves} />} />
-            <Route path="/" component={Index} />
+            <Route path="/sketch/line" component={() => <FullPageSketch sketch={Line} />} />
+            <Route path="/sketch/dots" component={() => <FullPageSketch sketch={Dots} />} />
+            <Route path="/sketch/waves" component={() => <FullPageSketch sketch={Waves} />} />
+            <Route path="/" component={HomePage} />
         </Switch>
     </BrowserRouter>,
     root

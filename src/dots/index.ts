@@ -403,7 +403,7 @@ function instantiatePointCloudAndGeometry() {
         particles[i].vertex = vertex;
     }
 
-    var starTexture = THREE.ImageUtils.loadTexture("star.png");
+    var starTexture = THREE.ImageUtils.loadTexture("/assets/sketches/line/star.png");
     starTexture.minFilter = THREE.NearestFilter;
     var material = new THREE.PointCloudMaterial({
         size: 15,

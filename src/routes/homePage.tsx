@@ -7,7 +7,7 @@ import { Dots } from "../dots/index";
 import { Waves } from "../waves/index";
 import { Link } from "react-router-dom";
 
-export class Index extends React.Component<{}, {}> {
+export class HomePage extends React.Component<{}, {}> {
     render() {
         return (
             <div className="root">
@@ -20,7 +20,7 @@ export class Index extends React.Component<{}, {}> {
     private renderHeader() {
         return (
             <div className="header">
-                <h1 className="header-name">Xiaohan Zhang</h1>
+                <Link className="header-name" to="/"><h1>Xiaohan Zhang</h1></Link>
                 <nav className="header-nav">
                     <Link to="#work">Work</Link>
                     &middot;
@@ -48,9 +48,9 @@ export class Index extends React.Component<{}, {}> {
     private renderWork() {
         return (
             <div className="work">
-                { this.renderSketch("Line", Line) }
-                { this.renderSketch("Dots", Dots) }
-                { this.renderSketch("Waves", Waves) }
+                { this.renderHighlight("Line", "/assets/images/gravity1.png") }
+                { this.renderHighlight("Dots", "/assets/images/dots2.png") }
+                { this.renderHighlight("Waves", "/assets/images/waves2.png") }
             </div>
         );
     }
@@ -95,12 +95,11 @@ export class Index extends React.Component<{}, {}> {
         )
     }
 
-    private renderSketch(name: string, sketch: ISketch) {
+    private renderHighlight(name: string, imageUrl: string) {
         return (
-            <div className="sketch-container">
-                <h2>{name}</h2>
-                <img src={sketch.id} />
-                {/* <SketchComponent sketch={sketch} /> */}
+            <div className="work-highlight">
+                <Link className="work-highlight-name" to={`/sketch/${name}`}>{name}</Link>
+                <img src={imageUrl} />
             </div>
         );
     }
