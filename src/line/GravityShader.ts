@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 export const GravityShader = {
     uniforms: {
         gamma:       { type: 'f', value: 6.0/6.0 },
