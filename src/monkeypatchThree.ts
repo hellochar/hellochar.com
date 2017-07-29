@@ -2,11 +2,11 @@ import * as THREE from "three";
 
 // HACK monkeypatch the old features that requires THREE on the global namespace
 (window as any).THREE = THREE;
-import "../public/threejs/controls/OrbitControls";
-import "../public/threejs/postprocessing/EffectComposer";
-import "../public/threejs/postprocessing/MaskPass";
-import "../public/threejs/postprocessing/RenderPass";
-import "../public/threejs/postprocessing/ShaderPass";
-import "../public/threejs/shaders/DotScreenShader";
-import "../public/threejs/shaders/CopyShader";
-import "../public/threejs/stats.min";
+import "../old/threejs/controls/OrbitControls";
+import "../old/threejs/postprocessing/EffectComposer";
+import "../old/threejs/postprocessing/MaskPass";
+import "../old/threejs/postprocessing/RenderPass";
+import "../old/threejs/postprocessing/ShaderPass";
+import "../old/threejs/shaders/DotScreenShader";
+import "../old/threejs/shaders/CopyShader";
+import "../old/threejs/stats.min";
