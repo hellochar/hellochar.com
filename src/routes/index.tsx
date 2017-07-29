@@ -5,6 +5,7 @@ import { ISketch } from "../sketch";
 import { SketchComponent } from "../sketchComponent";
 import { Dots } from "../dots/index";
 import { Waves } from "../waves/index";
+import { Link } from "react-router-dom";
 
 export class Index extends React.Component<{}, {}> {
     render() {
@@ -21,13 +22,13 @@ export class Index extends React.Component<{}, {}> {
             <div className="header">
                 <h1 className="header-name">Xiaohan Zhang</h1>
                 <nav className="header-nav">
-                    <a href="#">Work</a>
+                    <Link to="#work">Work</Link>
                     &middot;
-                    <a href="#">About Me</a>
+                    <Link to="#about-me">About Me</Link>
                     &middot;
-                    <a href="#">History</a>
+                    <Link to="#history">History</Link>
                     &middot;
-                    <a href="#">Contact</a>
+                    <Link to="#contact">Contact</Link>
                 </nav>
             </div>
         );

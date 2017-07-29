@@ -23,21 +23,30 @@ const DEFAULT_SKETCH_OPTIONS: ISketchOptions = {
     showInstructions: true
 };
 
-export type IEventCallback<T> = (event: JQueryEventObject) => void;
+export const UI_EVENTS = {
+    "mousedown": true,
+    "mouseup": true,
+    "mousemove": true,
+    "touchstart": true,
+    "touchmove": true,
+    "touchend": true,
+    "keyup": true,
+    "keydown": true,
+    "keypress": true,
+};
 
-export interface ISketch {
-    animate(millisElapsed: number): void;
+export type UIEventReciever = {
+    [E in keyof typeof UI_EVENTS]?: JQuery.EventHandler<HTMLElement>;
+}
+
+export interface ISketch extends UIEventReciever {
     id: string;
+
+    animate(millisElapsed: number): void;
+
     init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext): void;
+
     instructions?: string;
-
-    mousedown?: IEventCallback<MouseEvent>;
-    mouseup?: IEventCallback<MouseEvent>;
-    mousemove?: IEventCallback<MouseEvent>;
-
-    touchstart?: IEventCallback<TouchEvent>;
-    touchmove?: IEventCallback<TouchEvent>;
-    touchend?: IEventCallback<TouchEvent>;
 
     resize(width: number, height: number): void;
 }
@@ -84,7 +93,7 @@ export function initializeSketch(sketch: ISketch, $sketchParent: JQuery, options
     $canvas.one("mousedown touchstart", function (e) {
         $instructionsElement.addClass("interacted");
     });
-    ["mousedown", "mouseup", "mousemove", "touchstart", "touchmove", "touchend", "keyup", "keydown", "keypress"].forEach(function (eventName) {
+    Object.keys(UI_EVENTS).forEach(function (eventName: keyof typeof UI_EVENTS) {
         var callback = sketch[eventName];
         if (callback != null) {
             $canvas.on(eventName, callback);
