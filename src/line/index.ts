@@ -16,8 +16,8 @@ var INERTIAL_DRAG_CONSTANT = 0.33913643334;
 
 function createAudioGroup(audioContext: SketchAudioContext) {
     const backgroundAudio = $("<audio autoplay loop>")
-        .append('<source src="audio/line_background.ogg" type="audio/ogg">')
-        .append('<source src="audio/line_background.mp3" type="audio/mp3">') as JQuery<HTMLMediaElement>;
+        .append('<source src="/assets/sketches/line/audio/line_background.ogg" type="audio/ogg">')
+        .append('<source src="/assets/sketches/line/audio/line_background.mp3" type="audio/mp3">') as JQuery<HTMLMediaElement>;
 
     var sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
     $("body").append(backgroundAudio);
@@ -603,7 +603,7 @@ function instantiatePointCloudAndGeometry() {
         particles[i].vertex = vertex;
     }
 
-    var starTexture = THREE.ImageUtils.loadTexture("star.png");
+    var starTexture = THREE.ImageUtils.loadTexture("/assets/sketches/line/star.png");
     starTexture.minFilter = THREE.NearestFilter;
     var material = new THREE.PointCloudMaterial({
         size: 15,
