@@ -7,10 +7,10 @@ export interface ISketchRouteProps {
     sketch: ISketch;
 }
 
-export class SketchRoute extends React.Component<ISketchRouteProps, {}> {
+export class FullPageSketch extends React.Component<ISketchRouteProps, {}> {
     public render() {
         return (
-            <div className="sketch-full-page">
+            <div className="full-page-sketch">
                 <SketchComponent sketch={this.props.sketch} />
             </div>
         );
