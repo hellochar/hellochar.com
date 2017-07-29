@@ -5,7 +5,6 @@ import * as THREE from "three";
 import { GravityShader } from "./gravityShader";
 import { ISketch, SketchAudioContext } from "../sketch";
 
-
 const NUM_PARTICLES = parse(location.search).p ||
     // cheap mobile detection
     (screen.width > 1024 ? 15000 : 5000);
@@ -617,7 +616,7 @@ function instantiatePointCloudAndGeometry() {
     scene.add(pointCloud);
 }
 
-export const sketch2: ISketch = {
+export const Line: ISketch = {
     id: "line",
     init: init,
     instructions: "Click, drag, look, listen.",

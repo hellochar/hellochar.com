@@ -371,7 +371,7 @@ function setVelocityFromCanvasCoordinates(canvasX: number, canvasY: number) {
     });
 }
 
-export const sketch3 = {
+export const Waves = {
     id: "waves",
     init: init,
     animate: animate,
