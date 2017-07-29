@@ -511,7 +511,7 @@ function triangleWaveApprox(t: number) {
     return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
 }
 
-function touchstart(event: JQueryEventObject) {
+function touchstart(event: JQuery.Event) {
     // prevent emulated mouse events from occuring
     event.preventDefault();
     var canvasOffset = $(canvas).offset()!;
@@ -526,7 +526,7 @@ function touchstart(event: JQueryEventObject) {
     enableFirstAttractor(touchX, touchY);
 }
 
-function touchmove(event: JQueryEventObject) {
+function touchmove(event: JQuery.Event) {
     var canvasOffset = $(canvas).offset()!;
     var touch = (event.originalEvent as TouchEvent).touches[0];
     var touchX = touch.pageX - canvasOffset.left;
@@ -538,11 +538,11 @@ function touchmove(event: JQueryEventObject) {
     moveFirstAttractor(touchX, touchY);
 }
 
-function touchend(event: JQueryEventObject) {
+function touchend(event: JQuery.Event) {
     disableFirstAttractor();
 }
 
-function mousedown(event: JQueryEventObject) {
+function mousedown(event: JQuery.Event) {
     if (event.which === 1) {
         mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
         mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
@@ -550,13 +550,13 @@ function mousedown(event: JQueryEventObject) {
     }
 }
 
-function mousemove(event: JQueryEventObject) {
+function mousemove(event: JQuery.Event) {
     mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
     mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
     moveFirstAttractor(mouseX, mouseY);
 }
 
-function mouseup(event: JQueryEventObject) {
+function mouseup(event: JQuery.Event) {
     if (event.which === 1) {
         disableFirstAttractor();
     }

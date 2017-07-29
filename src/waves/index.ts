@@ -3,7 +3,7 @@ import { parse } from "query-string";
 import * as THREE from "three";
 
 import { lerp, map } from "../math";
-import { SketchAudioContext } from "../sketch";
+import { SketchAudioContext, ISketch } from "../sketch";
 
 var LINE_SEGMENT_LENGTH = (window.screen.width > 1024) ? 11 : 22;
 
@@ -288,25 +288,25 @@ function getDarkness(frame: number) {
     }
 }
 
-function mousemove(event: JQueryEventObject) {
+function mousemove(event: JQuery.Event) {
     setVelocityFromMouseEvent(event);
 }
 
-function mousedown(event: JQueryEventObject) {
+function mousedown(event: JQuery.Event) {
     if (event.which === 1) {
         isTimeFast = true;
         setVelocityFromMouseEvent(event);
     }
 }
 
-function mouseup(event: JQueryEventObject) {
+function mouseup(event: JQuery.Event) {
     if (event.which === 1) {
         isTimeFast = false;
         setVelocityFromMouseEvent(event);
     }
 }
 
-function setVelocityFromMouseEvent(event: JQueryEventObject) {
+function setVelocityFromMouseEvent(event: JQuery.Event) {
     var mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
     var mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
     setVelocityFromCanvasCoordinates(mouseX, mouseY);
@@ -337,7 +337,7 @@ function resize(width: number, height: number) {
     });
 }
 
-function touchstart(event: JQueryEventObject) {
+function touchstart(event: JQuery.Event) {
     // prevent emulated mouse events from occuring
     event.preventDefault();
 
@@ -345,15 +345,15 @@ function touchstart(event: JQueryEventObject) {
     setVelocityFromTouchEvent(event);
 }
 
-function touchmove(event: JQueryEventObject) {
+function touchmove(event: JQuery.Event) {
     setVelocityFromTouchEvent(event);
 }
 
-function touchend(event: JQueryEventObject) {
+function touchend(event: JQuery.Event) {
     isTimeFast = false;
 }
 
-function setVelocityFromTouchEvent(event: JQueryEventObject) {
+function setVelocityFromTouchEvent(event: JQuery.Event) {
     var canvasOffset = $(renderer.domElement).offset()!;
     var touch = (event.originalEvent as TouchEvent).touches[0];
     var touchX = touch.pageX - canvasOffset.left;
@@ -371,7 +371,7 @@ function setVelocityFromCanvasCoordinates(canvasX: number, canvasY: number) {
     });
 }
 
-export const Waves = {
+export const Waves: ISketch = {
     id: "waves",
     init: init,
     animate: animate,
