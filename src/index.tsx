@@ -7,6 +7,7 @@ import * as Sketch from "./sketch";
 import * as Line from "./line/";
 import { initializeSketch, ISketch } from "./sketch";
 import { sketch4 } from "./dots/index";
+import { sketch3 } from "./waves/index";
 
 const root = document.createElement("div");
 document.body.appendChild(root);
@@ -28,6 +29,7 @@ ReactDOM.render(
     <div>
         <SketchComponent sketch={Line.sketch2} />
         <SketchComponent sketch={sketch4} />
+        <SketchComponent sketch={sketch3} />
     </div>,
     root
 );
