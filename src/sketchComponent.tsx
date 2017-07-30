@@ -13,8 +13,9 @@ export class SketchComponent extends React.Component<ISketchComponentProps, {}> 
     };
 
     public render() {
+        const {sketch, ...divProps} = this.props;
         return (
-            <div {...this.props} className="sketch-component" ref={this.handleRef}>
+            <div {...divProps} className="sketch-component" ref={this.handleRef}>
             </div>
         );
     }

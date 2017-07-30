@@ -12,12 +12,12 @@ var SIMULATION_SPEED = 3;
 var GRAVITY_CONSTANT = 320;
 // speed becomes this percentage of its original speed every second
 var PULLING_DRAG_CONSTANT = 0.93075095702;
-var INERTIAL_DRAG_CONSTANT = 0.33913643334;
+var INERTIAL_DRAG_CONSTANT = 0.53913643334;
 
 function createAudioGroup(audioContext: SketchAudioContext) {
     const backgroundAudio = $("<audio autoplay loop>")
-        .append('<source src="/assets/sketches/line/audio/line_background.ogg" type="audio/ogg">')
-        .append('<source src="/assets/sketches/line/audio/line_background.mp3" type="audio/mp3">') as JQuery<HTMLMediaElement>;
+        .append('<source src="/assets/sketches/line/line_background.ogg" type="audio/ogg">')
+        .append('<source src="/assets/sketches/line/line_background.mp3" type="audio/mp3">') as JQuery<HTMLMediaElement>;
 
     var sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
     $("body").append(backgroundAudio);
@@ -415,7 +415,7 @@ function animate(millisElapsed: number) {
 
         particle.x += particle.dx * timeStep;
         particle.y += particle.dy * timeStep;
-        if (particle.x < 0 || particle.x > canvas.width || particle.y < 0 || particle.y > canvas.height) {
+        if (particle.x < -canvas.width || particle.x > canvas.width*2 || particle.y < -canvas.width || particle.y > canvas.height*2) {
             particle.x = Math.random() * canvas.width;
             particle.y = canvas.height / 2;
             particle.dx = particle.dy = 0;

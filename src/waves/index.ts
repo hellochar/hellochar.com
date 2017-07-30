@@ -157,8 +157,8 @@ class LineStrip {
 
 function createAudioGroup(audioContext: SketchAudioContext) {
     var backgroundAudio = $("<audio autoplay loop>")
-                            .append('<source src="assets/sketches/waves/waves_background.mp3" type="audio/mp3">')
-                            .append('<source src="assets/sketches/waves/waves_background.ogg" type="audio/ogg">') as JQuery<HTMLMediaElement>;
+                            .append('<source src="/assets/sketches/waves/waves_background.mp3" type="audio/mp3">')
+                            .append('<source src="/assets/sketches/waves/waves_background.ogg" type="audio/ogg">') as JQuery<HTMLMediaElement>;
 
     var sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
     $("body").append(backgroundAudio);

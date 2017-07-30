@@ -5,7 +5,7 @@ import { ISketch } from "../sketch";
 import { SketchComponent } from "../sketchComponent";
 import { Dots } from "../dots/index";
 import { Waves } from "../waves/index";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 export class HomePage extends React.Component<{}, {}> {
     render() {
@@ -22,13 +22,13 @@ export class HomePage extends React.Component<{}, {}> {
             <div className="header">
                 <Link className="header-name" to="/"><h1>Xiaohan Zhang</h1></Link>
                 <nav className="header-nav">
-                    <Link to="#work">Work</Link>
+                    <NavLink activeClassName="active" to="/work">Work</NavLink>
                     &middot;
-                    <Link to="#about-me">About Me</Link>
+                    <NavLink activeClassName="active" to="/about-me">About Me</NavLink>
                     &middot;
-                    <Link to="#history">History</Link>
+                    <NavLink activeClassName="active" to="/history">History</NavLink>
                     &middot;
-                    <Link to="#contact">Contact</Link>
+                    <NavLink activeClassName="active" to="/contact">Contact</NavLink>
                 </nav>
             </div>
         );
@@ -47,8 +47,8 @@ export class HomePage extends React.Component<{}, {}> {
 
     private renderWork() {
         return (
-            <div className="work">
-                { this.renderHighlight("Line", "/assets/images/gravity1.png") }
+            <div className="work" id="work">
+                { this.renderHighlight("Line", "/assets/images/gravity4_cropped.png") }
                 { this.renderHighlight("Dots", "/assets/images/dots2.png") }
                 { this.renderHighlight("Waves", "/assets/images/waves2.png") }
             </div>
@@ -57,7 +57,7 @@ export class HomePage extends React.Component<{}, {}> {
 
     private renderAboutMe() {
         return (
-            <div className="about-me">
+            <div className="about-me" id="about-me">
                 <img src="self-picture.png" />
                 <p>
                 I am a web developer and creative coder in the San Francisco Bay Area.
@@ -71,7 +71,7 @@ export class HomePage extends React.Component<{}, {}> {
 
     private renderHistory() {
         return (
-            <div className="history">
+            <div className="history" id="history">
                 2017: did some stuff
                 2016: did some stuff
                 2015: did some stuff
@@ -86,7 +86,7 @@ export class HomePage extends React.Component<{}, {}> {
 
     private renderContact() {
         return (
-            <div className="contact">
+            <div className="contact" id="contact">
                 Get in touch:
                 email
                 facebook
@@ -96,10 +96,11 @@ export class HomePage extends React.Component<{}, {}> {
     }
 
     private renderHighlight(name: string, imageUrl: string) {
+        const linkUrl = `/sketch/${name.toLowerCase()}`;
         return (
             <div className="work-highlight">
-                <Link className="work-highlight-name" to={`/sketch/${name}`}>{name}</Link>
-                <img src={imageUrl} />
+                <Link className="work-highlight-name" to={linkUrl}>{name}</Link>
+                <Link to={linkUrl}><img src={imageUrl} /></Link>
             </div>
         );
     }
