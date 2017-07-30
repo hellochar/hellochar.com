@@ -6,8 +6,10 @@ import { SketchComponent } from "../sketchComponent";
 import { Dots } from "../dots/index";
 import { Waves } from "../waves/index";
 import { Link, NavLink } from "react-router-dom";
+import { RouteComponentProps } from "react-router";
+import { ShrinkingHeader } from "./shrinkingHeader";
 
-export class HomePage extends React.Component<{}, {}> {
+export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     render() {
         return (
             <div className="root">
@@ -16,22 +18,17 @@ export class HomePage extends React.Component<{}, {}> {
             </div>
         );
     }
+
+    public componentDidMount() {
+        const hash = this.props.location.hash;
+        const element = document.getElementById(hash);
+        if (element != null) {
+            element.scrollIntoView();
+        }
+    }
     
     private renderHeader() {
-        return (
-            <div className="header">
-                <Link className="header-name" to="/"><h1>Xiaohan Zhang</h1></Link>
-                <nav className="header-nav">
-                    <NavLink activeClassName="active" to="/work">Work</NavLink>
-                    &middot;
-                    <NavLink activeClassName="active" to="/about-me">About Me</NavLink>
-                    &middot;
-                    <NavLink activeClassName="active" to="/history">History</NavLink>
-                    &middot;
-                    <NavLink activeClassName="active" to="/contact">Contact</NavLink>
-                </nav>
-            </div>
-        );
+        return <ShrinkingHeader />;
     }
 
     private renderContent() {
