@@ -31,7 +31,7 @@ export class ShrinkingHeader extends React.Component<{}, {}> {
         const className = "header" + (minimized ? " minimized" : "");
         return (
             <div className={className}>
-                <Link className="header-name" to="/"><h1>Xiaohan Zhang</h1></Link>
+                <a className="header-name" href="/"><h1>Xiaohan Zhang</h1></a>
                 <nav className="header-nav">
                     <a href="#work">Work</a>
                     &middot;
