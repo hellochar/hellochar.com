@@ -12,7 +12,7 @@ import { ShrinkingHeader } from "./shrinkingHeader";
 export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     render() {
         return (
-            <div className="root">
+            <div className="homepage">
                 { this.renderHeader() }
                 { this.renderContent() }
             </div>

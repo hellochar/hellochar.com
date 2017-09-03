@@ -421,6 +421,7 @@ export const Dots: ISketch = {
     init: init,
     instructions: "Click, drag, release, look, listen.",
     animate: animate,
+    darkTheme: true,
     mousedown: mousedown,
     mousemove: mousemove,
     mouseup: mouseup,
