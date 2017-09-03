@@ -13,6 +13,9 @@ $palatino-family: Palatino, Palatino Linotype, Palatino LT STD, Book Antiqua, Ge
 }
 
 .header {
+    background: white;
+    z-index: 1;
+    position: fixed;
     padding: 80px 0;
     height: 350px;
     max-width: 800px;
@@ -26,10 +29,9 @@ $palatino-family: Palatino, Palatino Linotype, Palatino LT STD, Book Antiqua, Ge
     border-bottom: 1px solid $gray5;
 
     &.minimized {
-        padding: 0;
+        padding: 10px 0;
         height: auto;
         text-align: initial;
-        position: fixed;
 
         .header-name h1 {
             font-size: 20px;
@@ -65,9 +67,13 @@ $palatino-family: Palatino, Palatino Linotype, Palatino LT STD, Book Antiqua, Ge
 }
 
 .content {
-    padding: 50px 0;
     position: relative;
+    // offset from the top header
     top: 350px;
+
+    > div {
+        padding-top: 80px;
+    }
 }
 
 .work-highlight {
