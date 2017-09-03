@@ -49,6 +49,8 @@ export interface ISketch extends UIEventReciever {
     instructions?: string;
 
     resize(width: number, height: number): void;
+
+    darkTheme?: boolean;
 }
 
 export interface SketchAudioContext extends AudioContext {

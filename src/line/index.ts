@@ -621,6 +621,7 @@ export const Line: ISketch = {
     init: init,
     instructions: "Click, drag, look, listen.",
     animate: animate,
+    darkTheme: true,
     mousedown: mousedown,
     mousemove: mousemove,
     mouseup: mouseup,
