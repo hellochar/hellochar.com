@@ -27,12 +27,9 @@ export class ShrinkingHeader extends React.Component<{}, {}> {
     }
 
     render() {
-        const minimized = this.state.scrollTop > 100;
+        const minimized = this.state.scrollTop > 80;
         const className = "header" + (minimized ? " minimized" : "");
         return (
-            <div className="header">
-                { this.maybeRenderMinimizedHeader() }
-            </div>
             <div className={className}>
                 <Link className="header-name" to="/"><h1>Xiaohan Zhang</h1></Link>
                 <nav className="header-nav">
@@ -47,5 +44,4 @@ export class ShrinkingHeader extends React.Component<{}, {}> {
             </div>
         );
     }
-
 }
