@@ -3,10 +3,10 @@
     position: fixed;
     left: 0;
     right: 0;
-    transition: opacity 0.2s;
 
     &.only-show-on-hover {
         opacity: 0;
+        transition: opacity 0.2s;
 
         &:hover {
             opacity: 1;
