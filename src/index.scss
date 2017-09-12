@@ -5,7 +5,8 @@ $gray3: #8A9BA8;
 $gray5: #BFCCD6;
 $light-gray1: #CED9E0;
 
-$palatino-family: Palatino, Palatino Linotype, Palatino LT STD, Book Antiqua, Georgia, serif; 
+$palatino-family: Palatino, Palatino Linotype, Palatino LT STD, Book Antiqua, serif; 
+$georgia-family: Georgia,Cambria,"Times New Roman",Times,serif;
 
 @import "~normalize.css/";
 
@@ -28,6 +29,19 @@ a {
     &:hover {
         border-bottom: 3px solid $black;
     }
+}
+
+body {
+    font-family: $palatino-family;
+}
+
+p {
+    font-weight: 400;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1.58;
+    letter-spacing: -.003em;
+    font-family: $georgia-family;
 }
 
 // fully fills its parent
