@@ -42,7 +42,7 @@ export class ShrinkingHeader extends React.Component<IShrinkingHeaderProps, IShr
 
         return (
             <div className={containerClassName}>
-                <div className={className}>
+                <header className={className}>
                     <a className="header-name" href="/"><h1>Xiaohan Zhang</h1></a>
                     <nav className="header-nav">
                         <a href="#work">Work</a>
@@ -53,7 +53,7 @@ export class ShrinkingHeader extends React.Component<IShrinkingHeaderProps, IShr
                         &middot;
                         <a href="#contact">Contact</a>
                     </nav>
-                </div>
+                </header>
                 <div className="extra-hover-area"></div>
             </div>
         );

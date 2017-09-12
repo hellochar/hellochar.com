@@ -33,28 +33,28 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
 
     private renderContent() {
         return (
-            <div className="content">
+            <main className="content">
                 { this.renderWork() }
                 { this.renderAboutMe() }
                 { this.renderContact() }
                 { this.renderHistory() }
-            </div>
+            </main>
         );
     }
 
     private renderWork() {
         return (
-            <div className="content-section work" id="work">
+            <section className="content-section work" id="work">
                 { this.renderHighlight("Line", "/assets/images/gravity4_cropped.png") }
                 { this.renderHighlight("Dots", "/assets/images/dots2.png") }
                 { this.renderHighlight("Waves", "/assets/images/waves2.png") }
-            </div>
+            </section>
         );
     }
 
     private renderAboutMe() {
         return (
-            <div className="content-section about-me" id="about-me">
+            <article className="content-section about-me" id="about-me">
                 <h1>About Me</h1>
                 <p>
                     Hi there.
@@ -85,13 +85,13 @@ Just as much as I loved playing games, I loved imagining new ones. My friends an
                 
                  Then an 8th grade math teacher showed our class
                 that 
-            </div>
+            </article>
         )
     }
 
     private renderHistory() {
         return (
-            <div className="content-section history" id="history">
+            <section className="content-section history" id="history">
                 2017: did some stuff
                 2016: did some stuff
                 2015: did some stuff
@@ -100,13 +100,13 @@ Just as much as I loved playing games, I loved imagining new ones. My friends an
                 2012: did some stuff
                 2011: did some stuff
                 2010: did some stuff
-            </div>
+            </section>
         )
     }
 
     private renderContact() {
         return (
-            <div className="content-section contact" id="contact">
+            <footer className="content-section contact" id="contact">
                 Get in touch:
                 <a href="mailto: hellocharlien@hotmail.com">Email</a>
                 &middot;
@@ -119,17 +119,19 @@ Just as much as I loved playing games, I loved imagining new ones. My friends an
                 <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">LinkedIn</a>
                 &middot;
                 <a href="https://www.instagram.com/hellochar">Instagram</a>
-            </div>
+            </footer>
         )
     }
 
     private renderHighlight(name: string, imageUrl: string) {
         const linkUrl = `/sketch/${name.toLowerCase()}`;
         return (
-            <div className="work-highlight">
-                <Link className="work-highlight-name" to={linkUrl}>{name}</Link>
+            <figure className="work-highlight">
+                <figcaption>
+                    <Link className="work-highlight-name" to={linkUrl}>{name}</Link>
+                </figcaption>
                 <Link to={linkUrl}><img src={imageUrl} /></Link>
-            </div>
+            </figure>
         );
     }
 }
