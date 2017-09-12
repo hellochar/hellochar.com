@@ -7,9 +7,18 @@
     position: relative;
     // offset from the top header
     top: 350px;
+    padding-bottom: 80px;
 
-    > div {
+    .content-section {
+        // adding padding-top to account for header when navving to it
         padding-top: 80px;
+    }
+
+    img {
+        display: block;
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
     }
 }
 
@@ -22,12 +31,5 @@
         font-size: 30px;
         font-weight: bold;
         margin: 1em 0;
-    }
-
-    img {
-        display: block;
-        width: 100%;
-        max-height: 500px;
-        object-fit: cover;
     }
 }

@@ -55,6 +55,11 @@
 
         .header-nav {
             float: right;
+            line-height: 20px;
+
+            a:last-of-type {
+                margin-right: 0;
+            }
         }
     }
 
