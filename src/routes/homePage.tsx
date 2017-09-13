@@ -8,6 +8,7 @@ import { Waves } from "../waves/index";
 import { Link, NavLink } from "react-router-dom";
 import { RouteComponentProps } from "react-router";
 import { ShrinkingHeader } from "./shrinkingHeader";
+import { HistorySection } from "../history";
 
 export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     render() {
@@ -37,7 +38,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 { this.renderWork() }
                 { this.renderAboutMe() }
                 { this.renderContact() }
-                { this.renderHistory() }
+                <HistorySection />
             </main>
         );
     }
@@ -56,57 +57,71 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
         return (
             <article className="content-section about-me" id="about-me">
                 <h1>About Me</h1>
+                <p>Hi there.</p>
+                <p>My name's Xiaohan, but everyone just calls me Han-Han (the X can be intimidating!).</p>
                 <p>
-                    Hi there.
+                    I am a web developer and creative coder in the San Francisco Bay Area, interested in
+                    discovering and sharing the beauty of mathematics and physics. Topics of interest
+                    include emergent systems, generative design, chaos/dynamical systems, self organization,
+                    physical simulations, UI/UX, and teaching.
                 </p>
                 <p>
-                    My name's Xiaohan, but everyone just calls me Han-Han (the X can be intimidating!).
-                </p>
-                <p>
-                I am a web developer and creative coder in the San Francisco Bay Area, interested in
-                discovering and sharing the beauty of mathematics and physics. Topics of interest
-                include emergent systems, generative design, chaos/dynamical systems, self organization,
-                physical simulations, UI/UX, and teaching.
-                </p>
-                <p>
-                    <img src="/assets/images/self_800x500.jpg" />
-                </p>
-
-                <hr />
-
-                <p>
-  I grew up with an intense love for video games. The type of love that consumes your thoughts. The type of love that makes you play eight hours a day, fall asleep to mental flashes of scoring points, and get into daily arguments with mom. I caught the bug and I couldn't escape.
+                    <img className="self" src="/assets/images/self_800x500.jpg" />
                 </p>
 
                 <p>
-Just as much as I loved playing games, I loved imagining new ones. My friends and I would go wild, designing and perfecting the Next Great Game. It would have Everything and it would be Perfect. I would give my days to the Warcraft III Map Editor [link], clunkily bringing to life our overstretched dreams. I remember a frenzied two week surge - wake up at 8am, eat breakfast (thanks parents), work till noon, eat lunch (thanks parents), work till 6pm, eat dinner (thanks parents), work till 10pm, sleep. The inevitable end to these projects was total burnout after a few weeks after the initial motivation died down. But that didn't stop us from trying on the next one. In fact, making the game was like a game in itself - the hardest, most rewarding game I'd ever played.
+                    In 9th grade our math teacher described the Chaos Game Method [link] by which
+                    to draw the Sierpinski triangle [link]. "An infinite number of smaller and
+                    smaller triangles inside each other going down forever?! And you can draw this
+                    on the calculator?! WHAT?!" It blew mind, seeing these dots seemily randomly
+                    place themselves, but somehow always end up creating triangles within triangles. 
+                    I struggled to understand it, even as I had written it just minutes prior. A 
+                    prolonged gaze at infinity.
                 </p>
 
-                
-                 Then an 8th grade math teacher showed our class
-                that 
+                <p style={{width: "50%", marginLeft: "auto", marginRight: "auto"}}>
+                    <img className="full-width" src="http://www.rimwe.com/_Media/ti_triangle.jpeg" />
+                    <sub>Blew. My. Mind.</sub>
+                </p>
+
+                <p>
+                    From that birthed explorations into fractals, cellular automata, generative
+                    processes, random terrain generation, gravity simulations, geometric shape
+                    explorations, more terrain generators, building video games, and more. I spent
+                    hours smashing my brain against Java Swing, building a ramshackle 2D gravity
+                    simulation with combining and exploding planets, before I found Processing.
+
+                    Much of my high school afterschool was spent in Processing, making sketch after
+                    sketch of anything I could think of. That continues to this day.
+                </p>
+
+                <p>
+                    Much of this came from my parents. They encouraged adventure, exploration, and
+                    love of natural beauty. We'd go on weekend trips to national parks, hiking and
+                    camping. I would inevitably go off the trail, climbing rocks and jumping over
+                    unmarked streams, in an attempt to discover what True, Uncurated Nature was.
+                    I didn't want a standard experience. I wanted the real thing. Ironically, I found
+                    the real thing in a virtual world. Programming is the ultimate tool for discovery.
+                    It's taking a trip to other worlds, and coming back and seeing your own world with new eyes.
+                </p>
+
+                <p>
+                    While driving over my parents would say "Han-Han look up from that Calculator,
+                    look at the natural beauty of the world around us!" What they didn't understand
+                    was that I was doing exactly that. I was building systems and simulations to
+                    quell my curiosity about the natural world. How do mountains get their valleys
+                    and canyons? How are clouds formed? Why do birds end up flocking? To see with
+                    new eyes as you unearthed an understanding of what a tree was, or how clouds
+                    were formed. To make my parents proud.
+                </p>
             </article>
-        )
-    }
-
-    private renderHistory() {
-        return (
-            <section className="content-section history" id="history">
-                2017: did some stuff
-                2016: did some stuff
-                2015: did some stuff
-                2014: did some stuff
-                2013: did some stuff
-                2012: did some stuff
-                2011: did some stuff
-                2010: did some stuff
-            </section>
         )
     }
 
     private renderContact() {
         return (
             <footer className="content-section contact" id="contact">
+                <p>
                 Get in touch:
                 <a href="mailto: hellocharlien@hotmail.com">Email</a>
                 &middot;
@@ -119,6 +134,7 @@ Just as much as I loved playing games, I loved imagining new ones. My friends an
                 <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">LinkedIn</a>
                 &middot;
                 <a href="https://www.instagram.com/hellochar">Instagram</a>
+                </p>
             </footer>
         )
     }
@@ -130,7 +146,7 @@ Just as much as I loved playing games, I loved imagining new ones. My friends an
                 <figcaption>
                     <Link className="work-highlight-name" to={linkUrl}>{name}</Link>
                 </figcaption>
-                <Link to={linkUrl}><img src={imageUrl} /></Link>
+                <Link to={linkUrl}><img className="full-width" src={imageUrl} /></Link>
             </figure>
         );
     }

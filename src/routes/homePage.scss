@@ -13,13 +13,22 @@
         // adding padding-top to account for header when navving to it
         padding-top: 80px;
     }
+}
 
-    img {
-        display: block;
-        width: 100%;
-        max-height: 500px;
-        object-fit: cover;
-    }
+.self {
+    display: block;
+    width: 400px;
+    height: 400px;
+    border-radius: 100%;
+    object-fit: cover;
+    margin: 80px auto;
+}
+
+.full-width {
+    display: block;
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
 }
 
 .work-highlight {
@@ -31,5 +40,16 @@
         font-size: 30px;
         font-weight: bold;
         margin: 1em 0;
+    }
+}
+
+.history-year {
+    > section {
+        padding-left: 20px;
+        border-left: 1px solid $gray1;
+
+        a {
+            color: blue;
+        }
     }
 }
