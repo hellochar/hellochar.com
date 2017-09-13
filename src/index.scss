@@ -18,7 +18,8 @@ $georgia-family: Georgia,Cambria,"Times New Roman",Times,serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
-	font-family: $palatino-family;
+    font-family: $palatino-family;
+    margin: 0;
 }
 
 a {
@@ -38,10 +39,21 @@ body {
 p {
     font-weight: 400;
     font-style: normal;
-    font-size: 20px;
+    font-size: 21px;
     line-height: 1.58;
-    letter-spacing: -.003em;
     font-family: $georgia-family;
+}
+
+figure {
+    margin: 0;
+}
+
+h1 ~ p {
+    margin-top: 10px;
+}
+
+p ~ p {
+    margin-top: 30px;
 }
 
 // fully fills its parent
