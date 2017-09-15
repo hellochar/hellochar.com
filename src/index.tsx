@@ -16,9 +16,9 @@ document.body.appendChild(root);
 ReactDOM.render(
     <BrowserRouter>
         <Switch>
-            <Route path="/sketch/line" component={() => <FullPageSketch sketch={Line} />} />
-            <Route path="/sketch/dots" component={() => <FullPageSketch sketch={Dots} />} />
-            <Route path="/sketch/waves" component={() => <FullPageSketch sketch={Waves} />} />
+            <Route path="/line" component={() => <FullPageSketch sketch={Line} />} />
+            <Route path="/dots" component={() => <FullPageSketch sketch={Dots} />} />
+            <Route path="/waves" component={() => <FullPageSketch sketch={Waves} />} />
             <Route path="/" component={HomePage} />
         </Switch>
     </BrowserRouter>,
