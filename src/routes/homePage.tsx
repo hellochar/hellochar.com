@@ -63,56 +63,28 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     I am a web developer and creative coder in the San Francisco Bay Area, interested in
                     discovering and sharing the beauty of mathematics and physics. Topics of interest
                     include emergent systems, generative design, chaos/dynamical systems, self organization,
-                    physical simulations, UI/UX, and teaching.
+                    physical simulations, UI/UX, teaching, and psychology
                 </p>
                 <p>
                     <img className="self" src="/assets/images/self_800x500.jpg" />
                 </p>
 
                 <p>
-                    In 9th grade our math teacher described the Chaos Game Method [link] by which
-                    to draw the Sierpinski triangle [link]. "An infinite number of smaller and
-                    smaller triangles inside each other going down forever?! And you can draw this
-                    on the calculator?! WHAT?!" It blew mind, seeing these dots seemily randomly
-                    place themselves, but somehow always end up creating triangles within triangles. 
-                    I struggled to understand it, even as I had written it just minutes prior. A 
-                    prolonged gaze at infinity.
+                    My interest in generative art grew from my sense of adventure and discovery
+                    in nature. My family would go on weekend trips to national parks, hiking and
+                    camping -- I would inevitably go off the trail, climbing rocks and jumping over
+                    unmarked streams, in an attempt to discover what True, Uncurated Nature was. I
+                    didn't want a standard experience. I wanted the real thing.
                 </p>
-
-                <p style={{width: "50%", marginLeft: "auto", marginRight: "auto"}}>
-                    <img className="full-width" src="http://www.rimwe.com/_Media/ti_triangle.jpeg" />
-                    <sub>Blew. My. Mind.</sub>
+                <p>
+                    Ironically, I found the real thing in programming virtual worlds. How are mountains
+                    formed? What would happen if gravity behaved differently? How do infinitely recursive
+                    shapes even exist? By allowing you to test and model ideas in minutes, programming
+                    is the ultimate tool for discovery. It's taking a trip to other worlds, then coming
+                    back and seeing your own world with new eyes.
                 </p>
 
                 <p>
-                    From that birthed explorations into fractals, cellular automata, generative
-                    processes, random terrain generation, gravity simulations, geometric shape
-                    explorations, more terrain generators, building video games, and more. I spent
-                    hours smashing my brain against Java Swing, building a ramshackle 2D gravity
-                    simulation with combining and exploding planets, before I found Processing.
-
-                    Much of my high school afterschool was spent in Processing, making sketch after
-                    sketch of anything I could think of. That continues to this day.
-                </p>
-
-                <p>
-                    Much of this came from my parents. They encouraged adventure, exploration, and
-                    love of natural beauty. We'd go on weekend trips to national parks, hiking and
-                    camping. I would inevitably go off the trail, climbing rocks and jumping over
-                    unmarked streams, in an attempt to discover what True, Uncurated Nature was.
-                    I didn't want a standard experience. I wanted the real thing. Ironically, I found
-                    the real thing in a virtual world. Programming is the ultimate tool for discovery.
-                    It's taking a trip to other worlds, and coming back and seeing your own world with new eyes.
-                </p>
-
-                <p>
-                    While driving over my parents would say "Han-Han look up from that Calculator,
-                    look at the natural beauty of the world around us!" What they didn't understand
-                    was that I was doing exactly that. I was building systems and simulations to
-                    quell my curiosity about the natural world. How do mountains get their valleys
-                    and canyons? How are clouds formed? Why do birds end up flocking? To see with
-                    new eyes as you unearthed an understanding of what a tree was, or how clouds
-                    were formed. To make my parents proud.
                 </p>
             </article>
         )
@@ -140,7 +112,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     }
 
     private renderHighlight(name: string, imageUrl: string) {
-        const linkUrl = `/sketch/${name.toLowerCase()}`;
+        const linkUrl = `/${name.toLowerCase()}`;
         return (
             <figure className="work-highlight">
                 <figcaption>
