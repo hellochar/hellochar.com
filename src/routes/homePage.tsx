@@ -63,7 +63,8 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     I am a web developer and creative coder in the San Francisco Bay Area, interested in
                     discovering and sharing the beauty of mathematics and physics. Topics of interest
                     include emergent systems, generative design, chaos/dynamical systems, self organization,
-                    physical simulations, UI/UX, teaching, and psychology
+                    and physical simulations. Additionally I care about UI/UX, teaching, and pushing the creative
+                    code community forward.
                 </p>
                 <p>
                     <img className="self" src="/assets/images/self_800x500.jpg" />
@@ -79,7 +80,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <p>
                     Ironically, I found the real thing in programming virtual worlds. How are mountains
                     formed? What would happen if gravity behaved differently? How do infinitely recursive
-                    shapes even exist? By allowing you to test and model ideas in minutes, programming
+                    shapes even exist, man?! By allowing you to test and model ideas in minutes, programming
                     is the ultimate tool for discovery. It's taking a trip to other worlds, then coming
                     back and seeing your own world with new eyes.
                 </p>
@@ -93,19 +94,42 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     private renderContact() {
         return (
             <footer className="content-section contact" id="contact">
+                <h1>Get in touch</h1>
                 <p>
-                Get in touch:
-                <a href="mailto: hellocharlien@hotmail.com">Email</a>
-                &middot;
-                <a href="https://www.facebook.com/xiaohan.zhang.16">Facebook</a>
-                &middot;
-                <a href="https://github.com/hellochar">Github</a>
-                &middot;
-                <a href="https://twitter.com/hellocharlien">Twitter</a>
-                &middot;
-                <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">LinkedIn</a>
-                &middot;
-                <a href="https://www.instagram.com/hellochar">Instagram</a>
+                    Lets chat! I'm interested in giving talks, workshops, teaching opportunities,
+                    work opportunities, getting a coffee or email correspondence, and generally
+                    connecting.
+                </p>
+                <p className="contact-links">
+                    <a href="mailto:hellocharlien@hotmail.com">
+                        <i className="fa fa-envelope" aria-hidden="true"></i>
+                        Email
+                    </a>
+                    &middot;
+                    <a href="https://www.facebook.com/xiaohan.zhang.16">
+                        <i className="fa fa-facebook-official" aria-hidden="true"></i>
+                        Facebook
+                    </a>
+                    &middot;
+                    <a href="https://github.com/hellochar">
+                        <i className="fa fa-github" aria-hidden="true"></i>
+                        Github
+                    </a>
+                    &middot;
+                    <a href="https://twitter.com/hellocharlien">
+                        <i className="fa fa-twitter" aria-hidden="true"></i>
+                        Twitter
+                    </a>
+                    &middot;
+                    <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">
+                        <i className="fa fa-linkedin-square" aria-hidden="true"></i>
+                        LinkedIn
+                    </a>
+                    &middot;
+                    <a href="https://www.instagram.com/hellochar">
+                        <i className="fa fa-instagram" aria-hidden="true"></i>
+                        Instagram
+                    </a>
                 </p>
             </footer>
         )

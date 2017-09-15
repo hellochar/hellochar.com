@@ -12,6 +12,12 @@
     .content-section {
         // adding padding-top to account for header when navving to it
         padding-top: 80px;
+
+        > h1 {
+            text-align: center;
+            margin: 40px;
+            font-size: 3em;
+        }
     }
 }
 
@@ -40,6 +46,18 @@
         font-size: 30px;
         font-weight: bold;
         margin: 1em 0;
+    }
+}
+
+.contact-links a {
+    margin: 0 15px;
+
+    .fa {
+        margin-right: 5px;
+    }
+
+    &:first-of-type {
+        margin-left: 0;
     }
 }
 
