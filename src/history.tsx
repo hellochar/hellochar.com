@@ -2,7 +2,7 @@ import * as React from "react";
 
 export const HistorySection = () => (
     <section className="content-section history" id="history">
-        <h1>Big List of Stuff (Work History)</h1>
+        <h1>Big List of Stuff</h1>
         <History2017 />
         <History2016 />
         <HistoryG year="2015" items={9} />
