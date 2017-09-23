@@ -30,6 +30,11 @@ a {
     &:hover {
         border-bottom: 3px solid $black;
     }
+
+    &:active {
+        position: relative;
+        top: 1px;
+    }
 }
 
 body {
