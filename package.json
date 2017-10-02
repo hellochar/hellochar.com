@@ -10,6 +10,7 @@
     "prod:server": "node ./bin/www"
   },
   "dependencies": {
+    "@types/classnames": "^2.2.3",
     "@types/jquery": "^3.2.9",
     "@types/query-string": "^4.3.1",
     "@types/react": "^15.0.38",
