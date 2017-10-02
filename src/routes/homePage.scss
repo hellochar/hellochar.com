@@ -93,23 +93,28 @@
     }
 }
 
-.row {
+.images {
     display: flex;
     margin: 20px 0;
 
-    > .row-item {
+    > .image {
         flex: 1 0 0;
 
-        .row-image {
+        img {
             width: 100%;
             height: auto;
         }
 
-        ~ .row-item {
+        ~ .image {
             margin-left: 10px;
         }
     }
+
+    &.full-size {
+        flex-direction: column;
+    }
 }
+
 
 .video {
     margin: 20px auto;
