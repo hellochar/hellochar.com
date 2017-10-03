@@ -18,7 +18,7 @@ const Title: React.StatelessComponent<{href?: string}> = ({href, children}) => {
         : <a href={href}>{children}</a>;
 
     return (
-        <h2 className="history-item-title">{titleElement}</h2>
+        <span className="history-item-title">{titleElement}</span>
     )
 };
 
@@ -213,21 +213,44 @@ const History2015 = () => (
 const History2014 = () => (
     <History name="2014">
         <p>
-            GGJ2014 - CYMK.
+            <Title href="https://globalgamejam.org/2014/games/cmyk">GGJ2014 - CYMK.</Title> Multiplayer
+            real-time cooperative online puzzle game. Centered around the notion of 
+            different perceptions to the same problem, each player can only interact with objects
+            that are similarly colored.
+            <Images>
+                {[<img src="https://globalgamejam.org/sites/default/files/styles/game_sidebar__wide/public/game/featured_image/cmyk_screenshot.png?itok=URolMaCD&timestamp=1390780093" />]}
+            </Images>
         </p>
         <p>
-            Maker Faire 2014
+            <Title>Multimedia Orchestra @Berkeley</Title>. Multimedia Orchestra @Berkeley was a student organization
+            dedicated to giving students opportunities to learn and share interactive art, creative code, instrument making,
+            Max/MSP, etc. We organized student shows of art installations, live visuals influenced by musicians' EEG signals,
+            traditional art/painting, group singalongs, etc, along with a trip to Maker Faire 2014.
+            <Images>
+                <img src="/assets/images/history/multimediaorchestra/3.jpg" />
+                <img src="/assets/images/history/multimediaorchestra/1.jpg" />
+                <img src="/assets/images/history/multimediaorchestra/5.jpg" />
+                <img src="/assets/images/history/multimediaorchestra/6.jpg" />
+                <img src="/assets/images/history/multimediaorchestra/7.jpg" />
+                <img src="/assets/images/history/multimediaorchestra/2.jpg" />
+                <img src="/assets/images/history/multimediaorchestra/4.jpg" />
+            </Images>
         </p>
         <p>
-            Multimedia Orchestra @Berkeley. Organized events, provided community space and learning opportunities.
-            Held public media concerts. [link] [link] [video] [media] [image]
+            <Title>EEG piece</Title>. Read input data from the emotive EEG on a guitarist performing live and use 
+            it to feed a 3D superformula piece. Made for the Multimedia Orchestra Spring 2014 show.
+            <Images>
+                {[<img src="/assets/images/history/multimediaorchestra/eeg.png" />]}
+            </Images>
         </p>
         <p>
-            EEG piece. Read input data from the emotive EEG in collaboration with a guitarist performing live
-            [link] [link] [video]
-        </p>
-        <p>
-        flappybird ai
+            <Title href="https://github.com/hellochar/flappybird-ai">flappybird-ai</Title>. Simple "AI" program that plays flappy bird for you.
+            It constantly takes screenshots of flappy bird running on an emulator on your computer, does extremely primitive object detection to
+            build a model of the game, and then uses that model of the game to decide whether to "tap" the emulator screen or not.
+            <Images>
+                <img src="https://raw.githubusercontent.com/hellochar/flappybird-ai/master/gameplay.gif" />
+                <img src="https://raw.githubusercontent.com/hellochar/flappybird-ai/master/highscore.png" />
+            </Images>
         </p>
         <p>
         <Title>party-quest.</Title> Inspired by Twitch Plays Pokemon, Party-Quest is a real time
@@ -236,7 +259,7 @@ const History2014 = () => (
         spikes, trapdoors, and exploding pigs. Designed to be a party
         game projected onto a large screen, anyone can visit www.party-quest.com
         to get a set of controls on their phone or computer. The game was designed
-        to 
+        to:
         <ol>
             <li>
                 Be intuitively understandable - there are no on screen instructions,
@@ -254,15 +277,16 @@ const History2014 = () => (
         character, applying a force impulse. Multiple users tapping together will apply
         a larger force and thus move faster - if they can agree on where to go. Together,
         users have to avoid spikes, dodge moving enemies, step over floor buttons to activate doors,
-        use wooden crates as shields, and navigate under icy conditions. It was shown
-        at Multimedia Orchestra's Spring Show 2014 and Maker Faire 2014.
-        [video] [image] [image] [image]
+        use wooden crates as shields, and navigate under icy conditions. Shown
+        at Multimedia Orchestra's Spring 2014 show and Maker Faire 2014.
         </p>
         <p>
         <Title href="https://github.com/hellochar/growth">growth.</Title> Real-time VJ
         software connected to live performance on the Novation Launch Control.
-        <img src="https://raw.githubusercontent.com/hellochar/growth/master/example1.gif" />
-        <img src="https://raw.githubusercontent.com/hellochar/growth/master/example2.gif" />
+        <Images>
+            <img src="https://raw.githubusercontent.com/hellochar/growth/master/example1.gif" />
+            <img src="https://raw.githubusercontent.com/hellochar/growth/master/example2.gif" />
+        </Images>
         </p>
         <p>
             <Title href="p5wscala.wordpress.com">p5wscala</Title>. My college blog dedicated to my creative coding using Processing 
