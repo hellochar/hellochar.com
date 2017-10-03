@@ -114,8 +114,8 @@ const History2015 = () => (
             that featured custom visuals, musicians, and (my responsibility) an interactive multimedia art gallery. I found, organized,
             and supported digital artists in the space. <a href="https://www.facebook.com/miorel/media_set?set=a.10107535453402791.1073742061.2051980&type=3">
             See photos of the show. </a>
-            <iframe className="video" src="https://player.vimeo.com/video/150231439" width="640" height="360" frameBorder="0" allowFullScreen></iframe>
             <Images>
+                <iframe className="video" src="https://player.vimeo.com/video/150231439" width="640" height="360" frameBorder="0" allowFullScreen></iframe>
                 <img src="/assets/images/history/sentience/5.jpg" />
                 <img src="/assets/images/history/sentience/6.jpg" />
                 <img src="/assets/images/history/sentience/4.jpg" />
@@ -156,10 +156,10 @@ const History2015 = () => (
             <img src="https://lh3.googleusercontent.com/SK_JI6q5SWDjiXM298sh6rDyZxXtKH-247wr9hdHeXC119d-_oEaaxyUnECgVeVkiFjuP8EFEg1-W98WWbO17wAnOC2yvgEsE1PD4g3tZCz0CZOb2QKKpm85HUGd1wdF6HlUOjvSYcjExbG6xzSzNIyehwiOm1CcqYYMUlcYE-pjd3g6KQP6f1jSQ-wIUiPLljdvXkbTICkuTaDCtyefyov0SruTwBeDykyjmml090TRbSoUijA0q5fJFGAOoTj0504WvGi7vM82V5wkzBatsXpsrajyv-h0UhWxB0hZ_TQPtawA3DFX8rO5fdt72CXl7ywICFAHYM0lVGFJ_Rd5ROrPfnMHzi02pMcfsuMW5uhyf6ZlOaRkDvWEQL_y9Jmpi3MmE33CTCHoK-8RiqNs6PNiMEIB5Cc-Ev0foRJAyZHTE1I4bn3C3tvaAZ9g0QTtHxRBo0Kwmb-TlWSiaEuG2p5fLjaMsk_wpwnFO9h_lX8K74VfETvjToFb7TuzW5mFeZG_UychCDlAPlc-FJ5-OlTCrU418LCC-W8WPj6cGOf3AhqsF6H0PUlk_axwqn3EWyVsfjwa3YT1RNZautTLProRKqQa0VvclYppwE5rXw=w1525-h858-no" />
             <img src="https://lh3.googleusercontent.com/BMl7yeyuWTxSG9xA6qIYDpx4qhmkYX1iUyrm89jVuJDz3EwMcQIh6smL0yUb5R8SxXifgf1OD-Za2YIrQWmZHj6lPhdxzVrf07yxTAA45__bl8N1qXG_k-xXPuPgPxp4J2DoZH5pyzymUniv_wXTHUnkbl47aXaZ7vhKYPBYeL9sm36sS5tkZ9sy9i_b_jm2gwXXkk-z_zlTSoUxIyShilHjZshbU7uEZvli7OC3HH9nKjfif3pHfFCVLm-dY88DmRNiF760hI3ctnTJVkXPXlzn7UXwaHlMCr47mPaGRbmkg7DxbscNjgoPei7H35Ftnc1C19XselFMkgUSdnqrkacU96vLvrl_4Hjs4tayjg5GX0oQF5ZncOO7TWmQAU_q2bj__kVJcok3B9YJewkXXx1HFmgJJpy3nPQnNJR501beO8fj6IX8k_zeFwV-222K7GjTo775-JjneaX1v_7LoT7erUabpImAV2va8eb7rNYhkJgz_gsOjiIjQ4klYKtiRyf0xCLEqhswMXqHFO4nOkQ9KWo6x91EpXECp380Z67ce8-F27zQqRHSp1o8nYbK5_OrCiBojamvbPBD-ywXpp9gKXIoWzu6ywAaW09xIA=w483-h858-no" />
             <img src="https://lh3.googleusercontent.com/wfYike9dpb5GV6SQzSrGXwDzqPHSgAyS7zyPU1ZU12STWvVN3YXpF9H4MLlKki2YxhNdzi4E5XYd2HNiQuyC10hLU3kObFgY_8GPBScmYECinTaGBSeSocKBoM_q4v39ieeEWdzBUZetGIBUmO3Z1p9tThUNJWYQZ8h-OI5w1q3z2VlAxfE0KKqNSn3ALUwRi5VoNn_cNHanGT4isiumHpPQVlDPoyc2G3sHa_xhby8sJ3sdPv59GmbC1Hkjlia04m2YjRx3plXUs4jMQLZNp9CRu2W5qCA3oN80W4MJfsjuP8CJ-9GvFBNQ7SJFbl2ohai1h6mEX86wwFXL6cdDAuFaPjciVx7RbPJujg_SExjZ1hC1tfzfeEeyF9ChHLAu1qM5CqKQQk3bsC1kD4kiBg2X6JaZgOtiytoAIw1NVvmeL4Uwy-MOvciCNRPD8GHuMrnhf76RZ7530noQ-e7BFc4ayAWq2_gpds4LvNH4g9yfCuXSv9W6z4kfwcU5RgdEA7DxMQn3V689uMXg0UcNMel8blaNkJEx55Op1iQp2UmZQ2cJhKuOPZSE6Log_BW0fR83X8lp3wgqk3-XO1IuWtY6NoQwMBPOjc2H_Tzqlw=w1525-h858-no" />
+            <video autoPlay loop>
+                <source src="/assets/video/history/performingart1_encoded.mp4" />
+            </video>
         </Images>
-        <video autoPlay loop>
-            <source src="/assets/images/history/performingart1_encoded.mp4" />
-        </video>
         </p>
         <p>
         <Title href="http://grayarea.org/education/immersive/">Gray Area Immersive TA - Spring 2015</Title>.
@@ -184,12 +184,40 @@ const History2015 = () => (
             <Title href="https://github.com/hellochar/web-vj">web-vj</Title>.
             real-time vj tool running on the web. Reads MIDI data from the Novation Launch Control MIDI Controller
             and adjusts parameters of a real time 3D scene. Performed at the CCRMA Transitions 2015 concert.
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/VhYl6zShcfI?start=4620" frameBorder="0" allowFullScreen></iframe>
+            <Images>
+                {[<iframe width="560" height="315" src="https://www.youtube.com/embed/VhYl6zShcfI?start=4620" frameBorder="0" allowFullScreen></iframe>]}
+            </Images>
         </p>
         <p>
             <Title href="https://github.com/data-doge/projected-network">projected network (live video feedback).</Title>
             Experiments with live webcam video feedback - pointing a webcam at a wall upon which is being
             projected the webcam input.
+            <Images>
+                <img src="https://lh3.googleusercontent.com/5-QuChH6QPD0bEELncRi1W-jwZnY6VI-fygOHC1i1R9XAiU2KUIU41CRZmrEvSsZlBbtmCCu0MuqmECYZjNSqR4amKkTDSpaHssn9OM4XxE6Vrzbo0-QB8cNzWi1zHvSAMJZutaLJoYurFCi-VF_1135mPw8K3KlYAjhiyGo44kBOy_oFI6VjrHKyhLowN4yW0qGJksYl7t-5R_V1IJGZYJIPvo07rDnp0VtXjUd_Cyh_axrP6gEY8FZs0Wohfb0dQSiR4zDTiMZrSTjOTgXjPsrD4Hw921Ar065FGqCNS20pS8hsj0U1p77pU9L7xZW0SOUzpHd6XFp9lu7MSBEyIEsvumRrJE_McxWfZ318RuIL4YqsRg_B8ezy0UiRfFfbfe8bwiMNamNoQ8VWNQz9QXvsGb3jiOtUVy_mEmQpPfWqofW3lyu9Rk1BkLrzC26Lp-EROrICxrchI28xZWrOIxMS86pJlCTexKzhb9IafDASwejJ2LlRD1o8_mu0CMJt2aeakfmPJmLQGECbye3utrLPm2tJsRMoFho3DdjqjliyuVf6mEOY2aK-TWKpd4ObocBh1ZsS7HkkdFTCWJqs7XJNbzPRNUxoO8rZDWwjQ=w482-h855-no" />
+                <img src="/assets/images/history/projected-network/pulse/00227.png" />
+                <img src="/assets/images/history/projected-network/pulse/00542.png" />
+                <img src="/assets/images/history/projected-network/pulse/00569.png" />
+                <img src="/assets/images/history/projected-network/pulse/01818.png" />
+                <img src="/assets/images/history/projected-network/pulse/01849.png" />
+                <img src="/assets/images/history/projected-network/pulse/02381.png" />
+                <img src="/assets/images/history/projected-network/pulse/02550.png" />
+                <img src="/assets/images/history/projected-network/pulse/03596.png" />
+                <img src="/assets/images/history/projected-network/pulse/05413.png" />
+                <img src="/assets/images/history/projected-network/pulse/05736.png" />
+                <img src="/assets/images/history/projected-network/pulse/05751.png" />
+                <img src="/assets/images/history/projected-network/pulse/07515.png" />
+                <img src="/assets/images/history/projected-network/pulse/07584.png" />
+                <img src="/assets/images/history/projected-network/pulse/07647.png" />
+                <img src="/assets/images/history/projected-network/pulse/08117.png" />
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/Rf7t-KRBbkk" frameBorder="0" allowFullScreen></iframe>
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/iqqaE0KZQkI" frameBorder="0" allowFullScreen></iframe>
+            </Images>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/jXETVVLYl-g" frameBorder="0" allowFullScreen></iframe>
+        </p>
+        <p>
+            <Title>Fractal Chamber (live video feedback).</Title> projector/webcam feedback, fed through openCV to
+            do blob detection which is then overlaid on the original image at an positional offset (and also changes
+            hues over time).
             <Images className="full-size">
                 <img src="/assets/images/history/projected-network/frame00081.png" />
                 <img src="/assets/images/history/projected-network/frame00271.png" />
@@ -199,13 +227,6 @@ const History2015 = () => (
                 <img src="/assets/images/history/projected-network/frame00558.png" />
             </Images>
             <iframe width="560" height="315" src="https://www.youtube.com/embed/w76KgXv5HHI" frameBorder="0" allowFullScreen></iframe>
-            projector/webcam feedback, fed through openCV to do blob detection which is then overlaid on the original image at an positional offset (and also changes hues over time)
-            <Images>
-                <img src="https://lh3.googleusercontent.com/5-QuChH6QPD0bEELncRi1W-jwZnY6VI-fygOHC1i1R9XAiU2KUIU41CRZmrEvSsZlBbtmCCu0MuqmECYZjNSqR4amKkTDSpaHssn9OM4XxE6Vrzbo0-QB8cNzWi1zHvSAMJZutaLJoYurFCi-VF_1135mPw8K3KlYAjhiyGo44kBOy_oFI6VjrHKyhLowN4yW0qGJksYl7t-5R_V1IJGZYJIPvo07rDnp0VtXjUd_Cyh_axrP6gEY8FZs0Wohfb0dQSiR4zDTiMZrSTjOTgXjPsrD4Hw921Ar065FGqCNS20pS8hsj0U1p77pU9L7xZW0SOUzpHd6XFp9lu7MSBEyIEsvumRrJE_McxWfZ318RuIL4YqsRg_B8ezy0UiRfFfbfe8bwiMNamNoQ8VWNQz9QXvsGb3jiOtUVy_mEmQpPfWqofW3lyu9Rk1BkLrzC26Lp-EROrICxrchI28xZWrOIxMS86pJlCTexKzhb9IafDASwejJ2LlRD1o8_mu0CMJt2aeakfmPJmLQGECbye3utrLPm2tJsRMoFho3DdjqjliyuVf6mEOY2aK-TWKpd4ObocBh1ZsS7HkkdFTCWJqs7XJNbzPRNUxoO8rZDWwjQ=w482-h855-no" />
-                <iframe width="560" height="315" src="https://www.youtube.com/embed/jXETVVLYl-g" frameBorder="0" allowFullScreen></iframe>
-                <iframe width="560" height="315" src="https://www.youtube.com/embed/Rf7t-KRBbkk" frameBorder="0" allowFullScreen></iframe>
-                <iframe width="560" height="315" src="https://www.youtube.com/embed/iqqaE0KZQkI" frameBorder="0" allowFullScreen></iframe>
-            </Images>
         </p>
     </History>
 );
@@ -299,7 +320,7 @@ const HistoryOlder = () => (
     <History name="Older">
         <p>
             <video autoPlay loop>
-                <source src="/assets/waterandair.mp4" />
+                <source src="/assets/video/history/waterandair.mp4" />
             </video>
             Water and air.
         </p>

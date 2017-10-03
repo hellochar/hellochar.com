@@ -149,6 +149,7 @@
 
     > .image {
         flex: 1 0 0;
+        overflow: hidden;
 
         img {
             width: 100%;
@@ -161,7 +162,17 @@
     }
 
     &.full-size {
-        flex-direction: column;
+        // flex-direction: column;
+    }
+
+    iframe {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    video {
+        width: 100%;
+        height: auto;
     }
 }
 
