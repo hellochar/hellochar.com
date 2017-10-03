@@ -73,6 +73,7 @@ const History2016 = () => (
         <p>
             <Title href="https://github.com/hellochar/ggj2016">ggj2016</Title>.
             A roguelike video game that uses web technologies and free web assets as much as possible.
+            <a href="https://5-71942994-gh.circle-artifacts.com/0/home/ubuntu/ggj2016/build/index.html"> Play a test build.</a>
             <Images>
                 <img src="/assets/images/history/ggj2016.png" />
                 <img src="http://i.imgur.com/0nRkwvn.png" />
@@ -111,21 +112,31 @@ const History2015 = () => (
             Organizer, curator, and artist for Sentience 2015, an immersive multi-media art exhibit and 3d audio/video
             experience. Sentience was a one night event at Public Works SF
             that featured custom visuals, musicians, and (my responsibility) an interactive multimedia art gallery. I found, organized,
-            and supported digital artists in the space. I designed and implemented a Max/MSP Patch that computes bark coefficients of the 
-            current audio being played in the venue and broadcasts that through the local wifi network - digital artists could then retrieve
-            the coefficients and use it to drive parameters in the digital art pieces.
+            and supported digital artists in the space. <a href="https://www.facebook.com/miorel/media_set?set=a.10107535453402791.1073742061.2051980&type=3">
+            See photos of the show. </a>
             <iframe className="video" src="https://player.vimeo.com/video/150231439" width="640" height="360" frameBorder="0" allowFullScreen></iframe>
-            <a href="https://www.facebook.com/miorel/media_set?set=a.10107535453402791.1073742061.2051980&type=3">Photos of the show.</a>
             <Images>
-                {[<img src="/assets/images/history/sentience_crew.jpg" />]}
+                <img src="/assets/images/history/sentience/5.jpg" />
+                <img src="/assets/images/history/sentience/6.jpg" />
+                <img src="/assets/images/history/sentience/4.jpg" />
+                <img src="/assets/images/history/sentience/7.jpg" />
+                <img src="/assets/images/history/sentience/9.jpg" />
+                <img src="/assets/images/history/sentience/crew.jpg" />
             </Images>
             The crew. Love you guys.
         </p>
         <p>
+            <Title>OSC Bark Coefficient Emitter.</Title> Designed and implemented a Max/MSP Patch that
+            computes the <a href="https://en.wikipedia.org/wiki/Bark_scale">bark coefficients</a> of an
+            audio track, such as the live music being played during the Sentience show, and broadcasts <a href="https://en.wikipedia.org/wiki/Open_Sound_Control">
+            OSC messages</a> through UDP on the local wifi network. Digital artists could then retrieve the coefficients and use it to drive parameters in their art
+            pieces, allowing all the art in a venue to react in tandem to the music.
+        </p>
+        <p>
         <Title>False mirror with tunable parameters</Title>.
-        Personal project for the Sentience show. A 40 inch TV is laid flat upon a six foot wooden box and connected
+        Personal project for the Sentience show. A 40 inch TV is laid flat upon a six foot tall wooden sturcture and connected
         to a laptop running real time visuals inside. The wooden box has physical sliders and knobs placed on it
-        to allow event-goers to interact with the visuals. 
+        to allow event-goers to interact with the visuals. The visuals listen to OSC bark coefficients.
         <Images className="full-size">
             <img src="/assets/images/history/falsemirror/1.jpg" />
             <img src="/assets/images/history/falsemirror/2.jpg" />
@@ -177,7 +188,7 @@ const History2015 = () => (
         </p>
         <p>
             <Title href="https://github.com/data-doge/projected-network">projected network (live video feedback).</Title>
-            Experiments with video feedback - pointing a webcam at a wall upon which is being
+            Experiments with live webcam video feedback - pointing a webcam at a wall upon which is being
             projected the webcam input.
             <Images className="full-size">
                 <img src="/assets/images/history/projected-network/frame00081.png" />
@@ -219,37 +230,43 @@ const History2014 = () => (
         flappybird ai
         </p>
         <p>
-        [link to party-quest.com] party-quest. 
-        Inspired by Twitch Plays Pokemon, Party-Quest is a real time
+        <Title>party-quest.</Title> Inspired by Twitch Plays Pokemon, Party-Quest is a real time
         multiplayer video game in which multiple players control the
         movements of a single character exploring a dungeon full of
         spikes, trapdoors, and exploding pigs. Designed to be a party
         game projected onto a large screen, anyone can visit www.party-quest.com
         to get a set of controls on their phone or computer. The game was designed
-        to 1) be immediately understandable, 2) be playable with any number of
-        players, 3) create a sense of group engagement. The controls are extremely
-        simple - tapping up, down, left, and right moves the character, applying a
-        force impulse. Multiple users tapping together will apply a larger force and
-        thus move faster - if they can agree on where to go. Together, users have to
-        avoid spikes, dodge moving enemies, step over floor buttons to activate doors,
+        to 
+        <ol>
+            <li>
+                Be intuitively understandable - there are no on screen instructions,
+                since users can come and go as they please in the gallery.
+            </li>
+            <li>
+                Be playable with any number of players. The game should be finishable
+                with one player, but feel different with many players.
+            </li>
+            <li>Create a sense of group engagement. Players should feel that their actions
+                affect the group in a significant way.
+            </li>
+        </ol>
+        The controls are extremely simple - tapping up, down, left, and right moves the
+        character, applying a force impulse. Multiple users tapping together will apply
+        a larger force and thus move faster - if they can agree on where to go. Together,
+        users have to avoid spikes, dodge moving enemies, step over floor buttons to activate doors,
         use wooden crates as shields, and navigate under icy conditions. It was shown
         at Multimedia Orchestra's Spring Show 2014 and Maker Faire 2014.
         [video] [image] [image] [image]
         </p>
         <p>
-        growth
-        [gif1] [gif2]
-        Real-time VJ software connected to the Novation Launch Control.
+        <Title href="https://github.com/hellochar/growth">growth.</Title> Real-time VJ
+        software connected to live performance on the Novation Launch Control.
+        <img src="https://raw.githubusercontent.com/hellochar/growth/master/example1.gif" />
+        <img src="https://raw.githubusercontent.com/hellochar/growth/master/example2.gif" />
         </p>
         <p>
-            <Title>p5wscala</Title>. My college blog dedicated to my creative coding using Processing 
+            <Title href="p5wscala.wordpress.com">p5wscala</Title>. My college blog dedicated to my creative coding using Processing 
             with the Scala programming language.
-            [image]
-            [image]
-            [image]
-            [image]
-            [image]
-            [image]
         </p>
     </History>
 );
