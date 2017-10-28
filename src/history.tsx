@@ -86,18 +86,88 @@ interface ImagesProps extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactElement<any>[];
 }
 
-const Images: React.StatelessComponent<ImagesProps> = ({children, ...props}) => {
-    const {className, ...restProps} = props;
-    const finalClassName = classnames("images", className);
-    return <div className={finalClassName} {...restProps}>
-        {
-            children.map((child, i) => (
-                <div key={i} className="image">
-                    {child}
+interface ImagesState {
+    fullScreen: boolean;
+    selectedImageIndex: number;
+}
+
+class Images extends React.Component<ImagesProps, ImagesState> {
+    state = {
+        fullScreen: false,
+        selectedImageIndex: 0,
+    }
+
+    public componentDidMount() {
+        document.addEventListener("keyup", this.handleKeyUp);
+    }
+
+    public componentWillUnmount() {
+        document.removeEventListener("keyup", this.handleKeyUp);
+    }
+
+    public render() {
+        const { children, className, ...restProps } = this.props;
+        const finalClassName = classnames("images", className);
+        return (
+            <div className={finalClassName} {...restProps}>
+                {
+                    children.map((child, i) => (
+                        <div key={i} className="image" onClick={() => this.handleThumbnailClick(i)}>
+                            {child}
+                        </div>
+                    ))
+                }
+                {this.maybeRenderFullScreen()}
+            </div>
+        );
+    }
+
+    private maybeRenderFullScreen() {
+        if (this.state.fullScreen) {
+            return (
+                <div className="images-fullscreen">
+                    <div className="images-fullscreen-image-wrapper">
+                        { this.props.children[this.state.selectedImageIndex] }
+                        <button className="images-fullscreen-button images-fullscreen-button-previous" onClick={this.handleNavPrevious}>&#x3008;</button>
+                        <button className="images-fullscreen-button images-fullscreen-button-next" onClick={this.handleNavNext}>&#x3009;</button>
+                        <button className="images-fullscreen-button images-fullscreen-button-exit" onClick={this.handleNavExit}>&#10006;</button>
+                    </div>
                 </div>
-            ))
+            )
         }
-    </div>
+    }
+
+    private handleKeyUp = (evt: KeyboardEvent) => {
+        if (evt.key === "Escape") {
+            // escape pressed
+            this.handleNavExit();
+        } else if (evt.key === "ArrowLeft") {
+            this.handleNavPrevious();
+        } else if (evt.key === "ArrowRight" ){
+            this.handleNavNext();
+        }
+    }
+
+    private handleThumbnailClick(selectedImageIndex: number) {
+        this.setState({
+            fullScreen: true,
+            selectedImageIndex,
+        })
+    }
+
+    private handleNavPrevious = () => {
+        const selectedImageIndex = ((this.state.selectedImageIndex - 1) + this.props.children.length) % this.props.children.length;
+        this.setState({ selectedImageIndex });
+    }
+
+    private handleNavNext = () => {
+        const selectedImageIndex = ((this.state.selectedImageIndex + 1) + this.props.children.length) % this.props.children.length;
+        this.setState({ selectedImageIndex });
+    }
+
+    private handleNavExit = () => {
+        this.setState({ fullScreen: false });
+    }
 }
 
 const History2015 = () => (
