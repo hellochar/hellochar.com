@@ -2,3 +2,4 @@ node_modules/
 ableton music
 Thumbs.db
 *.js.map
+.idea/
