@@ -56,10 +56,6 @@
         }
     }
 
-    .full-width {
-        margin: 20px 0;
-    }
-
     .history-item-title {
         font-size: 18px;
         font-weight: bold;
@@ -120,13 +116,17 @@
     z-index: 1;
 
     .images-fullscreen-image-wrapper {
+        background: $black;
         height: 100%;
         position: relative;
 
-        img {
-            background: black;
+        img, video, iframe {
             object-fit: contain;
             height: 100%;
+        }
+
+        iframe {
+            height: 100% !important;
         }
     }
 
@@ -136,6 +136,7 @@
         color: $gray3;
         position: absolute;
         font-size: 20px;
+        font-weight: bold;
 
         &:hover {
             cursor: pointer;
