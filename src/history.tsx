@@ -127,19 +127,30 @@ class Images extends React.Component<ImagesProps, ImagesState> {
             return (
                 <div className="images-fullscreen">
                     <div className="images-fullscreen-image-wrapper">
-                        { this.props.children[this.state.selectedImageIndex] }
+                        { this.renderFullScreenChild() }
                         <button className="images-fullscreen-button images-fullscreen-button-previous" onClick={this.handleNavPrevious}>&#x3008;</button>
                         <button className="images-fullscreen-button images-fullscreen-button-next" onClick={this.handleNavNext}>&#x3009;</button>
-                        <button className="images-fullscreen-button images-fullscreen-button-exit" onClick={this.handleNavExit}>&#10006;</button>
+                        <button className="images-fullscreen-button images-fullscreen-button-exit" onClick={this.handleNavExit}>&#215;</button>
                     </div>
                 </div>
             )
         }
     }
 
+    private renderFullScreenChild() {
+        const child = this.props.children[this.state.selectedImageIndex];
+        // specially treat imgs - clicking on them will auto-next
+        if (child.type === "img") {
+            return React.cloneElement(child, {
+                onClick: this.handleNavNext,
+            });
+        } else {
+            return child;
+        }
+    }
+
     private handleKeyUp = (evt: KeyboardEvent) => {
         if (evt.key === "Escape") {
-            // escape pressed
             this.handleNavExit();
         } else if (evt.key === "ArrowLeft") {
             this.handleNavPrevious();
@@ -211,7 +222,7 @@ const History2015 = () => (
             <img src="/assets/images/history/falsemirror/1.jpg" />
             <img src="/assets/images/history/falsemirror/2.jpg" />
             <img src="/assets/images/history/falsemirror/3.jpg" />
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/pc4n7tdlpv8" frameBorder="0" allowFullScreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/pc4n7tdlpv8?rel=0&amp;showinfo=0" frameBorder="0" allowFullScreen></iframe>
         </Images>
         </p>
         <p>
@@ -237,7 +248,11 @@ const History2015 = () => (
         of programming and creative code concepts. As a TA I was responsible for supporting the
         class through an array of teachers and topics such as web skills, Processing,
         Javascript, Arduino, and projection mapping.
-        <img className="full-width" src="https://lh3.googleusercontent.com/Q7doAntds2iA0yz-j40KqqYDdtoh2P_Mr0MzBFIDbuDdBJxD4hSmq8a2CG_cAb-8Gltnufv38Rz8vd51r_WT-p1CobtgWw03oMDqJoXyHAhFIt8c4K6Q5UAmpHw3ImpL-BKqZHGnaO6dVA_QqXtDDFsQVg_n8HZZzD4t8AQIkqaAaJeIeAVwi8NqmRGX5I8_TUKvdNytkxTRti7BtvBXpZZApZi9Gt-YMuHEGx6rfAgr1AFotzJAU6Sqhs2S0bC0p_6sUcURZ-JQoCT_zizThwin2yAUlFzhWp5GrS60G_N7dN6DyV7fjZodKXtPnRnDleIG5DTVq8oNd5Z0zbHo2afx8xg-sI4bUCabPj7ly0TlR8CSu97mO8Jo7L78KJZjAqc8Mkv1npO6M-y6FnVH7pV0iOYB6d1wmP459FdiKL6hYu9uDFqWgPvTxA19RsH8py90wVDQ273C-UD37fYV9L5As--sL1mLZ60A1rBxhfmSFfcGpVcBw8Wy8nCZH5t5YO5LZmSpvpfh1xtjtbRm-fHiwN6tVmqvoImmllQUtspsbRMOSEdbbdexkgLT81lZ9ar0_DTpSLvCdBjsxHMWel3wmB77EM1Pn0-0JDEEOw=w1632-h918-no" />
+        <Images>
+            {[
+                <img src="https://lh3.googleusercontent.com/Q7doAntds2iA0yz-j40KqqYDdtoh2P_Mr0MzBFIDbuDdBJxD4hSmq8a2CG_cAb-8Gltnufv38Rz8vd51r_WT-p1CobtgWw03oMDqJoXyHAhFIt8c4K6Q5UAmpHw3ImpL-BKqZHGnaO6dVA_QqXtDDFsQVg_n8HZZzD4t8AQIkqaAaJeIeAVwi8NqmRGX5I8_TUKvdNytkxTRti7BtvBXpZZApZi9Gt-YMuHEGx6rfAgr1AFotzJAU6Sqhs2S0bC0p_6sUcURZ-JQoCT_zizThwin2yAUlFzhWp5GrS60G_N7dN6DyV7fjZodKXtPnRnDleIG5DTVq8oNd5Z0zbHo2afx8xg-sI4bUCabPj7ly0TlR8CSu97mO8Jo7L78KJZjAqc8Mkv1npO6M-y6FnVH7pV0iOYB6d1wmP459FdiKL6hYu9uDFqWgPvTxA19RsH8py90wVDQ273C-UD37fYV9L5As--sL1mLZ60A1rBxhfmSFfcGpVcBw8Wy8nCZH5t5YO5LZmSpvpfh1xtjtbRm-fHiwN6tVmqvoImmllQUtspsbRMOSEdbbdexkgLT81lZ9ar0_DTpSLvCdBjsxHMWel3wmB77EM1Pn0-0JDEEOw=w1632-h918-no" />
+            ]}
+        </Images>
         </p>
         <p>
             <Title>Natural Habitat.</Title> Natural Habitat explores the made up worlds we
@@ -255,7 +270,7 @@ const History2015 = () => (
             real-time vj tool running on the web. Reads MIDI data from the Novation Launch Control MIDI Controller
             and adjusts parameters of a real time 3D scene. Performed at the CCRMA Transitions 2015 concert.
             <Images>
-                {[<iframe width="560" height="315" src="https://www.youtube.com/embed/VhYl6zShcfI?start=4620" frameBorder="0" allowFullScreen></iframe>]}
+                {[<iframe width="560" height="315" src="https://www.youtube.com/embed/VhYl6zShcfI?start=4620&amp;rel=0&amp;showinfo=0" frameBorder="0" allowFullScreen></iframe>]}
             </Images>
         </p>
         <p>
@@ -279,10 +294,10 @@ const History2015 = () => (
                 <img src="/assets/images/history/projected-network/pulse/07584.png" />
                 <img src="/assets/images/history/projected-network/pulse/07647.png" />
                 <img src="/assets/images/history/projected-network/pulse/08117.png" />
-                <iframe width="560" height="315" src="https://www.youtube.com/embed/Rf7t-KRBbkk" frameBorder="0" allowFullScreen></iframe>
-                <iframe width="560" height="315" src="https://www.youtube.com/embed/iqqaE0KZQkI" frameBorder="0" allowFullScreen></iframe>
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/Rf7t-KRBbkk?rel=0&amp;showinfo=0" frameBorder="0" allowFullScreen></iframe>
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/iqqaE0KZQkI?rel=0&amp;showinfo=0" frameBorder="0" allowFullScreen></iframe>
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/jXETVVLYl-g?rel=0&amp;showinfo=0" frameBorder="0" allowFullScreen></iframe>
             </Images>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/jXETVVLYl-g" frameBorder="0" allowFullScreen></iframe>
         </p>
         <p>
             <Title>Fractal Chamber (live video feedback).</Title> projector/webcam feedback, fed through openCV to
@@ -296,7 +311,7 @@ const History2015 = () => (
                 <img src="/assets/images/history/projected-network/frame00487.png" />
                 <img src="/assets/images/history/projected-network/frame00558.png" />
             </Images>
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/w76KgXv5HHI" frameBorder="0" allowFullScreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/w76KgXv5HHI?rel=0&amp;showinfo=0" frameBorder="0" allowFullScreen></iframe>
         </p>
     </History>
 );
