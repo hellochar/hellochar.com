@@ -16,7 +16,7 @@
         }
 
         > p {
-            $p-width: 600px;
+            $p-width: 700px;
             $p-margin-left: 50px;
 
             position: relative;
@@ -25,6 +25,7 @@
             font-family: $arial-family;
             margin-left: $p-margin-left;
             max-width: $p-width;
+            text-align: justify;
 
             $horizontal-line-left: $p-margin-left - $vertical-line-left;
             $horizontal-line-top: 0.9em;
@@ -62,26 +63,25 @@
         font-family: $palatino-family;
     }
 
-    .history-item-small {
-        margin-top: 16px;
+    // .history-item-small {
+    //     margin-top: 16px;
 
-        ~ p {
-            margin-top: 16px;
-        }
-    }
+    //     ~ p {
+    //         margin-top: 16px;
+    //     }
+    // }
 }
 
 .images {
     display: flex;
-    margin: 20px 0;
     flex-wrap: wrap;
 
     > .image {
-        flex: 0 0 120px;
+        flex: 0 0 140px;
 
         cursor: pointer;
         padding: 10px;
-        height: 120px;
+        height: 140px;
 
         img {
             width: 100%;
@@ -165,7 +165,9 @@
     }
 }
 
-.video {
+.vimeo-video {
     margin: 20px auto;
     display: block;
+    width: 100%;
+    height: 300px;
 }
