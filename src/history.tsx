@@ -195,8 +195,8 @@ const History2015 = () => (
             that featured custom visuals, musicians, and (my responsibility) an interactive multimedia art gallery. I found, organized,
             and supported digital artists in the space. <a href="https://www.facebook.com/miorel/media_set?set=a.10107535453402791.1073742061.2051980&type=3">
             See photos of the show. </a>
+            <iframe className="vimeo-video" src="https://player.vimeo.com/video/150231439" frameBorder="0" allowFullScreen></iframe>
             <Images>
-                <iframe className="video" src="https://player.vimeo.com/video/150231439" width="640" height="360" frameBorder="0" allowFullScreen></iframe>
                 <img src="/assets/images/history/sentience/5.jpg" />
                 <img src="/assets/images/history/sentience/6.jpg" />
                 <img src="/assets/images/history/sentience/4.jpg" />
@@ -395,7 +395,7 @@ const History2014 = () => (
         </Images>
         </p>
         <p>
-            <Title href="p5wscala.wordpress.com">p5wscala</Title>. My college blog dedicated to my creative coding using Processing 
+            <Title href="http://p5wscala.wordpress.com">p5wscala</Title>. My college blog dedicated to my creative coding using Processing 
             with the Scala programming language.
         </p>
     </History>
