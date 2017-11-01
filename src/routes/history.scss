@@ -73,30 +73,44 @@
 }
 
 .images {
-    display: flex;
-    flex-wrap: wrap;
+    margin-top: 10px;
+    $width: 700px;
+    $num-images-per-row: 5;
+    $in-between-space: 20px;
 
-    > .image {
-        flex: 0 0 140px;
+    .images-row {
+        display: flex;
 
-        cursor: pointer;
-        padding: 10px;
-        height: 140px;
-
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        ~ .images-row {
+            margin-top: $in-between-space;
         }
 
-        iframe {
-            width: 100% !important;
-            height: 100% !important;
-        }
+        .image-wrapper {
+            $image-size: ($width - ($num-images-per-row - 1) * $in-between-space) / $num-images-per-row;
+            flex: 0 0 $image-size;
+            cursor: pointer;
+            height: $image-size;
+            position: relative;
 
-        video {
-            width: 100%;
-            height: 100%;
+            ~ .image-wrapper {
+                margin-left: $in-between-space;
+            }
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            iframe {
+                width: 100% !important;
+                height: 100% !important;
+            }
+
+            video {
+                width: 100%;
+                height: 100%;
+            }
         }
     }
 }
@@ -165,9 +179,8 @@
     }
 }
 
-.vimeo-video {
-    margin: 20px auto;
+.figure-video {
+    margin-top: 10px;
     display: block;
     width: 100%;
-    height: 300px;
 }
