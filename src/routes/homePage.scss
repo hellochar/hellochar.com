@@ -6,8 +6,7 @@
 
 .content {
     position: relative;
-    // offset from the top header
-    top: 350px;
+    padding-top: 300px;
     padding-bottom: 80px;
 
     .content-section {
@@ -61,5 +60,27 @@
         &:first-of-type {
             margin-left: 0;
         }
+    }
+}
+
+footer {
+    font-family: $palatino-family;
+    background: $black;
+    color: $white;
+    margin-left: -100vw;
+    margin-right: -100vw;
+
+    .get-in-touch {
+        color: $white;
+        padding: 80px;
+        text-align: center;
+        font-size: 30px;
+    }
+
+    .copyright {
+        color: $gray3;
+        padding-bottom: 20px;
+        text-align: center;
+        font-size: 16px;
     }
 }

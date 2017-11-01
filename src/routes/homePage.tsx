@@ -16,6 +16,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
             <div className="homepage">
                 { this.renderHeader() }
                 { this.renderContent() }
+                { this.renderFooter() }
             </div>
         );
     }
@@ -41,6 +42,19 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <HistorySection />
             </main>
         );
+    }
+
+    private renderFooter() {
+        return (
+            <footer>
+                <a href="mailto:hellocharlien@hotmail.com">
+                    <div className="get-in-touch">Get in touch</div>
+                </a>
+                <div className="copyright">
+                    &copy; 2013 - present Xiaohan Zhang
+                </div>
+            </footer>
+        )
     }
 
     private renderWork() {
