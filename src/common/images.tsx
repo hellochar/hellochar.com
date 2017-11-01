@@ -36,7 +36,7 @@ export class Images extends React.Component<ImagesProps, ImagesState> {
                 <div className="images-row">
                     {
                         rowChildren.map((child, i) => (
-                            <div key={i} className="image-wrapper" onClick={() => this.handleThumbnailClick(i)}>
+                            <div key={i} className="image-wrapper" onClick={() => this.handleThumbnailClick(i + 5*rowIndex)}>
                                 {child}
                             </div>
                         ))

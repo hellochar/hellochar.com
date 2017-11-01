@@ -69,8 +69,19 @@ const History2017 = () => (
 
 const History2016 = () => (
     <History name="2016">
+        <p>
+            <Title>Glowcon 2016</Title>. Modified Gravity to take input from the Leap Motion sensor. Users could attract particles with their pointer finger.
+            I spent some time finding just the right interaction here. Originally the finger z position controlled 
+            <iframe className="figure-video" height="393" src="https://www.youtube.com/embed/ovFrFWpg2ro?rel=0&amp;showinfo=0&amp;start=75" frameBorder="0" allowFullScreen></iframe>
+            <Images>
+                <img src="/assets/images/history/gravity_leapmotion1.png" />
+                <img src="/assets/images/history/gravity_leapmotion2.png" />
+                <img src="/assets/images/history/gravity_leapmotion3.png" />
+            </Images>
+        </p>
         <p className="history-item-small">
             <Title href="https://www.youtube.com/watch?v=Z8WhaCPIrzs">3D Web Fest 2016.</Title> Performed web-vj.
+            <iframe className="figure-video" height="393" src="https://www.youtube.com/embed/Z8WhaCPIrzs?rel=0&amp;showinfo=0&amp;start=555" frameBorder="0" allowFullScreen></iframe>
         </p>
         <p>
             <Title href="https://github.com/hellochar/ggj2016">ggj2016</Title>.
@@ -135,6 +146,7 @@ const History2015 = () => (
         the room. Explores how humans percieve and then fabricate digital versions
         of the world, which are then placed into the world itself.
         Shown at the <a href="http://codame.com/events/art-tech-festival-2015">Codame Art+Tech Festival 2015</a>.
+        <iframe className="figure-video" src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FCODAME.ART.TECH%2Fvideos%2F1084699231606404%2F&show_text=0&width=700" height="393" scrolling="no" frameBorder="0" allowTransparency allowFullScreen></iframe>
         <video className="figure-video" autoPlay loop>
             <source src="/assets/video/history/performingart1_encoded.mp4" />
         </video>
@@ -214,6 +226,23 @@ const History2015 = () => (
                 <img src="/assets/images/history/projected-network/frame00558.png" />
             </Images>
         </p>
+        <p>
+            <Title>3D Web Fest 2015.</Title> Performed Gravity.
+            <iframe className="figure-video" height="393" src="https://www.youtube.com/embed/D-FILGRGqXw?rel=0&amp;showinfo=0&amp;start=314" frameBorder="0" allowFullScreen></iframe>
+            <Images>
+                <img src="/assets/images/history/3dwebfest2015/2.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/3.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/4.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/5.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/6.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/7.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/8.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/11.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/13.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/15.jpg" />
+                <img src="/assets/images/history/3dwebfest2015/16.jpg" />
+            </Images>
+            </p>
     </History>
 );
 
@@ -257,6 +286,26 @@ const History2014 = () => (
             <Images>
                 <img src="https://raw.githubusercontent.com/hellochar/flappybird-ai/master/gameplay.gif" />
                 <img src="https://raw.githubusercontent.com/hellochar/flappybird-ai/master/highscore.png" />
+            </Images>
+        </p>
+        <p>
+            <Title>vectorfield</Title>. Kinect body motions hook into a modified fluid dynamics simulation. Users could "push" energy around to each other,
+            create swirls, and affect each other's energy.
+            <Images>
+                <img src="/assets/images/history/vectorfield3.png" />
+                <img src="/assets/images/history/vectorfield4.png" />
+                <img src="/assets/images/history/vectorfield6.png" />
+            </Images>
+        </p>
+        <p>
+            <Title>gravity 2013</Title>. Reworking gravity to do up to 500k particles using Scala's parallel collections. Additionally, use the Leap Motion controller
+            to control both a attractor and a repeller.
+            <Images>
+                <img src="/assets/images/history/gravity2.png" />
+                <img src="/assets/images/history/gravity6.png" />
+                <img src="/assets/images/history/gravity7.png" />
+                <img src="/assets/images/history/gravity8.png" />
+                <img src="/assets/images/history/gravity9.png" />
             </Images>
         </p>
         <p>
