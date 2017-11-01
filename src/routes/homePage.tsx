@@ -1,14 +1,14 @@
 import * as React from "react";
+import { RouteComponentProps } from "react-router";
+import { Link, NavLink } from "react-router-dom";
 
 import { Line } from "../line/index";
 import { ISketch } from "../sketch";
 import { SketchComponent } from "../sketchComponent";
 import { Dots } from "../dots/index";
 import { Waves } from "../waves/index";
-import { Link, NavLink } from "react-router-dom";
-import { RouteComponentProps } from "react-router";
 import { ShrinkingHeader } from "./shrinkingHeader";
-import { HistorySection } from "../history";
+import { HistorySection } from "./history";
 
 export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     render() {
