@@ -59,10 +59,12 @@ const History2017 = () => (
             commitment, effective practice, and finishing things.
         </p>
         <p className="history-item-small">
-            <Title href="https://github.com/hellochar/Shadow-of-the-Honey-Badger">GGJ2017 - Shadow of the Honey Badger.</Title>
-        </p>
-        <p className="history-item-small">
-            <Title href="https://github.com/hellochar/7drl-2017">7drl2017.</Title>
+            <Title href="https://github.com/hellochar/7drl-2017">7drl2017.</Title> Experimental game. The main game mechanic was algebraic tree structure manipulation.
+            Tree literals were called "crystals" which contained a Number (positive or negative) and a Flavor (red/green/blue). Flavors "beat"
+            each other in a rock paper scissors fashion. In addition to literals, there are operators that can take one/two/many nodes and modify them.
+            The magnifier: number *= magnifier. The modulator: color becomes what it's strong against. The mogrifier: color becomes what it's weak against.
+            You would play as a wizard that had a weapon, a shield, and an HP bar for each Flavor. Combat was a turn based approach where wizards could
+            either attack, or swap nodes around.
         </p>
     </History>
 );
@@ -79,14 +81,33 @@ const History2016 = () => (
                 <img src="/assets/images/history/gravity_leapmotion3.png" />
             </Images>
         </p>
+        <p>
+            <Title>20mission's going fourth party.</Title> Put web-vj out there for any party goers to experiment and play with.
+            <Images>
+                <img src="https://scontent-sjc2-1.xx.fbcdn.net/v/t31.0-8/12976944_782102208966_8471501848337640168_o.jpg?oh=55df77b59446a79fb21860936a091a3e&oe=5A6DA062" />
+                <img src="https://scontent-sjc2-1.xx.fbcdn.net/v/t31.0-8/12967967_782102149086_7897997315764132786_o.jpg?oh=0cf4cb046ca5672fcad5c99a904314a9&oe=5AACB804" />
+                <img src="https://scontent-sjc2-1.xx.fbcdn.net/v/t31.0-8/12916973_782100392606_7699892061294714129_o.jpg?oh=ebba32ac613b17f9dd8160792cf130b1&oe=5A66DD7D" />
+                <img src="https://scontent-sjc2-1.xx.fbcdn.net/v/t31.0-8/12916257_782100751886_4221315897959822193_o.jpg?oh=ad3f65215a930465fed35dfeeb5e5171&oe=5A78C88C" />
+                <img src="https://scontent-sjc2-1.xx.fbcdn.net/v/t31.0-8/12719515_10153513276983733_2917334965798317860_o.jpg?oh=4b336376113869bc29afae4954acf775&oe=5AA3B41F" />
+                <img src="https://scontent-sjc2-1.xx.fbcdn.net/v/t31.0-8/12719168_10153513277278733_409027285730465035_o.jpg?oh=90eb3d1932a6421f0767369d01509aa3&oe=5A75D617" />
+                <img src="https://scontent-sjc2-1.xx.fbcdn.net/v/t31.0-8/12909609_10153513188588733_1763786166874271113_o.jpg?oh=5ed0372dcdb087c47a607441f377d137&oe=5A6873BD" />
+            </Images>
+        </p>
         <p className="history-item-small">
             <Title href="https://www.youtube.com/watch?v=Z8WhaCPIrzs">3D Web Fest 2016.</Title> Performed web-vj.
             <iframe className="figure-video" height="393" src="https://www.youtube.com/embed/Z8WhaCPIrzs?rel=0&amp;showinfo=0&amp;start=555" frameBorder="0" allowFullScreen></iframe>
         </p>
         <p>
             <Title href="https://github.com/hellochar/ggj2016">ggj2016</Title>.
-            A roguelike video game that uses web technologies and free web assets as much as possible.
-            <a href="https://5-71942994-gh.circle-artifacts.com/0/home/ubuntu/ggj2016/build/index.html"> Play a test build.</a>
+            An unfinished roguelike video game that used web technologies and free web assets as much as possible. <a
+            href="https://5-71942994-gh.circle-artifacts.com/0/home/ubuntu/ggj2016/build/index.html">
+            Play a test build here.</a> It featured:
+            <ul>
+                <li>12 different level generation algorithms based on Conway's Game of Life- CA simulations.</li>
+                <li>Basic inventory, weapon, hunger, warmth, and energy system.</li>
+                <li>Modernized UI that took full advantage of web capabilities e.g. popovers when mousing over items to see their description, CSS animations, etc.</li>
+                <li>React/Redux state model for easy time travel debugging.</li>
+            </ul>
             <Images>
                 <img src="/assets/images/history/ggj2016.png" />
                 <img src="http://i.imgur.com/0nRkwvn.png" />
@@ -158,7 +179,11 @@ const History2015 = () => (
         </Images>
         </p>
         <p>
-        <Title href="http://grayarea.org/education/immersive/">Gray Area Immersive TA - Spring 2015</Title>.
+            <Title>Gray Area Summer 2015 Immersive Instructor</Title>.
+            Taught the first week of Gray Area's Immersive program (basics of programming and Processing).
+        </p>
+        <p>
+        <Title href="http://grayarea.org/education/immersive/">Gray Area Spring 2015 Immersive TA</Title>.
         Ten week program teaching students from mostly non-technical backgrounds a variety
         of programming and creative code concepts. As a TA I was responsible for supporting the
         class through an array of teachers and topics such as web skills, Processing,
