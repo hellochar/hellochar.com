@@ -13,6 +13,7 @@ import "./index.scss";
 
 const root = document.createElement("div");
 document.body.appendChild(root);
+root.className = "root";
 ReactDOM.render(
     <BrowserRouter>
         <Switch>

@@ -1,4 +1,5 @@
 $black: #10161A;
+$white: #ffffff;
 $dark-gray1: #182026;
 $gray1: #5C7080;
 $gray3: #8A9BA8;
@@ -66,4 +67,8 @@ p ~ p {
 .sketch-component {
     width: 100%;
     height: 100%;
+}
+
+.root {
+    overflow: hidden;
 }
