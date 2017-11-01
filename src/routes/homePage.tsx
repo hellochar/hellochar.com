@@ -94,9 +94,9 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <h1>Get in touch</h1>
                 <p>
                     Lets chat! I'm interested in giving talks, workshops, teaching, showing work,
-                    site specific installations, interactive 
-                    work opportunities, getting a coffee or email correspondence, and generally
-                    connecting.
+                    site specific installations, interactive work opportunities, getting a coffee,
+                    email correspondence, collaborations, going for a walk in the park, connecting
+                    like old friends, running away from a bear, etc. etc!
                 </p>
                 <p className="contact-links">
                     <a href="mailto:hellocharlien@hotmail.com">
