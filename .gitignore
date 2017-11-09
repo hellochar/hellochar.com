@@ -2,3 +2,6 @@ node_modules/
 ableton music
 Thumbs.db
 *.js.map
+.idea/
+yarn-error.log
+public/app.js

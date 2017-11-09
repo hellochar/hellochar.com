@@ -1,0 +1,74 @@
+$black: #10161A;
+$white: #ffffff;
+$dark-gray1: #182026;
+$gray1: #5C7080;
+$gray3: #8A9BA8;
+$gray5: #BFCCD6;
+$light-gray1: #CED9E0;
+
+$palatino-family: Palatino, Palatino Linotype, Palatino LT STD, Book Antiqua, serif; 
+$georgia-family: Georgia,Cambria,"Times New Roman",Times,serif;
+$arial-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+
+@import "~normalize.css/";
+
+@import "./routes/index";
+@import "./oldSketchStyles";
+
+* {
+    box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: $palatino-family;
+    margin: 0;
+}
+
+a {
+    color: $dark-gray1;
+    text-decoration: none;
+    transition: border-bottom .05s;
+
+    &:hover {
+        border-bottom: 3px solid $black;
+    }
+
+    &:active {
+        position: relative;
+        top: 1px;
+    }
+}
+
+body {
+    font-family: $palatino-family;
+}
+
+p {
+    font-weight: 400;
+    font-style: normal;
+    font-size: 21px;
+    line-height: 1.58;
+    font-family: $georgia-family;
+}
+
+figure {
+    margin: 0;
+}
+
+h1 ~ p {
+    margin-top: 10px;
+}
+
+p ~ p {
+    margin-top: 30px;
+}
+
+// fully fills its parent
+.sketch-component {
+    width: 100%;
+    height: 100%;
+}
+
+.root {
+    overflow: hidden;
+}
