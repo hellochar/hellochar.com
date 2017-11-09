@@ -1,0 +1,86 @@
+.homepage {
+    max-width: 800px;
+    margin: auto;
+    padding: 0 10px;
+}
+
+.content {
+    position: relative;
+    padding-top: 300px;
+    padding-bottom: 80px;
+
+    .content-section {
+        // adding padding-top to account for header when navving to it
+        padding-top: 80px;
+
+        > h1 {
+            text-align: center;
+            margin: 40px;
+            font-size: 3em;
+        }
+    }
+}
+
+.self {
+    display: block;
+    width: 400px;
+    height: 400px;
+    border-radius: 100%;
+    object-fit: cover;
+    margin: 80px auto;
+}
+
+.full-width {
+    display: block;
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+}
+
+.work-highlight {
+    text-align: center;
+
+    .work-highlight-name {
+        display: inline-block;
+        font-family: $palatino-family;
+        font-size: 30px;
+        font-weight: bold;
+        margin: 1em 0;
+    }
+}
+
+.contact-links {
+    a {
+        margin: 0 15px;
+
+        .fa {
+            margin-right: 5px;
+        }
+
+        &:first-of-type {
+            margin-left: 0;
+        }
+    }
+}
+
+.page-footer {
+    font-family: $palatino-family;
+    background: $black;
+    color: $white;
+    margin-left: -100vw;
+    margin-right: -100vw;
+
+    .get-in-touch {
+        color: $white;
+        padding: 80px;
+        text-align: center;
+        font-size: 30px;
+    }
+
+    .copyright {
+        color: $gray3;
+        padding-bottom: 20px;
+        text-align: center;
+        font-size: 16px;
+    }
+}
