@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "build": "webpack",
-    "start": "webpack-dev-server",
+    "start": "webpack-dev-server --open --config webpack.dev.js",
     "prod": "npm-run-all prod:build prod:server",
-    "prod:build": "webpack --config webpack.config.prod.js || true",
+    "prod:build": "webpack --config webpack.prod.js || true",
     "prod:server": "node ./bin/www"
   },
   "dependencies": {
@@ -33,7 +33,8 @@
     "react-router-hash-link": "^1.1.0",
     "serve-favicon": "~2.1.3",
     "three": "^0.70.1",
-    "typescript": "^2.4.2"
+    "typescript": "^2.4.2",
+    "uglifyjs-webpack-plugin": "^1.0.1"
   },
   "devDependencies": {
     "css-loader": "^0.28.4",
@@ -42,7 +43,7 @@
     "sass-loader": "^6.0.6",
     "style-loader": "^0.18.2",
     "ts-loader": "^2.3.1",
-    "webpack": "^3.3.0",
+    "webpack": "^3.8.1",
     "webpack-dev-server": "^2.6.1",
     "webpack-merge": "^4.1.1"
   }

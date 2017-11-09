@@ -1,11 +1,6 @@
 const path = require("path");
 
 module.exports = {
-    devServer: {
-        historyApiFallback: true,
-        contentBase: path.join(__dirname, "public"),
-    },
-    devtool: 'inline-source-map',
     entry: "./src/index.tsx",
     output: {
         publicPath: "/",

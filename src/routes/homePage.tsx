@@ -47,7 +47,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     private renderFooter() {
         return (
             <footer className="page-footer">
-                <a href="/#contact">
+                <a href="#contact">
                     <div className="get-in-touch">Get in touch</div>
                 </a>
                 <div className="copyright">
