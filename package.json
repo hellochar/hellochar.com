@@ -8,7 +8,7 @@
   "scripts": {
     "build": "webpack",
     "start": "webpack-dev-server --open --config webpack.dev.js",
-    "prod": "npm-run-all prod:build prod:server",
+    "prod": "npm-run-all -p prod:build prod:server",
     "prod:build": "webpack --config webpack.prod.js || true",
     "prod:server": "node ./bin/www"
   },
