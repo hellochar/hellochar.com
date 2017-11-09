@@ -59,10 +59,10 @@ const History2017 = () => (
             commitment, effective practice, and finishing things.
         </p>
         <p className="history-item-small">
-            <Title href="https://github.com/hellochar/7drl-2017">7drl2017.</Title> Experimental game. The main game mechanic was algebraic tree structure manipulation.
-            Tree literals were called "crystals" which contained a Number (positive or negative) and a Flavor (red/green/blue). Flavors "beat"
-            each other in a rock paper scissors fashion. In addition to literals, there are operators that can take one/two/many nodes and modify them.
-            The magnifier: number *= magnifier. The modulator: color becomes what it's strong against. The mogrifier: color becomes what it's weak against.
+            <Title href="https://github.com/hellochar/7drl-2017">7drl2017.</Title> Experimental game. The main game mechanic is algebraic tree structure manipulation.
+            Tree literals are called "crystals" and contain a Number (positive or negative) and a Flavor (red/green/blue). Flavors "beat"
+            each other in a rock paper scissors fashion. In addition to literals, there are operators that can take one nodes and modify them,
+            e.g. the modulator changes the color of the crystal into what the original color was strong against.
             You would play as a wizard that had a weapon, a shield, and an HP bar for each Flavor. Combat was a turn based approach where wizards could
             either attack, or swap nodes around.
         </p>
@@ -109,8 +109,11 @@ const History2016 = () => (
                 <li>React/Redux state model for easy time travel debugging.</li>
             </ul>
             <Images>
-                <img src="/assets/images/history/ggj2016.png" />
+                <img src="/assets/images/history/ggj2016/0.png" />
                 <img src="http://i.imgur.com/0nRkwvn.png" />
+                <img src="/assets/images/history/ggj2016/1.png" />
+                <img src="/assets/images/history/ggj2016/2.png" />
+                <img src="/assets/images/history/ggj2016/3.png" />
             </Images>
         </p>
     </History>
@@ -168,9 +171,6 @@ const History2015 = () => (
         of the world, which are then placed into the world itself.
         Shown at the <a href="http://codame.com/events/art-tech-festival-2015">Codame Art+Tech Festival 2015</a>.
         <iframe className="figure-video" src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2FCODAME.ART.TECH%2Fvideos%2F1084699231606404%2F&show_text=0&width=700" height="393" scrolling="no" frameBorder="0" allowTransparency allowFullScreen></iframe>
-        <video className="figure-video" autoPlay loop>
-            <source src="/assets/video/history/performingart1_encoded.mp4" />
-        </video>
         <Images>
             <img src="https://lh3.googleusercontent.com/K_uTz-i8g-eiqRzpYJa8y6mz1eVnOMJSXHnUnVhoJOA9a51G1QVFfAMbsrOuJwBOLc-kMBjjHjeu76Qp2mppDqWUNG-4VUw4-vZMmr1f_opsAX4ysivo0cFmlGKM1oL3Dlt8RdcPbmrVVhA1duFUiuv9o3HrgPjcCk90QD0VQ4_eMhgsrSeqKwNaSFYB1s8H2LihSUbWTl1vNXeNt_KjceoPEeg4Prldq0PxvpDDFG4Yb-BPNBhVIGJA2HpqTSeM9SeDWfMVP8RhR9vclHRzfz2RSHVUSRd1TdA3PUm1xqPE7iLZvVG9eEknPwV2sbJU5egGSl5ugJuMDQNTx-NOzJEbmvA3jeUfB_r6ULDrLVPjiVXU2wdIW-gHFXz1nzYaX3c0VkoqLqA3Jmml6xPje6hgm4rLvJx11EUC53TqkE2HhirTZvuAtL4gk-YMOG6nrNYLvwzcUf5Sk9ENPKNrq9Uqt0yhTbly7ZpIolxsS1qGu3vRHAZAblY_mspsODDyBDMBYXfPzozw87Np-Yuv0r7MAivrM3SAnxyR0SsHfrcLSHbeSzhSs26V3bbU3faGVYuYb-SWBbfeVul2QPD5BCrlqRuiYgwO4jq4KMPkTA=w1525-h858-no" />
             <img src="https://lh3.googleusercontent.com/SK_JI6q5SWDjiXM298sh6rDyZxXtKH-247wr9hdHeXC119d-_oEaaxyUnECgVeVkiFjuP8EFEg1-W98WWbO17wAnOC2yvgEsE1PD4g3tZCz0CZOb2QKKpm85HUGd1wdF6HlUOjvSYcjExbG6xzSzNIyehwiOm1CcqYYMUlcYE-pjd3g6KQP6f1jSQ-wIUiPLljdvXkbTICkuTaDCtyefyov0SruTwBeDykyjmml090TRbSoUijA0q5fJFGAOoTj0504WvGi7vM82V5wkzBatsXpsrajyv-h0UhWxB0hZ_TQPtawA3DFX8rO5fdt72CXl7ywICFAHYM0lVGFJ_Rd5ROrPfnMHzi02pMcfsuMW5uhyf6ZlOaRkDvWEQL_y9Jmpi3MmE33CTCHoK-8RiqNs6PNiMEIB5Cc-Ev0foRJAyZHTE1I4bn3C3tvaAZ9g0QTtHxRBo0Kwmb-TlWSiaEuG2p5fLjaMsk_wpwnFO9h_lX8K74VfETvjToFb7TuzW5mFeZG_UychCDlAPlc-FJ5-OlTCrU418LCC-W8WPj6cGOf3AhqsF6H0PUlk_axwqn3EWyVsfjwa3YT1RNZautTLProRKqQa0VvclYppwE5rXw=w1525-h858-no" />
@@ -378,12 +378,6 @@ const History2014 = () => (
 
 const HistoryOlder = () => (
     <History name="Older">
-        <p>
-            <video autoPlay loop>
-                <source src="/assets/video/history/waterandair.mp4" />
-            </video>
-            Water and air.
-        </p>
         <p>
 [ ]   Universe
 

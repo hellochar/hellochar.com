@@ -46,8 +46,8 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
 
     private renderFooter() {
         return (
-            <footer>
-                <a href="mailto:hellocharlien@hotmail.com">
+            <footer className="page-footer">
+                <a href="/#contact">
                     <div className="get-in-touch">Get in touch</div>
                 </a>
                 <div className="copyright">
@@ -104,7 +104,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
 
     private renderContact() {
         return (
-            <footer className="content-section contact" id="contact">
+            <section className="content-section contact" id="contact">
                 <h1>Get in touch</h1>
                 <p>
                     Lets chat! I'm interested in giving talks, workshops, teaching, showing work,
@@ -143,7 +143,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                         Instagram
                     </a>
                 </p>
-            </footer>
+            </section>
         )
     }
 
