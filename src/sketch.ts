@@ -48,7 +48,7 @@ export interface ISketch extends UIEventReciever {
 
     instructions?: string;
 
-    resize(width: number, height: number): void;
+    resize?(width: number, height: number): void;
 
     darkTheme?: boolean;
 }
@@ -146,7 +146,7 @@ export function initializeSketch(sketch: ISketch, $sketchParent: JQuery, options
 
     sketch.init(renderer, audioContext);
     requestAnimationFrame(animateAndRequestAnimFrame);
-    return $sketchElement;
+
 }
 
 export interface ISketchOptions {
