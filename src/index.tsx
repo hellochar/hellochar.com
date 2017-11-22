@@ -7,6 +7,7 @@ import { Cymatics } from "./cymatics";
 import { Dots } from "./dots";
 import { Line } from "./line";
 import { Waves } from "./waves";
+import { Flame } from "./flame";
 import { HomePage } from "./routes/homePage";
 import { FullPageSketch } from "./routes/fullPageSketch";
 
@@ -22,6 +23,7 @@ ReactDOM.render(
             <Route path="/dots" component={() => <FullPageSketch sketch={Dots} />} />
             <Route path="/waves" component={() => <FullPageSketch sketch={Waves} />} />
             <Route path="/cymatics" component={() => <FullPageSketch sketch={Cymatics} />} />
+            <Route path="/flame" component={() => <FullPageSketch sketch={Flame} />} />
             <Route path="/" component={HomePage} />
         </Switch>
     </BrowserRouter>,
