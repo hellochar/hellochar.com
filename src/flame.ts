@@ -1,39 +1,50 @@
 import * as THREE from 'three';
 
 import { map } from './math';
-import { ISketch } from './sketch';
+import { ISketch, SketchAudioContext } from './sketch';
+import { MouseEvent } from 'react';
+
+type Variation = (point: THREE.Vector3) => void;
+
+interface Affine {
+    color: THREE.Color;
+    weight: number;
+    transform: Variation;
+    variation: Variation;
+}
 
 const VARIATIONS = {
-    Linear: function(point) {
+    Linear: (point: THREE.Vector3) => {
         // no op
     },
-    Sinusoidal: function(point) {
+    Sinusoidal: (point: THREE.Vector3) => {
         point.set(Math.sin(point.x), Math.sin(point.y), 0);
     },
-    Spherical: function(point) {
+    Spherical: (point: THREE.Vector3) => {
         point.multiplyScalar(1 / point.lengthSq());
     },
-    Polar: function(point) {
+    Polar: (point: THREE.Vector3) => {
         point.set(Math.atan2(point.y, point.x) / Math.PI, point.length() - 1, 0);
     },
-    Swirl: function(point) {
+    Swirl: (point: THREE.Vector3) => {
         var r2 = point.lengthSq();
         point.set(point.x * Math.sin(r2) - point.y * Math.cos(r2),
                     point.x * Math.cos(r2) + point.y * Math.sin(r2),
                     0);
     },
-    interpolated: function(variationA, variationB, interpolationFn) {
-        return function(pointA) {
-            var pointB = pointA.clone();
-            variationA(pointA);
-            variationB(pointB);
-            var interpolatedAmount = interpolationFn();
-            pointA.lerp(pointB, interpolatedAmount);
-        };
-    }
 };
 
-function stepAffine(affine, point, color) {
+function createInterpolatedVariation(variationA: Variation, variationB: Variation, interpolationFn: () => number) {
+    return function(pointA: THREE.Vector3) {
+        var pointB = pointA.clone();
+        variationA(pointA);
+        variationB(pointB);
+        var interpolatedAmount = interpolationFn();
+        pointA.lerp(pointB, interpolatedAmount);
+    };
+}
+
+function stepAffine(affine: Affine, point: THREE.Vector3, color: THREE.Color) {
     // apply the affine transform to the point
     affine.transform(point);
 
@@ -45,26 +56,28 @@ function stepAffine(affine, point, color) {
     color.add(affine.color);
 }
 
-function AffineSet(affines) {
-    this.affines = affines;
-    this.totalWeight = this.affines.map(function (affine) { return affine.weight; }).reduce(function(x,y) { return x+y; });
-}
+class AffineSet {
+    public totalWeight: number;
+    constructor (public affines: Affine[]) {
+        this.totalWeight = this.affines.map(function (affine) { return affine.weight; }).reduce(function(x,y) { return x+y; });
+    }
 
-AffineSet.prototype.choose = function() {
-    var weight = Math.random() * this.totalWeight;
-    var chosenAffine = null;
-    this.affines.reduce(function (oldWeightSum, thisAffine) {
-        if (oldWeightSum < weight && weight <= thisAffine.weight + oldWeightSum + 1e-10) {
-            chosenAffine = thisAffine;
-        };
-        return thisAffine.weight + oldWeightSum;
-    }, 0);
-    return chosenAffine;
-}
+    public choose() {
+        const weight = Math.random() * this.totalWeight;
+        let chosenAffine = this.affines[0];
+        this.affines.reduce(function (oldWeightSum, thisAffine) {
+            if (oldWeightSum < weight && weight <= thisAffine.weight + oldWeightSum + 1e-10) {
+                chosenAffine = thisAffine;
+            };
+            return thisAffine.weight + oldWeightSum;
+        }, 0);
+        return chosenAffine;
+    }
 
-AffineSet.prototype.step = function(point, color) {
-    var affine = this.choose();
-    stepAffine(affine, point, color);
+    public step(point: THREE.Vector3, color: THREE.Color) {
+        const affine = this.choose();
+        stepAffine(affine, point, color);
+    }
 }
 
 var SERPINSKI_TRIANGLE = new AffineSet([
@@ -94,45 +107,64 @@ var SERPINSKI_TRIANGLE = new AffineSet([
     },
 ]);
 
-function SuperPoint(point, color, rootGeometry) {
-    this.point = point;
-    this.color = color;
-    this.rootGeometry = rootGeometry;
-    rootGeometry.vertices.push(point);
-    rootGeometry.colors.push(color);
-}
-
-SuperPoint.prototype.updateSubtree = function(affineSet, depth) {
-    if (depth === 0) return;
-
-    if (this.children == null) {
-        this.children = affineSet.affines.map(function () {
-            return new SuperPoint(new THREE.Vector3(), new THREE.Color(), this.rootGeometry);
-        }.bind(this));
+class SuperPoint {
+    public children: SuperPoint[];
+    constructor(
+        public point: THREE.Vector3,
+        public color: THREE.Color,
+        public rootGeometry: THREE.Geometry) {
+        this.point = point;
+        this.color = color;
+        this.rootGeometry = rootGeometry;
+        rootGeometry.vertices.push(point);
+        rootGeometry.colors.push(color);
     }
-    this.children.forEach(function (child, idx) {
-        var affine = affineSet.affines[idx];
-        // reset the child's position to your updated position so it's ready to get stepped
-        child.point.copy(this.point);
-        child.color.copy(this.color);
-        stepAffine(affine, child.point, child.color);
-        child.updateSubtree(affineSet, depth - 1);
-    }.bind(this));
+
+    public updateSubtree(affineSet: AffineSet, depth: number) {
+        if (depth === 0) return;
+
+        if (this.children === undefined) {
+            this.children = affineSet.affines.map(() => {
+                return new SuperPoint(new THREE.Vector3(), new THREE.Color(), this.rootGeometry);
+            });
+        }
+
+        this.children.forEach((child, idx) => {
+            var affine = affineSet.affines[idx];
+            // reset the child's position to your updated position so it's ready to get stepped
+            child.point.copy(this.point);
+            child.color.copy(this.color);
+            stepAffine(affine, child.point, child.color);
+            child.updateSubtree(affineSet, depth - 1);
+        });
+    }
 }
 
-var scene, renderer, camera, geometry, pointCloud;
 
-var superPoint;
+let renderer: THREE.WebGLRenderer;
+let camera: THREE.PerspectiveCamera;
+let scene: THREE.Scene;
+let geometry: THREE.Geometry;
+let material: THREE.PointCloudMaterial;
+let pointCloud: THREE.PointCloud;
+let raycaster: THREE.Raycaster;
+let mousePressed = false;
+let mousePosition = new THREE.Vector2(0, 0);
+let lastMousePosition = new THREE.Vector2(0, 0);
 
-function init(_renderer, _audioContext) {
+let superPoint: SuperPoint;
+
+function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
     scene = new THREE.Scene();
 
     renderer = _renderer;
 
     var aspectRatio = renderer.domElement.height / renderer.domElement.width;
     // camera = new THREE.OrthographicCamera(-1.1, 1.1, -1.1*aspectRatio, 1.1*aspectRatio, 1, 1000);
-    camera = new THREE.PerspectiveCamera(0.4, 1 / aspectRatio, 1, 1000);
-    camera.position.z = 500;
+    camera = new THREE.PerspectiveCamera(60, 1 / aspectRatio, 1, 1000);
+    camera.position.z = 3;
+    camera.position.y = -2;
+    camera.position.x = -1;
     camera.lookAt(new THREE.Vector3());
 
     geometry = new THREE.Geometry();
@@ -141,7 +173,7 @@ function init(_renderer, _audioContext) {
 
     var material = new THREE.PointCloudMaterial({
         vertexColors: THREE.VertexColors,
-        size: 2,
+        size: 0.01,
         sizeAttenuation: true
     });
 
@@ -150,9 +182,12 @@ function init(_renderer, _audioContext) {
 }
 
 function animate() {
+    camera.rotateZ(0.001);
     // superPoint.point.set(cX, cY, 0);
-    superPoint.point.set(0,0,0);
-    superPoint.updateSubtree(SERPINSKI_TRIANGLE, 9);
+    const x = performance.now() / 10000;
+    superPoint.point.set(x,0,0);
+    // superPoint.updateSubtree(SERPINSKI_TRIANGLE, 9);
+    superPoint.updateSubtree(SERPINSKI_TRIANGLE, 10);
     // geometry.vertices.forEach(function (point, idx) {
     //     var color = geometry.colors[idx];
     //     color.setRGB(0,0,0);
@@ -163,19 +198,19 @@ function animate() {
 }
 
 var cX = 0, cY = 0;
-function mousemove(event) {
-    var mouseX = event.offsetX == undefined ? event.originalEvent.layerX : event.offsetX;
-    var mouseY = event.offsetY == undefined ? event.originalEvent.layerY : event.offsetY;
+function mousemove(event: JQuery.Event) {
+    var mouseX = event.offsetX == undefined ? (event.originalEvent as any).layerX : event.offsetX;
+    var mouseY = event.offsetY == undefined ? (event.originalEvent as any).layerY : event.offsetY;
 
     cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -4, 4), 3);
     cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 4, -4), 3);
 }
 
-function mousedown(event) {
+function mousedown(event: JQuery.Event) {
 }
 
 function resize() {
-    camera.aspect = renderer.domElement.width / camera.domElement.height;
+    camera.aspect = renderer.domElement.width / renderer.domElement.height;
     camera.updateProjectionMatrix();
 }
 
