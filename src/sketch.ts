@@ -67,16 +67,21 @@ export interface SketchAudioContext extends AudioContext {
  * 
  */
 export function initializeSketch(sketch: ISketch, $sketchParent: JQuery, options: ISketchOptions = DEFAULT_SKETCH_OPTIONS) {
-    var renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
+    let renderer: THREE.WebGLRenderer;
+    try {
+        renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
+    } catch (e) {
+        throw new Error("WebGL error");
+    }
 
     // add sketch element to body
-    var $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
+    const $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
     $sketchParent.append($sketchElement);
 
     // allow canvas to be selectable
     $sketchElement.append(renderer.domElement);
 
-    var $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions!);
+    const $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions!);
     if (options.showInstructions) {
         $sketchElement.append($instructionsElement);
     }
