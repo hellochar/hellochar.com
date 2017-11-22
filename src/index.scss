@@ -65,8 +65,32 @@ p ~ p {
 
 // fully fills its parent
 .sketch-component {
+    background: $light-gray1;
     width: 100%;
     height: 100%;
+    display: flex;
+
+    .sketch-error {
+        animation-duration: 2s;
+        animation-name: opacify-in;
+        margin: auto;
+        text-align: center;
+
+        .back {
+            color: $gray3;
+            font-style: italic;
+        }
+    }
+}
+
+@keyframes opacify-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .root {
