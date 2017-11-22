@@ -1,7 +1,7 @@
 import * as $ from "jquery";
 import * as THREE from "three";
 
-import { map } from "../math";
+import { map, lerp } from "../math";
 import { ISketch, SketchAudioContext } from '../sketch';
 
 const FORCE_CONSTANT = 0.25;
@@ -51,11 +51,12 @@ class Cell {
         });
         this.neighbors = [];
 
-        this.height = 0;
+        this.height = 0
         this.accumulatedHeight = 0;
     }
 
     public setForce() {
+        this.force = 0;
         if (this.positionFunction != null) {
             return;
         }
@@ -77,7 +78,7 @@ class Cell {
         }
         // this.accumulatedHeight = (this.accumulatedHeight + Math.abs(this.height) / (this.accumulatedHeight + 1)) * 0.99;
         this.accumulatedHeight = (this.accumulatedHeight + Math.abs(this.height)) * 0.99;
-        this.force = 0;
+        // this.accumulatedHeight = (this.accumulatedHeight + this.height) * 0.99;
     }
 
     public updateColor() {
@@ -88,7 +89,22 @@ class Cell {
             // var colorFactor = this.accumulatedHeight / 20;
             var colorFactor = this.accumulatedHeight / 100;
             // var colorFactor = this.height / 9 + 0.5;
-            this.color.setRGB(colorFactor, colorFactor, colorFactor);
+            // this.color.setRGB(colorFactor, colorFactor, colorFactor);
+
+            
+            const h = ((((this.height + 5) / 10) % 1) + 1) % 1;
+            // const h = this.height > 0 ? 0 : 0.5;
+            // const s = (this.velocity + 10) / 20;
+            // const s = (this.force + 10) / 20;
+            // const brightness = Math.sqrt(Math.abs(h - 0.5));
+            // const brightness = Math.abs(this.force);
+            // const brightness = colorFactor;
+            // const h = (this.force + 10) / 20;
+            this.color.setHSL(
+                h,
+                1,
+                colorFactor
+            );
         }
     }
 }
@@ -166,7 +182,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     renderer.setClearColor(0xfcfcfc);
     renderer.clear();
     // camera = new THREE.PerspectiveCamera(60, renderer.domElement.width / renderer.domElement.height, 1, 400);
-    var height = 420;
+    var height = 200;
     var width = renderer.domElement.width / renderer.domElement.height * height;
     camera = new THREE.OrthographicCamera(-width/2, width/2, height/2, -height/2, 1, 400);
     camera.position.z = 170;
@@ -177,7 +193,8 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     grid.cells[Math.floor(grid.width/2)][Math.floor(grid.height/2)].positionFunction = (function() {
         var t = 0;
         return function() {
-            t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -1, 1.6515));
+            // t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -1, 1.6515));
+            t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
             return 20 * Math.sin(t);
         };
     })();
@@ -203,20 +220,19 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
 }
 
 function animate(dt: number) {
-    if (mousePressed) {
-        // raycast to find droplet location
-        raycaster.setFromCamera(mousePosition, camera);
-        var intersections = raycaster.intersectObject( pointCloud );
-        intersections.forEach(function (intersection) {
-            var index = intersection.index;
-            var x = Math.floor(index / grid.height);
-            var y = index % grid.height;
+    // raycast to find droplet location
+    raycaster.setFromCamera(mousePosition, camera);
+    var intersections = raycaster.intersectObject( pointCloud );
+    intersections.forEach(function (intersection) {
+        var index = intersection.index;
+        var x = Math.floor(index / grid.height);
+        var y = index % grid.height;
 
-            var cell = grid.cells[x][y];
+        var cell = grid.cells[x][y];
+        if (mousePressed) {
             cell.freeze();
-        });
-    }
-    // controls.update();
+        }
+    });
 
     grid.step();
 
