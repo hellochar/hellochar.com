@@ -36,6 +36,14 @@ export const History: React.StatelessComponent<{ name: string }> = ({name, child
 const History2017 = () => (
     <History name="2017">
         <p>
+            <Title>Drawing with Gravitational Waves</Title>. Drawing With Gravitational Waves was a performance and improvisational
+            science/music/art experience in Wallenberg Theatre at Stanford on November 17th, 2017, in collaboartion with painter and artist
+            Pamela Davis Kivelson and classical improv violinist Lucy Liuxuan Zhang. I wrote phyics simulations in Processing inspired by gravitational
+            waves and adopted a pure black/white visual style (the right half of the screen) to contrast with Pam's paintings on the left.
+            We further processed Pam's paintings with different Processing sketches to intermix traditional art with digital work. 
+            <iframe className="figure-video" src="https://player.vimeo.com/video/243603441" height="393" frameBorder="0" allowFullScreen></iframe>
+        </p>
+        <p>
             <Title href="https://hellochar.github.io/phone-theremin">Phone Theremin</Title>.
             Turn your phone into a musical instrument. Visit the website on mobile and simply rotate your phone to change the pitch and volume.
             Made at the <a href="http://topos.house/">Topos House</a> <a href="http://hypotext.co/antidisciplinarathon">Antidisciplinarathon</a>. 
@@ -73,7 +81,10 @@ const History2016 = () => (
     <History name="2016">
         <p>
             <Title>Glowcon 2016</Title>. Modified Gravity to take input from the Leap Motion sensor. Users could attract particles with their pointer finger.
-            I spent some time finding just the right interaction here. Originally the finger z position controlled 
+            I spent some time finding just the right interaction here. Originally the finger z position controlled the intensity of the pull (starting with no pull)
+            but I found users confused and unable to have direct control. Since the average person has no experience interacting with a Leap Motion controller I
+            made the interaction dead simple - just attract to wherever the index finger is. Additionally I added the whole hand skeleton to help make that connection
+            between physical and digital space.
             <iframe className="figure-video" height="393" src="https://www.youtube.com/embed/ovFrFWpg2ro?rel=0&amp;showinfo=0&amp;start=75" frameBorder="0" allowFullScreen></iframe>
             <Images>
                 <img src="/assets/images/history/gravity_leapmotion1.png" />

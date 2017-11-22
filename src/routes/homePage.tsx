@@ -74,7 +74,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <p>Hi there.</p>
                 <p>My name's Xiaohan, but everyone just calls me Han-Han (the X can be intimidating!).</p>
                 <p>
-                    I am a web developer and creative coder in the San Francisco Bay Area, interested in
+                    I am a new media artist in the San Francisco Bay Area, interested in
                     discovering and sharing the beauty of mathematics and physics. Topics of interest
                     include real time interactive art, emergent systems, generative design, self organization,
                     and physical simulations. I also care about UI, teaching, contributing to the broader
