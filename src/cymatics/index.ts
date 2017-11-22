@@ -175,6 +175,7 @@ let pointCloud: THREE.PointCloud;
 let raycaster: THREE.Raycaster;
 let mousePressed = false;
 let mousePosition = new THREE.Vector2(0, 0);
+let lastMousePosition = new THREE.Vector2(0, 0);
 
 function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
     renderer = _renderer;
@@ -220,25 +221,47 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
 }
 
 function animate(dt: number) {
-    // raycast to find droplet location
-    raycaster.setFromCamera(mousePosition, camera);
-    var intersections = raycaster.intersectObject( pointCloud );
-    intersections.forEach(function (intersection) {
-        var index = intersection.index;
-        var x = Math.floor(index / grid.height);
-        var y = index % grid.height;
+    if (mousePressed) {
+        let gridStart = new THREE.Vector2();
+        let gridEnd = new THREE.Vector2();
+        // raycast to find droplet location
+        raycaster.setFromCamera(mousePosition, camera);
+        raycaster.intersectObject(pointCloud).forEach((intersection) => {
+            const { index } = intersection;
+            const x = Math.floor(index / grid.height);
+            const y = index % grid.height;
 
-        var cell = grid.cells[x][y];
-        if (mousePressed) {
+            gridStart.set(x, y);
+        });
+
+        raycaster.setFromCamera(lastMousePosition, camera);
+        raycaster.intersectObject(pointCloud).forEach((intersection) => {
+            const { index } = intersection;
+            const x = Math.floor(index / grid.height);
+            const y = index % grid.height;
+
+            gridEnd.set(x, y);
+        });
+
+        const dist = gridStart.distanceTo(gridEnd);
+        for (let i = 0; i <= dist; i++) {
+            const lerped = new THREE.Vector2(gridStart.x, gridStart.y);
+            if (dist > 0) {
+                lerped.lerp(gridEnd, i / dist);
+            }
+            const {x, y} = lerped.floor();
+
+            var cell = grid.cells[x][y];
             cell.freeze();
         }
-    });
+    }
 
     grid.step();
 
     geometry.colorsNeedUpdate = true;
     camera.lookAt(new THREE.Vector3(0, 0, 0));
     renderer.render(scene, camera);
+    lastMousePosition.set(mousePosition.x, mousePosition.y);
 }
 
 function mousedown(event: JQuery.Event) {
