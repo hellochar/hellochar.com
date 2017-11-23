@@ -43,9 +43,9 @@
   version "15.0.38"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-15.0.38.tgz#6afea31a9fe66304af474106ba372ddaba449995"
 
-"@types/three@^0.84.18":
-  version "0.84.18"
-  resolved "https://registry.yarnpkg.com/@types/three/-/three-0.84.18.tgz#761f62a08845a280fea78d05a5b524c18c3ec390"
+"@types/three@^0.84.33":
+  version "0.84.33"
+  resolved "https://registry.yarnpkg.com/@types/three/-/three-0.84.33.tgz#81fba49b0c80f89411809da3779a41a85936869d"
   dependencies:
     "@types/webvr-api" "*"
 
@@ -4249,9 +4249,9 @@ tar@^2.0.0, tar@^2.2.1:
     fstream "^1.0.2"
     inherits "2"
 
-three@^0.70.1:
-  version "0.70.1"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.70.1.tgz#459e5eabf2240bda58ea4ba412c14d0b3e4a250d"
+three@^0.88.0:
+  version "0.88.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.88.0.tgz#4256c2fc38e4fb23a0d23eba2b6cce4df8e466d5"
 
 through2@^2.0.0:
   version "2.0.3"
