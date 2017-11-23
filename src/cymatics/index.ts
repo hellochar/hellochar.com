@@ -170,8 +170,8 @@ let renderer: THREE.WebGLRenderer;
 let camera: THREE.OrthographicCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
-let material: THREE.PointCloudMaterial;
-let pointCloud: THREE.PointCloud;
+let material: THREE.PointsMaterial;
+let pointCloud: THREE.Points;
 let raycaster: THREE.Raycaster;
 let mousePressed = false;
 let mousePosition = new THREE.Vector2(0, 0);
@@ -207,12 +207,12 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
             geometry.colors.push(cell.color);
         });
     });
-    material = new THREE.PointCloudMaterial({
+    material = new THREE.PointsMaterial({
         size: renderer.domElement.height / height,
         sizeAttenuation: false,
         vertexColors: THREE.VertexColors
     });
-    pointCloud = new THREE.PointCloud(geometry, material);
+    pointCloud = new THREE.Points(geometry, material);
     pointCloud.position.set(-grid.width/2, -grid.height/2, 0);
     scene.add(pointCloud);
 

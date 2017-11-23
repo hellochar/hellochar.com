@@ -186,7 +186,7 @@ var camera: THREE.OrthographicCamera;
 var composer: THREE.EffectComposer;
 var filter: THREE.ShaderPass;
 var geometry: THREE.Geometry;
-var pointCloud: THREE.PointCloud;
+var pointCloud: THREE.Points;
 var renderer: THREE.WebGLRenderer;
 var scene: THREE.Scene;
 
@@ -405,14 +405,14 @@ function instantiatePointCloudAndGeometry() {
 
     var starTexture = THREE.ImageUtils.loadTexture("/assets/sketches/line/star.png");
     starTexture.minFilter = THREE.NearestFilter;
-    var material = new THREE.PointCloudMaterial({
+    var material = new THREE.PointsMaterial({
         size: 15,
         sizeAttenuation: false,
         map: starTexture,
         opacity: 0.18,
         transparent: true
     });
-    pointCloud = new THREE.PointCloud(geometry, material);
+    pointCloud = new THREE.Points(geometry, material);
     scene.add(pointCloud);
 }
 

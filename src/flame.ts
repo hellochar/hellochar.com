@@ -234,8 +234,8 @@ let renderer: THREE.WebGLRenderer;
 let camera: THREE.PerspectiveCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
-let material: THREE.PointCloudMaterial;
-let pointCloud: THREE.PointCloud;
+let material: THREE.PointsMaterial;
+let pointCloud: THREE.Points;
 let raycaster: THREE.Raycaster;
 let mousePressed = false;
 let mousePosition = new THREE.Vector2(0, 0);
@@ -268,7 +268,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
         branches,
     );
 
-    material = new THREE.PointCloudMaterial({
+    material = new THREE.PointsMaterial({
         vertexColors: THREE.VertexColors,
         size: 0.003,
         transparent: true,
@@ -276,9 +276,24 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
         sizeAttenuation: true
     });
 
-    pointCloud = new THREE.PointCloud(geometry, material);
+    pointCloud = new THREE.Points(geometry, material);
     pointCloud.rotateX(-Math.PI / 2);
     scene.add(pointCloud);
+
+    // const plane = new THREE.Mesh(
+    //     // new THREE.PlaneGeometry(200, 200, 1, 1),
+    //     new THREE.BoxGeometry(5, 5, 0.05),
+    //     new THREE.MeshBasicMaterial({
+    //         color: 0xffffff,
+    //         opacity: 0.5,
+    //         transparent: true
+    //     })
+    // );
+    // plane.rotateX(-Math.PI / 2);
+    // plane.translateZ(-1);
+    // scene.add(plane);
+
+    // scene.add(new THREE.AxisHelper(1));
 }
 
 function animate() {
@@ -319,7 +334,7 @@ function keypress(event: JQuery.Event) {
 
         scene.remove(pointCloud);
 
-        pointCloud = new THREE.PointCloud(geometry, material);
+        pointCloud = new THREE.Points(geometry, material);
         pointCloud.rotateX(-Math.PI / 2);
         scene.add(pointCloud);
     }
