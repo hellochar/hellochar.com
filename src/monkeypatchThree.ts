@@ -7,6 +7,6 @@ import "../old/threejs/postprocessing/EffectComposer";
 import "../old/threejs/postprocessing/MaskPass";
 import "../old/threejs/postprocessing/RenderPass";
 import "../old/threejs/postprocessing/ShaderPass";
-import "../old/threejs/shaders/DotScreenShader";
 import "../old/threejs/shaders/CopyShader";
+import "../old/threejs/shaders/DotScreenShader";
 import "../old/threejs/stats.min";

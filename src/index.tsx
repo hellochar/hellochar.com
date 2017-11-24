@@ -4,13 +4,13 @@ import * as ReactGA from "react-ga";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 
 import "./monkeypatchThree";
+import { FullPageSketch } from "./routes/fullPageSketch";
+import { HomePage } from "./routes/homePage";
 import { Cymatics } from "./sketches/cymatics";
 import { Dots } from "./sketches/dots";
+import { Flame } from "./sketches/flame";
 import { Line } from "./sketches/line";
 import { Waves } from "./sketches/waves";
-import { Flame } from "./sketches/flame";
-import { HomePage } from "./routes/homePage";
-import { FullPageSketch } from "./routes/fullPageSketch";
 
 import "./index.scss";
 
@@ -45,5 +45,5 @@ ReactDOM.render(
             </Switch>
         </div>
     </BrowserRouter>,
-    root
+    root,
 );

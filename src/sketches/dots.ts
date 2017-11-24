@@ -2,8 +2,8 @@ import * as $ from "jquery";
 import { parse } from "query-string";
 import * as THREE from "three";
 
-import { ISketch, SketchAudioContext } from "../sketch";
 import { ExplodeShader } from "../common/explodeShader";
+import { ISketch, SketchAudioContext } from "../sketch";
 
 interface Point {
     x: number;
@@ -15,19 +15,19 @@ const SIMULATION_SPEED = 3;
 const GRAVITY_CONSTANT = 100;
 const STATIONARY_CONSTANT = 0.01;
 // speed becomes this percentage of its original speed every second
-var PULLING_DRAG_CONSTANT = 0.96075095702;
-var INERTIAL_DRAG_CONSTANT = 0.23913643334;
-var EXTENT = 10;
-var GRID_SIZE = parse(location.search).gridSize || 7;
+let PULLING_DRAG_CONSTANT = 0.96075095702;
+let INERTIAL_DRAG_CONSTANT = 0.23913643334;
+let EXTENT = 10;
+let GRID_SIZE = parse(location.search).gridSize || 7;
 
 function createAudioGroup(audioContext: SketchAudioContext) {
 
     // white noise
-    var noise = (function() {
-        var node = audioContext.createBufferSource()
+    let noise = (function() {
+        let node = audioContext.createBufferSource()
         , buffer = audioContext.createBuffer(1, audioContext.sampleRate * 5, audioContext.sampleRate)
         , data = buffer.getChannelData(0);
-        for (var i = 0; i < buffer.length; i++) {
+        for (let i = 0; i < buffer.length; i++) {
             data[i] = Math.random();
         }
         node.buffer = buffer;
@@ -35,10 +35,9 @@ function createAudioGroup(audioContext: SketchAudioContext) {
         node.start(0);
         return node;
     })();
-    var noiseGain = audioContext.createGain();
+    let noiseGain = audioContext.createGain();
     noiseGain.gain.value = 0;
     noise.connect(noiseGain);
-
 
     // // pink noise from http://noisehack.com/generate-noise-web-audio-api/
     // var source = (function() {
@@ -64,58 +63,58 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     //     return node;
     // })();
 
-    var BASE_FREQUENCY = 164.82;
+    let BASE_FREQUENCY = 164.82;
     function detuned(freq: number, centsOffset: number) {
         return freq * Math.pow(2, centsOffset / 1200);
     }
-    var source1 = (function() {
-        var node = audioContext.createOscillator();
+    let source1 = (function() {
+        let node = audioContext.createOscillator();
         node.frequency.value = detuned(BASE_FREQUENCY / 2, 2);
         node.type = "square";
         node.start(0);
 
-        var gain = audioContext.createGain();
+        let gain = audioContext.createGain();
         gain.gain.value = 0.30;
         node.connect(gain);
 
         return gain;
     })();
-    var source2 = (function() {
-        var node = audioContext.createOscillator();
+    let source2 = (function() {
+        let node = audioContext.createOscillator();
         node.frequency.value = BASE_FREQUENCY;
         node.type = "sawtooth";
         node.start(0);
 
-        var gain = audioContext.createGain();
+        let gain = audioContext.createGain();
         gain.gain.value = 0.30;
         node.connect(gain);
 
         return gain;
     })();
 
-    var sourceGain = audioContext.createGain();
+    let sourceGain = audioContext.createGain();
     sourceGain.gain.value = 0.0;
 
-    var lfo = audioContext.createOscillator();
+    let lfo = audioContext.createOscillator();
     lfo.frequency.value = 8.66;
     lfo.start(0);
 
-    var lfoGain = audioContext.createGain();
+    let lfoGain = audioContext.createGain();
     lfoGain.gain.value = 0;
 
     lfo.connect(lfoGain);
 
-    var filter = audioContext.createBiquadFilter();
+    let filter = audioContext.createBiquadFilter();
     filter.type = "bandpass";
     filter.frequency.value = 0;
     filter.Q.value = 5.18;
 
-    var filter2 = audioContext.createBiquadFilter();
+    let filter2 = audioContext.createBiquadFilter();
     filter2.type = "bandpass";
     filter2.frequency.value = 0;
     filter2.Q.value = 5.18;
 
-    var filterGain = audioContext.createGain();
+    let filterGain = audioContext.createGain();
     filterGain.gain.value = 0.7;
 
     source1.connect(sourceGain);
@@ -130,21 +129,21 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     noiseGain.connect(audioContext.gain);
     filterGain.connect(audioContext.gain);
     return {
-        sourceGain: sourceGain,
-        lfo: lfo,
-        lfoGain: lfoGain,
-        filter: filter,
-        filter2: filter2,
-        filterGain: filterGain,
-        setFrequency: function(freq: number) {
+        sourceGain,
+        lfo,
+        lfoGain,
+        filter,
+        filter2,
+        filterGain,
+        setFrequency(freq: number) {
             filter.frequency.value = freq;
             filter2.frequency.value = freq;
             lfoGain.gain.value = freq * .06;
         },
-        setVolume: function(volume: number) {
+        setVolume(volume: number) {
             sourceGain.gain.value = volume;
             noiseGain.gain.value = volume * 0.05;
-        }
+        },
     };
 }
 
@@ -152,7 +151,7 @@ interface Particle {
     dragRatio: number;
     dx: number;
     dy: number;
-    isStationary: boolean,
+    isStationary: boolean;
     originalX: number;
     originalY: number;
     x: number;
@@ -170,25 +169,25 @@ function createParticle(originalX: number, originalY: number, isStationary: bool
         originalY,
         x: originalX,
         y: originalY,
-        vertex: null!
+        vertex: null!,
     };
 }
 
 let audioGroup: any;
 let attractor: Point | null = null;
-var canvas: HTMLCanvasElement;
+let canvas: HTMLCanvasElement;
 let dragConstant = INERTIAL_DRAG_CONSTANT;
 let mouseX: number, mouseY: number;
 const particles: Particle[] = [];
 
 // threejs stuff
-var camera: THREE.OrthographicCamera;
-var composer: THREE.EffectComposer;
-var filter: THREE.ShaderPass;
-var geometry: THREE.Geometry;
-var pointCloud: THREE.Points;
-var renderer: THREE.WebGLRenderer;
-var scene: THREE.Scene;
+let camera: THREE.OrthographicCamera;
+let composer: THREE.EffectComposer;
+let filter: THREE.ShaderPass;
+let geometry: THREE.Geometry;
+let pointCloud: THREE.Points;
+let renderer: THREE.WebGLRenderer;
+let scene: THREE.Scene;
 
 function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
     audioGroup = createAudioGroup(_audioContext);
@@ -199,8 +198,8 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
     camera.position.z = 500;
 
-    for (var x = -EXTENT * GRID_SIZE; x < canvas.width + EXTENT * GRID_SIZE; x += GRID_SIZE) {
-        for (var y = -EXTENT * GRID_SIZE; y < canvas.height + EXTENT * GRID_SIZE; y += GRID_SIZE) {
+    for (let x = -EXTENT * GRID_SIZE; x < canvas.width + EXTENT * GRID_SIZE; x += GRID_SIZE) {
+        for (let y = -EXTENT * GRID_SIZE; y < canvas.height + EXTENT * GRID_SIZE; y += GRID_SIZE) {
             particles.push(createParticle(x, y, true, 0.9));
             // createParticle(x, y, true, 0.88);
             // createParticle(x, y, true, 0.86);
@@ -213,34 +212,34 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     composer = new THREE.EffectComposer(renderer);
     composer.addPass(new THREE.RenderPass(scene, camera));
     filter = new THREE.ShaderPass(ExplodeShader);
-    filter.uniforms['iResolution'].value = new THREE.Vector2(canvas.width, canvas.height);
+    filter.uniforms.iResolution.value = new THREE.Vector2(canvas.width, canvas.height);
     filter.renderToScreen = true;
     composer.addPass(filter);
 }
 
 function animate(millisElapsed: number) {
-    var timeStep = millisElapsed / 1000 * SIMULATION_SPEED;
-    var averageX = 0, averageY = 0;
-    var averageVel2 = 0;
-    for (var i = 0; i < particles.length; i++) {
-        var particle = particles[i];
+    let timeStep = millisElapsed / 1000 * SIMULATION_SPEED;
+    let averageX = 0, averageY = 0;
+    let averageVel2 = 0;
+    for (let i = 0; i < particles.length; i++) {
+        let particle = particles[i];
         if (attractor != null) {
-            var dx = attractor.x - particle.x;
-            var dy = attractor.y - particle.y;
-            var length2 = Math.sqrt(dx*dx + dy*dy);
-            var forceX = GRAVITY_CONSTANT * dx / length2;
-            var forceY = GRAVITY_CONSTANT * dy / length2;
+            let dx = attractor.x - particle.x;
+            let dy = attractor.y - particle.y;
+            let length2 = Math.sqrt(dx * dx + dy * dy);
+            let forceX = GRAVITY_CONSTANT * dx / length2;
+            let forceY = GRAVITY_CONSTANT * dy / length2;
 
             particle.dx += forceX * timeStep;
             particle.dy += forceY * timeStep;
         }
 
         if (particle.isStationary) {
-            var dx = particle.originalX - particle.x;
-            var dy = particle.originalY - particle.y;
-            var length2 = Math.sqrt(dx*dx + dy*dy);
-            var forceX = STATIONARY_CONSTANT * dx * length2;
-            var forceY = STATIONARY_CONSTANT * dy * length2;
+            let dx = particle.originalX - particle.x;
+            let dy = particle.originalY - particle.y;
+            let length2 = Math.sqrt(dx * dx + dy * dy);
+            let forceX = STATIONARY_CONSTANT * dx * length2;
+            let forceY = STATIONARY_CONSTANT * dy * length2;
 
             particle.dx += forceX * timeStep;
             particle.dy += forceY * timeStep;
@@ -251,7 +250,7 @@ function animate(millisElapsed: number) {
             }
         }
 
-        var thisParticleDragConstant = dragConstant;
+        let thisParticleDragConstant = dragConstant;
         if (particle.dragRatio) {
             thisParticleDragConstant *= particle.dragRatio;
         }
@@ -270,11 +269,11 @@ function animate(millisElapsed: number) {
     averageX /= NUM_FREE_PARTICLES;
     averageY /= NUM_FREE_PARTICLES;
     averageVel2 /= NUM_FREE_PARTICLES;
-    var varianceX2 = 0;
-    var varianceY2 = 0;
-    var varianceVel22 = 0;
-    for (var i = 0; i < NUM_FREE_PARTICLES; i++) {
-        var particle = particles[i];
+    let varianceX2 = 0;
+    let varianceY2 = 0;
+    let varianceVel22 = 0;
+    for (let i = 0; i < NUM_FREE_PARTICLES; i++) {
+        let particle = particles[i];
         varianceX2 += Math.pow(particle.x - averageX, 2);
         varianceY2 += Math.pow(particle.y - averageY, 2);
         varianceVel22 += Math.pow(particle.dx * particle.dx + particle.dy * particle.dy - averageVel2, 2);
@@ -283,32 +282,32 @@ function animate(millisElapsed: number) {
     varianceY2 /= NUM_FREE_PARTICLES;
     varianceVel22 /= NUM_FREE_PARTICLES;
 
-    var varianceX = Math.sqrt(varianceX2);
-    var varianceY = Math.sqrt(varianceY2);
-    var varianceVel2 = Math.sqrt(varianceVel22);
+    let varianceX = Math.sqrt(varianceX2);
+    let varianceY = Math.sqrt(varianceY2);
+    let varianceVel2 = Math.sqrt(varianceVel22);
 
-    var varianceLength = Math.sqrt(varianceX2 + varianceY2);
-    var varianceVel = Math.sqrt(varianceVel2);
-    var averageVel = Math.sqrt(averageVel2);
+    let varianceLength = Math.sqrt(varianceX2 + varianceY2);
+    let varianceVel = Math.sqrt(varianceVel2);
+    let averageVel = Math.sqrt(averageVel2);
 
     // flatRatio = 1 -> perfectly circular
     // flatRatio is high (possibly Infinity) -> extremely horizontally flat
     // flatRatio is low (near 0) -> vertically thin
-    var flatRatio = varianceX / varianceY;
+    let flatRatio = varianceX / varianceY;
 
     // TODO divide velocity and length by canvas dimensions so that size of canvas has no effect
 
     // in reset formation, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
     // magicNumber is experimentally found to be 1.3938
     // AKA varianceLength = 0.28866 * canvasWidth
-    var normalizedVarianceLength = varianceLength / (0.28866 * (canvas.width + canvas.height) / 2);
+    let normalizedVarianceLength = varianceLength / (0.28866 * (canvas.width + canvas.height) / 2);
 
-    var groupedUpness = Math.sqrt(averageVel / varianceLength);
+    let groupedUpness = Math.sqrt(averageVel / varianceLength);
     audioGroup.lfo.frequency.value = flatRatio;
     audioGroup.setFrequency(111 / normalizedVarianceLength);
     audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
-    filter.uniforms['iMouse'].value = new THREE.Vector2(mouseX / canvas.width, (canvas.height - mouseY) / canvas.height);
+    filter.uniforms.iMouse.value = new THREE.Vector2(mouseX / canvas.width, (canvas.height - mouseY) / canvas.height);
     // when groupedUpness is 0, shrinkFactor should be 0.98
     // when groupedUpness is 1, shrinkFactor should be 1.0
     // filter.uniforms['shrinkFactor'].value = 0.98 + groupedUpness * 0.03;
@@ -320,10 +319,10 @@ function animate(millisElapsed: number) {
 function touchstart(event: JQuery.Event) {
     // prevent emulated mouse events from occuring
     event.preventDefault();
-    var canvasOffset = $(canvas).offset()!;
-    var touch = (event.originalEvent as TouchEvent).touches[0];
-    var touchX = touch.pageX - canvasOffset.left;
-    var touchY = touch.pageY - canvasOffset.top;
+    let canvasOffset = $(canvas).offset()!;
+    let touch = (event.originalEvent as TouchEvent).touches[0];
+    let touchX = touch.pageX - canvasOffset.left;
+    let touchY = touch.pageY - canvasOffset.top;
     // offset the touchY by its radius so the attractor is above the thumb
     // touchY -= 100;
     createAttractor(touchX, touchY);
@@ -332,10 +331,10 @@ function touchstart(event: JQuery.Event) {
 }
 
 function touchmove(event: JQuery.Event) {
-    var canvasOffset = $(canvas).offset()!;
-    var touch = (event.originalEvent as TouchEvent).touches[0];
-    var touchX = touch.pageX - canvasOffset.left;
-    var touchY = touch.pageY - canvasOffset.top;
+    let canvasOffset = $(canvas).offset()!;
+    let touch = (event.originalEvent as TouchEvent).touches[0];
+    let touchX = touch.pageX - canvasOffset.left;
+    let touchY = touch.pageY - canvasOffset.top;
     // touchY -= 100;
     moveAttractor(touchX, touchY);
     mouseX = touchX;
@@ -367,7 +366,7 @@ function mouseup(event: JQuery.Event) {
 }
 
 function createAttractor(x: number, y: number) {
-    attractor = { x: x, y : y };
+    attractor = { x, y };
     dragConstant = PULLING_DRAG_CONSTANT;
 }
 
@@ -386,7 +385,7 @@ function removeAttractor() {
 function resize(width: number, height: number) {
     camera.right = width;
     camera.bottom = height;
-    filter.uniforms['iResolution'].value = new THREE.Vector2(width, height);
+    filter.uniforms.iResolution.value = new THREE.Vector2(width, height);
 
     camera.updateProjectionMatrix();
 }
@@ -396,21 +395,21 @@ function instantiatePointCloudAndGeometry() {
         scene.remove(pointCloud);
     }
     geometry = new THREE.Geometry();
-    for(var i = 0; i < NUM_FREE_PARTICLES; i++) {
-        var particle = particles[i];
-        var vertex = new THREE.Vector3(particle.x, particle.y, 0);
+    for (let i = 0; i < NUM_FREE_PARTICLES; i++) {
+        let particle = particles[i];
+        let vertex = new THREE.Vector3(particle.x, particle.y, 0);
         geometry.vertices.push(vertex);
         particles[i].vertex = vertex;
     }
 
-    var starTexture = THREE.ImageUtils.loadTexture("/assets/sketches/line/star.png");
+    let starTexture = THREE.ImageUtils.loadTexture("/assets/sketches/line/star.png");
     starTexture.minFilter = THREE.NearestFilter;
-    var material = new THREE.PointsMaterial({
+    let material = new THREE.PointsMaterial({
         size: 15,
         sizeAttenuation: false,
         map: starTexture,
         opacity: 0.18,
-        transparent: true
+        transparent: true,
     });
     pointCloud = new THREE.Points(geometry, material);
     scene.add(pointCloud);
@@ -418,15 +417,15 @@ function instantiatePointCloudAndGeometry() {
 
 export const Dots: ISketch = {
     id: "dots",
-    init: init,
+    init,
     instructions: "Click, drag, release, look, listen.",
-    animate: animate,
+    animate,
     darkTheme: true,
-    mousedown: mousedown,
-    mousemove: mousemove,
-    mouseup: mouseup,
-    resize: resize,
-    touchstart: touchstart,
-    touchmove: touchmove,
-    touchend: touchend
+    mousedown,
+    mousemove,
+    mouseup,
+    resize,
+    touchstart,
+    touchmove,
+    touchend,
 };

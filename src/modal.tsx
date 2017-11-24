@@ -2,7 +2,7 @@
 import * as React from "react";
 
 export interface IPhotoGalleryProps {
-    children: React.ReactElement<any>[];
+    children: Array<React.ReactElement<any>>;
 }
 
 export interface IPhotoGalleryState {
@@ -18,7 +18,7 @@ export class PhotoGallery extends React.Component<IPhotoGalleryProps, {}> {
         ));
         return (
             <div className="photo-gallery">
-                {children}  
+                {children}
             </div>
         );
     }

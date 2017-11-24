@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.EffectComposer = function ( renderer, renderTarget ) {
+THREE.EffectComposer = function( renderer, renderTarget ) {
 
 	this.renderer = renderer;
 
@@ -26,8 +26,9 @@ THREE.EffectComposer = function ( renderer, renderTarget ) {
 
 	this.passes = [];
 
-	if ( THREE.CopyShader === undefined )
+	if ( THREE.CopyShader === undefined ) {
 		console.error( "THREE.EffectComposer relies on THREE.CopyShader" );
+	}
 
 	this.copyPass = new THREE.ShaderPass( THREE.CopyShader );
 
@@ -43,19 +44,19 @@ THREE.EffectComposer.prototype = {
 
 	},
 
-	addPass: function ( pass ) {
+	addPass: function( pass ) {
 
 		this.passes.push( pass );
 
 	},
 
-	insertPass: function ( pass, index ) {
+	insertPass: function( pass, index ) {
 
 		this.passes.splice( index, 0, pass );
 
 	},
 
-	render: function ( delta ) {
+	render: function( delta ) {
 
 		this.writeBuffer = this.renderTarget1;
 		this.readBuffer = this.renderTarget2;
@@ -68,7 +69,7 @@ THREE.EffectComposer.prototype = {
 
 			pass = this.passes[ i ];
 
-			if ( !pass.enabled ) continue;
+			if ( !pass.enabled ) { continue; }
 
 			pass.render( this.renderer, this.writeBuffer, this.readBuffer, delta, maskActive );
 
@@ -104,7 +105,7 @@ THREE.EffectComposer.prototype = {
 
 	},
 
-	reset: function ( renderTarget ) {
+	reset: function( renderTarget ) {
 
 		if ( renderTarget === undefined ) {
 
@@ -125,7 +126,7 @@ THREE.EffectComposer.prototype = {
 
 	},
 
-	setSize: function ( width, height ) {
+	setSize: function( width, height ) {
 
 		var renderTarget = this.renderTarget1.clone();
 
@@ -134,6 +135,6 @@ THREE.EffectComposer.prototype = {
 
 		this.reset( renderTarget );
 
-	}
+	},
 
 };
