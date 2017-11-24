@@ -4,19 +4,8 @@ import * as THREE from "three";
 const $window = $(window);
 var HAS_SOUND = true;
 
-function isElementOnScreen(element: JQuery) {
-    var scrollTop = $window.scrollTop()!,
-        scrollBottom = scrollTop + $window.height()!;
-
-    var elementTop = element.offset()!.top;
-    var elementBottom = elementTop + element.height()!;
-    var elementMiddle = (elementBottom + elementTop) / 2;
-
-    return scrollTop < elementMiddle && elementMiddle < scrollBottom;
-}
-
-function setCanvasDimensions(renderer: THREE.WebGLRenderer, sketchElement: JQuery) {
-    renderer.setSize(sketchElement.width()!, sketchElement.height()!);
+function setCanvasDimensions(renderer: THREE.WebGLRenderer, sketchParent: Element) {
+    renderer.setSize(sketchParent.clientWidth, sketchParent.clientHeight);
 }
 
 const DEFAULT_SKETCH_OPTIONS: ISketchOptions = {
@@ -24,6 +13,7 @@ const DEFAULT_SKETCH_OPTIONS: ISketchOptions = {
 };
 
 export const UI_EVENTS = {
+    "click": true,
     "mousedown": true,
     "mouseup": true,
     "mousemove": true,
@@ -51,6 +41,8 @@ export interface ISketch extends UIEventReciever {
     resize?(width: number, height: number): void;
 
     darkTheme?: boolean;
+
+    elements?: JSX.Element[];
 }
 
 export interface SketchAudioContext extends AudioContext {
@@ -62,11 +54,11 @@ export interface SketchAudioContext extends AudioContext {
  * Initializes the sketch object passed to it.
  *
  * @param sketch
- * @param $sketchParent: JQuery element to place the sketch on.
+ * @param sketchParent: element to place the sketch on.
  * @param options: 
  * 
  */
-export function initializeSketch(sketch: ISketch, $sketchParent: JQuery, options: ISketchOptions = DEFAULT_SKETCH_OPTIONS) {
+export function initializeSketch(sketch: ISketch, sketchParent: Element, options: ISketchOptions = DEFAULT_SKETCH_OPTIONS) {
     let renderer: THREE.WebGLRenderer;
     try {
         renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
@@ -74,21 +66,12 @@ export function initializeSketch(sketch: ISketch, $sketchParent: JQuery, options
         throw new Error("WebGL error");
     }
 
-    // add sketch element to body
-    const $sketchElement = $('<div></div>').addClass("sketch-wrapper").attr('id', sketch.id);
-    $sketchParent.append($sketchElement);
+    sketchParent.appendChild(renderer.domElement);
+    // document.body.appendChild(renderer.domElement);
 
-    // allow canvas to be selectable
-    $sketchElement.append(renderer.domElement);
-
-    const $instructionsElement = $("<div>").addClass("instructions").text(sketch.instructions!);
-    if (options.showInstructions) {
-        $sketchElement.append($instructionsElement);
-    }
-
-    setCanvasDimensions(renderer, $sketchElement);
+    setCanvasDimensions(renderer, sketchParent);
     $window.resize(function() {
-        setCanvasDimensions(renderer, $sketchElement);
+        setCanvasDimensions(renderer, sketchParent);
         if (sketch.resize != null) {
             sketch.resize(renderer.domElement.width, renderer.domElement.height);
         }
@@ -97,11 +80,8 @@ export function initializeSketch(sketch: ISketch, $sketchParent: JQuery, options
     // canvas setup
     var $canvas = $(renderer.domElement);
     $canvas.attr("tabindex", 1);
-    $canvas.one("mousedown touchstart", function (e) {
-        $instructionsElement.addClass("interacted");
-    });
-    Object.keys(UI_EVENTS).forEach(function (eventName: keyof typeof UI_EVENTS) {
-        var callback = sketch[eventName];
+    Object.keys(UI_EVENTS).forEach((eventName: keyof typeof UI_EVENTS) => {
+        const callback = sketch[eventName];
         if (callback != null) {
             $canvas.on(eventName, callback);
         }
@@ -116,18 +96,18 @@ export function initializeSketch(sketch: ISketch, $sketchParent: JQuery, options
     function animateAndRequestAnimFrame(timestamp: number) {
         var millisElapsed = timestamp - lastTimestamp;
         lastTimestamp = timestamp;
-        if (isElementOnScreen($sketchElement)) {
-            $sketchElement.removeClass("disabled");
-            $canvas.focus();
-            if (HAS_SOUND) {
-                audioContextGain.gain.value = 1;
-            }
-            sketch.animate(millisElapsed);
-        } else {
-            $sketchElement.addClass("disabled");
-            $canvas.blur();
-            audioContextGain.gain.value = 0;
-        }
+        // if (isElementOnScreen(sketchParent)) {
+        //     $sketchElement.removeClass("disabled");
+        //     $canvas.focus();
+        //     if (HAS_SOUND) {
+        //         audioContextGain.gain.value = 1;
+        //     }
+        sketch.animate(millisElapsed);
+        // } else {
+        //     $sketchElement.addClass("disabled");
+        //     $canvas.blur();
+        //     audioContextGain.gain.value = 0;
+        // }
         requestAnimationFrame(animateAndRequestAnimFrame);
     }
 

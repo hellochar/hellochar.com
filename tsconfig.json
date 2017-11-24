@@ -5,7 +5,10 @@
         "module": "commonjs",
         "jsx": "react",
         "strict": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "typeRoots": [
+            "src/custom-typings"
+        ]
     },
     "include": [
         "src"
