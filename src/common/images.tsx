@@ -4,7 +4,7 @@ import * as React from "react";
 const NUM_IMAGES_PER_ROW = 5;
 
 export interface ImagesProps extends React.HTMLAttributes<HTMLDivElement> {
-    children: React.ReactElement<any>[];
+    children: Array<React.ReactElement<any>>;
 }
 
 export interface ImagesState {
@@ -13,10 +13,10 @@ export interface ImagesState {
 }
 
 export class Images extends React.Component<ImagesProps, ImagesState> {
-    state = {
+    public state = {
         fullScreen: false,
         selectedImageIndex: 0,
-    }
+    };
 
     public componentDidMount() {
         document.addEventListener("keyup", this.handleKeyUp);
@@ -36,12 +36,12 @@ export class Images extends React.Component<ImagesProps, ImagesState> {
                 <div className="images-row">
                     {
                         rowChildren.map((child, i) => (
-                            <div key={i} className="image-wrapper" onClick={() => this.handleThumbnailClick(i + 5*rowIndex)}>
+                            <div key={i} className="image-wrapper" onClick={() => this.handleThumbnailClick(i + 5 * rowIndex)}>
                                 {child}
                             </div>
                         ))
                     }
-                </div>
+                </div>,
             );
         }
         return (
@@ -63,7 +63,7 @@ export class Images extends React.Component<ImagesProps, ImagesState> {
                         <button className="images-fullscreen-button images-fullscreen-button-exit" onClick={this.handleNavExit}>&#215;</button>
                     </div>
                 </div>
-            )
+            );
         }
     }
 
@@ -84,7 +84,7 @@ export class Images extends React.Component<ImagesProps, ImagesState> {
             this.handleNavExit();
         } else if (evt.key === "ArrowLeft") {
             this.handleNavPrevious();
-        } else if (evt.key === "ArrowRight" ){
+        } else if (evt.key === "ArrowRight" ) {
             this.handleNavNext();
         }
     }
@@ -93,7 +93,7 @@ export class Images extends React.Component<ImagesProps, ImagesState> {
         this.setState({
             fullScreen: true,
             selectedImageIndex,
-        })
+        });
     }
 
     private handleNavPrevious = () => {

@@ -21,7 +21,7 @@ const Title: React.StatelessComponent<{href?: string}> = ({href, children}) => {
 
     return (
         <span className="history-item-title">{titleElement}</span>
-    )
+    );
 };
 
 export const History: React.StatelessComponent<{ name: string }> = ({name, children}) => (
@@ -40,13 +40,13 @@ const History2017 = () => (
             science/music/art experience in Wallenberg Theatre at Stanford on November 17th, 2017, in collaboartion with painter and artist
             Pamela Davis Kivelson and classical improv violinist Lucy Liuxuan Zhang. I wrote phyics simulations in Processing inspired by gravitational
             waves and adopted a pure black/white visual style (the right half of the screen) to contrast with Pam's paintings on the left.
-            We further processed Pam's paintings with different Processing sketches to intermix traditional art with digital work. 
+            We further processed Pam's paintings with different Processing sketches to intermix traditional art with digital work.
             <iframe className="figure-video" src="https://player.vimeo.com/video/243603441" height="393" frameBorder="0" allowFullScreen></iframe>
         </p>
         <p>
             <Title href="https://hellochar.github.io/phone-theremin">Phone Theremin</Title>.
             Turn your phone into a musical instrument. Visit the website on mobile and simply rotate your phone to change the pitch and volume.
-            Made at the <a href="http://topos.house/">Topos House</a> <a href="http://hypotext.co/antidisciplinarathon">Antidisciplinarathon</a>. 
+            Made at the <a href="http://topos.house/">Topos House</a> <a href="http://hypotext.co/antidisciplinarathon">Antidisciplinarathon</a>.
             Live music performance often has a revered, inaccessible feeling that separates the performer
             from the audience - the performer is looked at in awe and admiration, but at a distance. By allowing practically every
             audience member to be a musical source we dissolve the difference between performer and audience. Instead,
@@ -201,7 +201,7 @@ const History2015 = () => (
         Javascript, Arduino, and projection mapping.
         <Images>
             {[
-                <img src="https://lh3.googleusercontent.com/Q7doAntds2iA0yz-j40KqqYDdtoh2P_Mr0MzBFIDbuDdBJxD4hSmq8a2CG_cAb-8Gltnufv38Rz8vd51r_WT-p1CobtgWw03oMDqJoXyHAhFIt8c4K6Q5UAmpHw3ImpL-BKqZHGnaO6dVA_QqXtDDFsQVg_n8HZZzD4t8AQIkqaAaJeIeAVwi8NqmRGX5I8_TUKvdNytkxTRti7BtvBXpZZApZi9Gt-YMuHEGx6rfAgr1AFotzJAU6Sqhs2S0bC0p_6sUcURZ-JQoCT_zizThwin2yAUlFzhWp5GrS60G_N7dN6DyV7fjZodKXtPnRnDleIG5DTVq8oNd5Z0zbHo2afx8xg-sI4bUCabPj7ly0TlR8CSu97mO8Jo7L78KJZjAqc8Mkv1npO6M-y6FnVH7pV0iOYB6d1wmP459FdiKL6hYu9uDFqWgPvTxA19RsH8py90wVDQ273C-UD37fYV9L5As--sL1mLZ60A1rBxhfmSFfcGpVcBw8Wy8nCZH5t5YO5LZmSpvpfh1xtjtbRm-fHiwN6tVmqvoImmllQUtspsbRMOSEdbbdexkgLT81lZ9ar0_DTpSLvCdBjsxHMWel3wmB77EM1Pn0-0JDEEOw=w1632-h918-no" />
+                <img src="https://lh3.googleusercontent.com/Q7doAntds2iA0yz-j40KqqYDdtoh2P_Mr0MzBFIDbuDdBJxD4hSmq8a2CG_cAb-8Gltnufv38Rz8vd51r_WT-p1CobtgWw03oMDqJoXyHAhFIt8c4K6Q5UAmpHw3ImpL-BKqZHGnaO6dVA_QqXtDDFsQVg_n8HZZzD4t8AQIkqaAaJeIeAVwi8NqmRGX5I8_TUKvdNytkxTRti7BtvBXpZZApZi9Gt-YMuHEGx6rfAgr1AFotzJAU6Sqhs2S0bC0p_6sUcURZ-JQoCT_zizThwin2yAUlFzhWp5GrS60G_N7dN6DyV7fjZodKXtPnRnDleIG5DTVq8oNd5Z0zbHo2afx8xg-sI4bUCabPj7ly0TlR8CSu97mO8Jo7L78KJZjAqc8Mkv1npO6M-y6FnVH7pV0iOYB6d1wmP459FdiKL6hYu9uDFqWgPvTxA19RsH8py90wVDQ273C-UD37fYV9L5As--sL1mLZ60A1rBxhfmSFfcGpVcBw8Wy8nCZH5t5YO5LZmSpvpfh1xtjtbRm-fHiwN6tVmqvoImmllQUtspsbRMOSEdbbdexkgLT81lZ9ar0_DTpSLvCdBjsxHMWel3wmB77EM1Pn0-0JDEEOw=w1632-h918-no" />,
             ]}
         </Images>
         </p>
@@ -211,7 +211,7 @@ const History2015 = () => (
             a perpetually sunny field, idling their days by. The screen is placed adjacent to a
             physical manifestation of the space - fake grass, a fence, some hay. A body sensor
             detects users when they enter the space and alerts the horses of their presence. As
-            users stare into a made up world, the horses stare back at you and wonder the same thing. 
+            users stare into a made up world, the horses stare back at you and wonder the same thing.
             <Images>
                 {[<img src="/assets/images/history/natural_habitat.png" />]}
             </Images>
@@ -286,7 +286,7 @@ const History2014 = () => (
     <History name="2014">
         <p>
             <Title href="https://globalgamejam.org/2014/games/cmyk">GGJ2014 - CYMK.</Title> Multiplayer
-            real-time cooperative online puzzle game. Centered around the notion of 
+            real-time cooperative online puzzle game. Centered around the notion of
             different perceptions to the same problem, each player can only interact with objects
             that are similarly colored.
             <Images>
@@ -309,7 +309,7 @@ const History2014 = () => (
             </Images>
         </p>
         <p>
-            <Title>EEG piece</Title>. Read input data from the emotive EEG on a guitarist performing live and use 
+            <Title>EEG piece</Title>. Read input data from the emotive EEG on a guitarist performing live and use
             it to feed a 3D superformula piece. Made for the Multimedia Orchestra Spring 2014 show.
             <Images>
                 {[<img src="/assets/images/history/multimediaorchestra/eeg.png" />]}
@@ -381,7 +381,7 @@ const History2014 = () => (
         </Images>
         </p>
         <p>
-            <Title href="http://p5wscala.wordpress.com">p5wscala</Title>. My college blog dedicated to my creative coding using Processing 
+            <Title href="http://p5wscala.wordpress.com">p5wscala</Title>. My college blog dedicated to my creative coding using Processing
             with the Scala programming language.
         </p>
     </History>

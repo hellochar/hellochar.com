@@ -2,13 +2,13 @@ import * as THREE from "three";
 
 export const GravityShader = {
     uniforms: {
-        gamma:       { type: 'f', value: 6.0/6.0 },
-        iGlobalTime: { type: 'f', value: 0 },
-        iMouse:      { type: 'v2', value: new THREE.Vector2(0, 0) },
-        iMouseFactor:{ type: 'f', value: 1/15 },
-        iResolution: { type: 'v2', value: new THREE.Vector2(100, 100) },
-        G:           { type: 'f', value: 0 },
-        tDiffuse:    { type: 't', value: null }
+        gamma:       { type: "f", value: 6.0 / 6.0 },
+        iGlobalTime: { type: "f", value: 0 },
+        iMouse:      { type: "v2", value: new THREE.Vector2(0, 0) },
+        iMouseFactor: { type: "f", value: 1 / 15 },
+        iResolution: { type: "v2", value: new THREE.Vector2(100, 100) },
+        G:           { type: "f", value: 0 },
+        tDiffuse:    { type: "t", value: null },
     },
 
     vertexShader: [
@@ -16,7 +16,7 @@ export const GravityShader = {
         "void main() {",
             "vTextureCoord = uv;",
             "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-        "}"
+        "}",
     ].join("\n"),
 
     fragmentShader: [
@@ -60,6 +60,6 @@ export const GravityShader = {
         "    vec4 c = texture2D(tDiffuse, vTextureCoord);",
         "    vec4 c2 = equality(uv, iResolution/2.0);",
         "    gl_FragColor = pow(c + c2, vec4(gamma));",
-        "}"
-    ].join("\n")
+        "}",
+    ].join("\n"),
 };

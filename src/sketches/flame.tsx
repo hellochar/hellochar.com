@@ -1,11 +1,11 @@
+import * as OrbitControls from "imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls";
 import { parse } from "query-string";
-import { MouseEvent, KeyboardEvent } from 'react';
-import * as React from 'react';
-import * as THREE from 'three';
-import * as OrbitControls from 'imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls';
+import { KeyboardEvent, MouseEvent } from "react";
+import * as React from "react";
+import * as THREE from "three";
 
-import { map } from '../math';
-import { ISketch, SketchAudioContext } from '../sketch';
+import { map } from "../math";
+import { ISketch, SketchAudioContext } from "../sketch";
 
 type Transform = (point: THREE.Vector3) => void;
 
@@ -37,13 +37,13 @@ const AFFINES = {
         point.set(
             (-point.x + point.y + point.z) / 2.1,
             (-point.y + point.x + point.z) / 2.1,
-            (-point.z + point.x + point.y) / 2.1
+            (-point.z + point.x + point.y) / 2.1,
         );
     },
     Up1: (point: THREE.Vector3) => {
         point.set(point.x, point.y, point.z + 1);
-    }
-}
+    },
+};
 
 const VARIATIONS = {
     Linear: (point: THREE.Vector3) => {
@@ -59,7 +59,7 @@ const VARIATIONS = {
         point.set(Math.atan2(point.y, point.x) / Math.PI, point.length() - 1, Math.atan2(point.z, point.x));
     },
     Swirl: (point: THREE.Vector3) => {
-        var r2 = point.lengthSq();
+        const r2 = point.lengthSq();
         point.set(point.z * Math.sin(r2) - point.y * Math.cos(r2),
                     point.x * Math.cos(r2) + point.z * Math.sin(r2),
                     point.x * Math.sin(r2) - point.y * Math.sin(r2),
@@ -71,15 +71,15 @@ const VARIATIONS = {
     },
     Shrink: (point: THREE.Vector3) => {
         point.setLength(Math.exp(-point.lengthSq()));
-    }
+    },
 };
 
 function createInterpolatedVariation(variationA: Transform, variationB: Transform, interpolationFn: () => number) {
     return function(pointA: THREE.Vector3) {
-        var pointB = pointA.clone();
+        const pointB = pointA.clone();
         variationA(pointA);
         variationB(pointB);
-        var interpolatedAmount = interpolationFn();
+        const interpolatedAmount = interpolationFn();
         pointA.lerp(pointB, interpolatedAmount);
     };
 }
@@ -92,7 +92,7 @@ function createRouterVariation(vA: Transform, vB: Transform, router: (p: THREE.V
         } else {
             vB(a);
         }
-    }
+    };
 }
 
 /**
@@ -138,14 +138,14 @@ class SuperPoint {
         public point: THREE.Vector3,
         public color: THREE.Color,
         public rootGeometry: THREE.Geometry,
-        private branches: Branch[]
+        private branches: Branch[],
     ) {
         rootGeometry.vertices.push(point);
         rootGeometry.colors.push(color);
     }
 
     public updateSubtree(depth: number) {
-        if (depth === 0) return;
+        if (depth === 0) { return; }
 
         if (this.children === undefined) {
             this.children = branches.map(() => {
@@ -179,7 +179,7 @@ class SuperPoint {
         // half of the total sum (except for b = 1)
         const depth = (branches.length == 1)
             ? 1000
-            : Math.round(Math.log(100000) / Math.log(branches.length))
+            : Math.round(Math.log(100000) / Math.log(branches.length));
             // just do depth 1k to prevent call stack
         // console.log(branches);
         this.updateSubtree(depth);
@@ -191,7 +191,7 @@ function randomBranches(name: string) {
     const branches: Branch[] = [];
     for (let i = 0; i < numBranches; i++) {
         const stringStart = map(i, 0, numBranches, 0, name.length);
-        const stringEnd = map(i+1, 0, numBranches, 0, name.length);
+        const stringEnd = map(i + 1, 0, numBranches, 0, name.length);
         const substring = name.substring(stringStart, stringEnd);
         branches.push(randomBranch(i, substring, numBranches));
     }
@@ -224,19 +224,19 @@ function randomBranch(idx: number, substring: string, numBranches: number) {
         variation = createInterpolatedVariation(
             variation,
             newVariation(),
-            () => 0.5
+            () => 0.5,
         );
     } else if (random() < 0.2) {
         variation = createRouterVariation(
             variation,
             newVariation(),
-            (p) => p.z < 0
+            (p) => p.z < 0,
         );
     }
     const colorValues = [
         random() * 0.1 - 0.05,
         random() * 0.1 - 0.05,
-        random() * 0.1 - 0.05
+        random() * 0.1 - 0.05,
     ];
     const focusIndex = idx % 3;
     colorValues[focusIndex] += 0.2;
@@ -246,7 +246,7 @@ function randomBranch(idx: number, substring: string, numBranches: number) {
         affine,
         color,
         variation,
-    }
+    };
     return branch;
 }
 
@@ -263,7 +263,7 @@ function objectValueByIndex<T>(obj: Record<string, T>, index: number) {
 
 function stringHash(s: string) {
     let hash = 0, i, char;
-    if (s.length == 0) return hash;
+    if (s.length == 0) { return hash; }
     for (let i = 0, l = s.length; i < l; i++) {
         char = s.charCodeAt(i);
         hash = hash * 31 + char;
@@ -282,13 +282,13 @@ const material: THREE.PointsMaterial = new THREE.PointsMaterial({
     size: 0.004,
     transparent: true,
     opacity: 0.7,
-    sizeAttenuation: true
+    sizeAttenuation: true,
 });
 let pointCloud: THREE.Points;
 let raycaster: THREE.Raycaster;
-let mousePressed = false;
-let mousePosition = new THREE.Vector2(0, 0);
-let lastMousePosition = new THREE.Vector2(0, 0);
+const mousePressed = false;
+const mousePosition = new THREE.Vector2(0, 0);
+const lastMousePosition = new THREE.Vector2(0, 0);
 let controls: THREE.OrbitControls;
 
 let branches: Branch[];
@@ -305,7 +305,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
 
     renderer = _renderer;
 
-    var aspectRatio = renderer.domElement.height / renderer.domElement.width;
+    const aspectRatio = renderer.domElement.height / renderer.domElement.width;
     camera = new THREE.PerspectiveCamera(60, 1 / aspectRatio, 0.01, 1000);
     camera.position.z = 3;
     camera.position.y = 1;
@@ -398,9 +398,9 @@ class FlameNameInput extends React.Component<{}, {}> {
 export const Flame: ISketch = {
     elements: [<FlameNameInput />],
     id: "flame",
-    init: init,
-    animate: animate,
-    mousemove: mousemove,
-    mousedown: mousedown,
-    resize: resize
+    init,
+    animate,
+    mousemove,
+    mousedown,
+    resize,
 };

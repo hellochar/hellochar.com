@@ -3,11 +3,11 @@ import { RouteComponentProps } from "react-router";
 import { Link, NavLink } from "react-router-dom";
 
 import { ISketch } from "../sketch";
-import { ShrinkingHeader } from "./shrinkingHeader";
 import { HistorySection } from "./history";
+import { ShrinkingHeader } from "./shrinkingHeader";
 
 export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
-    render() {
+    public render() {
         return (
             <div className="homepage">
                 { this.renderHeader() }
@@ -24,7 +24,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
             element.scrollIntoView();
         }
     }
-    
+
     private renderHeader() {
         return <ShrinkingHeader />;
     }
@@ -50,7 +50,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     &copy; 2013 - present Xiaohan Zhang
                 </div>
             </footer>
-        )
+        );
     }
 
     private renderWork() {
@@ -97,7 +97,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <p>
                 </p>
             </article>
-        )
+        );
     }
 
     private renderContact() {
@@ -142,7 +142,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     </a>
                 </p>
             </section>
-        )
+        );
     }
 
     private renderHighlight(name: string, imageUrl: string) {

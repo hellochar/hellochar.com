@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.RenderPass = function ( scene, camera, overrideMaterial, clearColor, clearAlpha ) {
+THREE.RenderPass = function( scene, camera, overrideMaterial, clearColor, clearAlpha ) {
 
 	this.scene = scene;
 	this.camera = camera;
@@ -23,7 +23,7 @@ THREE.RenderPass = function ( scene, camera, overrideMaterial, clearColor, clear
 
 THREE.RenderPass.prototype = {
 
-	render: function ( renderer, writeBuffer, readBuffer, delta ) {
+	render: function( renderer, writeBuffer, readBuffer, delta ) {
 
 		this.scene.overrideMaterial = this.overrideMaterial;
 
@@ -46,6 +46,6 @@ THREE.RenderPass.prototype = {
 
 		this.scene.overrideMaterial = null;
 
-	}
+	},
 
 };

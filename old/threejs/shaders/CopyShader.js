@@ -9,7 +9,7 @@ THREE.CopyShader = {
 	uniforms: {
 
 		"tDiffuse": { type: "t", value: null },
-		"opacity":  { type: "f", value: 1.0 }
+		"opacity":  { type: "f", value: 1.0 },
 
 	},
 
@@ -22,7 +22,7 @@ THREE.CopyShader = {
 			"vUv = uv;",
 			"gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 
-		"}"
+		"}",
 
 	].join("\n"),
 
@@ -39,8 +39,8 @@ THREE.CopyShader = {
 			"vec4 texel = texture2D( tDiffuse, vUv );",
 			"gl_FragColor = opacity * texel;",
 
-		"}"
+		"}",
 
-	].join("\n")
+	].join("\n"),
 
 };

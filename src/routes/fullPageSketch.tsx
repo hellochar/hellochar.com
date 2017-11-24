@@ -2,8 +2,8 @@ import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { Link } from "react-router-dom";
 
-import { SketchComponent } from "../sketchComponent";
 import { ISketch } from "../sketch";
+import { SketchComponent } from "../sketchComponent";
 import { ShrinkingHeader } from "./shrinkingHeader";
 
 export interface ISketchRouteProps {

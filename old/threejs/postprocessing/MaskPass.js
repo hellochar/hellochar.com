@@ -2,7 +2,7 @@
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.MaskPass = function ( scene, camera ) {
+THREE.MaskPass = function( scene, camera ) {
 
 	this.scene = scene;
 	this.camera = camera;
@@ -17,7 +17,7 @@ THREE.MaskPass = function ( scene, camera ) {
 
 THREE.MaskPass.prototype = {
 
-	render: function ( renderer, writeBuffer, readBuffer, delta ) {
+	render: function( renderer, writeBuffer, readBuffer, delta ) {
 
 		var context = renderer.context;
 
@@ -62,12 +62,11 @@ THREE.MaskPass.prototype = {
 		context.stencilFunc( context.EQUAL, 1, 0xffffffff );  // draw if == 1
 		context.stencilOp( context.KEEP, context.KEEP, context.KEEP );
 
-	}
+	},
 
 };
 
-
-THREE.ClearMaskPass = function () {
+THREE.ClearMaskPass = function() {
 
 	this.enabled = true;
 
@@ -75,12 +74,12 @@ THREE.ClearMaskPass = function () {
 
 THREE.ClearMaskPass.prototype = {
 
-	render: function ( renderer, writeBuffer, readBuffer, delta ) {
+	render: function( renderer, writeBuffer, readBuffer, delta ) {
 
 		var context = renderer.context;
 
 		context.disable( context.STENCIL_TEST );
 
-	}
+	},
 
 };

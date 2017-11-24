@@ -1,8 +1,8 @@
 import * as $ from "jquery";
 import * as THREE from "three";
 
-import { map, lerp } from "../math";
-import { ISketch, SketchAudioContext } from '../sketch';
+import { lerp, map } from "../math";
+import { ISketch, SketchAudioContext } from "../sketch";
 
 const FORCE_CONSTANT = 0.25;
 
@@ -21,14 +21,14 @@ const FORCE_CONSTANT = 0.25;
  * The total force is then sum_neighbors(k*(c.height - height))
  */
 class Cell {
-    color: THREE.Color = new THREE.Color(0x000000);
-    position: THREE.Vector3;
-    height = 0;
-    velocity = 0;
-    force = 0;
-    accumulatedHeight = 0;
-    neighbors: Cell[] = [];
-    positionFunction: (time: number) => number;
+    public color: THREE.Color = new THREE.Color(0x000000);
+    public position: THREE.Vector3;
+    public height = 0;
+    public velocity = 0;
+    public force = 0;
+    public accumulatedHeight = 0;
+    public neighbors: Cell[] = [];
+    public positionFunction: (time: number) => number;
 
     constructor(position: THREE.Vector3) {
         this.position = position;
@@ -39,7 +39,7 @@ class Cell {
     }
 
     public removeNeighbor(neighbor: Cell) {
-        var index = this.neighbors.indexOf(neighbor);
+        const index = this.neighbors.indexOf(neighbor);
         if (index >= 0) {
             this.neighbors.splice(index, 1);
         }
@@ -51,7 +51,7 @@ class Cell {
         });
         this.neighbors = [];
 
-        this.height = 0
+        this.height = 0;
         this.accumulatedHeight = 0;
     }
 
@@ -61,8 +61,8 @@ class Cell {
             return;
         }
 
-        var neighbors = this.neighbors;
-        for( var i = 0; i < neighbors.length; i++) {
+        const neighbors = this.neighbors;
+        for ( let i = 0; i < neighbors.length; i++) {
             this.force += neighbors[i].height - this.height;
         }
         this.force *= FORCE_CONSTANT;
@@ -87,11 +87,10 @@ class Cell {
         } else {
             // var colorFactor = Math.log(this.accumulatedHeight) / 6;
             // var colorFactor = this.accumulatedHeight / 20;
-            var colorFactor = this.accumulatedHeight / 100;
+            const colorFactor = this.accumulatedHeight / 100;
             // var colorFactor = this.height / 9 + 0.5;
             // this.color.setRGB(colorFactor, colorFactor, colorFactor);
 
-            
             const h = ((((this.height + 5) / 10) % 1) + 1) % 1;
             // const h = this.height > 0 ? 0 : 0.5;
             // const s = (this.velocity + 10) / 20;
@@ -103,7 +102,7 @@ class Cell {
             this.color.setHSL(
                 h,
                 1,
-                colorFactor
+                colorFactor,
             );
         }
     }
@@ -115,49 +114,49 @@ class Cell {
  * cells: Cell[][] - grid of cells
  */
 class Grid {
-    cells: Cell[][];
-    width: number;
-    height: number;
-    time: number;
+    public cells: Cell[][];
+    public width: number;
+    public height: number;
+    public time: number;
 
     constructor(width: number, height: number) {
         this.cells = [];
         this.width = width;
         this.height = height;
         this.time = 0;
-        for(var x = 0; x < width; x++) {
+        for (let x = 0; x < width; x++) {
             this.cells.push([]);
-            for(var y = 0; y < height; y++) {
-                var cell = new Cell(new THREE.Vector3(x, y, 0));
+            for (let y = 0; y < height; y++) {
+                const cell = new Cell(new THREE.Vector3(x, y, 0));
                 this.cells[x].push(cell);
                 if (x > 0) {
-                    cell.addNeighbor(this.cells[x-1][y]);
-                    this.cells[x-1][y].addNeighbor(cell);
+                    cell.addNeighbor(this.cells[x - 1][y]);
+                    this.cells[x - 1][y].addNeighbor(cell);
                 }
                 if (y > 0) {
-                    cell.addNeighbor(this.cells[x][y-1]);
-                    this.cells[x][y-1].addNeighbor(cell);
+                    cell.addNeighbor(this.cells[x][y - 1]);
+                    this.cells[x][y - 1].addNeighbor(cell);
                 }
             }
         }
     }
 
-    step() {
-        for(var i = 0; i < 5; i++) {
+    public step() {
+        for (let i = 0; i < 5; i++) {
             this.time += 1;
-            for(var x = 0; x < this.width; x++) {
-                for(var y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                for (let y = 0; y < this.height; y++) {
                     this.cells[x][y].setForce();
                 }
             }
-            for(var x = 0; x < this.width; x++) {
-                for(var y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                for (let y = 0; y < this.height; y++) {
                     this.cells[x][y].step(this.time);
                 }
             }
         }
-        for(var x = 0; x < this.width; x++) {
-            for(var y = 0; y < this.height; y++) {
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
                 this.cells[x][y].updateColor();
             }
         }
@@ -174,8 +173,8 @@ let material: THREE.PointsMaterial;
 let pointCloud: THREE.Points;
 let raycaster: THREE.Raycaster;
 let mousePressed = false;
-let mousePosition = new THREE.Vector2(0, 0);
-let lastMousePosition = new THREE.Vector2(0, 0);
+const mousePosition = new THREE.Vector2(0, 0);
+const lastMousePosition = new THREE.Vector2(0, 0);
 
 function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
     renderer = _renderer;
@@ -183,16 +182,16 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     renderer.setClearColor(0xfcfcfc);
     renderer.clear();
     // camera = new THREE.PerspectiveCamera(60, renderer.domElement.width / renderer.domElement.height, 1, 400);
-    var height = 200;
-    var width = renderer.domElement.width / renderer.domElement.height * height;
-    camera = new THREE.OrthographicCamera(-width/2, width/2, height/2, -height/2, 1, 400);
+    const height = 200;
+    const width = renderer.domElement.width / renderer.domElement.height * height;
+    camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 400);
     camera.position.z = 170;
 
     scene = new THREE.Scene();
 
     grid = new Grid(Math.ceil(width), height + 1);
-    grid.cells[Math.floor(grid.width/2)][Math.floor(grid.height/2)].positionFunction = (function() {
-        var t = 0;
+    grid.cells[Math.floor(grid.width / 2)][Math.floor(grid.height / 2)].positionFunction = (function() {
+        let t = 0;
         return function() {
             // t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -1, 1.6515));
             t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
@@ -201,8 +200,8 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     })();
 
     geometry = new THREE.Geometry();
-    grid.cells.forEach(function (col) {
-        col.forEach(function (cell) {
+    grid.cells.forEach(function(col) {
+        col.forEach(function(cell) {
             geometry.vertices.push(cell.position);
             geometry.colors.push(cell.color);
         });
@@ -210,10 +209,10 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     material = new THREE.PointsMaterial({
         size: renderer.domElement.height / height,
         sizeAttenuation: false,
-        vertexColors: THREE.VertexColors
+        vertexColors: THREE.VertexColors,
     });
     pointCloud = new THREE.Points(geometry, material);
-    pointCloud.position.set(-grid.width/2, -grid.height/2, 0);
+    pointCloud.position.set(-grid.width / 2, -grid.height / 2, 0);
     scene.add(pointCloud);
 
     raycaster = new THREE.Raycaster();
@@ -222,8 +221,8 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
 
 function animate(dt: number) {
     if (mousePressed) {
-        let gridStart = new THREE.Vector2();
-        let gridEnd = new THREE.Vector2();
+        const gridStart = new THREE.Vector2();
+        const gridEnd = new THREE.Vector2();
         // raycast to find droplet location
         raycaster.setFromCamera(mousePosition, camera);
         raycaster.intersectObject(pointCloud).forEach((intersection) => {
@@ -251,7 +250,7 @@ function animate(dt: number) {
             }
             const {x, y} = lerped.floor();
 
-            var cell = grid.cells[x][y];
+            const cell = grid.cells[x][y];
             cell.freeze();
         }
     }
@@ -266,16 +265,16 @@ function animate(dt: number) {
 
 function mousedown(event: JQuery.Event) {
     if (event.which === 1) {
-        var mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        var mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+        const mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+        const mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
         mousePosition.set(mouseX / renderer.domElement.width * 2 - 1, (1 - mouseY / renderer.domElement.height) * 2 - 1);
         mousePressed = true;
     }
 }
 
 function mousemove(event: JQuery.Event) {
-        var mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        var mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+        const mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+        const mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
         mousePosition.set(mouseX / renderer.domElement.width * 2 - 1, (1 - mouseY / renderer.domElement.height) * 2 - 1);
 }
 
@@ -287,9 +286,9 @@ function mouseup(event: JQuery.Event) {
 
 export const Cymatics: ISketch = {
     id: "cymatics",
-    init: init,
-    animate: animate,
-    mousedown: mousedown,
-    mousemove: mousemove,
-    mouseup: mouseup
+    init,
+    animate,
+    mousedown,
+    mousemove,
+    mouseup,
 };

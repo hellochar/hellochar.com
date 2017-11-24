@@ -1,12 +1,12 @@
 import * as $ from "jquery";
-import * as THREE from "three";
 import * as React from "react";
+import * as THREE from "three";
 
-import { ISketch, SketchAudioContext, UI_EVENTS } from "./sketch";
 import { Link } from "react-router-dom";
+import { ISketch, SketchAudioContext, UI_EVENTS } from "./sketch";
 
 const $window = $(window);
-var HAS_SOUND = true;
+let HAS_SOUND = true;
 
 export interface ISketchComponentProps extends React.DOMAttributes<HTMLDivElement> {
     sketch: ISketch;
@@ -25,7 +25,7 @@ export interface ISketchComponentState {
 
 export class SketchComponent extends React.Component<ISketchComponentProps, ISketchComponentState> {
     public state: ISketchComponentState = {
-        status: SketchStatus.LOADING
+        status: SketchStatus.LOADING,
     };
 
     private renderer: THREE.WebGLRenderer;
@@ -48,7 +48,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             // TODO unmount the sketch
             this.destroySketch();
         }
-    };
+    }
 
     public render() {
         const {sketch, ...divProps} = this.props;
@@ -91,7 +91,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
 
     private lastTimestamp = 0;
     private animateAndRequestAnimFrame = (timestamp: number) => {
-        var millisElapsed = timestamp - this.lastTimestamp;
+        let millisElapsed = timestamp - this.lastTimestamp;
         this.lastTimestamp = timestamp;
         // if (isElementOnScreen(sketchParent)) {
         //     $sketchElement.removeClass("disabled");
@@ -110,7 +110,6 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         }
     }
 
-
     private initializeSketch(sketch: ISketch, sketchParent: Element) {
         let renderer: THREE.WebGLRenderer;
         try {
@@ -124,7 +123,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         $window.resize(this.handleWindowResize);
 
         // canvas setup
-        var $canvas = $(renderer.domElement);
+        let $canvas = $(renderer.domElement);
         $canvas.attr("tabindex", 1);
         Object.keys(UI_EVENTS).forEach((eventName: keyof typeof UI_EVENTS) => {
             const callback = sketch[eventName];
@@ -133,7 +132,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             }
         });
         // prevent scrolling the viewport
-        $canvas.on("touchmove", function (event) {
+        $canvas.on("touchmove", function(event) {
             event.preventDefault();
         });
 
@@ -142,7 +141,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         const audioContextGain = audioContext.createGain();
         audioContextGain.connect(audioContext.destination);
         audioContext.gain = audioContextGain;
-        document.addEventListener("visibilitychange", function () {
+        document.addEventListener("visibilitychange", function() {
             if (document.hidden) {
                 audioContextGain.gain.value = 0;
             } else {
@@ -173,4 +172,3 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         renderer.setSize(sketchParent.clientWidth, sketchParent.clientHeight);
     }
 }
-
