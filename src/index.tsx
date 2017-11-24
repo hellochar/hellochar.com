@@ -1,6 +1,7 @@
 import * as React from "react";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
 import * as ReactDOM from "react-dom";
+import * as ReactGA from "react-ga";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
 
 import "./monkeypatchThree";
 import { Cymatics } from "./cymatics";
@@ -13,19 +14,36 @@ import { FullPageSketch } from "./routes/fullPageSketch";
 
 import "./index.scss";
 
+ReactGA.initialize("UA-59922576-1");
+
+class GATracker extends React.Component<{}, {}> {
+    public componentDidMount() {
+        ReactGA.pageview(window.location.pathname + window.location.search);
+    }
+    public componentDidUpdate() {
+        ReactGA.pageview(window.location.pathname + window.location.search);
+    }
+    public render() {
+        return null;
+    }
+}
+
 const root = document.createElement("div");
 document.body.appendChild(root);
 root.className = "root";
 ReactDOM.render(
     <BrowserRouter>
-        <Switch>
-            <Route path="/line" component={() => <FullPageSketch sketch={Line} />} />
-            <Route path="/dots" component={() => <FullPageSketch sketch={Dots} />} />
-            <Route path="/waves" component={() => <FullPageSketch sketch={Waves} />} />
-            <Route path="/cymatics" component={() => <FullPageSketch sketch={Cymatics} />} />
-            <Route path="/flame" component={() => <FullPageSketch sketch={Flame} />} />
-            <Route path="/" component={HomePage} />
-        </Switch>
+        <div>
+            <GATracker />
+            <Switch>
+                <Route path="/line" component={() => <FullPageSketch sketch={Line} />} />
+                <Route path="/dots" component={() => <FullPageSketch sketch={Dots} />} />
+                <Route path="/waves" component={() => <FullPageSketch sketch={Waves} />} />
+                <Route path="/cymatics" component={() => <FullPageSketch sketch={Cymatics} />} />
+                <Route path="/flame" component={() => <FullPageSketch sketch={Flame} />} />
+                <Route path="/" component={HomePage} />
+            </Switch>
+        </div>
     </BrowserRouter>,
     root
 );
