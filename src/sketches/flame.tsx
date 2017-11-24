@@ -1,11 +1,11 @@
 import { parse } from "query-string";
+import { MouseEvent, KeyboardEvent } from 'react';
+import * as React from 'react';
 import * as THREE from 'three';
 import * as OrbitControls from 'imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls';
 
-import { map } from './math';
-import { ISketch, SketchAudioContext } from './sketch';
-import { MouseEvent, KeyboardEvent } from 'react';
-import * as React from 'react';
+import { map } from '../math';
+import { ISketch, SketchAudioContext } from '../sketch';
 
 type Transform = (point: THREE.Vector3) => void;
 

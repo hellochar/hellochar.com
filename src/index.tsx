@@ -4,11 +4,11 @@ import * as ReactGA from "react-ga";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 
 import "./monkeypatchThree";
-import { Cymatics } from "./cymatics";
-import { Dots } from "./dots";
-import { Line } from "./line";
-import { Waves } from "./waves";
-import { Flame } from "./flame";
+import { Cymatics } from "./sketches/cymatics";
+import { Dots } from "./sketches/dots";
+import { Line } from "./sketches/line";
+import { Waves } from "./sketches/waves";
+import { Flame } from "./sketches/flame";
 import { HomePage } from "./routes/homePage";
 import { FullPageSketch } from "./routes/fullPageSketch";
 
