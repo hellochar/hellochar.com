@@ -1,3 +1,4 @@
+import { parse } from "query-string";
 import * as THREE from 'three';
 import * as OrbitControls from 'imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls';
 
@@ -279,6 +280,8 @@ let superPoint: SuperPoint;
 
 let jumpiness = 0;
 
+const nameFromSearch = parse(location.search).name;
+
 function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0, 12, 50);
@@ -298,7 +301,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     controls.enableKeys = false;
     controls.enablePan = false;
 
-    updateName("Han");
+    updateName(nameFromSearch);
 }
 
 function animate() {
@@ -326,7 +329,10 @@ function mousemove(event: JQuery.Event) {
 function mousedown(event: JQuery.Event) {
 }
 
-function updateName(name: string) {
+function updateName(name: string = "Han") {
+    const {origin, pathname} = window.location;
+    const newUrl = `${origin}${pathname}?name=${name}`;
+    window.history.replaceState({}, null!, newUrl);
     jumpiness = 30;
     cY = (() => {
         let hash = 0, i, char;
@@ -368,7 +374,11 @@ class FlameNameInput extends React.Component<{}, {}> {
     public render() {
         return (
             <div className="flame-input">
-                <input placeholder="Han" onInput={this.handleInput} />
+                <input
+                    defaultValue={nameFromSearch}
+                    placeholder="Han"
+                    onInput={this.handleInput}
+                />
             </div>
         );
     }
