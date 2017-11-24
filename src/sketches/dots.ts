@@ -3,7 +3,7 @@ import { parse } from "query-string";
 import * as THREE from "three";
 
 import { ISketch, SketchAudioContext } from "../sketch";
-import { ExplodeShader } from "./explodeShader";
+import { ExplodeShader } from "../common/explodeShader";
 
 interface Point {
     x: number;

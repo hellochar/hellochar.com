@@ -2,7 +2,7 @@ import * as $ from "jquery";
 import { parse } from "query-string";
 import * as THREE from "three";
 
-import { GravityShader } from "./gravityShader";
+import { GravityShader } from "../common/gravityShader";
 import { ISketch, SketchAudioContext } from "../sketch";
 
 const NUM_PARTICLES = parse(location.search).p ||
