@@ -75,7 +75,7 @@ const VARIATIONS = {
 };
 
 function createInterpolatedVariation(variationA: Transform, variationB: Transform, interpolationFn: () => number) {
-    return function(pointA: THREE.Vector3) {
+    return (pointA: THREE.Vector3) => {
         const pointB = pointA.clone();
         variationA(pointA);
         variationB(pointB);
@@ -148,7 +148,7 @@ class SuperPoint {
         if (depth === 0) { return; }
 
         if (this.children === undefined) {
-            this.children = branches.map(() => {
+            this.children = this.branches.map(() => {
                 return new SuperPoint(
                     new THREE.Vector3(),
                     new THREE.Color(0, 0, 0),
@@ -159,7 +159,7 @@ class SuperPoint {
         }
 
         this.children.forEach((child, idx) => {
-            const branch = branches[idx];
+            const branch = this.branches[idx];
             // reset the child's position to your updated position so it's ready to get stepped
             child.point.copy(this.point);
             child.color.copy(this.color);
@@ -177,9 +177,9 @@ class SuperPoint {
         // 120k = b^0 + b^1 + ... + b^d
         // only the last level really matters - the last level accounts for at least
         // half of the total sum (except for b = 1)
-        const depth = (branches.length == 1)
+        const depth = (globalBranches.length === 1)
             ? 1000
-            : Math.round(Math.log(100000) / Math.log(branches.length));
+            : Math.round(Math.log(100000) / Math.log(globalBranches.length));
             // just do depth 1k to prevent call stack
         // console.log(branches);
         this.updateSubtree(depth);
@@ -262,8 +262,8 @@ function objectValueByIndex<T>(obj: Record<string, T>, index: number) {
 }
 
 function stringHash(s: string) {
-    let hash = 0, i, char;
-    if (s.length == 0) { return hash; }
+    let hash = 0, char;
+    if (s.length === 0) { return hash; }
     for (let i = 0, l = s.length; i < l; i++) {
         char = s.charCodeAt(i);
         hash = hash * 31 + char;
@@ -285,13 +285,12 @@ const material: THREE.PointsMaterial = new THREE.PointsMaterial({
     sizeAttenuation: true,
 });
 let pointCloud: THREE.Points;
-let raycaster: THREE.Raycaster;
 const mousePressed = false;
 const mousePosition = new THREE.Vector2(0, 0);
 const lastMousePosition = new THREE.Vector2(0, 0);
 let controls: THREE.OrbitControls;
 
-let branches: Branch[];
+let globalBranches: Branch[];
 let superPoint: SuperPoint;
 
 let cX = 0, cY = 0;
@@ -350,7 +349,7 @@ function updateName(name: string = "Han") {
     const hash = stringHash(name);
     const hashNorm = (hash % 1024) / 1024;
     cY = hashNorm * 5 - 2.5;
-    branches = randomBranches(name);
+    globalBranches = randomBranches(name);
 
     geometry = new THREE.Geometry();
     geometry.vertices = [];
@@ -359,7 +358,7 @@ function updateName(name: string = "Han") {
         new THREE.Vector3(0, 0, 0),
         new THREE.Color(0, 0, 0),
         geometry,
-        branches,
+        globalBranches,
     );
 
     scene.remove(pointCloud);

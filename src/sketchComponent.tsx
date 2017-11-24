@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { ISketch, SketchAudioContext, UI_EVENTS } from "./sketch";
 
 const $window = $(window);
-let HAS_SOUND = true;
+const HAS_SOUND = true;
 
 export interface ISketchComponentProps extends React.DOMAttributes<HTMLDivElement> {
     sketch: ISketch;
@@ -89,9 +89,18 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         }
     }
 
+    private handleVisibilityChange = () => {
+        const audioContextGain = this.audioContext.gain;
+        if (document.hidden) {
+            audioContextGain.gain.value = 0;
+        } else {
+            audioContextGain.gain.value = 1;
+        }
+    }
+
     private lastTimestamp = 0;
     private animateAndRequestAnimFrame = (timestamp: number) => {
-        let millisElapsed = timestamp - this.lastTimestamp;
+        const millisElapsed = timestamp - this.lastTimestamp;
         this.lastTimestamp = timestamp;
         // if (isElementOnScreen(sketchParent)) {
         //     $sketchElement.removeClass("disabled");
@@ -123,7 +132,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         $window.resize(this.handleWindowResize);
 
         // canvas setup
-        let $canvas = $(renderer.domElement);
+        const $canvas = $(renderer.domElement);
         $canvas.attr("tabindex", 1);
         Object.keys(UI_EVENTS).forEach((eventName: keyof typeof UI_EVENTS) => {
             const callback = sketch[eventName];
@@ -132,7 +141,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             }
         });
         // prevent scrolling the viewport
-        $canvas.on("touchmove", function(event) {
+        $canvas.on("touchmove", (event) => {
             event.preventDefault();
         });
 
@@ -141,13 +150,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         const audioContextGain = audioContext.createGain();
         audioContextGain.connect(audioContext.destination);
         audioContext.gain = audioContextGain;
-        document.addEventListener("visibilitychange", function() {
-            if (document.hidden) {
-                audioContextGain.gain.value = 0;
-            } else {
-                audioContextGain.gain.value = 1;
-            }
-        });
+        document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
         sketch.init(renderer, audioContext);
         requestAnimationFrame(this.animateAndRequestAnimFrame);
@@ -160,6 +163,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         $window.off("resize", this.handleWindowResize);
         if (this.audioContext != null) {
             this.audioContext.close();
+            document.removeEventListener("visibilitychange", this.handleVisibilityChange);
         }
         this.setState({ status: SketchStatus.ERROR });
         const { sketch } = this.props;

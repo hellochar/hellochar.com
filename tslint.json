@@ -2,7 +2,17 @@
     "extends": "tslint:recommended",
     "rules": {
         "max-line-length": false,
-        "member-ordering": false
+        "member-ordering": false,
+        "object-literal-sort-keys": false,
+        "object-literal-shorthand": false,
+        "interface-name": false,
+        "variable-name": false,
+        "one-variable-per-declaration": false,
+        "prefer-for-of": false,
+        "max-classes-per-file": false,
+        "no-bitwise": false,
+        "no-empty": false,
+        "no-console": false
     },
     "defaultSeverity": "warning"
 }
