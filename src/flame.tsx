@@ -168,9 +168,7 @@ class SuperPoint {
     }
 
     public recalculate() {
-        const t = performance.now() / 10000;
-        const z = 1 / (1 + Math.exp(-5 * Math.sin(t)));;
-        this.point.set(jumpiness, jumpiness, z / 10 + jumpiness);
+        this.point.set(jumpiness, jumpiness, jumpiness);
         // this.point.set(0,0,0);
         // points at exactly depth d = b^d
         // points from depth 0...d = b^0 + b^1 + b^2 + ... b^d
@@ -329,7 +327,7 @@ function mousedown(event: JQuery.Event) {
 }
 
 function updateName(name: string) {
-    jumpiness = 50;
+    jumpiness = 30;
     cY = (() => {
         let hash = 0, i, char;
         if (name.length == 0) return hash;
