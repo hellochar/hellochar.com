@@ -190,9 +190,9 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     scene = new THREE.Scene();
 
     grid = new Grid(Math.ceil(width), height + 1);
-    grid.cells[Math.floor(grid.width / 2)][Math.floor(grid.height / 2)].positionFunction = (function() {
+    grid.cells[Math.floor(grid.width / 2)][Math.floor(grid.height / 2)].positionFunction = (() => {
         let t = 0;
-        return function() {
+        return () => {
             // t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -1, 1.6515));
             t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
             return 20 * Math.sin(t);
@@ -200,8 +200,8 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     })();
 
     geometry = new THREE.Geometry();
-    grid.cells.forEach(function(col) {
-        col.forEach(function(cell) {
+    grid.cells.forEach((col) => {
+        col.forEach((cell) => {
             geometry.vertices.push(cell.position);
             geometry.colors.push(cell.color);
         });
@@ -265,16 +265,16 @@ function animate(dt: number) {
 
 function mousedown(event: JQuery.Event) {
     if (event.which === 1) {
-        const mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        const mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+        const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+        const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
         mousePosition.set(mouseX / renderer.domElement.width * 2 - 1, (1 - mouseY / renderer.domElement.height) * 2 - 1);
         mousePressed = true;
     }
 }
 
 function mousemove(event: JQuery.Event) {
-        const mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        const mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+        const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+        const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
         mousePosition.set(mouseX / renderer.domElement.width * 2 - 1, (1 - mouseY / renderer.domElement.height) * 2 - 1);
 }
 
