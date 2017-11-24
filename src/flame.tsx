@@ -179,7 +179,7 @@ class SuperPoint {
         // half of the total sum (except for b = 1)
         const depth = (branches.length == 1)
             ? 1000
-            : Math.floor(Math.log(80000) / Math.log(branches.length))
+            : Math.round(Math.log(100000) / Math.log(branches.length))
             // just do depth 1k to prevent call stack
         // console.log(branches);
         this.updateSubtree(depth);
@@ -187,11 +187,13 @@ class SuperPoint {
 }
 
 function randomBranches(name: string) {
-    // const numAffines = Math.floor(map(Math.random(), 0, 1, 2, 7));
-    const numAffines = name.length;
+    const numBranches = Math.ceil(1 + name.length / 2);
     const branches: Branch[] = [];
-    for (let i = 0; i < numAffines; i++) {
-        branches.push(randomBranch(i, name.charCodeAt(i)));
+    for (let i = 0; i < numBranches; i++) {
+        const stringStart = map(i, 0, numBranches, 0, name.length);
+        const stringEnd = map(i+1, 0, numBranches, 0, name.length);
+        const substring = name.substring(stringStart, stringEnd);
+        branches.push(randomBranch(i, substring, numBranches));
     }
     return branches;
 }
@@ -199,7 +201,8 @@ function randomBranches(name: string) {
 // as low as 32 (for spaces)
 // charCode - usually between 65 and 122
 // other unicode languages could go up to 10k
-function randomBranch(idx: number, charCode: number) {
+function randomBranch(idx: number, substring: string, numBranches: number) {
+    let charCode = stringHash(substring);
     function gen() {
         return (charCode = (charCode * 4910711 + 39) % 2e16);
     }
@@ -219,13 +222,13 @@ function randomBranch(idx: number, charCode: number) {
 
     if (random() < 0.2) {
         variation = createInterpolatedVariation(
-            newVariation(),
+            variation,
             newVariation(),
             () => 0.5
         );
     } else if (random() < 0.2) {
         variation = createRouterVariation(
-            newVariation(),
+            variation,
             newVariation(),
             (p) => p.z < 0
         );
@@ -238,6 +241,7 @@ function randomBranch(idx: number, charCode: number) {
     const focusIndex = idx % 3;
     colorValues[focusIndex] += 0.2;
     const color = new THREE.Color().fromArray(colorValues);
+    color.multiplyScalar(numBranches / 3.5);
     const branch: Branch = {
         affine,
         color,
@@ -257,13 +261,25 @@ function objectValueByIndex<T>(obj: Record<string, T>, index: number) {
     return obj[keys[index % keys.length]];
 }
 
+function stringHash(s: string) {
+    let hash = 0, i, char;
+    if (s.length == 0) return hash;
+    for (let i = 0, l = s.length; i < l; i++) {
+        char = s.charCodeAt(i);
+        hash = hash * 31 + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    hash *= hash * 31;
+    return hash;
+}
+
 let renderer: THREE.WebGLRenderer;
 let camera: THREE.PerspectiveCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
 const material: THREE.PointsMaterial = new THREE.PointsMaterial({
     vertexColors: THREE.VertexColors,
-    size: 0.003,
+    size: 0.004,
     transparent: true,
     opacity: 0.7,
     sizeAttenuation: true
@@ -278,6 +294,7 @@ let controls: THREE.OrbitControls;
 let branches: Branch[];
 let superPoint: SuperPoint;
 
+let cX = 0, cY = 0;
 let jumpiness = 0;
 
 const nameFromSearch = parse(location.search).name;
@@ -307,7 +324,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
 function animate() {
     const time = performance.now() / 3000;
     cX = 2 / (1 + Math.exp(-6 * Math.sin(time))) - 1;
-    jumpiness *= 0.9;
+    jumpiness *= -0.99999;
     superPoint.recalculate();
     geometry.verticesNeedUpdate = true;
 
@@ -315,11 +332,7 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-let cX = 0, cY = 0;
 function mousemove(event: JQuery.Event) {
-    var mouseX = event.offsetX == undefined ? (event.originalEvent as any).layerX : event.offsetX;
-    var mouseY = event.offsetY == undefined ? (event.originalEvent as any).layerY : event.offsetY;
-
     // cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -1.5, 1.5), 3);
     // cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 1.5, -1.5), 3);
     // cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -0.5, 0.5), 1);
@@ -334,18 +347,9 @@ function updateName(name: string = "Han") {
     const newUrl = `${origin}${pathname}?name=${name}`;
     window.history.replaceState({}, null!, newUrl);
     jumpiness = 30;
-    cY = (() => {
-        let hash = 0, i, char;
-        if (name.length == 0) return hash;
-        for (let i = 0, l = name.length; i < l; i++) {
-            char = name.charCodeAt(i);
-            hash = hash * 31 + char;
-            hash |= 0; // Convert to 32bit integer
-        }
-        hash *= hash * 31;
-        const norm = (hash % 1024) / 1024;
-        return norm * 5 - 2.5;
-    })();
+    const hash = stringHash(name);
+    const hashNorm = (hash % 1024) / 1024;
+    cY = hashNorm * 5 - 2.5;
     branches = randomBranches(name);
 
     geometry = new THREE.Geometry();
@@ -377,6 +381,7 @@ class FlameNameInput extends React.Component<{}, {}> {
                 <input
                     defaultValue={nameFromSearch}
                     placeholder="Han"
+                    maxLength={20}
                     onInput={this.handleInput}
                 />
             </div>
@@ -386,7 +391,7 @@ class FlameNameInput extends React.Component<{}, {}> {
     private handleInput = (event: React.FormEvent<HTMLInputElement>) => {
         const value = event.currentTarget.value;
         const name = (value == null || value === "") ? "Han" : value;
-        updateName(name);
+        updateName(name.trim());
     }
 }
 
