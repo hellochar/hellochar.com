@@ -27,6 +27,9 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: [".tsx", ".ts", ".js"]
+        extensions: [".tsx", ".ts", ".js"],
+        alias: {
+            'three-examples': path.resolve(__dirname, 'node_modules/three/examples/js/')
+        }
     }
 };

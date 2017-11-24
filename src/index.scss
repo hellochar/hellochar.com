@@ -13,7 +13,7 @@ $arial-family: Arial, Helvetica Neue, Helvetica, sans-serif;
 @import "~normalize.css/";
 
 @import "./routes/index";
-@import "./oldSketchStyles";
+@import "./sketchComponent";
 
 * {
     box-sizing: border-box;
@@ -61,36 +61,6 @@ h1 ~ p {
 
 p ~ p {
     margin-top: 30px;
-}
-
-// fully fills its parent
-.sketch-component {
-    background: $light-gray1;
-    width: 100%;
-    height: 100%;
-    display: flex;
-
-    .sketch-error {
-        animation-duration: 2s;
-        animation-name: opacify-in;
-        margin: auto;
-        text-align: center;
-
-        .back {
-            color: $gray3;
-            font-style: italic;
-        }
-    }
-}
-
-@keyframes opacify-in {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
 }
 
 .root {

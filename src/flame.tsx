@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import * as OrbitControls from 'imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls';
 
 import { map } from './math';
 import { ISketch, SketchAudioContext } from './sketch';
 import { MouseEvent, KeyboardEvent } from 'react';
+import * as React from 'react';
 
 type Transform = (point: THREE.Vector3) => void;
 
@@ -111,25 +113,23 @@ function applyBranch(branch: Branch, point: THREE.Vector3, color: THREE.Color) {
     color.add(branch.color);
 }
 
-const CIRCLE_CLAWS: Branch[] = [
-    {
-        color: new THREE.Color(0.28, -0.12, -0.12),
-        affine: AFFINES.TowardsOriginNegativeBias,
-        variation: VARIATIONS.Swirl
-    },
-    {
-        color: new THREE.Color(0.07, 0.21, 0),
-        affine: AFFINES.TowardsOriginNegativeBias,
-        variation: VARIATIONS.Spherical
-    },
-    {
-        color: new THREE.Color(0, 0.1, 0.35),
-        affine: AFFINES.TowardsOrigin2,
-        variation: VARIATIONS.Polar
-    },
-];
-
-let branches: Branch[] = CIRCLE_CLAWS;
+// const CIRCLE_CLAWS: Branch[] = [
+//     {
+//         color: new THREE.Color(0.28, -0.12, -0.12),
+//         affine: AFFINES.TowardsOriginNegativeBias,
+//         variation: VARIATIONS.Swirl
+//     },
+//     {
+//         color: new THREE.Color(0.07, 0.21, 0),
+//         affine: AFFINES.TowardsOriginNegativeBias,
+//         variation: VARIATIONS.Spherical
+//     },
+//     {
+//         color: new THREE.Color(0, 0.1, 0.35),
+//         affine: AFFINES.TowardsOrigin2,
+//         variation: VARIATIONS.Polar
+//     },
+// ];
 
 class SuperPoint {
     public children: SuperPoint[];
@@ -169,53 +169,76 @@ class SuperPoint {
 
     public recalculate() {
         const t = performance.now() / 10000;
-        const z = 1 / (1 + Math.exp(-10 * Math.sin(t)));;
-        this.point.set(0, 0, z / 100);
+        const z = 1 / (1 + Math.exp(-5 * Math.sin(t)));;
+        this.point.set(jumpiness, jumpiness, z / 10 + jumpiness);
         // this.point.set(0,0,0);
-        // we can support around 100k points. numPoints = branchLength ^ depth
-        // log(numPoints) = depth * log(branchLength)
-        // log(numPoints) / log(branchLength) = depth
-        const depth = Math.floor(Math.log(120000) / Math.log(branches.length));
+        // points at exactly depth d = b^d
+        // points from depth 0...d = b^0 + b^1 + b^2 + ... b^d
+        // we want total points to be ~120k, so
+        // 120k = b^0 + b^1 + ... + b^d
+        // only the last level really matters - the last level accounts for at least
+        // half of the total sum (except for b = 1)
+        const depth = (branches.length == 1)
+            ? 1000
+            : Math.floor(Math.log(80000) / Math.log(branches.length))
+            // just do depth 1k to prevent call stack
         // console.log(branches);
         this.updateSubtree(depth);
     }
 }
 
-function randomBranches() {
-    const numAffines = Math.floor(map(Math.random(), 0, 1, 2, 7));
+function randomBranches(name: string) {
+    // const numAffines = Math.floor(map(Math.random(), 0, 1, 2, 7));
+    const numAffines = name.length;
     const branches: Branch[] = [];
     for (let i = 0; i < numAffines; i++) {
-        branches.push(randomBranch(i));
+        branches.push(randomBranch(i, name.charCodeAt(i)));
     }
     return branches;
 }
 
-function randomBranch(idx: number) {
-    const affine = randomValue(AFFINES);
-    let variation = randomValue(VARIATIONS);
+// as low as 32 (for spaces)
+// charCode - usually between 65 and 122
+// other unicode languages could go up to 10k
+function randomBranch(idx: number, charCode: number) {
+    function gen() {
+        return (charCode = (charCode * 4910711 + 39) % 2e16);
+    }
+    for (let i = 0; i < 5; i++) {
+        gen();
+    }
+    const newVariation = () => {
+        gen();
+        return objectValueByIndex(VARIATIONS, charCode);
+    };
+    const random = () => {
+        gen();
+        return charCode / 2e16;
+    };
+    const affine = objectValueByIndex(AFFINES, charCode);
+    let variation = newVariation();
 
-    if (Math.random() < 0.2) {
+    if (random() < 0.2) {
         variation = createInterpolatedVariation(
-            randomValue(VARIATIONS),
-            randomValue(VARIATIONS),
+            newVariation(),
+            newVariation(),
             () => 0.5
         );
-    } else if (Math.random() < 0.2) {
+    } else if (random() < 0.2) {
         variation = createRouterVariation(
-            randomValue(VARIATIONS),
-            randomValue(VARIATIONS),
+            newVariation(),
+            newVariation(),
             (p) => p.z < 0
         );
     }
     const colorValues = [
-        Math.random() * 0.1 - 0.05,
-        Math.random() * 0.1 - 0.05,
-        Math.random() * 0.1 - 0.05
+        random() * 0.1 - 0.05,
+        random() * 0.1 - 0.05,
+        random() * 0.1 - 0.05
     ];
     const focusIndex = idx % 3;
     colorValues[focusIndex] += 0.2;
     const color = new THREE.Color().fromArray(colorValues);
-    console.log(color);
     const branch: Branch = {
         affine,
         color,
@@ -224,17 +247,28 @@ function randomBranch(idx: number) {
     return branch;
 }
 
-function randomValue<T>(obj: Record<string, T>) {
+// function randomValue<T>(obj: Record<string, T>) {
+//     const keys = Object.keys(obj);
+//     const index = Math.floor(Math.random() * keys.length);
+//     return obj[keys[index]];
+// }
+
+function objectValueByIndex<T>(obj: Record<string, T>, index: number) {
     const keys = Object.keys(obj);
-    const index = Math.floor(Math.random() * keys.length);
-    return obj[keys[index]];
+    return obj[keys[index % keys.length]];
 }
 
 let renderer: THREE.WebGLRenderer;
 let camera: THREE.PerspectiveCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
-let material: THREE.PointsMaterial;
+const material: THREE.PointsMaterial = new THREE.PointsMaterial({
+    vertexColors: THREE.VertexColors,
+    size: 0.003,
+    transparent: true,
+    opacity: 0.7,
+    sizeAttenuation: true
+});
 let pointCloud: THREE.Points;
 let raycaster: THREE.Raycaster;
 let mousePressed = false;
@@ -242,61 +276,36 @@ let mousePosition = new THREE.Vector2(0, 0);
 let lastMousePosition = new THREE.Vector2(0, 0);
 let controls: THREE.OrbitControls;
 
+let branches: Branch[];
 let superPoint: SuperPoint;
+
+let jumpiness = 0;
 
 function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
     scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0, 12, 50);
 
     renderer = _renderer;
 
     var aspectRatio = renderer.domElement.height / renderer.domElement.width;
-    // camera = new THREE.OrthographicCamera(-1.1, 1.1, -1.1*aspectRatio, 1.1*aspectRatio, 1, 1000);
     camera = new THREE.PerspectiveCamera(60, 1 / aspectRatio, 0.01, 1000);
     camera.position.z = 3;
     camera.position.y = 1;
     camera.lookAt(new THREE.Vector3());
-    controls = new THREE.OrbitControls(camera);
+    controls = new OrbitControls(camera, renderer.domElement);
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.5;
+    controls.autoRotateSpeed = 1;
+    controls.maxDistance = 10;
+    controls.minDistance = 0.1;
+    controls.enableKeys = false;
+    controls.enableRotate = false;
+    controls.enablePan = false;
 
-    geometry = new THREE.Geometry();
-
-    superPoint = new SuperPoint(
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Color(0, 0, 0),
-        geometry,
-        branches,
-    );
-
-    material = new THREE.PointsMaterial({
-        vertexColors: THREE.VertexColors,
-        size: 0.003,
-        transparent: true,
-        opacity: 0.7,
-        sizeAttenuation: true
-    });
-
-    pointCloud = new THREE.Points(geometry, material);
-    pointCloud.rotateX(-Math.PI / 2);
-    scene.add(pointCloud);
-
-    // const plane = new THREE.Mesh(
-    //     // new THREE.PlaneGeometry(200, 200, 1, 1),
-    //     new THREE.BoxGeometry(5, 5, 0.05),
-    //     new THREE.MeshBasicMaterial({
-    //         color: 0xffffff,
-    //         opacity: 0.5,
-    //         transparent: true
-    //     })
-    // );
-    // plane.rotateX(-Math.PI / 2);
-    // plane.translateZ(-1);
-    // scene.add(plane);
-
-    // scene.add(new THREE.AxisHelper(1));
+    updateName("Han");
 }
 
 function animate() {
+    jumpiness *= 0.9;
     superPoint.recalculate();
     geometry.verticesNeedUpdate = true;
 
@@ -318,26 +327,25 @@ function mousemove(event: JQuery.Event) {
 function mousedown(event: JQuery.Event) {
 }
 
-function keypress(event: JQuery.Event) {
-    if ((event.originalEvent as any).code === "Space") {
-        branches = randomBranches();
+function updateName(name: string) {
+    jumpiness = 50;
+    branches = randomBranches(name);
 
-        geometry = new THREE.Geometry();
-        geometry.vertices = [];
-        geometry.colors = [];
-        superPoint = new SuperPoint(
-            new THREE.Vector3(0, 0, 0),
-            new THREE.Color(0, 0, 0),
-            geometry,
-            branches,
-        );
+    geometry = new THREE.Geometry();
+    geometry.vertices = [];
+    geometry.colors = [];
+    superPoint = new SuperPoint(
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Color(0, 0, 0),
+        geometry,
+        branches,
+    );
 
-        scene.remove(pointCloud);
+    scene.remove(pointCloud);
 
-        pointCloud = new THREE.Points(geometry, material);
-        pointCloud.rotateX(-Math.PI / 2);
-        scene.add(pointCloud);
-    }
+    pointCloud = new THREE.Points(geometry, material);
+    pointCloud.rotateX(-Math.PI / 2);
+    scene.add(pointCloud);
 }
 
 function resize() {
@@ -345,12 +353,28 @@ function resize() {
     camera.updateProjectionMatrix();
 }
 
+class FlameNameInput extends React.Component<{}, {}> {
+    public render() {
+        return (
+            <div className="flame-input">
+                <input placeholder="Han" onInput={this.handleInput} />
+            </div>
+        );
+    }
+
+    private handleInput = (event: React.FormEvent<HTMLInputElement>) => {
+        const value = event.currentTarget.value;
+        const name = (value == null || value === "") ? "Han" : value;
+        updateName(name);
+    }
+}
+
 export const Flame: ISketch = {
+    elements: [<FlameNameInput />],
     id: "flame",
     init: init,
     animate: animate,
     mousemove: mousemove,
     mousedown: mousedown,
-    keypress: keypress,
     resize: resize
 };

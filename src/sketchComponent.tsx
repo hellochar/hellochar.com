@@ -27,7 +27,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     private handleRef = (ref: HTMLDivElement | null) => {
         if (ref != null) {
             try {
-                initializeSketch(this.props.sketch, $(ref), {});
+                initializeSketch(this.props.sketch, ref, {});
                 this.setState({ status: SketchStatus.LOADED });
             } catch (e) {
                 if (e.message === "WebGL error") {
@@ -47,7 +47,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         const { status } = this.state;
         if (status === SketchStatus.ERROR) {
             return (
-                <div {...divProps} className="sketch-component" ref={this.handleRef}>
+                <div {...divProps} id={sketch.id} className="sketch-component" ref={this.handleRef}>
                     <p className="sketch-error">
                         Oops - something went wrong! Try again later.
                         <p><Link className="back" to="/">Back</Link></p>
@@ -56,7 +56,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             );
         } else if (status === SketchStatus.ERROR_WEBGL) {
             return (
-                <div {...divProps} className="sketch-component" ref={this.handleRef}>
+                <div {...divProps} id={sketch.id} className="sketch-component" ref={this.handleRef}>
                     <p className="sketch-error">
                         Your browser doesn't support WebGL. Try visiting this page in Chrome.
                         <p><Link className="back" to="/">Back</Link></p>
@@ -65,7 +65,10 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             );
         } else {
             return (
-                <div {...divProps} className="sketch-component" ref={this.handleRef}>
+                <div {...divProps} id={sketch.id} className="sketch-component" ref={this.handleRef}>
+                    <div className="sketch-elements">
+                        { sketch.elements }
+                    </div>
                 </div>
             );
         }
