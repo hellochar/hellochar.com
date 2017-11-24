@@ -298,13 +298,14 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     controls.maxDistance = 10;
     controls.minDistance = 0.1;
     controls.enableKeys = false;
-    controls.enableRotate = false;
     controls.enablePan = false;
 
     updateName("Han");
 }
 
 function animate() {
+    const time = performance.now() / 3000;
+    cX = 2 / (1 + Math.exp(-6 * Math.sin(time))) - 1;
     jumpiness *= 0.9;
     superPoint.recalculate();
     geometry.verticesNeedUpdate = true;
@@ -313,13 +314,13 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-var cX = 0, cY = 0;
+let cX = 0, cY = 0;
 function mousemove(event: JQuery.Event) {
     var mouseX = event.offsetX == undefined ? (event.originalEvent as any).layerX : event.offsetX;
     var mouseY = event.offsetY == undefined ? (event.originalEvent as any).layerY : event.offsetY;
 
-    cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -1.5, 1.5), 3);
-    cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 1.5, -1.5), 3);
+    // cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -1.5, 1.5), 3);
+    // cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 1.5, -1.5), 3);
     // cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -0.5, 0.5), 1);
     // cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 0.5, -0.5), 1);
 }
@@ -329,6 +330,18 @@ function mousedown(event: JQuery.Event) {
 
 function updateName(name: string) {
     jumpiness = 50;
+    cY = (() => {
+        let hash = 0, i, char;
+        if (name.length == 0) return hash;
+        for (let i = 0, l = name.length; i < l; i++) {
+            char = name.charCodeAt(i);
+            hash = hash * 31 + char;
+            hash |= 0; // Convert to 32bit integer
+        }
+        hash *= hash * 31;
+        const norm = (hash % 1024) / 1024;
+        return norm * 5 - 2.5;
+    })();
     branches = randomBranches(name);
 
     geometry = new THREE.Geometry();
