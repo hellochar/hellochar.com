@@ -12,7 +12,9 @@
         "max-classes-per-file": false,
         "no-bitwise": false,
         "no-empty": false,
-        "no-console": false
+        "no-console": false,
+        "quotemark": false,
+        "no-debugger": false
     },
     "defaultSeverity": "warning"
 }

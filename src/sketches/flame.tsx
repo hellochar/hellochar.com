@@ -1,10 +1,10 @@
-import * as OrbitControls from "imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls";
+// import * as OrbitControls from "imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls";
 import { parse } from "query-string";
 import { KeyboardEvent, MouseEvent } from "react";
 import * as React from "react";
 import * as THREE from "three";
 
-import { map } from "../math";
+import { map, sampleArray } from "../math";
 import { ISketch, SketchAudioContext } from "../sketch";
 
 type Transform = (point: THREE.Vector3) => void;
@@ -22,7 +22,7 @@ const AFFINES = {
     },
     // lerp towards the origin, biasing x by 1, y by -1
     TowardsOrigin2: (point: THREE.Vector3) => {
-        point.set( (point.x + 1) / 2, (point.y - 1) / 2, (point.z + 1) / 2);
+        point.set( (point.x + 1) / 2, (point.y - 1) / 2 - 0.1, (point.z + 1) / 2 - 0.1);
     },
     Swap: (point: THREE.Vector3) => {
         point.set((point.y + point.z) / 2.5, (point.x + point.z) / 2.5, (point.x + point.y) / 2.5);
@@ -53,7 +53,10 @@ const VARIATIONS = {
         point.set(Math.sin(point.x), Math.sin(point.y), Math.sin(point.z));
     },
     Spherical: (point: THREE.Vector3) => {
-        point.multiplyScalar(1 / point.lengthSq());
+        const lengthSq = point.lengthSq();
+        if (lengthSq !== 0) {
+            point.multiplyScalar(1 / lengthSq);
+        }
     },
     Polar: (point: THREE.Vector3) => {
         point.set(Math.atan2(point.y, point.x) / Math.PI, point.length() - 1, Math.atan2(point.z, point.x));
@@ -79,6 +82,9 @@ function createInterpolatedVariation(variationA: Transform, variationB: Transfor
         const pointB = pointA.clone();
         variationA(pointA);
         variationB(pointB);
+        // if (Number.isNaN(pointA.lengthManhattan()) || Number.isNaN(pointB.lengthManhattan())) {
+        //     debugger;
+        // }
         const interpolatedAmount = interpolationFn();
         pointA.lerp(pointB, interpolatedAmount);
     };
@@ -187,13 +193,14 @@ class SuperPoint {
 }
 
 function randomBranches(name: string) {
-    const numBranches = Math.ceil(1 + name.length / 2);
+    const numWraps = Math.floor(name.length / 5);
+    const numBranches = Math.ceil(1 + name.length % 5 + numWraps);
     const branches: Branch[] = [];
     for (let i = 0; i < numBranches; i++) {
         const stringStart = map(i, 0, numBranches, 0, name.length);
         const stringEnd = map(i + 1, 0, numBranches, 0, name.length);
         const substring = name.substring(stringStart, stringEnd);
-        branches.push(randomBranch(i, substring, numBranches));
+        branches.push(randomBranch(i, substring, numBranches, numWraps));
     }
     return branches;
 }
@@ -201,7 +208,7 @@ function randomBranches(name: string) {
 // as low as 32 (for spaces)
 // charCode - usually between 65 and 122
 // other unicode languages could go up to 10k
-function randomBranch(idx: number, substring: string, numBranches: number) {
+function randomBranch(idx: number, substring: string, numBranches: number, numWraps: number) {
     let charCode = stringHash(substring);
     function gen() {
         return (charCode = (charCode * 4910711 + 39) % 2e16);
@@ -220,13 +227,13 @@ function randomBranch(idx: number, substring: string, numBranches: number) {
     const affine = objectValueByIndex(AFFINES, charCode);
     let variation = newVariation();
 
-    if (random() < 0.2) {
+    if (random() < numWraps * 0.25) {
         variation = createInterpolatedVariation(
             variation,
             newVariation(),
             () => 0.5,
         );
-    } else if (random() < 0.2) {
+    } else if (numWraps > 2 && random() < 0.2) {
         variation = createRouterVariation(
             variation,
             newVariation(),
@@ -309,7 +316,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     camera.position.z = 3;
     camera.position.y = 1;
     camera.lookAt(new THREE.Vector3());
-    controls = new OrbitControls(camera, renderer.domElement);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.autoRotate = true;
     controls.autoRotateSpeed = 1;
     controls.maxDistance = 10;
@@ -323,7 +330,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
 function animate() {
     const time = performance.now() / 3000;
     cX = 2 / (1 + Math.exp(-6 * Math.sin(time))) - 1;
-    jumpiness *= -0.99999;
+    jumpiness *= 0.9;
     superPoint.recalculate();
     geometry.verticesNeedUpdate = true;
 
@@ -339,6 +346,10 @@ function mousemove(event: JQuery.Event) {
 }
 
 function mousedown(event: JQuery.Event) {
+}
+
+function dblclick() {
+    jumpiness = 30;
 }
 
 function updateName(name: string = "Han") {
@@ -399,6 +410,7 @@ export const Flame: ISketch = {
     id: "flame",
     init,
     animate,
+    dblclick,
     mousemove,
     mousedown,
     resize,

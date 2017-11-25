@@ -347,15 +347,15 @@ function touchend(event: JQuery.Event) {
 
 function mousedown(event: JQuery.Event) {
     if (event.which === 1) {
-        mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+        mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+        mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
         createAttractor(mouseX, mouseY);
     }
 }
 
 function mousemove(event: JQuery.Event) {
-    mouseX = event.offsetX == undefined ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-    mouseY = event.offsetY == undefined ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+    mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+    mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
     moveAttractor(mouseX, mouseY);
 }
 
