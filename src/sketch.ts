@@ -1,5 +1,6 @@
 export const UI_EVENTS = {
     click: true,
+    dblclick: true,
     mousedown: true,
     mouseup: true,
     mousemove: true,
