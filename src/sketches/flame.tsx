@@ -4,7 +4,7 @@ import { KeyboardEvent, MouseEvent } from "react";
 import * as React from "react";
 import * as THREE from "three";
 
-import { map, sampleArray } from "../math";
+import { lerp, map, sampleArray } from "../math";
 import { ISketch, SketchAudioContext } from "../sketch";
 
 type Transform = (point: THREE.Vector3) => void;
@@ -185,7 +185,7 @@ class SuperPoint {
         // half of the total sum (except for b = 1)
         const depth = (globalBranches.length === 1)
             ? 1000
-            : Math.round(Math.log(100000) / Math.log(globalBranches.length));
+            : Math.floor(Math.log(100000) / Math.log(globalBranches.length));
             // just do depth 1k to prevent call stack
         // console.log(branches);
         this.updateSubtree(depth);
