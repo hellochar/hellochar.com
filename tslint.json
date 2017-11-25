@@ -14,7 +14,8 @@
         "no-empty": false,
         "no-console": false,
         "quotemark": false,
-        "no-debugger": false
+        "no-debugger": false,
+        "interface-over-type-literal": false
     },
     "defaultSeverity": "warning"
 }
