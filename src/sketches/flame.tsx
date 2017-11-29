@@ -4,6 +4,7 @@ import { KeyboardEvent, MouseEvent } from "react";
 import * as React from "react";
 import * as THREE from "three";
 
+import { createPinkNoise, createWhiteNoise } from "../audio/noise";
 import { lerp, map, sampleArray } from "../math";
 import { ISketch, SketchAudioContext } from "../sketch";
 
@@ -140,12 +141,15 @@ function applyBranch(branch: Branch, point: THREE.Vector3, color: THREE.Color) {
 
 class SuperPoint {
     public children: SuperPoint[];
+    public lastPoint: THREE.Vector3 = new THREE.Vector3();
+
     constructor(
         public point: THREE.Vector3,
         public color: THREE.Color,
         public rootGeometry: THREE.Geometry,
         private branches: Branch[],
     ) {
+        this.lastPoint.copy(point);
         rootGeometry.vertices.push(point);
         rootGeometry.colors.push(color);
     }
@@ -167,30 +171,40 @@ class SuperPoint {
         this.children.forEach((child, idx) => {
             const branch = this.branches[idx];
             // reset the child's position to your updated position so it's ready to get stepped
+            child.lastPoint.copy(child.point);
             child.point.copy(this.point);
             child.color.copy(this.color);
             applyBranch(branch, child.point, child.color);
+
+            // keep points from getting too out of hand
+            if (child.point.lengthSq() > 50 * 50) {
+                // take far away points and move them into the center again
+                VARIATIONS.Spherical(child.point);
+                farAwayPoints++;
+            }
+
+            if (Math.random() < 0.1) {
+                velocity += child.lastPoint.distanceTo(child.point);
+
+                const lengthSq = child.point.lengthSq();
+                varianceNumSamples++;
+                varianceSum += Math.sqrt(lengthSq);
+                varianceSumSq += lengthSq;
+            }
+
             child.updateSubtree(depth - 1);
         });
     }
 
-    public recalculate() {
-        this.point.set(jumpiness, jumpiness, jumpiness);
-        // this.point.set(0,0,0);
-        // points at exactly depth d = b^d
-        // points from depth 0...d = b^0 + b^1 + b^2 + ... b^d
-        // we want total points to be ~120k, so
-        // 120k = b^0 + b^1 + ... + b^d
-        // only the last level really matters - the last level accounts for at least
-        // half of the total sum (except for b = 1)
-        const depth = (globalBranches.length === 1)
-            ? 1000
-            : Math.floor(Math.log(100000) / Math.log(globalBranches.length));
-            // just do depth 1k to prevent call stack
-        // console.log(branches);
+    public recalculate(initialPoint: number, depth: number) {
+        this.point.set(initialPoint, initialPoint, initialPoint);
         this.updateSubtree(depth);
     }
 }
+
+let varianceNumSamples = 0;
+let varianceSum = 0;
+let varianceSumSq = 0;
 
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
@@ -200,7 +214,7 @@ function randomBranches(name: string) {
         const stringStart = map(i, 0, numBranches, 0, name.length);
         const stringEnd = map(i + 1, 0, numBranches, 0, name.length);
         const substring = name.substring(stringStart, stringEnd);
-        branches.push(randomBranch(i, substring, numBranches, numWraps));
+        branches.push(randomBranch(i, substring, numBranches, numWraps, name));
     }
     return branches;
 }
@@ -208,23 +222,24 @@ function randomBranches(name: string) {
 // as low as 32 (for spaces)
 // charCode - usually between 65 and 122
 // other unicode languages could go up to 10k
-function randomBranch(idx: number, substring: string, numBranches: number, numWraps: number) {
-    let charCode = stringHash(substring);
-    function gen() {
-        return (charCode = (charCode * 4910711 + 39) % 2e16);
+const GEN_DIVISOR = 2147483648 - 1; // 2^31 - 1
+function randomBranch(idx: number, substring: string, numBranches: number, numWraps: number, name: string) {
+    let gen = stringHash(substring);
+    function next() {
+        return (gen = (gen * 4194303 + 127) % GEN_DIVISOR);
     }
     for (let i = 0; i < 5; i++) {
-        gen();
+        next();
     }
     const newVariation = () => {
-        gen();
-        return objectValueByIndex(VARIATIONS, charCode);
+        next();
+        return objectValueByIndex(VARIATIONS, gen);
     };
     const random = () => {
-        gen();
-        return charCode / 2e16;
+        next();
+        return gen / GEN_DIVISOR;
     };
-    const affine = objectValueByIndex(AFFINES, charCode);
+    const affine = objectValueByIndex(AFFINES, gen);
     let variation = newVariation();
 
     if (random() < numWraps * 0.25) {
@@ -256,12 +271,6 @@ function randomBranch(idx: number, substring: string, numBranches: number, numWr
     };
     return branch;
 }
-
-// function randomValue<T>(obj: Record<string, T>) {
-//     const keys = Object.keys(obj);
-//     const index = Math.floor(Math.random() * keys.length);
-//     return obj[keys[index]];
-// }
 
 function objectValueByIndex<T>(obj: Record<string, T>, index: number) {
     const keys = Object.keys(obj);
@@ -297,15 +306,19 @@ const mousePosition = new THREE.Vector2(0, 0);
 const lastMousePosition = new THREE.Vector2(0, 0);
 let controls: THREE.OrbitControls;
 
+let audioContext: SketchAudioContext;
+
 let globalBranches: Branch[];
 let superPoint: SuperPoint;
 
 let cX = 0, cY = 0;
-let jumpiness = 0;
+const jumpiness = 3;
 
 const nameFromSearch = parse(location.search).name;
 
 function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
+    audioContext = _audioContext;
+    initAudio(_audioContext);
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0, 12, 50);
 
@@ -327,15 +340,179 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     updateName(nameFromSearch);
 }
 
+let noiseGain: GainNode;
+let oscLow: OscillatorNode;
+let oscHigh: OscillatorNode;
+let oscHighGain: GainNode;
+let oscGain: GainNode;
+let chord: any;
+let filter: BiquadFilterNode;
+let compressor: DynamicsCompressorNode;
+
+function initAudio(context: SketchAudioContext) {
+    compressor = context.createDynamicsCompressor();
+    compressor.threshold.value = -40;
+    compressor.knee.value = 35;
+    compressor.attack.value = 0.1;
+    compressor.release.value = 0.25;
+    compressor.ratio.value = 1.8;
+
+    // const noise = createPinkNoise(context);
+    const noise = createWhiteNoise(context);
+    noiseGain = context.createGain();
+    noiseGain.gain.value = 0.0;
+    noise.connect(noiseGain);
+    noiseGain.connect(compressor);
+
+    oscLow = context.createOscillator();
+    oscLow.frequency.value = 0;
+    oscLow.type = "square";
+    oscLow.start(0);
+    const oscLowGain = context.createGain();
+    oscLowGain.gain.value = 0.6;
+    oscLow.connect(oscLowGain);
+
+    filter = context.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 100;
+    filter.Q.value = 2.18;
+    oscLowGain.connect(filter);
+
+    oscHigh = context.createOscillator();
+    oscHigh.frequency.value = 0;
+    oscHigh.type = "triangle";
+    oscHigh.start(0);
+    oscHighGain = context.createGain();
+    oscHighGain.gain.value = 0.05;
+    oscHigh.connect(oscHighGain);
+
+    oscGain = context.createGain();
+    oscGain.gain.value = 0.0;
+    filter.connect(oscGain);
+    oscHighGain.connect(oscGain);
+    oscGain.connect(compressor);
+
+    // plays a major or minor chord
+    chord = (() => {
+        const root = context.createOscillator();
+        root.type = "sine";
+        root.start(0);
+        const third = context.createOscillator();
+        third.type = "sine";
+        third.start(0);
+        const fifth = context.createOscillator();
+        fifth.type = "sine";
+        fifth.start(0);
+
+        const fifthGain = context.createGain();
+        fifthGain.gain.value = 0.7;
+        fifth.connect(fifthGain);
+
+        const gain = context.createGain();
+        root.connect(gain);
+        third.connect(gain);
+        fifthGain.connect(gain);
+
+        // 0 = full major, 1 = full minor
+        let minorBias = 0;
+        let rootFreq = 0;
+
+        function recompute() {
+            root.frequency.value = rootFreq;
+            const thirdScaleNote = 4 - minorBias;
+            const thirdFreqScale = Math.pow(2, thirdScaleNote / 12);
+            third.frequency.value = rootFreq * thirdFreqScale;
+            fifth.frequency.value = rootFreq * Math.pow(2, 7 / 12);
+        }
+
+        return {
+            root,
+            third,
+            fifth,
+            gain,
+            setFrequency: (f: number) => {
+                rootFreq = f;
+                recompute();
+            },
+            setMinorBias: (mB: number) => {
+                minorBias = mB;
+                recompute();
+            },
+        };
+    })();
+    chord.gain.connect(compressor);
+
+    compressor.connect(context.gain);
+}
+
+let velocity = 0;
+let farAwayPoints = 0;
+let baseFrequency = 0;
+let baseLowFrequency = 0;
+let noiseGainScale = 0;
 function animate() {
     const time = performance.now() / 3000;
     cX = 2 / (1 + Math.exp(-6 * Math.sin(time))) - 1;
-    jumpiness *= 0.9;
-    superPoint.recalculate();
+    // jumpiness *= 0.9;
+    velocity = 0;
+    varianceNumSamples = 0;
+    varianceSum = 0;
+    varianceSumSq = 0;
+    farAwayPoints = 0;
+    superPoint.recalculate(jumpiness, computeDepth());
+    velocity = velocity / varianceNumSamples;
+    // can go as high as 15 - 20, as low as 0.1
+    const variance = (varianceSumSq - (varianceSum * varianceSum) / varianceNumSamples) / (varianceNumSamples - 1);
+    // ignore the very first frame
+    if (velocity < 0.1) {
+        const newNoiseGain = noiseGain.gain.value * 0.9 + 0.1 * Math.min(velocity * noiseGainScale, 0.3);
+        noiseGain.gain.value = newNoiseGain;
+
+        const newOscGain = oscGain.gain.value * 0.9 + 0.1 * Math.max(0, Math.min(velocity * velocity * 2000, 0.6) - 0.01);
+        oscGain.gain.value = newOscGain;
+
+        const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
+        oscLow.frequency.value = newOscFreq;
+
+        const sigmoidX = map(velocity * velocity, 1e-8, 0.005, -10, 10);
+        oscHigh.frequency.value = Math.min(map(sigmoid(sigmoidX), 0, 1, baseFrequency, baseFrequency * 5), 20000);
+
+        chord.setFrequency(240);
+        chord.setMinorBias(velocity * 100 + sigmoid(variance - 3) * 4);
+        chord.gain.gain.value = 0.95 * newNoiseGain + 0.05;
+    }
     geometry.verticesNeedUpdate = true;
 
     controls.update();
+    const cameraLength = camera.position.length();
+    compressor.ratio.value = 1 + 3 / cameraLength;
+    audioContext.gain.gain.value = 2.5 / cameraLength;
+
     renderer.render(scene, camera);
+}
+
+function sigmoid(x: number) {
+    if (x > 10) {
+        return 1;
+    } else if (x < -10) {
+        return 0;
+    } else {
+        return 1 / (1 + Math.exp(-x));
+    }
+}
+
+function computeDepth() {
+    // points at exactly depth d = b^d
+    // points from depth 0...d = b^0 + b^1 + b^2 + ... b^d
+    // we want total points to be ~120k, so
+    // 120k = b^0 + b^1 + ... + b^d
+    // only the last level really matters - the last level accounts for at least
+    // half of the total sum (except for b = 1)
+    const depth = (globalBranches.length === 1)
+        ? 1000
+        : Math.floor(Math.log(100000) / Math.log(globalBranches.length));
+        // just do depth 1k to prevent call stack
+    return depth;
 }
 
 function mousemove(event: JQuery.Event) {
@@ -349,17 +526,24 @@ function mousedown(event: JQuery.Event) {
 }
 
 function dblclick() {
-    jumpiness = 30;
+    // jumpiness = 30;
 }
 
 function updateName(name: string = "Han") {
     const {origin, pathname} = window.location;
     const newUrl = `${origin}${pathname}?name=${name}`;
     window.history.replaceState({}, null!, newUrl);
-    jumpiness = 30;
+    // jumpiness = 30;
     const hash = stringHash(name);
     const hashNorm = (hash % 1024) / 1024;
-    cY = hashNorm * 5 - 2.5;
+    baseFrequency = map((hash % 2048) / 2048, 0, 1, 10, 6000);
+    const hash2 = hash * hash + hash * 31 + 9;
+    filter.frequency.value = map((hash2 % 2e12) / 2e12, 0, 1, 120, 400);
+    const hash3 = hash2 * hash2 + hash2 * 31 + 9;
+    filter.Q.value = map((hash3 % 2e12) / 2e12, 0, 1, 5, 8);
+    baseLowFrequency = map((hash3 % 10) / 10, 0, 1, 10, 20);
+    noiseGainScale = map((hash2 * hash3 % 100) / 100, 0, 1, 3, 6);
+    cY = map(hashNorm, 0, 1, -2.5, 2.5);
     globalBranches = randomBranches(name);
 
     geometry = new THREE.Geometry();
