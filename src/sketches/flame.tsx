@@ -121,24 +121,6 @@ function applyBranch(branch: Branch, point: THREE.Vector3, color: THREE.Color) {
     color.add(branch.color);
 }
 
-// const CIRCLE_CLAWS: Branch[] = [
-//     {
-//         color: new THREE.Color(0.28, -0.12, -0.12),
-//         affine: AFFINES.TowardsOriginNegativeBias,
-//         variation: VARIATIONS.Swirl
-//     },
-//     {
-//         color: new THREE.Color(0.07, 0.21, 0),
-//         affine: AFFINES.TowardsOriginNegativeBias,
-//         variation: VARIATIONS.Spherical
-//     },
-//     {
-//         color: new THREE.Color(0, 0.1, 0.35),
-//         affine: AFFINES.TowardsOrigin2,
-//         variation: VARIATIONS.Polar
-//     },
-// ];
-
 class SuperPoint {
     public children: SuperPoint[];
     public lastPoint: THREE.Vector3 = new THREE.Vector3();
@@ -201,26 +183,6 @@ class SuperPoint {
         // console.time("updateSubtree");
         this.updateSubtree(depth);
         // console.timeEnd("updateSubtree");
-
-        const sideLengths = [1, 0.1, 0.01, 0.001];
-        // console.time("boxCount");
-        const [count, countDensity] = getFractalDimensionBoxCount(this.rootGeometry.vertices, sideLengths);
-        // console.timeEnd("boxCount");
-
-        // count ranges from 0.5 in the extremely shunken case (aaaaa) to 2.8 in a really spaced out case
-        // much of it is ~2; anything < 1.7 is very linear/1D
-
-        // countDensity ranges from 3.5 (adsfadsfa) really spaced out to ~6 which is extremely tiny
-        // much of it ranges from 3.5 to like 4.5
-        // it's a decent measure of how "dense" the fractal is
-
-        // density ranges from 1 to ~6 or 7 at the high end.
-        // low density 1.5 and below are spaced out, larger fractals
-        // between 1.5 and 3 is a nice variety
-        // anything above 3 is really dense, hard to see
-        const density = countDensity / count;
-
-        // console.log(count, countDensity, density);
     }
 }
 
@@ -236,7 +198,7 @@ function randomBranches(name: string) {
         const stringStart = map(i, 0, numBranches, 0, name.length);
         const stringEnd = map(i + 1, 0, numBranches, 0, name.length);
         const substring = name.substring(stringStart, stringEnd);
-        branches.push(randomBranch(i, substring, numBranches, numWraps, name));
+        branches.push(randomBranch(i, substring, numBranches, numWraps));
     }
     return branches;
 }
@@ -245,12 +207,12 @@ function randomBranches(name: string) {
 // charCode - usually between 65 and 122
 // other unicode languages could go up to 10k
 const GEN_DIVISOR = 2147483648 - 1; // 2^31 - 1
-function randomBranch(idx: number, substring: string, numBranches: number, numWraps: number, name: string) {
+function randomBranch(idx: number, substring: string, numBranches: number, numWraps: number) {
     let gen = stringHash(substring);
     function next() {
         return (gen = (gen * 4194303 + 127) % GEN_DIVISOR);
     }
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 5 + idx * numWraps; i++) {
         next();
     }
     const newVariation = () => {
@@ -372,6 +334,7 @@ let filter: BiquadFilterNode;
 let compressor: DynamicsCompressorNode;
 
 function initAudio(context: SketchAudioContext) {
+    context.gain.gain.value = 0;
     compressor = context.createDynamicsCompressor();
     compressor.threshold.value = -40;
     compressor.knee.value = 35;
@@ -419,32 +382,55 @@ function initAudio(context: SketchAudioContext) {
         const root = context.createOscillator();
         root.type = "sine";
         root.start(0);
+
         const third = context.createOscillator();
         third.type = "sine";
         third.start(0);
+
         const fifth = context.createOscillator();
         fifth.type = "sine";
         fifth.start(0);
-
         const fifthGain = context.createGain();
         fifthGain.gain.value = 0.7;
         fifth.connect(fifthGain);
 
+        const sub = context.createOscillator();
+        sub.type = "triangle";
+        sub.start(0);
+        const subGain = context.createGain();
+        subGain.gain.value = 0.9;
+        sub.connect(subGain);
+
+        const sub2 = context.createOscillator();
+        sub2.type = "triangle";
+        sub2.start(0);
+        const sub2Gain = context.createGain();
+        sub2Gain.gain.value = 0.8;
+        sub2.connect(sub2Gain);
+
         const gain = context.createGain();
+        gain.gain.value = 0;
         root.connect(gain);
         third.connect(gain);
         fifthGain.connect(gain);
+        subGain.connect(gain);
+        sub2Gain.connect(gain);
 
         // 0 = full major, 1 = full minor
         let minorBias = 0;
         let rootFreq = 0;
+        let fifthBias = 0;
 
         function recompute() {
             root.frequency.value = rootFreq;
             const thirdScaleNote = 4 - minorBias;
             const thirdFreqScale = Math.pow(2, thirdScaleNote / 12);
             third.frequency.value = rootFreq * thirdFreqScale;
-            fifth.frequency.value = rootFreq * Math.pow(2, 7 / 12);
+            const fifthScaleNote = 7 + fifthBias;
+            const fifthFreqScale = Math.pow(2, fifthScaleNote / 12);
+            fifth.frequency.value = rootFreq * fifthFreqScale;
+            sub.frequency.value = rootFreq / 2;
+            sub2.frequency.value = rootFreq / 4;
         }
 
         return {
@@ -460,6 +446,10 @@ function initAudio(context: SketchAudioContext) {
                 minorBias = mB;
                 recompute();
             },
+            setFifthBias: (fB: number) => {
+                fifthBias = fB;
+                recompute();
+            },
         };
     })();
     chord.gain.connect(compressor);
@@ -472,9 +462,15 @@ let farAwayPoints = 0;
 let baseFrequency = 0;
 let baseLowFrequency = 0;
 let noiseGainScale = 0;
+let baseThirdBias = 0;
+let baseFifthBias = 0;
+let noiseGate = 0;
+let oscLowGate = 0;
+let oscHighGate = 0;
+let chordGate = 0;
 function animate() {
     const time = performance.now() / 3000;
-    cX = 2 / (1 + Math.exp(-6 * Math.sin(time))) - 1;
+    cX = 2 * sigmoid(6 * Math.sin(time)) - 1;
     // jumpiness *= 0.9;
     velocity = 0;
     varianceNumSamples = 0;
@@ -482,34 +478,60 @@ function animate() {
     varianceSumSq = 0;
     farAwayPoints = 0;
     superPoint.recalculate(jumpiness, computeDepth());
+    geometry.verticesNeedUpdate = true;
+    if (boundingSphere == null) {
+        geometry.computeBoundingSphere();
+        boundingSphere = geometry.boundingSphere;
+    }
+
     velocity = velocity / varianceNumSamples;
+
     // can go as high as 15 - 20, as low as 0.1
     const variance = (varianceSumSq - (varianceSum * varianceSum) / varianceNumSamples) / (varianceNumSamples - 1);
-    // ignore the very first frame
-    if (velocity < 0.1) {
-        const newNoiseGain = noiseGain.gain.value * 0.9 + 0.1 * Math.min(velocity * noiseGainScale, 0.3);
-        noiseGain.gain.value = newNoiseGain;
 
-        const newOscGain = oscGain.gain.value * 0.9 + 0.1 * Math.max(0, Math.min(velocity * velocity * 2000, 0.6) - 0.01);
-        oscGain.gain.value = newOscGain;
+    const sideLengths = [1, 0.1, 0.01, 0.001];
+    // console.time("boxCount");
 
-        const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
-        oscLow.frequency.value = newOscFreq;
+    // count ranges from 0.5 in the extremely shunken case (aaaaa) to 2.8 in a really spaced out case
+    // much of it is ~2; anything < 1.7 is very linear/1D
 
-        const sigmoidX = map(velocity * velocity, 1e-8, 0.005, -10, 10);
-        oscHigh.frequency.value = Math.min(map(sigmoid(sigmoidX), 0, 1, baseFrequency, baseFrequency * 5), 20000);
+    // countDensity ranges from 3.5 (adsfadsfa) really spaced out to ~6 which is extremely tiny
+    // much of it ranges from 3.5 to like 4.5
+    // it's a decent measure of how "dense" the fractal is
+    const [count, countDensity] = getFractalDimensionBoxCount(geometry.vertices, sideLengths);
 
-        chord.setFrequency(240);
-        chord.setMinorBias(velocity * 100 + sigmoid(variance - 3) * 4);
-        chord.gain.gain.value = 0.95 * newNoiseGain + 0.05;
-    }
-    geometry.verticesNeedUpdate = true;
+    // console.timeEnd("boxCount");
 
-    controls.update();
+    // density ranges from 1 to ~6 or 7 at the high end.
+    // low density 1.5 and below are spaced out, larger fractals
+    // between 1.5 and 3 is a nice variety
+    // anything above 3 is really dense, hard to see
+    const density = countDensity / count;
+
+    const velocityFactor = Math.min(velocity * noiseGainScale, 0.3);
+    const noiseAmplitude = 2 / (1 + density * density);
+    const newNoiseGain = noiseGain.gain.value * 0.9 + 0.1 * velocityFactor * noiseAmplitude;
+    noiseGain.gain.value = (newNoiseGain + 1e-4) * noiseGate;
+
+    const newOscGain = oscGain.gain.value * 0.9 + 0.1 * Math.max(0, Math.min(velocity * velocity * 2000, 0.6) - 0.01);
+    oscGain.gain.value = newOscGain;
+
+    const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
+    oscLow.frequency.value = newOscFreq * oscLowGate;
+
+    const sigmoidX = map(velocity * velocity, 1e-8, 0.005, -10, 10);
+    oscHigh.frequency.value = Math.min(map(sigmoid(sigmoidX), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate;
+
+    chord.setFrequency(100 + 100 * boundingSphere.radius);
+    chord.setMinorBias(baseThirdBias + velocity * 100 + sigmoid(variance - 3) * 4);
+    chord.setFifthBias(baseFifthBias + countDensity / 3);
+    chord.gain.gain.value = (chord.gain.gain.value * 0.9 + 0.1 * (velocityFactor * count * count / 8) + 3e-5) * chordGate;
+
     const cameraLength = camera.position.length();
     compressor.ratio.value = 1 + 3 / cameraLength;
-    audioContext.gain.gain.value = 2.5 / cameraLength;
+    audioContext.gain.gain.value = audioContext.gain.gain.value * 0.95 + 0.05 * (2.5 / cameraLength);
 
+    controls.update();
     // console.time("render");
     renderer.render(scene, camera);
     // console.timeEnd("render");
@@ -553,11 +575,14 @@ function dblclick() {
     // jumpiness = 30;
 }
 
+let boundingSphere: THREE.Sphere | null;
 function updateName(name: string = "Han") {
     const {origin, pathname} = window.location;
     const newUrl = `${origin}${pathname}?name=${name}`;
     window.history.replaceState({}, null!, newUrl);
     // jumpiness = 30;
+    boundingSphere = null;
+    audioContext.gain.gain.value = 0;
     const hash = stringHash(name);
     const hashNorm = (hash % 1024) / 1024;
     baseFrequency = map((hash % 2048) / 2048, 0, 1, 10, 6000);
@@ -567,6 +592,15 @@ function updateName(name: string = "Han") {
     filter.Q.value = map((hash3 % 2e12) / 2e12, 0, 1, 5, 8);
     baseLowFrequency = map((hash3 % 10) / 10, 0, 1, 10, 20);
     noiseGainScale = map((hash2 * hash3 % 100) / 100, 0, 1, 3, 6);
+    baseThirdBias = (hash2 % 4) / 4;
+    baseFifthBias = (hash3 % 3) / 3;
+
+    // basically boolean randoms; we don't want mod 2 cuz the hashes are related to each other at that small level
+    noiseGate = (hash3 % 100) < 50 ? 0 : 1;
+    oscLowGate = (hash2 * hash3 % 96) < 48 ? 0 : 1;
+    oscHighGate = (hash3 * hash3 % 4000) < 2000 ? 0 : 1;
+    chordGate = (hash + hash2 + hash3) % 44 < 22 ? 0 : 1;
+
     cY = map(hashNorm, 0, 1, -2.5, 2.5);
     globalBranches = randomBranches(name);
 
