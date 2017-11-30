@@ -121,6 +121,10 @@ function applyBranch(branch: Branch, point: THREE.Vector3, color: THREE.Color) {
     color.add(branch.color);
 }
 
+interface UpdateVisitor {
+    visit(point: SuperPoint): void;
+}
+
 class SuperPoint {
     public children: SuperPoint[];
     public lastPoint: THREE.Vector3 = new THREE.Vector3();
@@ -136,7 +140,7 @@ class SuperPoint {
         rootGeometry.colors.push(color);
     }
 
-    public updateSubtree(depth: number) {
+    public updateSubtree(depth: number, ...visitors: UpdateVisitor[]) {
         if (depth === 0) { return; }
 
         if (this.children === undefined) {
@@ -158,37 +162,28 @@ class SuperPoint {
             child.color.copy(this.color);
             applyBranch(branch, child.point, child.color);
 
-            // keep points from getting too out of hand
+            // take far away points and move them into the center again to keep points from getting too out of hand
             if (child.point.lengthSq() > 50 * 50) {
-                // take far away points and move them into the center again
                 VARIATIONS.Spherical(child.point);
-                farAwayPoints++;
             }
 
-            if (Math.random() < 0.1) {
-                velocity += child.lastPoint.distanceTo(child.point);
-
-                const lengthSq = child.point.lengthSq();
-                varianceNumSamples++;
-                varianceSum += Math.sqrt(lengthSq);
-                varianceSumSq += lengthSq;
+            if (Math.random() < 0.01) {
+                for (const v of visitors) {
+                    v.visit(child);
+                }
             }
 
-            child.updateSubtree(depth - 1);
+            child.updateSubtree(depth - 1, ...visitors);
         });
     }
 
-    public recalculate(initialPoint: number, depth: number) {
+    public recalculate(initialPoint: number, depth: number, ...visitors: UpdateVisitor[]) {
         this.point.set(initialPoint, initialPoint, initialPoint);
         // console.time("updateSubtree");
-        this.updateSubtree(depth);
+        this.updateSubtree(depth, ...visitors);
         // console.timeEnd("updateSubtree");
     }
 }
-
-let varianceNumSamples = 0;
-let varianceSum = 0;
-let varianceSumSq = 0;
 
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
@@ -457,50 +452,132 @@ function initAudio(context: SketchAudioContext) {
     compressor.connect(context.gain);
 }
 
-let velocity = 0;
-let farAwayPoints = 0;
-let baseFrequency = 0;
-let baseLowFrequency = 0;
-let noiseGainScale = 0;
-let baseThirdBias = 0;
-let baseFifthBias = 0;
-let noiseGate = 0;
-let oscLowGate = 0;
-let oscHighGate = 0;
-let chordGate = 0;
+class VelocityTrackerVisitor implements UpdateVisitor {
+    public velocity = 0;
+    public numVisited = 0;
+
+    public visit(p: SuperPoint) {
+        this.velocity += p.lastPoint.distanceTo(p.point);
+        this.numVisited++;
+    }
+
+    public computeVelocity() {
+        return this.velocity / this.numVisited;
+    }
+}
+
+class LengthVarianceTrackerVisitor implements UpdateVisitor {
+    public varianceNumSamples = 0;
+    public varianceSum = 0;
+    public varianceSumSq = 0;
+
+    public variance = 0;
+
+    public visit(p: SuperPoint) {
+        const lengthSq = p.point.lengthSq();
+        this.varianceNumSamples++;
+        this.varianceSum += Math.sqrt(lengthSq);
+        this.varianceSumSq += lengthSq;
+    }
+
+    public computeVariance() {
+        const { varianceSumSq, varianceSum, varianceNumSamples } = this;
+        // can go as high as 15 - 20, as low as 0.1
+        return (varianceSumSq - (varianceSum * varianceSum) / varianceNumSamples) / (varianceNumSamples - 1);
+    }
+}
+
+type BoxHash = { [boxCorner: string]: number };
+class BoxCountVisitor implements UpdateVisitor {
+    public boxHashes: BoxHash[];
+    public counts: number[];
+    public densities: number[];
+
+    public constructor(public sideLengths: number[]) {
+        this.boxHashes = sideLengths.map( () => ({}) );
+        this.counts = sideLengths.map(() => 0);
+        this.densities = sideLengths.map(() => 0);
+    }
+
+    private temp = new THREE.Vector3();
+    public visit(p: SuperPoint) {
+        const { sideLengths, boxHashes, temp, counts, densities } = this;
+
+        for (let idx = 0, sll = sideLengths.length; idx < sll; idx++) {
+            const sideLength = sideLengths[idx];
+            const boxHash = boxHashes[idx];
+            // round to nearest sideLength interval on x/y/z
+            // e.g. for side length 2
+            // [0 to 2) -> 0
+            // [2 to 4) -> 2
+            temp.copy(p.point).divideScalar(sideLength).floor().multiplyScalar(sideLength);
+            const hash = `${temp.x},${temp.y},${temp.z}`;
+            if (!boxHash[hash]) {
+                boxHash[hash] = 1;
+                counts[idx]++;
+                densities[idx] += 1;
+            } else {
+                // approximates boxHash^2
+                // we have the sequence 1, 2, 3, 4, 5, ...n
+                // assume we've gotten n^2 contribution.
+                // now we want to get to (n+1)^2 contribution. What do we add?
+                // (n+1)^2 - n^2 = (n+1)*(n+1) - n^2 = n^2 + 2n + 1 - n^2 = 2n + 1
+                densities[idx] += 2 * boxHash[hash] + 1;
+                boxHash[hash]++;
+            }
+        }
+    }
+
+    public computeCountAndCountDensity() {
+        const { counts, densities, sideLengths } = this;
+
+        // so we have three data points:
+        // { volume: 1, count: 11 }, { volume: 1e-3, count: 341 }, { volume: 1e-6, count: 15154 }
+        // the formula is roughly count = C * side^dimension
+        // lets just log both of them
+        // log(count) = dimesion*log(C*side); linear regression out the C*side to get the dimension
+        const logSideLengths = sideLengths.map((sideLength) => Math.log(sideLength));
+        const logCounts = counts.map((count) => Math.log(count));
+        const logDensities = densities.map((density) => Math.log(density));
+
+        const slopeCount = -this.linearRegressionSlope(logSideLengths, logCounts);
+        const slopeDensity = -this.linearRegressionSlope(logSideLengths, logDensities);
+
+        // count ranges from 0.5 in the extremely shunken case (aaaaa) to 2.8 in a really spaced out case
+        // much of it is ~2; anything < 1.7 is very linear/1D
+
+        // countDensity ranges from 3.5 (adsfadsfa) really spaced out to ~6 which is extremely tiny
+        // much of it ranges from 3.5 to like 4.5
+        // it's a decent measure of how "dense" the fractal is
+        return [slopeCount, slopeDensity];
+    }
+
+    private linearRegressionSlope(xs: number[], ys: number[]) {
+        const xAvg = xs.reduce((sum, x) => sum + x, 0);
+        const yAvg = ys.reduce((sum, y) => sum + y, 0);
+        const denominator = xs.reduce((sum, x) => (x - xAvg) * (x - xAvg), 0);
+        const numerator = xs.reduce((sum, x, idx) => (x - xAvg) * (ys[idx] - yAvg), 0);
+        return numerator / denominator;
+    }
+}
+
+let boundingSphere: THREE.Sphere | null;
 function animate() {
     const time = performance.now() / 3000;
     cX = 2 * sigmoid(6 * Math.sin(time)) - 1;
-    // jumpiness *= 0.9;
-    velocity = 0;
-    varianceNumSamples = 0;
-    varianceSum = 0;
-    varianceSumSq = 0;
-    farAwayPoints = 0;
-    superPoint.recalculate(jumpiness, computeDepth());
+    const velocityVisitor = new VelocityTrackerVisitor();
+    const varianceVisitor = new LengthVarianceTrackerVisitor();
+    const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
+    superPoint.recalculate(jumpiness, computeDepth(), velocityVisitor, varianceVisitor, countVisitor);
     geometry.verticesNeedUpdate = true;
     if (boundingSphere == null) {
         geometry.computeBoundingSphere();
         boundingSphere = geometry.boundingSphere;
     }
 
-    velocity = velocity / varianceNumSamples;
-
-    // can go as high as 15 - 20, as low as 0.1
-    const variance = (varianceSumSq - (varianceSum * varianceSum) / varianceNumSamples) / (varianceNumSamples - 1);
-
-    const sideLengths = [1, 0.1, 0.01, 0.001];
-    // console.time("boxCount");
-
-    // count ranges from 0.5 in the extremely shunken case (aaaaa) to 2.8 in a really spaced out case
-    // much of it is ~2; anything < 1.7 is very linear/1D
-
-    // countDensity ranges from 3.5 (adsfadsfa) really spaced out to ~6 which is extremely tiny
-    // much of it ranges from 3.5 to like 4.5
-    // it's a decent measure of how "dense" the fractal is
-    const [count, countDensity] = getFractalDimensionBoxCount(geometry.vertices, sideLengths);
-
-    // console.timeEnd("boxCount");
+    const velocity = velocityVisitor.computeVelocity();
+    const variance = varianceVisitor.computeVariance();
+    const [count, countDensity] = countVisitor.computeCountAndCountDensity();
 
     // density ranges from 1 to ~6 or 7 at the high end.
     // low density 1.5 and below are spaced out, larger fractals
@@ -519,8 +596,8 @@ function animate() {
     const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
     oscLow.frequency.value = newOscFreq * oscLowGate;
 
-    const sigmoidX = map(velocity * velocity, 1e-8, 0.005, -10, 10);
-    oscHigh.frequency.value = Math.min(map(sigmoid(sigmoidX), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate;
+    const velocitySq = map(velocity * velocity, 1e-8, 0.005, -10, 10);
+    oscHigh.frequency.value = Math.min(map(sigmoid(velocitySq), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate;
 
     chord.setFrequency(100 + 100 * boundingSphere.radius);
     chord.setMinorBias(baseThirdBias + velocity * 100 + sigmoid(variance - 3) * 4);
@@ -575,7 +652,15 @@ function dblclick() {
     // jumpiness = 30;
 }
 
-let boundingSphere: THREE.Sphere | null;
+let baseFrequency = 0;
+let baseLowFrequency = 0;
+let noiseGainScale = 0;
+let baseThirdBias = 0;
+let baseFifthBias = 0;
+let noiseGate = 0;
+let oscLowGate = 0;
+let oscHighGate = 0;
+let chordGate = 0;
 function updateName(name: string = "Han") {
     const {origin, pathname} = window.location;
     const newUrl = `${origin}${pathname}?name=${name}`;
@@ -645,69 +730,6 @@ class FlameNameInput extends React.Component<{}, {}> {
         const name = (value == null || value === "") ? "Han" : value;
         updateName(name.trim());
     }
-}
-
-function getFractalDimensionBoxCount(points: THREE.Vector3[], sideLengths: number[]) {
-    const [counts, densities] = countBoxesRough(points, sideLengths);
-
-    // so we have three data points:
-    // { volume: 1, count: 11 }, { volume: 1e-3, count: 341 }, { volume: 1e-6, count: 15154 }
-    // the formula is roughly count = C * side^dimension
-    // lets just log both of them
-    // log(count) = dimesion*log(C*side); linear regression out the C*side to get the dimension
-    const logSideLengths = sideLengths.map((sideLength) => Math.log(sideLength));
-    const logCounts = counts.map((count) => Math.log(count));
-    const logDensities = densities.map((density) => Math.log(density));
-
-    const slopeCount = -linearRegressionSlope(logSideLengths, logCounts);
-    const slopeDensity = -linearRegressionSlope(logSideLengths, logDensities);
-    return [slopeCount, slopeDensity];
-}
-
-type BoxHash = { [boxCorner: string]: number };
-function countBoxesRough(points: THREE.Vector3[], sideLengths: number[]) {
-    const boxHashes: BoxHash[] = sideLengths.map( () => ({}) );
-    const counts: number[] = sideLengths.map(() => 0);
-    const densities: number[] = sideLengths.map(() => 0);
-
-    const temp = new THREE.Vector3();
-    for (let i = 0, pl = points.length; i < pl; i++) {
-        if (Math.random() < 0.01) {
-            const p = points[i];
-            for (let idx = 0, sll = sideLengths.length; idx < sll; idx++) {
-                const sideLength = sideLengths[idx];
-                const boxHash = boxHashes[idx];
-                // round to nearest sideLength interval on x/y/z
-                // e.g. for side length 2
-                // [0 to 2) -> 0
-                // [2 to 4) -> 2
-                temp.copy(p).divideScalar(sideLength).floor().multiplyScalar(sideLength);
-                const hash = `${temp.x},${temp.y},${temp.z}`;
-                if (!boxHash[hash]) {
-                    boxHash[hash] = 1;
-                    counts[idx]++;
-                    densities[idx] += 1;
-                } else {
-                    // approximates boxHash^2
-                    // we have the sequence 1, 2, 3, 4, 5, ...n
-                    // assume we've gotten n^2 contribution.
-                    // now we want to get to (n+1)^2 contribution. What do we add?
-                    // (n+1)^2 - n^2 = (n+1)*(n+1) - n^2 = n^2 + 2n + 1 - n^2 = 2n + 1
-                    densities[idx] += 2 * boxHash[hash] + 1;
-                    boxHash[hash]++;
-                }
-            }
-        }
-    }
-    return [counts, densities];
-}
-
-function linearRegressionSlope(xs: number[], ys: number[]) {
-    const xAvg = xs.reduce((sum, x) => sum + x, 0);
-    const yAvg = ys.reduce((sum, y) => sum + y, 0);
-    const denominator = xs.reduce((sum, x) => (x - xAvg) * (x - xAvg), 0);
-    const numerator = xs.reduce((sum, x, idx) => (x - xAvg) * (ys[idx] - yAvg), 0);
-    return numerator / denominator;
 }
 
 export const Flame: ISketch = {
