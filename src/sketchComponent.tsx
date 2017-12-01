@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { Link } from "react-router-dom";
 import { ISketch, SketchAudioContext, UI_EVENTS } from "./sketch";
+import * as classnames from "classnames";
 
 const $window = $(window);
 const HAS_SOUND = true;
@@ -30,6 +31,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
 
     private renderer: THREE.WebGLRenderer;
     private audioContext: SketchAudioContext;
+    private userVolume: GainNode;
 
     private handleRef = (ref: HTMLDivElement | null) => {
         if (ref != null) {
@@ -77,9 +79,23 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
                     <div className="sketch-elements">
                         { sketch.elements }
                     </div>
+                    { this.renderVolumeButton() }
                 </div>
             );
         }
+    }
+
+    private renderVolumeButton() {
+        const hasVolume = this.userVolume != null && this.userVolume.gain.value > 0;
+        const volumeElementClassname = classnames("fa", {
+            "fa-volume-off": hasVolume,
+            "fa-volume-up": !hasVolume,
+        });
+        return (
+            <button className="user-volume">
+                <i className={volumeElementClassname} aria-hidden="true" />
+            </button>
+        );
     }
 
     private handleWindowResize = () => {
@@ -90,11 +106,10 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     }
 
     private handleVisibilityChange = () => {
-        const audioContextGain = this.audioContext.gain;
         if (document.hidden) {
-            audioContextGain.gain.value = 0;
+            this.audioContext.suspend();
         } else {
-            audioContextGain.gain.value = 1;
+            this.audioContext.resume();
         }
     }
 
@@ -147,9 +162,14 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
 
         // initialize and run sketch
         const audioContext = this.audioContext = new AudioContext() as SketchAudioContext;
-        const audioContextGain = audioContext.createGain();
-        audioContextGain.connect(audioContext.destination);
-        audioContext.gain = audioContextGain;
+
+        this.userVolume = audioContext.createGain();
+        this.userVolume.gain.value = 0.8;
+        this.userVolume.connect(audioContext.destination);
+
+        const audioContextGain = audioContext.gain = audioContext.createGain();
+        audioContextGain.connect(this.userVolume);
+
         document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
         sketch.init(renderer, audioContext);

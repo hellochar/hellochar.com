@@ -75,3 +75,17 @@
         }
     }
 }
+
+.user-volume {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+    background: none;
+    color: $gray3;
+    border: none;
+    font-size: 30px;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+}
