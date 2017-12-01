@@ -606,7 +606,7 @@ function animate() {
 
     const cameraLength = camera.position.length();
     compressor.ratio.value = 1 + 3 / cameraLength;
-    audioContext.gain.gain.value = audioContext.gain.gain.value * 0.95 + 0.05 * (2.5 / cameraLength);
+    audioContext.gain.gain.value = (2.5 / cameraLength) + 0.05;
 
     controls.update();
     // console.time("render");
