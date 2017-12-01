@@ -22,11 +22,13 @@ export enum SketchStatus {
 
 export interface ISketchComponentState {
     status: SketchStatus;
+    volumeEnabled: boolean;
 }
 
 export class SketchComponent extends React.Component<ISketchComponentProps, ISketchComponentState> {
     public state: ISketchComponentState = {
         status: SketchStatus.LOADING,
+        volumeEnabled: JSON.parse(window.localStorage.getItem("sketch-volumeEnabled") || "true"),
     };
 
     private renderer: THREE.WebGLRenderer;
@@ -53,6 +55,9 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     }
 
     public render() {
+        if (this.userVolume != null) {
+            this.userVolume.gain.value = this.state.volumeEnabled ? 1 : 0;
+        }
         const {sketch, ...divProps} = this.props;
         const { status } = this.state;
         if (status === SketchStatus.ERROR) {
@@ -86,16 +91,22 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     }
 
     private renderVolumeButton() {
-        const hasVolume = this.userVolume != null && this.userVolume.gain.value > 0;
+        const { volumeEnabled } = this.state;
         const volumeElementClassname = classnames("fa", {
-            "fa-volume-off": hasVolume,
-            "fa-volume-up": !hasVolume,
+            "fa-volume-off": !volumeEnabled,
+            "fa-volume-up": volumeEnabled,
         });
         return (
-            <button className="user-volume">
+            <button className="user-volume" onClick={this.handleVolumeButtonClick}>
                 <i className={volumeElementClassname} aria-hidden="true" />
             </button>
         );
+    }
+
+    private handleVolumeButtonClick = () => {
+        const volumeEnabled = !this.state.volumeEnabled;
+        this.setState({ volumeEnabled });
+        window.localStorage.setItem("sketch-volumeEnabled", JSON.stringify(volumeEnabled));
     }
 
     private handleWindowResize = () => {
