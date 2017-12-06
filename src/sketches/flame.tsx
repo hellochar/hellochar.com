@@ -125,6 +125,10 @@ interface UpdateVisitor {
     visit(point: SuperPoint): void;
 }
 
+let globalSubtreeIterationIndex = 0;
+let globalStartTime = 0;
+let globalStop = false;
+let frameCount = 0;
 class SuperPoint {
     public children: SuperPoint[];
     public lastPoint: THREE.Vector3 = new THREE.Vector3();
@@ -142,6 +146,7 @@ class SuperPoint {
 
     public updateSubtree(depth: number, ...visitors: UpdateVisitor[]) {
         if (depth === 0) { return; }
+        if (globalStop) { return; }
 
         if (this.children === undefined) {
             this.children = this.branches.map(() => {
@@ -154,7 +159,12 @@ class SuperPoint {
             });
         }
 
-        this.children.forEach((child, idx) => {
+        for (let idx = 0, l = this.children.length; idx < l; idx++) {
+            globalSubtreeIterationIndex++;
+            if (globalStop) {
+                return;
+            }
+            const child = this.children[idx];
             const branch = this.branches[idx];
             // reset the child's position to your updated position so it's ready to get stepped
             child.lastPoint.copy(child.point);
@@ -167,17 +177,29 @@ class SuperPoint {
                 VARIATIONS.Spherical(child.point);
             }
 
-            if (Math.random() < 0.01) {
+            if (globalSubtreeIterationIndex % 307 === 0) {
                 for (const v of visitors) {
                     v.visit(child);
                 }
             }
+            // only check once in a while; performance.now() is itself a perf hit
+            if (globalSubtreeIterationIndex % 1001 === 0) {
+                const now = performance.now();
+                if (now - globalStartTime > 60) {
+                    globalStop = true;
+                    return;
+                }
+            }
 
             child.updateSubtree(depth - 1, ...visitors);
-        });
+        }
     }
 
     public recalculate(initialPoint: number, depth: number, ...visitors: UpdateVisitor[]) {
+        globalSubtreeIterationIndex = 0;
+        globalStartTime = performance.now();
+        globalStop = false;
+        frameCount++;
         this.point.set(initialPoint, initialPoint, initialPoint);
         // console.time("updateSubtree");
         this.updateSubtree(depth, ...visitors);
@@ -462,6 +484,9 @@ class VelocityTrackerVisitor implements UpdateVisitor {
     }
 
     public computeVelocity() {
+        if (this.numVisited === 0) {
+            return 0;
+        }
         return this.velocity / this.numVisited;
     }
 }
@@ -482,6 +507,9 @@ class LengthVarianceTrackerVisitor implements UpdateVisitor {
 
     public computeVariance() {
         const { varianceSumSq, varianceSum, varianceNumSamples } = this;
+        if (this.varianceNumSamples === 0) {
+            return 0;
+        }
         // can go as high as 15 - 20, as low as 0.1
         return (varianceSumSq - (varianceSum * varianceSum) / varianceNumSamples) / (varianceNumSamples - 1);
     }
@@ -733,7 +761,7 @@ class FlameNameInput extends React.Component<{}, {}> {
 }
 
 export const Flame: ISketch = {
-    elements: [<FlameNameInput />],
+    elements: [<FlameNameInput key="input" />],
     id: "flame",
     init,
     animate,

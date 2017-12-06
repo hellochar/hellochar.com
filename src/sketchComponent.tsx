@@ -2,9 +2,9 @@ import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 
+import * as classnames from "classnames";
 import { Link } from "react-router-dom";
 import { ISketch, SketchAudioContext, UI_EVENTS } from "./sketch";
-import * as classnames from "classnames";
 
 const $window = $(window);
 const HAS_SOUND = true;
