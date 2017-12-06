@@ -182,14 +182,15 @@ class SuperPoint {
                     v.visit(child);
                 }
             }
-            // only check once in a while; performance.now() is itself a perf hit
-            if (globalSubtreeIterationIndex % 1001 === 0) {
-                const now = performance.now();
-                if (now - globalStartTime > 60) {
-                    globalStop = true;
-                    return;
-                }
-            }
+
+            // // only check once in a while; performance.now() is itself a perf hit
+            // if (globalSubtreeIterationIndex % 1001 === 0) {
+            //     const now = performance.now();
+            //     if (now - globalStartTime > 60) {
+            //         globalStop = true;
+            //         return;
+            //     }
+            // }
 
             child.updateSubtree(depth - 1, ...visitors);
         }
