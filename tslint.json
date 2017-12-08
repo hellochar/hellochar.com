@@ -16,7 +16,8 @@
         "quotemark": false,
         "no-debugger": false,
         "interface-over-type-literal": false,
-        "forin": false
+        "forin": false,
+        "no-unused-variable": true
     },
     "defaultSeverity": "warning"
 }
