@@ -3,16 +3,10 @@ import * as ReactDOM from "react-dom";
 import * as ReactGA from "react-ga";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 
-import "./monkeypatchThree";
-import { FullPageSketch } from "./routes/fullPageSketch";
-import { HomePage } from "./routes/homePage";
-import { Cymatics } from "./sketches/cymatics";
-import { Dots } from "./sketches/dots";
-import { Flame } from "./sketches/flame";
-import { Line } from "./sketches/line";
-import { Waves } from "./sketches/waves";
+import { Routes } from "./routes";
 
 import "./index.scss";
+import "./monkeypatchThree";
 
 ReactGA.initialize("UA-59922576-1");
 
@@ -35,14 +29,7 @@ ReactDOM.render(
     <BrowserRouter>
         <div>
             <GATracker />
-            <Switch>
-                <Route path="/line" component={() => <FullPageSketch sketch={Line} />} />
-                <Route path="/dots" component={() => <FullPageSketch sketch={Dots} />} />
-                <Route path="/waves" component={() => <FullPageSketch sketch={Waves} />} />
-                <Route path="/cymatics" component={() => <FullPageSketch sketch={Cymatics} />} />
-                <Route path="/flame" component={() => <FullPageSketch sketch={Flame} />} />
-                <Route path="/" component={HomePage} />
-            </Switch>
+            <Routes />
         </div>
     </BrowserRouter>,
     root,

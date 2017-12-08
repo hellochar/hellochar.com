@@ -390,11 +390,11 @@ const History2014 = () => (
 const HistoryOlder = () => (
     <History name="Older">
         <p>
-[ ]   Universe
+[ ]   Universe - punt
 
-[ ]   Tree
+[ ]   Tree - punt
 
-[ ]   Spiral
+[ ]   Spiral - meh
 
 [ ]   PlasmaFractal
 
