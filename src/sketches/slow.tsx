@@ -15,25 +15,33 @@ class Particle {
     public velocity = new THREE.Vector3();
 
     public constructor(public position: THREE.Vector3, public color: THREE.Color) {
-        this.velocity.set(Math.random() / 100, Math.random() / 100, 0);
+        this.velocity.set(THREE.Math.randFloatSpread(0.1), THREE.Math.randFloatSpread(0.1), 0);
     }
 
     public animate(camera: THREE.OrthographicCamera, fgmaskData: Uint8Array, fgmaskWidth: number, fgmaskHeight: number) {
-        this.position.add(this.velocity);
-        if (this.position.x > camera.right) {
-            this.position.x = camera.right;
-            this.velocity.x *= -1;
-        } else if (this.position.x < camera.left) {
-            this.position.x = camera.left;
-            this.velocity.x *= -1;
-        }
 
-        if (this.position.y > camera.top) {
-            this.position.y = camera.top;
-            this.velocity.y *= -1;
-        } else if (this.position.y < camera.bottom) {
-            this.position.y = camera.bottom;
-            this.velocity.y *= -1;
+        const pixelX = Math.floor(THREE.Math.mapLinear(this.position.x, camera.left, camera.right, 0, fgmaskWidth));
+        const pixelY = Math.floor(THREE.Math.mapLinear(this.position.y, camera.top, camera.bottom, 0, fgmaskHeight));
+        const pixelIndex = pixelY * fgmaskWidth + pixelX;
+        const pixelValue = fgmaskData[pixelIndex];
+
+        const movementScalar = pixelValue / 127 + 0.1;
+        this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
+        this.position.set(
+            this.position.x + this.velocity.x * movementScalar,
+            this.position.y + this.velocity.y * movementScalar,
+            0,
+        );
+        if (this.position.x > camera.right ||
+            this.position.x < camera.left ||
+            this.position.y > camera.top ||
+            this.position.y < camera.bottom
+        ) {
+            this.position.set(
+                THREE.Math.randFloat(camera.left, camera.right),
+                THREE.Math.randFloat(camera.bottom, camera.top),
+                0,
+            );
         }
     }
 }
@@ -71,6 +79,7 @@ class Line {
             vertex.set(x + offsetX, y + offsetY, 0);
         });
         this.geometry.verticesNeedUpdate = true;
+        this.geometry.colorsNeedUpdate = true;
     }
 }
 
@@ -85,8 +94,6 @@ export const Slow = new (class implements ISketch {
 
     public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
         this.renderer = renderer;
-        this.renderer.setClearColor(0xffffff);
-        this.renderer.clear();
         this.initVideo();
         this.setupCamera();
         // this.setupLines();
@@ -96,15 +103,22 @@ export const Slow = new (class implements ISketch {
     public particleGeometry = new THREE.Geometry();
     public particlePoints: THREE.Points;
     public setupParticles() {
-        this.particles = new Array(10000).fill(null).map(() => {
+        this.particles = new Array(1000000).fill(null).map(() => {
             const position = new THREE.Vector3();
-            const color = new THREE.Color(0, 0.5, 0.7);
+            const color = new THREE.Color(1, 1, 1);
             this.particleGeometry.vertices.push(position);
             this.particleGeometry.colors.push(color);
             return new Particle(position, color);
         });
+        this.particleGeometry.colorsNeedUpdate = true;
         this.particlePoints = new THREE.Points(
             this.particleGeometry,
+            new THREE.PointsMaterial({
+                vertexColors: THREE.VertexColors,
+                transparent: true,
+                opacity: 0.2,
+                size: 1,
+            }),
         );
         this.scene.add(this.particlePoints);
     }
@@ -129,11 +143,7 @@ export const Slow = new (class implements ISketch {
         this.camera.top = height / 2;
         this.camera.bottom = -height / 2;
         this.camera.right = width / 2;
-        console.log(this.camera);
         this.camera.updateProjectionMatrix();
-
-        this.renderer.setClearColor(0xffffff);
-        this.renderer.setClearAlpha(1);
     }
 
     get aspectRatio() {
@@ -179,23 +189,11 @@ export const Slow = new (class implements ISketch {
 
     public animate() {
         if (this.cap != null) {
-            if (performance.now() % 100 < 25) {
-                // console.time("read/apply");
-                this.cap.read(this.frame); // 9 - 13ms
-                this.fgbg.apply(this.frame, this.fgmask); // 45 - 55ms
-                // console.timeEnd("read/apply");
-                cv.imshow('canvasOutput', this.fgmask); // 12 - 20ms
-                // console.time("HoughCircles");
-                // cv.HoughCircles(this.fgmask, this.circlesMat, cv.HOUGH_GRADIENT,
-                //     1, 45, 75, 40, 0, 0);
-                // console.timeEnd("HoughCircles");
-                // for (let i = 0; i < this.circlesMat.cols; ++i) {
-                //     let x = this.circlesMat.data32F[i * 3];
-                //     let y = this.circlesMat.data32F[i * 3 + 1];
-                //     let radius = this.circlesMat.data32F[i * 3 + 2];
-                //     console.log(x, y, radius);
-                // }
-            }
+            // console.time("read/apply");
+            this.cap.read(this.frame); // 9 - 13ms
+            this.fgbg.apply(this.frame, this.fgmask); // 45 - 55ms
+            // console.timeEnd("read/apply");
+            // cv.imshow('canvasOutput', this.fgmask); // 12 - 20ms
 
             // only access once for perf
             const fgmaskData = this.fgmask.data;
@@ -205,6 +203,7 @@ export const Slow = new (class implements ISketch {
             // this.lines.forEach((line) => line.animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight));
             this.particles.forEach((p) => p.animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight));
             this.particleGeometry.verticesNeedUpdate = true;
+            this.particleGeometry.colorsNeedUpdate = true;
         }
 
         this.renderer.render(this.scene, this.camera);
