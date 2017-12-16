@@ -3,8 +3,6 @@ import { parse } from "query-string";
 import * as React from "react";
 import * as THREE from "three";
 
-const tracker = clm.tracker;
-
 import { ISketch, SketchAudioContext } from "../sketch";
 
 const ctracker = new clm.tracker();
