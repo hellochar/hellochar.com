@@ -26,6 +26,7 @@ declare namespace cv {
         data: Uint8Array;
         rows: number;
 
+        constructor();
         constructor(width: number, height: number, dataType: MatDataType);
 
         delete(): void;
@@ -57,4 +58,8 @@ declare namespace cv {
      * @param mat 
      */
     function imshow(canvasElementName: string, mat: Mat): void;
+
+    type HoughGradient = number;
+    const HOUGH_GRADIENT: HoughGradient;
+    function HoughCircles(src: Mat, circles: Mat, method: HoughGradient, dp: number, minDist: number, param1: number, param2: number, minRadius: number, maxRadius: number): void;
 }
