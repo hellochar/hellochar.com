@@ -102,7 +102,7 @@ class LineStrip {
         this.gridOffsetX = ((this.gridOffsetX + this.dx) % this.gridSize + this.gridSize) % this.gridSize;
         this.gridOffsetY = ((this.gridOffsetY + this.dy) % this.gridSize + this.gridSize) % this.gridSize;
         // console.log(this.gridOffsetX, this.gridOffsetY);
-        this.object.children.forEach((lineMesh: PositionedLine) => {
+        (this.object.children as PositionedLine[]).forEach((lineMesh) => {
             const { x, y, inlineOffsetX, inlineOffsetY } = lineMesh;
             const geometry = lineMesh.geometry as THREE.Geometry;
             permutedLine(

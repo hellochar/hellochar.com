@@ -21,37 +21,33 @@ declare module 'clmtrackr' {
     interface IModel {
     }
 
-    export class tracker {
-        constructor(params: IParams);
+    namespace _default {
+        export class tracker {
+            constructor(params?: IParams);
 
-        init(model?: IModel): void;
+            init(model?: IModel): void;
 
-        start(element: HTMLVideoElement | HTMLCanvasElement): void;
+            start(element: HTMLVideoElement | HTMLCanvasElement): void;
 
-        track(element: HTMLVideoElement | HTMLCanvasElement): IPosition[] | false;
+            track(element: HTMLVideoElement | HTMLCanvasElement): IPosition[] | false;
 
-        reset(): void;
+            reset(): void;
 
-        getConvergence(): number;
+            getConvergence(): number;
 
-        getCurrentParameters(): number[];
+            getCurrentParameters(): number[];
 
-        getCurrentPosition(): IPosition[];
+            getCurrentPosition(): IPosition[] | false;
 
-        getScore(): number;
+            getScore(): number;
 
-        draw(canvas: HTMLCanvasElement): void;
+            draw(canvas: HTMLCanvasElement): void;
 
-        setResponseMode(type: "single" | "cycle" | "blend", list: Array<"raw" | "sobel" | "lbp">): void;
+            setResponseMode(type: "single" | "cycle" | "blend", list: Array<"raw" | "sobel" | "lbp">): void;
 
+        }
+        export const version: string;
     }
 
-    export const version: string;
-
-    interface DefaultExport {
-        tracker: tracker;
-        version: string;
-    }
-
-    export default DefaultExport;
+    export default _default;
 }

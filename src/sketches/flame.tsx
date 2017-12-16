@@ -5,208 +5,9 @@ import * as React from "react";
 import * as THREE from "three";
 
 import { createPinkNoise, createWhiteNoise } from "../audio/noise";
+import { AFFINES, Branch, createInterpolatedVariation, createRouterVariation, SuperPoint, UpdateVisitor, VARIATIONS, VelocityTrackerVisitor, LengthVarianceTrackerVisitor, BoxCountVisitor } from "../common/flame";
 import { lerp, map, sampleArray } from "../math";
 import { ISketch, SketchAudioContext } from "../sketch";
-
-type Transform = (point: THREE.Vector3) => void;
-
-interface Branch {
-    color: THREE.Color;
-    affine: Transform;
-    variation: Transform;
-}
-
-const AFFINES = {
-    // lerp halfway towards the origin, biased by -1
-    TowardsOriginNegativeBias: (point: THREE.Vector3) => {
-        point.set( (point.x - 1) / 2 + 0.25, (point.y - 1) / 2, point.z / 2);
-    },
-    // lerp towards the origin, biasing x by 1, y by -1
-    TowardsOrigin2: (point: THREE.Vector3) => {
-        point.set( (point.x + 1) / 2, (point.y - 1) / 2 - 0.1, (point.z + 1) / 2 - 0.1);
-    },
-    Swap: (point: THREE.Vector3) => {
-        point.set((point.y + point.z) / 2.5, (point.x + point.z) / 2.5, (point.x + point.y) / 2.5);
-    },
-    SwapSub: (point: THREE.Vector3) => {
-        point.set((point.y - point.z) / 2, (point.z - point.x) / 2, (point.x - point.y) / 2);
-    },
-    Negate: (point: THREE.Vector3) => {
-        point.set(-point.x, -point.y, -point.z);
-    },
-    NegateSwap: (point: THREE.Vector3) => {
-        point.set(
-            (-point.x + point.y + point.z) / 2.1,
-            (-point.y + point.x + point.z) / 2.1,
-            (-point.z + point.x + point.y) / 2.1,
-        );
-    },
-    Up1: (point: THREE.Vector3) => {
-        point.set(point.x, point.y, point.z + 1);
-    },
-};
-
-const VARIATIONS = {
-    Linear: (point: THREE.Vector3) => {
-        // no op
-    },
-    Sin: (point: THREE.Vector3) => {
-        point.set(Math.sin(point.x), Math.sin(point.y), Math.sin(point.z));
-    },
-    Spherical: (point: THREE.Vector3) => {
-        const lengthSq = point.lengthSq();
-        if (lengthSq !== 0) {
-            point.multiplyScalar(1 / lengthSq);
-        }
-    },
-    Polar: (point: THREE.Vector3) => {
-        point.set(Math.atan2(point.y, point.x) / Math.PI, point.length() - 1, Math.atan2(point.z, point.x));
-    },
-    Swirl: (point: THREE.Vector3) => {
-        const r2 = point.lengthSq();
-        point.set(point.z * Math.sin(r2) - point.y * Math.cos(r2),
-                    point.x * Math.cos(r2) + point.z * Math.sin(r2),
-                    point.x * Math.sin(r2) - point.y * Math.sin(r2),
-                );
-    },
-    Normalize: (point: THREE.Vector3) => {
-        // point.setLength(Math.sqrt(point.length()));
-        point.normalize();
-    },
-    Shrink: (point: THREE.Vector3) => {
-        point.setLength(Math.exp(-point.lengthSq()));
-    },
-};
-
-function createInterpolatedVariation(variationA: Transform, variationB: Transform, interpolationFn: () => number) {
-    return (pointA: THREE.Vector3) => {
-        const pointB = pointA.clone();
-        variationA(pointA);
-        variationB(pointB);
-        // if (Number.isNaN(pointA.lengthManhattan()) || Number.isNaN(pointB.lengthManhattan())) {
-        //     debugger;
-        // }
-        const interpolatedAmount = interpolationFn();
-        pointA.lerp(pointB, interpolatedAmount);
-    };
-}
-
-function createRouterVariation(vA: Transform, vB: Transform, router: (p: THREE.Vector3) => boolean) {
-    return (a: THREE.Vector3) => {
-        const choice = router(a);
-        if (choice) {
-            vA(a);
-        } else {
-            vB(a);
-        }
-    };
-}
-
-/**
- * @param branch branch to apply
- * @param point point to apply to
- * @param color color to apply to
- */
-function applyBranch(branch: Branch, point: THREE.Vector3, color: THREE.Color) {
-    // apply the affine transform to the point
-    branch.affine(point);
-    point.x += cX / 5;
-    point.y += cY / 5;
-
-    // apply the nonlinear variation to the point
-    branch.variation(point);
-
-    // interpolate towards the affine color
-    // color.lerp(affine.color, 0.5);
-    color.add(branch.color);
-}
-
-interface UpdateVisitor {
-    visit(point: SuperPoint): void;
-}
-
-let globalSubtreeIterationIndex = 0;
-let globalStartTime = 0;
-let globalStop = false;
-let frameCount = 0;
-class SuperPoint {
-    public children: SuperPoint[];
-    public lastPoint: THREE.Vector3 = new THREE.Vector3();
-
-    constructor(
-        public point: THREE.Vector3,
-        public color: THREE.Color,
-        public rootGeometry: THREE.Geometry,
-        private branches: Branch[],
-    ) {
-        this.lastPoint.copy(point);
-        rootGeometry.vertices.push(point);
-        rootGeometry.colors.push(color);
-    }
-
-    public updateSubtree(depth: number, ...visitors: UpdateVisitor[]) {
-        if (depth === 0) { return; }
-        if (globalStop) { return; }
-
-        if (this.children === undefined) {
-            this.children = this.branches.map(() => {
-                return new SuperPoint(
-                    new THREE.Vector3(),
-                    new THREE.Color(0, 0, 0),
-                    this.rootGeometry,
-                    this.branches,
-                );
-            });
-        }
-
-        for (let idx = 0, l = this.children.length; idx < l; idx++) {
-            globalSubtreeIterationIndex++;
-            if (globalStop) {
-                return;
-            }
-            const child = this.children[idx];
-            const branch = this.branches[idx];
-            // reset the child's position to your updated position so it's ready to get stepped
-            child.lastPoint.copy(child.point);
-            child.point.copy(this.point);
-            child.color.copy(this.color);
-            applyBranch(branch, child.point, child.color);
-
-            // take far away points and move them into the center again to keep points from getting too out of hand
-            if (child.point.lengthSq() > 50 * 50) {
-                VARIATIONS.Spherical(child.point);
-            }
-
-            if (globalSubtreeIterationIndex % 307 === 0) {
-                for (const v of visitors) {
-                    v.visit(child);
-                }
-            }
-
-            // // only check once in a while; performance.now() is itself a perf hit
-            // if (globalSubtreeIterationIndex % 1001 === 0) {
-            //     const now = performance.now();
-            //     if (now - globalStartTime > 60) {
-            //         globalStop = true;
-            //         return;
-            //     }
-            // }
-
-            child.updateSubtree(depth - 1, ...visitors);
-        }
-    }
-
-    public recalculate(initialPoint: number, depth: number, ...visitors: UpdateVisitor[]) {
-        globalSubtreeIterationIndex = 0;
-        globalStartTime = performance.now();
-        globalStop = false;
-        frameCount++;
-        this.point.set(initialPoint, initialPoint, initialPoint);
-        // console.time("updateSubtree");
-        this.updateSubtree(depth, ...visitors);
-        // console.timeEnd("updateSubtree");
-    }
-}
 
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
@@ -241,7 +42,12 @@ function randomBranch(idx: number, substring: string, numBranches: number, numWr
         next();
         return gen / GEN_DIVISOR;
     };
-    const affine = objectValueByIndex(AFFINES, gen);
+    const affineBase = objectValueByIndex(AFFINES, gen);
+    const affine = (point: THREE.Vector3) => {
+        affineBase(point);
+        point.x += cX / 5;
+        point.y += cY / 5;
+    };
     let variation = newVariation();
 
     if (random() < numWraps * 0.25) {
@@ -475,121 +281,6 @@ function initAudio(context: SketchAudioContext) {
     compressor.connect(context.gain);
 }
 
-class VelocityTrackerVisitor implements UpdateVisitor {
-    public velocity = 0;
-    public numVisited = 0;
-
-    public visit(p: SuperPoint) {
-        this.velocity += p.lastPoint.distanceTo(p.point);
-        this.numVisited++;
-    }
-
-    public computeVelocity() {
-        if (this.numVisited === 0) {
-            return 0;
-        }
-        return this.velocity / this.numVisited;
-    }
-}
-
-class LengthVarianceTrackerVisitor implements UpdateVisitor {
-    public varianceNumSamples = 0;
-    public varianceSum = 0;
-    public varianceSumSq = 0;
-
-    public variance = 0;
-
-    public visit(p: SuperPoint) {
-        const lengthSq = p.point.lengthSq();
-        this.varianceNumSamples++;
-        this.varianceSum += Math.sqrt(lengthSq);
-        this.varianceSumSq += lengthSq;
-    }
-
-    public computeVariance() {
-        const { varianceSumSq, varianceSum, varianceNumSamples } = this;
-        if (this.varianceNumSamples === 0) {
-            return 0;
-        }
-        // can go as high as 15 - 20, as low as 0.1
-        return (varianceSumSq - (varianceSum * varianceSum) / varianceNumSamples) / (varianceNumSamples - 1);
-    }
-}
-
-type BoxHash = { [boxCorner: string]: number };
-class BoxCountVisitor implements UpdateVisitor {
-    public boxHashes: BoxHash[];
-    public counts: number[];
-    public densities: number[];
-
-    public constructor(public sideLengths: number[]) {
-        this.boxHashes = sideLengths.map( () => ({}) );
-        this.counts = sideLengths.map(() => 0);
-        this.densities = sideLengths.map(() => 0);
-    }
-
-    private temp = new THREE.Vector3();
-    public visit(p: SuperPoint) {
-        const { sideLengths, boxHashes, temp, counts, densities } = this;
-
-        for (let idx = 0, sll = sideLengths.length; idx < sll; idx++) {
-            const sideLength = sideLengths[idx];
-            const boxHash = boxHashes[idx];
-            // round to nearest sideLength interval on x/y/z
-            // e.g. for side length 2
-            // [0 to 2) -> 0
-            // [2 to 4) -> 2
-            temp.copy(p.point).divideScalar(sideLength).floor().multiplyScalar(sideLength);
-            const hash = `${temp.x},${temp.y},${temp.z}`;
-            if (!boxHash[hash]) {
-                boxHash[hash] = 1;
-                counts[idx]++;
-                densities[idx] += 1;
-            } else {
-                // approximates boxHash^2
-                // we have the sequence 1, 2, 3, 4, 5, ...n
-                // assume we've gotten n^2 contribution.
-                // now we want to get to (n+1)^2 contribution. What do we add?
-                // (n+1)^2 - n^2 = (n+1)*(n+1) - n^2 = n^2 + 2n + 1 - n^2 = 2n + 1
-                densities[idx] += 2 * boxHash[hash] + 1;
-                boxHash[hash]++;
-            }
-        }
-    }
-
-    public computeCountAndCountDensity() {
-        const { counts, densities, sideLengths } = this;
-
-        // so we have three data points:
-        // { volume: 1, count: 11 }, { volume: 1e-3, count: 341 }, { volume: 1e-6, count: 15154 }
-        // the formula is roughly count = C * side^dimension
-        // lets just log both of them
-        // log(count) = dimesion*log(C*side); linear regression out the C*side to get the dimension
-        const logSideLengths = sideLengths.map((sideLength) => Math.log(sideLength));
-        const logCounts = counts.map((count) => Math.log(count));
-        const logDensities = densities.map((density) => Math.log(density));
-
-        const slopeCount = -this.linearRegressionSlope(logSideLengths, logCounts);
-        const slopeDensity = -this.linearRegressionSlope(logSideLengths, logDensities);
-
-        // count ranges from 0.5 in the extremely shunken case (aaaaa) to 2.8 in a really spaced out case
-        // much of it is ~2; anything < 1.7 is very linear/1D
-
-        // countDensity ranges from 3.5 (adsfadsfa) really spaced out to ~6 which is extremely tiny
-        // much of it ranges from 3.5 to like 4.5
-        // it's a decent measure of how "dense" the fractal is
-        return [slopeCount, slopeDensity];
-    }
-
-    private linearRegressionSlope(xs: number[], ys: number[]) {
-        const xAvg = xs.reduce((sum, x) => sum + x, 0);
-        const yAvg = ys.reduce((sum, y) => sum + y, 0);
-        const denominator = xs.reduce((sum, x) => (x - xAvg) * (x - xAvg), 0);
-        const numerator = xs.reduce((sum, x, idx) => (x - xAvg) * (ys[idx] - yAvg), 0);
-        return numerator / denominator;
-    }
-}
-
 let boundingSphere: THREE.Sphere | null;
 function animate() {
     const time = performance.now() / 3000;
@@ -597,8 +288,7 @@ function animate() {
     const velocityVisitor = new VelocityTrackerVisitor();
     const varianceVisitor = new LengthVarianceTrackerVisitor();
     const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
-    superPoint.recalculate(jumpiness, computeDepth(), velocityVisitor, varianceVisitor, countVisitor);
-    geometry.verticesNeedUpdate = true;
+    superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), velocityVisitor, varianceVisitor, countVisitor);
     if (boundingSphere == null) {
         geometry.computeBoundingSphere();
         boundingSphere = geometry.boundingSphere;
