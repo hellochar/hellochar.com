@@ -22,18 +22,23 @@ const FGMASK_HEIGHT = 150;
 const PX_FACTOR = FGMASK_WIDTH / (cameraRight - cameraLeft);
 const PY_FACTOR = FGMASK_HEIGHT / (cameraBottom - cameraTop);
 
+let now: number = 0;
 class Particle {
     public velocity = new THREE.Vector3();
 
     public constructor(public position: THREE.Vector3, public color: THREE.Color) {
-        this.velocity.set(THREE.Math.randFloatSpread(0.1), THREE.Math.randFloatSpread(0.1), 0);
+        this.randomizeVelocity();
     }
 
     public animate(camera: THREE.OrthographicCamera, fgmaskData: Uint8Array, fgmaskWidth: number, fgmaskHeight: number) {
-        const pixelX = Math.floor((this.position.x - cameraLeft) * PX_FACTOR);
-        const pixelY = Math.floor((this.position.y - cameraTop) * PY_FACTOR);
+        const pixelX = Math.floor(THREE.Math.mapLinear(this.position.x, camera.left, camera.right, 0, fgmaskWidth));
+        const pixelY = Math.floor(THREE.Math.mapLinear(this.position.y, camera.top, camera.bottom, 0, fgmaskHeight));
         const pixelIndex = pixelY * fgmaskWidth + pixelX;
         const pixelValue = fgmaskData[pixelIndex];
+
+        this.velocity.x += this.position.x * 0.001;
+        this.velocity.y += this.position.y * 0.001;
+        this.velocity.y -= Math.sin(now / 10000) * 0.001;
 
         const movementScalar = pixelValue / 127 + 0.1;
         this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
@@ -47,12 +52,25 @@ class Particle {
             this.position.y > camera.top ||
             this.position.y < camera.bottom
         ) {
+            this.randomizeVelocity();
             this.position.set(
-                THREE.Math.randFloat(camera.left, camera.right),
-                THREE.Math.randFloat(camera.bottom, camera.top),
+                0, 0,
+                // THREE.Math.randFloat(camera.left, camera.right),
+                // THREE.Math.randFloat(camera.bottom, camera.top),
                 0,
             );
         }
+    }
+
+    public randomizeVelocity() {
+        const angle = Math.random() * Math.PI * 2;
+        const frequency = THREE.Math.mapLinear(Math.cos(now / 30000), -1, 1, 10000, 30000);
+        let velocitySpread = (Math.sin(now / frequency) + 1) / 2;
+        velocitySpread *= velocitySpread;
+        velocitySpread *= velocitySpread;
+        velocitySpread = 1 - velocitySpread;
+        const velocity = 0.1 * velocitySpread + Math.random() * 0.1 * (1 - velocitySpread);
+        this.velocity.set(Math.cos(angle) * velocity, Math.sin(angle) * velocity, 0);
     }
 }
 
@@ -105,8 +123,11 @@ export const Slow = new (class implements ISketch {
     public composer: THREE.EffectComposer;
     public filter: THREE.ShaderPass;
 
+    public audioContext: SketchAudioContext;
+
     public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
         this.renderer = renderer;
+        this.audioContext = audioContext;
         this.initVideo();
         this.setupCamera();
         // this.setupLines();
@@ -208,6 +229,7 @@ export const Slow = new (class implements ISketch {
     public circlesMat = new cv.Mat();
 
     public animate() {
+        now = performance.now();
         if (this.cap != null) {
             // console.time("read/apply");
             this.cap.read(this.frame); // 9 - 13ms
@@ -228,7 +250,7 @@ export const Slow = new (class implements ISketch {
             this.particleGeometry.colorsNeedUpdate = true;
         }
 
-        const t = performance.now() / 10000;
+        const t = now / 10000;
         this.filter.uniforms.iMouse.value = new THREE.Vector2(Math.sin(t) / 2, Math.cos(t) / 2);
         this.composer.render();
     }
