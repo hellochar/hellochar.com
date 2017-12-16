@@ -11,6 +11,7 @@ import {
     Genetics,
     Line,
     Waves,
+    Webcam,
 } from "./sketches";
 
 export const Routes = () => (
@@ -21,6 +22,7 @@ export const Routes = () => (
         <Route path="/cymatics" component={() => <FullPageSketch sketch={Cymatics} />} />
         <Route path="/flame" component={() => <FullPageSketch sketch={Flame} />} />
         <Route path="/genetics" component={() => <FullPageSketch sketch={Genetics} />} />
+        <Route path="/webcam" component={() => <FullPageSketch sketch={Webcam} />} />
         <Route path="/" component={HomePage} />
     </Switch>
 );
