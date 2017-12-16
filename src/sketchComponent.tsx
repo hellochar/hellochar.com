@@ -160,7 +160,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         // canvas setup
         const $canvas = $(renderer.domElement);
         $canvas.attr("tabindex", 1);
-        Object.keys(UI_EVENTS).forEach((eventName: keyof typeof UI_EVENTS) => {
+        (Object.keys(UI_EVENTS) as Array<keyof typeof UI_EVENTS>).forEach((eventName) => {
             const callback = sketch[eventName];
             if (callback != null) {
                 $canvas.on(eventName, callback);

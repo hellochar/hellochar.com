@@ -28,7 +28,7 @@ root.className = "root";
 ReactDOM.render(
     <BrowserRouter>
         <div>
-            <video id="lol" autoPlay loop width="300" height="200" />
+            <video id="lol" autoPlay loop width="800" height="600" />
             <GATracker />
             <Routes />
         </div>
