@@ -10,6 +10,7 @@ import {
     Flame,
     Genetics,
     Line,
+    Slow,
     Waves,
     Webcam,
 } from "./sketches";
@@ -23,6 +24,7 @@ export const Routes = () => (
         <Route path="/flame" component={() => <FullPageSketch sketch={Flame} />} />
         <Route path="/genetics" component={() => <FullPageSketch sketch={Genetics} />} />
         <Route path="/webcam" component={() => <FullPageSketch sketch={Webcam} />} />
+        <Route path="/slow" component={() => <FullPageSketch sketch={Slow} />} />
         <Route path="/" component={HomePage} />
     </Switch>
 );
