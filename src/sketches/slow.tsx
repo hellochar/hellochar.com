@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as THREE from "three";
 
+import { ExplodeShader } from "../common/explodeShader";
 import { ISketch, SketchAudioContext } from "../sketch";
 // import Worker from 'worker-loader!./worker';
 
@@ -11,6 +12,16 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 // worker.addEventListener("message", (event) => {});
 
+const cameraLeft = -0.8888888888888888;
+const cameraRight = 0.8888888888888888;
+const cameraTop = 0.5;
+const cameraBottom = -0.5;
+const FGMASK_WIDTH = 200;
+const FGMASK_HEIGHT = 150;
+
+const PX_FACTOR = FGMASK_WIDTH / (cameraRight - cameraLeft);
+const PY_FACTOR = FGMASK_HEIGHT / (cameraBottom - cameraTop);
+
 class Particle {
     public velocity = new THREE.Vector3();
 
@@ -19,9 +30,8 @@ class Particle {
     }
 
     public animate(camera: THREE.OrthographicCamera, fgmaskData: Uint8Array, fgmaskWidth: number, fgmaskHeight: number) {
-
-        const pixelX = Math.floor(THREE.Math.mapLinear(this.position.x, camera.left, camera.right, 0, fgmaskWidth));
-        const pixelY = Math.floor(THREE.Math.mapLinear(this.position.y, camera.top, camera.bottom, 0, fgmaskHeight));
+        const pixelX = Math.floor((this.position.x - cameraLeft) * PX_FACTOR);
+        const pixelY = Math.floor((this.position.y - cameraTop) * PY_FACTOR);
         const pixelIndex = pixelY * fgmaskWidth + pixelX;
         const pixelValue = fgmaskData[pixelIndex];
 
@@ -92,12 +102,21 @@ export const Slow = new (class implements ISketch {
     private camera: THREE.OrthographicCamera;
     public particles: Particle[];
 
+    public composer: THREE.EffectComposer;
+    public filter: THREE.ShaderPass;
+
     public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
         this.renderer = renderer;
         this.initVideo();
         this.setupCamera();
         // this.setupLines();
         this.setupParticles();
+        this.composer = new THREE.EffectComposer(renderer);
+        this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
+        const filter = this.filter = new THREE.ShaderPass(ExplodeShader);
+        filter.uniforms.iResolution.value = new THREE.Vector2(renderer.domElement.width, renderer.domElement.height);
+        filter.renderToScreen = true;
+        this.composer.addPass(filter);
     }
 
     public particleGeometry = new THREE.Geometry();
@@ -157,9 +176,10 @@ export const Slow = new (class implements ISketch {
 
     public initVideo() {
         const constraints: MediaStreamConstraints = {
-            video: {
-                aspectRatio: 16 / 9,
-            },
+            // video: {
+            //     aspectRatio: 16 / 9,
+            // },
+            video: true,
         };
 
         navigator.getUserMedia(
@@ -201,11 +221,15 @@ export const Slow = new (class implements ISketch {
             const fgmaskHeight = this.fgmask.rows;
 
             // this.lines.forEach((line) => line.animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight));
-            this.particles.forEach((p) => p.animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight));
+            for (let i = 0, l = this.particles.length; i < l; i++) {
+                this.particles[i].animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight);
+            }
             this.particleGeometry.verticesNeedUpdate = true;
             this.particleGeometry.colorsNeedUpdate = true;
         }
 
-        this.renderer.render(this.scene, this.camera);
+        const t = performance.now() / 10000;
+        this.filter.uniforms.iMouse.value = new THREE.Vector2(Math.sin(t) / 2, Math.cos(t) / 2);
+        this.composer.render();
     }
 })();
