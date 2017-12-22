@@ -34,14 +34,15 @@ class Particle {
         const pixelX = Math.floor(THREE.Math.mapLinear(this.position.x, camera.left, camera.right, 0, fgmaskWidth));
         const pixelY = Math.floor(THREE.Math.mapLinear(this.position.y, camera.top, camera.bottom, 0, fgmaskHeight));
         const pixelIndex = pixelY * fgmaskWidth + pixelX;
-        const pixelValue = fgmaskData[pixelIndex];
+        const pixelValue = fgmaskData[pixelIndex] || 0;
 
-        this.velocity.x += this.position.x * 0.001;
-        this.velocity.y += this.position.y * 0.001;
-        this.velocity.y -= Math.sin(now / 10000) * 0.001;
+        this.velocity.x += this.position.x * 0.0001;
+        this.velocity.y += this.position.y * 0.0001;
+        this.velocity.y -= Math.sin(now / 10000) * 0.0001;
 
         const movementScalar = pixelValue / 127 + 0.1;
         this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
+
         this.position.set(
             this.position.x + this.velocity.x * movementScalar,
             this.position.y + this.velocity.y * movementScalar,
@@ -69,8 +70,9 @@ class Particle {
         velocitySpread *= velocitySpread;
         velocitySpread *= velocitySpread;
         velocitySpread = 1 - velocitySpread;
-        const velocity = 0.1 * velocitySpread + Math.random() * 0.1 * (1 - velocitySpread);
+        const velocity = 0.03 * velocitySpread + Math.random() * 0.03 * (1 - velocitySpread);
         this.velocity.set(Math.cos(angle) * velocity, Math.sin(angle) * velocity, 0);
+        this.color.set(0xffffff);
     }
 }
 
@@ -143,7 +145,7 @@ export const Slow = new (class implements ISketch {
     public particleGeometry = new THREE.Geometry();
     public particlePoints: THREE.Points;
     public setupParticles() {
-        this.particles = new Array(1000000).fill(null).map(() => {
+        this.particles = new Array(300000).fill(null).map(() => {
             const position = new THREE.Vector3();
             const color = new THREE.Color(1, 1, 1);
             this.particleGeometry.vertices.push(position);
@@ -156,8 +158,8 @@ export const Slow = new (class implements ISketch {
             new THREE.PointsMaterial({
                 vertexColors: THREE.VertexColors,
                 transparent: true,
-                opacity: 0.2,
-                size: 1,
+                opacity: 0.25,
+                size: 2,
             }),
         );
         this.scene.add(this.particlePoints);
@@ -213,7 +215,7 @@ export const Slow = new (class implements ISketch {
 
                 this.frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
                 this.fgmask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-                this.fgbg = new cv.BackgroundSubtractorMOG2(60 * 10, 40, false);
+                this.fgbg = new cv.BackgroundSubtractorMOG2(60 * 10, 8, false);
             },
             (e) => {
                 console.log('Reeeejected!', e);
