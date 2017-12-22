@@ -28,8 +28,6 @@ root.className = "root";
 ReactDOM.render(
     <BrowserRouter>
         <div>
-            <video id="lol" autoPlay loop width="200" height="150" style={{display: "none"}} />
-            {/* <canvas id="canvasOutput" width="200" height="150" /> */}
             <GATracker />
             <Routes />
         </div>
