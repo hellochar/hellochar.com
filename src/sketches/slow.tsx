@@ -7,6 +7,21 @@ import { ISketch, SketchAudioContext } from "../sketch";
 const NUM_PARTICLES = 300000;
 const INIT_PARTICLE_VELOCITY = 0.03;
 const VELOCITY_POSITION_SCALAR = 0.0001;
+const Y_VELOCITY_WAVE_TIMESCALAR = 1 / 10000;
+const Y_VELOCITY_WAVE_AMPLITUDESCALAR = 0.0001;
+const FREQ_SPREAD_TIMESCALAR = 1 / 30000;
+const FREQ_MIN = 10000;
+const FREQ_MAX = 30000;
+
+const VIDEO_WIDTH = 200;
+const VIDEO_HEIGHT = 150;
+
+const POINTS_MATERIAL = new THREE.PointsMaterial({
+    vertexColors: THREE.VertexColors,
+    transparent: true,
+    opacity: 0.25,
+    size: 2,
+});
 
 let now: number = 0;
 class Particle {
@@ -25,7 +40,7 @@ class Particle {
         this.velocity.x += this.position.x * VELOCITY_POSITION_SCALAR;
         this.velocity.y += this.position.y * VELOCITY_POSITION_SCALAR;
 
-        this.velocity.y -= Math.sin(now / 10000) * 0.0001;
+        this.velocity.y -= Math.sin(now * Y_VELOCITY_WAVE_TIMESCALAR) * Y_VELOCITY_WAVE_AMPLITUDESCALAR;
 
         const movementScalar = pixelValue / 127 + 0.1;
         this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
@@ -54,7 +69,7 @@ class Particle {
 
     public randomizeVelocity() {
         const angle = Math.random() * Math.PI * 2;
-        const frequency = THREE.Math.mapLinear(Math.cos(now / 30000), -1, 1, 10000, 30000);
+        const frequency = THREE.Math.mapLinear(Math.cos(now * FREQ_SPREAD_TIMESCALAR), -1, 1, FREQ_MIN, FREQ_MAX);
         let velocitySpread = (Math.sin(now / frequency) + 1) / 2;
         velocitySpread *= velocitySpread;
         velocitySpread *= velocitySpread;
@@ -65,47 +80,9 @@ class Particle {
     }
 }
 
-class Line {
-    public geometry = new THREE.Geometry();
-    public static material = new THREE.LineBasicMaterial({
-        color: new THREE.Color("rgb(50, 12, 12)"),
-        transparent: true,
-        opacity: .03,
-    });
-    public lineObject: THREE.Line;
-
-    constructor(public offset: number) {
-        this.geometry.vertices.push(...(new Array(100).fill(null).map((() => new THREE.Vector3()))));
-        this.lineObject = new THREE.Line(this.geometry, Line.material);
-    }
-
-    public animate(camera: THREE.OrthographicCamera, fgmaskData: Uint8Array, fgmaskWidth: number, fgmaskHeight: number) {
-        const LOOP_TIME = 20000;
-        this.geometry.vertices.forEach((vertex, index) => {
-            const x = THREE.Math.mapLinear((performance.now() + this.offset * LOOP_TIME) % LOOP_TIME, 0, LOOP_TIME, camera.left, camera.right);
-            const y = THREE.Math.mapLinear(index, 0, 100, camera.top, camera.bottom);
-
-            // now grab the pixel from the background subtraction. We don't need to modify aspect ratios here since
-            // we've carefully arranged everything to be 16:9
-
-            const pixelX = Math.floor(THREE.Math.mapLinear(x, camera.left, camera.right, 0, fgmaskWidth));
-            const pixelY = Math.floor(THREE.Math.mapLinear(y, camera.top, camera.bottom, 0, fgmaskHeight));
-            const pixelIndex = pixelY * fgmaskWidth + pixelX;
-            const pixelValue = fgmaskData[pixelIndex];
-
-            const offsetX = THREE.Math.mapLinear(pixelValue, 0, 255, 0, 0.1);
-            const offsetY = THREE.Math.mapLinear(pixelValue, 0, 255, 0, 0.1);
-            vertex.set(x + offsetX, y + offsetY, 0);
-        });
-        this.geometry.verticesNeedUpdate = true;
-        this.geometry.colorsNeedUpdate = true;
-    }
-}
-
 export const Slow = new (class implements ISketch {
     public id = "slow";
 
-    public lines: Line[];
     public scene = new THREE.Scene();
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.OrthographicCamera;
@@ -121,7 +98,6 @@ export const Slow = new (class implements ISketch {
         this.audioContext = audioContext;
         this.initVideo();
         this.setupCamera();
-        // this.setupLines();
         this.setupParticles();
         this.composer = new THREE.EffectComposer(renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
@@ -136,7 +112,7 @@ export const Slow = new (class implements ISketch {
     public setupParticles() {
         this.particles = new Array(NUM_PARTICLES).fill(null).map(() => {
             const position = new THREE.Vector3();
-            const color = new THREE.Color(1, 1, 1);
+            const color = new THREE.Color();
             this.particleGeometry.vertices.push(position);
             this.particleGeometry.colors.push(color);
             return new Particle(position, color);
@@ -144,12 +120,7 @@ export const Slow = new (class implements ISketch {
         this.particleGeometry.colorsNeedUpdate = true;
         this.particlePoints = new THREE.Points(
             this.particleGeometry,
-            new THREE.PointsMaterial({
-                vertexColors: THREE.VertexColors,
-                transparent: true,
-                opacity: 0.25,
-                size: 2,
-            }),
+            POINTS_MATERIAL,
         );
         this.scene.add(this.particlePoints);
     }
@@ -187,19 +158,14 @@ export const Slow = new (class implements ISketch {
     private fgbg: cv.BackgroundSubtractorMOG2;
 
     public initVideo() {
-        const constraints: MediaStreamConstraints = {
-            // video: {
-            //     aspectRatio: 16 / 9,
-            // },
-            video: true,
-        };
+        const constraints: MediaStreamConstraints = { video: true };
 
         navigator.getUserMedia(
             constraints,
             (localMediaStream) => {
                 const video = document.createElement("video");
-                video.width = 200;
-                video.height = 150;
+                video.width = VIDEO_WIDTH;
+                video.height = VIDEO_HEIGHT;
                 video.autoplay = true;
                 video.src = window.URL.createObjectURL(localMediaStream);
 
@@ -215,13 +181,6 @@ export const Slow = new (class implements ISketch {
         );
     }
 
-    public setupLines() {
-        this.lines = (new Array(20).fill(null).map((_, idx) => new Line(idx / 20)));
-        this.lines.forEach((line) => this.scene.add(line.lineObject));
-    }
-
-    public circlesMat = new cv.Mat();
-
     public animate() {
         now = performance.now();
         if (this.cap != null) {
@@ -233,7 +192,6 @@ export const Slow = new (class implements ISketch {
             const fgmaskWidth = this.fgmask.cols;
             const fgmaskHeight = this.fgmask.rows;
 
-            // this.lines.forEach((line) => line.animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight));
             for (let i = 0, l = this.particles.length; i < l; i++) {
                 this.particles[i].animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight);
             }
