@@ -43,14 +43,14 @@ class Particle {
         this.velocity.y -= Math.sin(now * Y_VELOCITY_WAVE_TIMESCALAR) * Y_VELOCITY_WAVE_AMPLITUDESCALAR;
 
         const movementScalar = pixelValue / 127 + 0.1;
-        this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
+        // this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
         // // const movementScalar = 1;
-        // if (pixelValue > 0) {
-        //     this.color.setRGB(0, 0, 0);
-        // } else {
-        //     // this.color.setRGB(1, 1, 1);
-        //     this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
-        // }
+        if (pixelValue > 0) {
+            this.color.setRGB(0, 0, 0);
+        } else {
+            this.color.setRGB(1, 1, 1);
+            // this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
+        }
 
         this.position.set(
             this.position.x + this.velocity.x * movementScalar,
