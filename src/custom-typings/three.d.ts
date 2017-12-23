@@ -5,4 +5,6 @@ import * as THREE from "three";
 declare module 'THREE' {
     export type AxesHelper = THREE.AxisHelper;
     var AxesHelper: AxesHelper;
+
+    class Float32BufferAttribute extends THREE.BufferAttribute { }
 }
