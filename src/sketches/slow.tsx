@@ -16,6 +16,9 @@ const FREQ_MAX = 30000;
 const VIDEO_WIDTH = 200;
 const VIDEO_HEIGHT = 150;
 
+const BG_SUBTRACTOR_HISTORY = 60 * 10; // 60 frames per second * 10 seconds = 10 seconds of history
+const BG_SUBTRACTOR_THRESHOLD = 8 * 8; // 8px value difference counts as foreground
+
 const POINTS_MATERIAL = new THREE.PointsMaterial({
     vertexColors: THREE.VertexColors,
     transparent: true,
@@ -27,18 +30,18 @@ let now: number = 0;
 class Particle {
     public velocity = new THREE.Vector3();
 
-    public constructor(public position: THREE.Vector3, public color: THREE.Color) {
+    public constructor(public position: Float32Array, public color: Float32Array) {
         this.randomizeVelocity();
     }
 
     public animate(camera: THREE.OrthographicCamera, fgmaskData: Uint8Array, fgmaskWidth: number, fgmaskHeight: number) {
-        const pixelX = Math.floor(THREE.Math.mapLinear(this.position.x, camera.left, camera.right, 0, fgmaskWidth));
-        const pixelY = Math.floor(THREE.Math.mapLinear(this.position.y, camera.top, camera.bottom, 0, fgmaskHeight));
+        const pixelX = Math.floor(THREE.Math.mapLinear(this.position[0], camera.left, camera.right, 0, fgmaskWidth));
+        const pixelY = Math.floor(THREE.Math.mapLinear(this.position[1], camera.top, camera.bottom, 0, fgmaskHeight));
         const pixelIndex = pixelY * fgmaskWidth + pixelX;
         const pixelValue = fgmaskData[pixelIndex] || 0;
 
-        this.velocity.x += this.position.x * VELOCITY_POSITION_SCALAR;
-        this.velocity.y += this.position.y * VELOCITY_POSITION_SCALAR;
+        this.velocity.x += this.position[0] * VELOCITY_POSITION_SCALAR;
+        this.velocity.y += this.position[1] * VELOCITY_POSITION_SCALAR;
 
         this.velocity.y -= Math.sin(now * Y_VELOCITY_WAVE_TIMESCALAR) * Y_VELOCITY_WAVE_AMPLITUDESCALAR;
 
@@ -46,24 +49,29 @@ class Particle {
         // this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
         // // const movementScalar = 1;
         if (pixelValue > 0) {
-            this.color.setRGB(0, 0, 0);
+            this.color[0] = 0;
+            this.color[1] = 0;
+            this.color[2] = 0;
         } else {
-            this.color.setRGB(1, 1, 1);
+            this.color[0] = 1;
+            this.color[1] = 1;
+            this.color[2] = 1;
             // this.color.setRGB(0.4, movementScalar / 1.5 + 0.4, 0.5 + movementScalar / 1.3);
         }
 
-        this.position.set(
-            this.position.x + this.velocity.x * movementScalar,
-            this.position.y + this.velocity.y * movementScalar,
-            0,
-        );
-        if (this.position.x > camera.right ||
-            this.position.x < camera.left ||
-            this.position.y > camera.top ||
-            this.position.y < camera.bottom
+        this.position[0] = this.position[0] + this.velocity.x * movementScalar;
+        this.position[1] = this.position[1] + this.velocity.y * movementScalar,
+        this.position[2] = 0;
+
+        if (this.position[0] > camera.right ||
+            this.position[0] < camera.left ||
+            this.position[1] > camera.top ||
+            this.position[1] < camera.bottom
         ) {
             this.randomizeVelocity();
-            this.position.set(0, 0, 0);
+            this.position[0] = 0;
+            this.position[1] = 0;
+            this.position[2] = 0;
         }
     }
 
@@ -76,7 +84,9 @@ class Particle {
         velocitySpread = 1 - velocitySpread;
         const velocity = INIT_PARTICLE_VELOCITY * velocitySpread + Math.random() * INIT_PARTICLE_VELOCITY * (1 - velocitySpread);
         this.velocity.set(Math.cos(angle) * velocity, Math.sin(angle) * velocity, 0);
-        this.color.set(0xffffff);
+        this.color[0] = 1;
+        this.color[1] = 1;
+        this.color[2] = 1;
     }
 }
 
@@ -107,19 +117,27 @@ export const Slow = new (class implements ISketch {
         this.composer.addPass(filter);
     }
 
-    public particleGeometry = new THREE.Geometry();
+    public particleBufferGeometry = new THREE.BufferGeometry();
+    // public particleGeometry = new THREE.Geometry();
     public particlePoints: THREE.Points;
     public setupParticles() {
-        this.particles = new Array(NUM_PARTICLES).fill(null).map(() => {
-            const position = new THREE.Vector3();
-            const color = new THREE.Color();
-            this.particleGeometry.vertices.push(position);
-            this.particleGeometry.colors.push(color);
+        const positionBuffer = new Float32Array(NUM_PARTICLES * 3);
+        const colorBuffer = new Float32Array(NUM_PARTICLES * 3);
+        const positionAttribute = new THREE.BufferAttribute(positionBuffer, 3);
+        const colorAttribute = new THREE.BufferAttribute(colorBuffer, 3);
+        this.particleBufferGeometry.addAttribute("position", positionAttribute);
+        this.particleBufferGeometry.addAttribute("color", colorAttribute);
+        this.particles = new Array(NUM_PARTICLES).fill(null).map((_, idx) => {
+            // const position = new THREE.Vector3();
+            // const color = new THREE.Color();
+            // this.particleGeometry.vertices.push(position);
+            // this.particleGeometry.colors.push(color);
+            const position = new Float32Array(positionBuffer.buffer, 4 * 3 * idx, 3);
+            const color = new Float32Array(colorBuffer.buffer, 4 * 3 * idx, 3);
             return new Particle(position, color);
         });
-        this.particleGeometry.colorsNeedUpdate = true;
         this.particlePoints = new THREE.Points(
-            this.particleGeometry,
+            this.particleBufferGeometry,
             POINTS_MATERIAL,
         );
         this.scene.add(this.particlePoints);
@@ -173,7 +191,7 @@ export const Slow = new (class implements ISketch {
 
                 this.frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
                 this.fgmask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-                this.fgbg = new cv.BackgroundSubtractorMOG2(60 * 10, 8, false);
+                this.fgbg = new cv.BackgroundSubtractorMOG2(BG_SUBTRACTOR_HISTORY, BG_SUBTRACTOR_THRESHOLD, false);
             },
             (e) => {
                 console.log('Reeeejected!', e);
@@ -195,8 +213,8 @@ export const Slow = new (class implements ISketch {
             for (let i = 0, l = this.particles.length; i < l; i++) {
                 this.particles[i].animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight);
             }
-            this.particleGeometry.verticesNeedUpdate = true;
-            this.particleGeometry.colorsNeedUpdate = true;
+            (this.particleBufferGeometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
+            (this.particleBufferGeometry.getAttribute("color") as THREE.BufferAttribute).needsUpdate = true;
         }
 
         const t = now / 10000;
