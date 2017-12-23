@@ -4,12 +4,14 @@ import * as THREE from "three";
 import Worker = require('worker-loader!./worker');
 import { ExplodeShader } from "../../common/explodeShader";
 import { ISketch, SketchAudioContext } from "../../sketch";
+import { NUM_PARTICLES, NUM_WORKERS, VIDEO_HEIGHT, VIDEO_WIDTH } from "./constants";
 import { IForegroundUpdateMessage, IPositionColorUpdateResponse } from "./interfaces";
 
-const worker = new Worker();
-
-const VIDEO_WIDTH = 200;
-const VIDEO_HEIGHT = 150;
+const workers: Worker[] = [];
+for (let i = 0; i < NUM_WORKERS; i++) {
+    const worker = new Worker();
+    workers.push(worker);
+}
 
 const BG_SUBTRACTOR_HISTORY = 60 * 10; // 60 frames per second * 10 seconds = 10 seconds of history
 const BG_SUBTRACTOR_THRESHOLD = 8 * 8; // 8px value difference counts as foreground
@@ -52,26 +54,32 @@ export const Slow = new (class implements ISketch {
     public particlePoints: THREE.Points;
     public setupParticles() {
         // filler for now
-        const NUM_PARTICLES = 300000;
         const positions = new Float32Array(NUM_PARTICLES * 3);
         const colors = new Float32Array(NUM_PARTICLES * 3);
         const positionAttribute = new THREE.BufferAttribute(positions, 3);
-        positionAttribute.setDynamic(true);
+        // positionAttribute.setDynamic(true);
         const colorAttribute = new THREE.BufferAttribute(colors, 3);
-        colorAttribute.setDynamic(true);
+        // colorAttribute.setDynamic(true);
 
         this.particleBufferGeometry.addAttribute("position", positionAttribute);
         this.particleBufferGeometry.addAttribute("color", colorAttribute);
 
-        worker.addEventListener("message", (e) => {
-            // console.log("main received");
-            const response: IPositionColorUpdateResponse = e.data;
-            if (response.type === "positionColorUpdate") {
-                positionAttribute.setArray(response.positions);
-                colorAttribute.setArray(response.colors);
-                positionAttribute.needsUpdate = true;
-                colorAttribute.needsUpdate = true;
-            }
+        workers.forEach((worker, idx) => {
+            worker.addEventListener("message", (e) => {
+                // console.log("main received");
+                const response: IPositionColorUpdateResponse = e.data;
+                if (response.type === "positionColorUpdate") {
+                    const startIndex = idx / NUM_WORKERS * NUM_PARTICLES;
+                    console.time(`received update on ${startIndex}, ${response.positions.length}`);
+                    positions.set(response.positions, startIndex);
+                    colors.set(response.colors, startIndex);
+                    console.timeEnd(`received update on ${startIndex}, ${response.positions.length}`);
+                    // positionAttribute.setArray(response.positions);
+                    // colorAttribute.setArray(response.colors);
+                    positionAttribute.needsUpdate = true;
+                    colorAttribute.needsUpdate = true;
+                }
+            });
         });
 
         this.particlePoints = new THREE.Points(
@@ -140,31 +148,24 @@ export const Slow = new (class implements ISketch {
             this.fgbg.apply(this.frame, this.fgmask);
 
             // only access once for perf
-            const fgmaskData = this.fgmask.data;
-            const fgmaskWidth = this.fgmask.cols;
-            const fgmaskHeight = this.fgmask.rows;
+            const fgmaskData = this.fgmask.data.slice();
 
-            // console.log("sending");
-            const message: IForegroundUpdateMessage = {
-                camera: {
-                    left: this.camera.left,
-                    right: this.camera.right,
-                    top: this.camera.top,
-                    bottom: this.camera.bottom,
-                },
-                // fgmaskData,
-                fgmaskWidth,
-                fgmaskHeight,
-                now,
-                type: "foregroundUpdate",
-            };
-            worker.postMessage(message);
-
-            // for (let i = 0, l = this.particles.length; i < l; i++) {
-            //     this.particles[i].animate(this.camera, fgmaskData, fgmaskWidth, fgmaskHeight);
-            // }
+            workers.forEach((worker, idx) => {
+                const message: IForegroundUpdateMessage = {
+                    camera: {
+                        left: this.camera.left,
+                        right: this.camera.right,
+                        top: this.camera.top,
+                        bottom: this.camera.bottom,
+                    },
+                    fgmaskData,
+                    // fgmaskData: fgmaskData.toString(),
+                    now,
+                    type: "foregroundUpdate",
+                };
+                worker.postMessage(message);
+            });
         }
-        // console.log("rendering");
 
         const t = now / 10000;
         this.filter.uniforms.iMouse.value = new THREE.Vector2(Math.sin(t) / 2, Math.cos(t) / 2);
