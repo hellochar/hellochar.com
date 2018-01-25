@@ -5,7 +5,7 @@ import { IPositionColorUpdateResponse, Message } from "./interfaces";
 const VELOCITY_POSITION_SCALAR = 0.0001;
 const Y_VELOCITY_WAVE_TIMESCALAR = 1 / 10000;
 const Y_VELOCITY_WAVE_AMPLITUDESCALAR = 0.0001;
-const INIT_PARTICLE_VELOCITY = 0.03;
+const INIT_PARTICLE_VELOCITY = 0.3;
 const FREQ_SPREAD_TIMESCALAR = 1 / 30000;
 const FREQ_MIN = 10000;
 const FREQ_MAX = 30000;
