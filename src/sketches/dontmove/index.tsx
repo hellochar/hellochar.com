@@ -18,8 +18,8 @@ const POINTS_MATERIAL = new THREE.PointsMaterial({
 });
 
 let now: number = 0;
-export const Slow = new (class implements ISketch {
-    public id = "slow";
+export const DontMove = new (class implements ISketch {
+    public id = "dontmove";
 
     public scene = new THREE.Scene();
     private renderer: THREE.WebGLRenderer;
