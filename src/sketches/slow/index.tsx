@@ -7,12 +7,6 @@ import { ISketch, SketchAudioContext } from "../../sketch";
 import { NUM_PARTICLES, NUM_WORKERS, VIDEO_HEIGHT, VIDEO_WIDTH } from "./constants";
 import { IForegroundUpdateMessage, IPositionColorUpdateResponse } from "./interfaces";
 
-const workers: Worker[] = [];
-for (let i = 0; i < NUM_WORKERS; i++) {
-    const worker = new Worker();
-    workers.push(worker);
-}
-
 const BG_SUBTRACTOR_HISTORY = 60 * 10; // 60 frames per second * 10 seconds = 10 seconds of history
 const BG_SUBTRACTOR_THRESHOLD = 8 * 8; // 8px value difference counts as foreground
 
@@ -35,10 +29,12 @@ export const Slow = new (class implements ISketch {
     public filter: THREE.ShaderPass;
 
     public audioContext: SketchAudioContext;
+    private workers: Worker[] = [];
 
     public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
         this.renderer = renderer;
         this.audioContext = audioContext;
+        this.initWorkers();
         this.initVideo();
         this.setupCamera();
         this.setupParticles();
@@ -48,6 +44,13 @@ export const Slow = new (class implements ISketch {
         filter.uniforms.iResolution.value = new THREE.Vector2(renderer.domElement.width, renderer.domElement.height);
         filter.renderToScreen = true;
         this.composer.addPass(filter);
+    }
+
+    private initWorkers() {
+        for (let i = 0; i < NUM_WORKERS; i++) {
+            const worker = new Worker();
+            this.workers.push(worker);
+        }
     }
 
     public particleBufferGeometry = new THREE.BufferGeometry();
@@ -64,7 +67,7 @@ export const Slow = new (class implements ISketch {
         this.particleBufferGeometry.addAttribute("position", positionAttribute);
         this.particleBufferGeometry.addAttribute("color", colorAttribute);
 
-        workers.forEach((worker, idx) => {
+        this.workers.forEach((worker, idx) => {
             worker.addEventListener("message", (e) => {
                 // console.log("main received");
                 const response: IPositionColorUpdateResponse = e.data;
@@ -150,7 +153,7 @@ export const Slow = new (class implements ISketch {
             // only access once for perf
             const fgmaskData = this.fgmask.data.slice();
 
-            workers.forEach((worker, idx) => {
+            this.workers.forEach((worker, idx) => {
                 const message: IForegroundUpdateMessage = {
                     camera: {
                         left: this.camera.left,
