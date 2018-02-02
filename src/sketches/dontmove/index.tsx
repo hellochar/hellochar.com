@@ -3,12 +3,10 @@ import * as THREE from "three";
 
 import Worker = require('worker-loader!./worker');
 import { ExplodeShader } from "../../common/explodeShader";
+import WebcamBackgroundSubtractor from "../../common/webcamBackgroundSubtractor";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { NUM_PARTICLES, NUM_WORKERS, VIDEO_HEIGHT, VIDEO_WIDTH } from "./constants";
 import { IForegroundUpdateMessage, IPositionColorUpdateResponse } from "./interfaces";
-
-const BG_SUBTRACTOR_HISTORY = 60 * 10; // 60 frames per second * 10 seconds = 10 seconds of history
-const BG_SUBTRACTOR_THRESHOLD = 8 * 8; // 8px value difference counts as foreground
 
 const POINTS_MATERIAL = new THREE.PointsMaterial({
     vertexColors: THREE.VertexColors,
@@ -31,11 +29,13 @@ export const DontMove = new (class implements ISketch {
     public audioContext: SketchAudioContext;
     private workers: Worker[] = [];
 
+    public backgroundSubtractor = new WebcamBackgroundSubtractor(VIDEO_WIDTH, VIDEO_HEIGHT);
+
     public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
         this.renderer = renderer;
         this.audioContext = audioContext;
         this.initWorkers();
-        this.initVideo();
+        this.initBackgroundSubtractor();
         this.setupCamera();
         this.setupParticles();
         this.composer = new THREE.EffectComposer(renderer);
@@ -51,6 +51,10 @@ export const DontMove = new (class implements ISketch {
             const worker = new Worker();
             this.workers.push(worker);
         }
+    }
+
+    private initBackgroundSubtractor() {
+        this.backgroundSubtractor.init();
     }
 
     public particleBufferGeometry = new THREE.BufferGeometry();
@@ -119,39 +123,11 @@ export const DontMove = new (class implements ISketch {
         return this.renderer.domElement.height / this.renderer.domElement.width;
     }
 
-    private cap: cv.VideoCapture;
-    private frame: cv.Mat;
-    private fgmask: cv.Mat;
-    private fgbg: cv.BackgroundSubtractorMOG2;
-
-    public initVideo() {
-        const constraints: MediaStreamConstraints = { video: true };
-
-        navigator.mediaDevices.getUserMedia(constraints).then((localMediaStream) => {
-            const video = document.createElement("video");
-            video.width = VIDEO_WIDTH;
-            video.height = VIDEO_HEIGHT;
-            video.autoplay = true;
-            video.srcObject = localMediaStream;
-
-            this.cap = new cv.VideoCapture(video);
-
-            this.frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-            this.fgmask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-            this.fgbg = new cv.BackgroundSubtractorMOG2(BG_SUBTRACTOR_HISTORY, BG_SUBTRACTOR_THRESHOLD, false);
-        }).catch((e) => {
-            console.log('Reeeejected!', e);
-        });
-    }
-
     public animate() {
         now = performance.now();
-        if (this.cap != null) {
-            this.cap.read(this.frame);
-            this.fgbg.apply(this.frame, this.fgmask);
-
-            // only access once for perf
-            const fgmaskData = this.fgmask.data.slice();
+        const fgmask = this.backgroundSubtractor.update();
+        if (fgmask != null) {
+            const fgmaskData = fgmask.data.slice();
 
             this.workers.forEach((worker, idx) => {
                 const message: IForegroundUpdateMessage = {
