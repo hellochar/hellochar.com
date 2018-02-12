@@ -562,6 +562,92 @@ function mouseup(event: JQuery.Event) {
     }
 }
 
+Leap.loop(function (frame) {
+    attractors.forEach(function (attractor) {
+        if (attractor.handMesh != null) attractor.handMesh.visible = false;
+        attractor.mesh.visible = false;
+        attractor.power = 0;
+    });
+    frame.hands.filter(function (hand) { return hand.valid; }).forEach(function (hand, index) {
+        var position = hand.indexFinger.bones[3].center();
+
+        var threePosition = mapLeapToThreePosition(position);
+        var x = threePosition.x;
+        var y = threePosition.y;
+        mouseX = x;
+        mouseY = y;
+
+        var attractor = attractors[index];
+        attractor.x = x;
+        attractor.y = y;
+        attractor.mesh.position.x = x;
+        attractor.mesh.position.y = y;
+
+        attractor.mesh.visible = true;
+        if (hand.indexFinger.extended) {
+            attractor.power = 1; //Math.pow(hand.pinchStrength, 2);
+        } else {
+            attractor.power = 0;
+        }
+
+        updateHandMesh(attractor, hand);
+        attractor.handMesh.visible = true;
+    });
+});
+
+const boneGeometry = new THREE.SphereGeometry(10, 3, 3);
+const boneMaterial = new THREE.MeshBasicMaterial({
+    color: 0xefeffb,
+    wireframe: true,
+    wireframeLinewidth: 5,
+    transparent: true,
+    opacity: 0.15
+});
+function updateHandMesh(attractor, hand) {
+    if (attractor.handMesh == null) {
+        var handMesh = new THREE.Object3D();
+        attractor.handMesh = handMesh;
+        scene.add(handMesh);
+    }
+    var handMesh = attractor.handMesh;
+    hand.fingers.forEach(function (finger) {
+        if (handMesh["finger" + finger.type] == null) {
+            var fingerLine = new THREE.Line(new THREE.Geometry(), boneMaterial);
+            handMesh["finger" + finger.type] = fingerLine;
+            handMesh.add(fingerLine);
+        }
+        fingerGeometry = handMesh["finger" + finger.type].geometry;
+        finger.bones.forEach(function (bone) {
+            // create sphere for every bone
+            const id = finger.type + ',' + bone.type;
+            if (handMesh[id] == null) {
+                var boneMesh = new THREE.Mesh(boneGeometry, boneMaterial);
+                handMesh[id] = boneMesh;
+                handMesh.add(boneMesh);
+            }
+            const position = mapLeapToThreePosition(bone.center());
+            handMesh[id].position.copy(position);
+
+            // create a line for every finger
+            if (fingerGeometry.vertices[bone.type] == null) {
+                fingerGeometry.vertices.push(new THREE.Vector3());
+            }
+            fingerGeometry.vertices[bone.type].copy(position);
+            fingerGeometry.verticesNeedUpdate = true;
+        });
+    });
+}
+
+function mapLeapToThreePosition(position) {
+    function map(val, minU, maxU, minV, maxV) {
+        return (val - minU) / (maxU - minU) * (maxV - minV) + minV;
+    }
+    var x = map(position[0], -200, 200, 0, canvas.width);
+    var y = map(position[1], 350, 40, 0, canvas.height);
+    var z = -100;
+    return new THREE.Vector3(x, y, z);
+}
+
 function enableFirstAttractor(x: number, y: number) {
     const attractor = attractors[0];
     attractor.x = x;
