@@ -2,8 +2,10 @@ declare namespace cv {
     enum MatDataType {
         CV_8UC1,
         CV_8UC4,
+        CV_8U,
     }
 
+    const CV_8U: MatDataType;
     const CV_8UC1: MatDataType;
     const CV_8UC4: MatDataType;
 
@@ -20,8 +22,9 @@ declare namespace cv {
         read(frame: Mat): void;
     }
 
-
     class Mat implements IDeletable {
+        static ones(width: number, height: number, dataType: MatDataType): Mat;
+
         cols: number;
         data: Uint8Array;
         rows: number;
@@ -52,12 +55,42 @@ declare namespace cv {
         delete(): void;
     }
 
+    class Size {
+        constructor(w: number, h: number);
+    }
+
+    class Point {
+        constructor(x: number, y: number);
+    }
+
+    enum BorderType {
+        BORDER_CONSTANT,
+        BORDER_REPLICATE,
+        BORDER_REFLECT,
+        BORDER_WRAP,
+        BORDER_REFLECT_101,
+        BORDER_TRANSPARENT,
+        BORDER_REFLECT101,
+        BORDER_DEFAULT,
+        BORDER_ISOLATED,
+    }
+
+    const BORDER_CONSTANT: BorderType;
+    const BORDER_DEFAULT: BorderType;
+
+    function blur(src: Mat, dst: Mat, ksize: Size, anchor: Point, borderType?: cv.BorderType): void;
+
+    function dilate(src: Mat, dst: Mat, M: Mat, anchor: Point, iterations: number, borderType?: cv.BorderType, borderValue?: number): void;
+    function erode(src: Mat, dst: Mat, M: Mat, anchor: Point, iterations: number, borderType?: cv.BorderType, borderValue?: number): void;
+
+    function morphologyDefaultBorderValue(): number;
+
     /**
      * Render the mat onto the canvas.
      * @param canvasElementName 
      * @param mat 
      */
-    function imshow(canvasElementName: string, mat: Mat): void;
+    function imshow(canvasElementName: string | HTMLCanvasElement, mat: Mat): void;
 
     type HoughGradient = number;
     const HOUGH_GRADIENT: HoughGradient;

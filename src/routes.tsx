@@ -12,6 +12,7 @@ import {
     Line,
     DontMove,
     Waves,
+    Waves2,
     Webcam,
 } from "./sketches";
 
@@ -20,6 +21,7 @@ export const Routes = () => (
         <Route path="/line" component={() => <FullPageSketch sketch={Line} />} />
         <Route path="/dots" component={() => <FullPageSketch sketch={Dots} />} />
         <Route path="/waves" component={() => <FullPageSketch sketch={Waves} />} />
+        <Route path="/waves2" component={() => <FullPageSketch sketch={Waves2} />} />
         <Route path="/cymatics" component={() => <FullPageSketch sketch={Cymatics} />} />
         <Route path="/flame" component={() => <FullPageSketch sketch={Flame} />} />
         <Route path="/genetics" component={() => <FullPageSketch sketch={Genetics} />} />
