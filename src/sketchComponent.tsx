@@ -148,7 +148,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     private initializeSketch(sketch: ISketch, sketchParent: Element) {
         let renderer: THREE.WebGLRenderer;
         try {
-            renderer = this.renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
+            renderer = this.renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true, antialias: true });
         } catch (e) {
             throw new Error("WebGL error");
         }

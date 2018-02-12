@@ -5,4 +5,5 @@ export { Flame } from "./flame";
 export { Genetics } from "./genetics";
 export { Line } from "./line";
 export { Waves } from "./waves";
+export { Waves2 } from "./waves2";
 export { Webcam } from "./webcam";
