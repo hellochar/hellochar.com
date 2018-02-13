@@ -1,8 +1,10 @@
 import * as $ from "jquery";
+import * as Leap from "leapjs";
 import { parse } from "query-string";
 import * as THREE from "three";
 
 import { GravityShader } from "../common/gravityShader";
+import { map } from "../math/index";
 import { ISketch, SketchAudioContext } from "../sketch";
 
 const NUM_PARTICLES = parse(location.search).p ||
@@ -14,23 +16,23 @@ const GRAVITY_CONSTANT = 320;
 const PULLING_DRAG_CONSTANT = 0.93075095702;
 const INERTIAL_DRAG_CONSTANT = 0.53913643334;
 
-function createAudioGroup(audioContext: SketchAudioContext) {
+function createAudioGroup(ctx: SketchAudioContext) {
     const backgroundAudio = $("<audio autoplay loop>")
         .append('<source src="/assets/sketches/line/line_background.ogg" type="audio/ogg">')
         .append('<source src="/assets/sketches/line/line_background.mp3" type="audio/mp3">') as JQuery<HTMLMediaElement>;
 
-    const sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
+    const sourceNode = ctx.createMediaElementSource(backgroundAudio[0]);
     $("body").append(backgroundAudio);
 
-    const backgroundAudioGain = audioContext.createGain();
+    const backgroundAudioGain = ctx.createGain();
     backgroundAudioGain.gain.value = 0.5;
     sourceNode.connect(backgroundAudioGain);
-    backgroundAudioGain.connect(audioContext.gain);
+    backgroundAudioGain.connect(ctx.gain);
 
     // white noise
     const noise = (() => {
-        const node = audioContext.createBufferSource()
-            , buffer = audioContext.createBuffer(1, audioContext.sampleRate * 5, audioContext.sampleRate)
+        const node = ctx.createBufferSource()
+            , buffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate)
             , data = buffer.getChannelData(0);
         for (let i = 0; i < buffer.length; i++) {
             data[i] = Math.random();
@@ -65,23 +67,23 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     //     return node;
     // })();
 
-    const noiseSourceGain = audioContext.createGain();
+    const noiseSourceGain = ctx.createGain();
     noiseSourceGain.gain.value = 0;
     noise.connect(noiseSourceGain);
 
-    const noiseFilter = audioContext.createBiquadFilter();
+    const noiseFilter = ctx.createBiquadFilter();
     noiseFilter.type = "lowpass";
     noiseFilter.frequency.value = 0;
     noiseFilter.Q.value = 1.0;
     noiseSourceGain.connect(noiseFilter);
 
-    const noiseShelf = audioContext.createBiquadFilter();
+    const noiseShelf = ctx.createBiquadFilter();
     noiseShelf.type = "lowshelf";
     noiseShelf.frequency.value = 2200;
     noiseShelf.gain.value = 8;
     noiseFilter.connect(noiseShelf);
 
-    const noiseGain = audioContext.createGain();
+    const noiseGain = ctx.createGain();
     noiseGain.gain.value = 1.0;
     noiseShelf.connect(noiseGain);
 
@@ -93,24 +95,24 @@ function createAudioGroup(audioContext: SketchAudioContext) {
         return detuned(freq, semitoneOffset * 100);
     }
     const source1 = (() => {
-        const node = audioContext.createOscillator();
+        const node = ctx.createOscillator();
         node.frequency.value = detuned(BASE_FREQUENCY / 2, 2);
         node.type = "square";
         node.start(0);
 
-        const gain = audioContext.createGain();
+        const gain = ctx.createGain();
         gain.gain.value = 0.30;
         node.connect(gain);
 
         return gain;
     })();
     const source2 = (() => {
-        const node = audioContext.createOscillator();
+        const node = ctx.createOscillator();
         node.frequency.value = BASE_FREQUENCY;
         node.type = "sawtooth";
         node.start(0);
 
-        const gain = audioContext.createGain();
+        const gain = ctx.createGain();
         gain.gain.value = 0.30;
         node.connect(gain);
 
@@ -118,12 +120,12 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     })();
 
     const sourceLow = (() => {
-        const node = audioContext.createOscillator();
+        const node = ctx.createOscillator();
         node.frequency.value = BASE_FREQUENCY / 4;
         node.type = "sawtooth";
         node.start(0);
 
-        const gain = audioContext.createGain();
+        const gain = ctx.createGain();
         gain.gain.value = 0.90;
         node.connect(gain);
 
@@ -131,30 +133,30 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     })();
 
     function makeChordSource(baseFrequency: number) {
-        const base = audioContext.createOscillator();
+        const base = ctx.createOscillator();
         base.frequency.value = baseFrequency;
         base.start(0);
 
-        const octave = audioContext.createOscillator();
+        const octave = ctx.createOscillator();
         octave.frequency.value = semitone(baseFrequency, 12);
         octave.type = "sawtooth";
         octave.start(0);
 
-        const fifth = audioContext.createOscillator();
+        const fifth = ctx.createOscillator();
         fifth.frequency.value = semitone(baseFrequency, 12 + 7);
         fifth.type = "sawtooth";
         fifth.start(0);
 
-        const octave2 = audioContext.createOscillator();
+        const octave2 = ctx.createOscillator();
         octave2.frequency.value = semitone(baseFrequency, 24);
         octave2.type = "sawtooth";
         octave2.start(0);
 
-        const fourth = audioContext.createOscillator();
+        const fourth = ctx.createOscillator();
         fourth.frequency.value = semitone(baseFrequency, 24 + 4);
         fourth.start(0);
 
-        const gain = audioContext.createGain();
+        const gain = ctx.createGain();
         gain.gain.value = 0.0;
         base.connect(gain);
         octave.connect(gain);
@@ -167,29 +169,29 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     const chordSource = makeChordSource(BASE_FREQUENCY);
     const chordHigh = makeChordSource(BASE_FREQUENCY * 8);
 
-    const sourceGain = audioContext.createGain();
+    const sourceGain = ctx.createGain();
     sourceGain.gain.value = 0.0;
 
-    const sourceLfo = audioContext.createOscillator();
+    const sourceLfo = ctx.createOscillator();
     sourceLfo.frequency.value = 8.66;
     sourceLfo.start(0);
 
-    const lfoGain = audioContext.createGain();
+    const lfoGain = ctx.createGain();
     lfoGain.gain.value = 0;
 
     sourceLfo.connect(lfoGain);
 
-    const filter = audioContext.createBiquadFilter();
+    const filter = ctx.createBiquadFilter();
     filter.type = "bandpass";
     filter.frequency.value = 0;
     filter.Q.value = 2.18;
 
-    const filter2 = audioContext.createBiquadFilter();
+    const filter2 = ctx.createBiquadFilter();
     filter2.type = "bandpass";
     filter2.frequency.value = 0;
     filter2.Q.value = 2.18;
 
-    const filterGain = audioContext.createGain();
+    const filterGain = ctx.createGain();
     filterGain.gain.value = 0.4;
 
     chordSource.connect(sourceGain);
@@ -204,34 +206,34 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     filter.connect(filter2);
     filter2.connect(filterGain);
 
-    const audioGain = audioContext.createGain();
+    const audioGain = ctx.createGain();
     audioGain.gain.value = 1.0;
 
     noiseGain.connect(audioGain);
     filterGain.connect(audioGain);
 
-    const analyser = audioContext.createAnalyser();
+    const analyser = ctx.createAnalyser();
     audioGain.connect(analyser);
 
-    const compressor = audioContext.createDynamicsCompressor();
+    const compressor = ctx.createDynamicsCompressor();
     compressor.threshold.value = -50;
     compressor.knee.value = 12;
     compressor.ratio.value = 2;
     analyser.connect(compressor);
 
-    const highAttenuation = audioContext.createBiquadFilter();
+    const highAttenuation = ctx.createBiquadFilter();
     highAttenuation.type = "highshelf";
     highAttenuation.frequency.value = BASE_FREQUENCY * 4;
     highAttenuation.gain.value = -6;
     compressor.connect(highAttenuation);
 
-    const highAttenuation2 = audioContext.createBiquadFilter();
+    const highAttenuation2 = ctx.createBiquadFilter();
     highAttenuation2.type = "highshelf";
     highAttenuation2.frequency.value = BASE_FREQUENCY * 8;
     highAttenuation2.gain.value = -6;
     highAttenuation.connect(highAttenuation2);
 
-    highAttenuation2.connect(audioContext.gain);
+    highAttenuation2.connect(ctx.gain);
 
     return {
         analyser,
@@ -278,7 +280,19 @@ const attractorMaterialSolid = new THREE.MeshBasicMaterial({
     opacity: 0.6,
 });
 
-function makeAttractor(x = 0, y = 0, power = 0) {
+interface Attractor {
+    x: number;
+    y: number;
+    handMesh?: HandMesh;
+    mesh: THREE.Object3D;
+    power: number;
+}
+
+type HandMesh = THREE.Object3D & {
+    [childId: string]: THREE.Line | THREE.Mesh;
+};
+
+function makeAttractor(x = 0, y = 0, power = 0): Attractor {
     const mesh = new THREE.Object3D();
     mesh.position.set(x, y, -100);
     for (let i = 0; i < 10; i++) {
@@ -293,7 +307,7 @@ function makeAttractor(x = 0, y = 0, power = 0) {
     return {
         x,
         y,
-        handMesh: null,
+        handMesh: undefined,
         mesh,
         power,
     };
@@ -337,6 +351,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     audioContext = _audioContext;
     audioGroup = createAudioGroup(audioContext);
     canvas = _renderer.domElement;
+    _renderer.setClearColor(0x000000);
 
     scene = new THREE.Scene();
     renderer = _renderer;
@@ -562,22 +577,22 @@ function mouseup(event: JQuery.Event) {
     }
 }
 
-Leap.loop(function (frame) {
-    attractors.forEach(function (attractor) {
-        if (attractor.handMesh != null) attractor.handMesh.visible = false;
+Leap.loop((frame: Leap.Frame) => {
+    attractors.forEach((attractor) => {
+        if (attractor.handMesh != null) {
+            attractor.handMesh.visible = false;
+        }
         attractor.mesh.visible = false;
         attractor.power = 0;
     });
-    frame.hands.filter(function (hand) { return hand.valid; }).forEach(function (hand, index) {
-        var position = hand.indexFinger.bones[3].center();
+    frame.hands.filter((hand) => hand.valid).forEach((hand, index) => {
+        const position = hand.indexFinger.bones[3].center();
 
-        var threePosition = mapLeapToThreePosition(position);
-        var x = threePosition.x;
-        var y = threePosition.y;
+        const {x, y} = mapLeapToThreePosition(position);
         mouseX = x;
         mouseY = y;
 
-        var attractor = attractors[index];
+        const attractor = attractors[index];
         attractor.x = x;
         attractor.y = y;
         attractor.mesh.position.x = x;
@@ -585,43 +600,41 @@ Leap.loop(function (frame) {
 
         attractor.mesh.visible = true;
         if (hand.indexFinger.extended) {
-            attractor.power = 1; //Math.pow(hand.pinchStrength, 2);
+            attractor.power = 1;
         } else {
             attractor.power = 0;
         }
 
         updateHandMesh(attractor, hand);
-        attractor.handMesh.visible = true;
+        attractor.handMesh!.visible = true;
     });
 });
 
 const boneGeometry = new THREE.SphereGeometry(10, 3, 3);
-const boneMaterial = new THREE.MeshBasicMaterial({
+const boneMaterial = new THREE.LineBasicMaterial({
     color: 0xefeffb,
-    wireframe: true,
-    wireframeLinewidth: 5,
+    linewidth: 5,
     transparent: true,
-    opacity: 0.15
+    opacity: 0.15,
 });
-function updateHandMesh(attractor, hand) {
+function updateHandMesh(attractor: Attractor, hand: Leap.Hand) {
     if (attractor.handMesh == null) {
-        var handMesh = new THREE.Object3D();
-        attractor.handMesh = handMesh;
-        scene.add(handMesh);
+        attractor.handMesh = new THREE.Object3D() as HandMesh;
+        scene.add(attractor.handMesh);
     }
-    var handMesh = attractor.handMesh;
-    hand.fingers.forEach(function (finger) {
+    const handMesh = attractor.handMesh;
+    hand.fingers.forEach((finger) => {
         if (handMesh["finger" + finger.type] == null) {
-            var fingerLine = new THREE.Line(new THREE.Geometry(), boneMaterial);
+            const fingerLine = new THREE.Line(new THREE.Geometry(), boneMaterial);
             handMesh["finger" + finger.type] = fingerLine;
             handMesh.add(fingerLine);
         }
-        fingerGeometry = handMesh["finger" + finger.type].geometry;
-        finger.bones.forEach(function (bone) {
+        const fingerGeometry = handMesh["finger" + finger.type].geometry as THREE.Geometry;
+        finger.bones.forEach((bone) => {
             // create sphere for every bone
             const id = finger.type + ',' + bone.type;
             if (handMesh[id] == null) {
-                var boneMesh = new THREE.Mesh(boneGeometry, boneMaterial);
+                const boneMesh = new THREE.Mesh(boneGeometry, boneMaterial);
                 handMesh[id] = boneMesh;
                 handMesh.add(boneMesh);
             }
@@ -638,13 +651,10 @@ function updateHandMesh(attractor, hand) {
     });
 }
 
-function mapLeapToThreePosition(position) {
-    function map(val, minU, maxU, minV, maxV) {
-        return (val - minU) / (maxU - minU) * (maxV - minV) + minV;
-    }
-    var x = map(position[0], -200, 200, 0, canvas.width);
-    var y = map(position[1], 350, 40, 0, canvas.height);
-    var z = -100;
+function mapLeapToThreePosition(position: number[]) {
+    const x = map(position[0], -200, 200, 0, canvas.width);
+    const y = map(position[1], 350, 40, 0, canvas.height);
+    const z = -100;
     return new THREE.Vector3(x, y, z);
 }
 
