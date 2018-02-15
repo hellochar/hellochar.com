@@ -134,7 +134,11 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         //     if (HAS_SOUND) {
         //         audioContextGain.gain.value = 1;
         //     }
+        // try {
         this.props.sketch.animate(millisElapsed);
+        // } catch (e) {
+        //     console.error(e);
+        // }
         // } else {
         //     $sketchElement.addClass("disabled");
         //     $canvas.blur();
