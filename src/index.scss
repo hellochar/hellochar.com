@@ -66,3 +66,113 @@ p ~ p {
 .root {
     overflow: hidden;
 }
+
+.instructions-image {
+    width: 100%;
+    opacity: 0.6;
+}
+
+.line-instructions {
+    background-color: transparentize($black, 0.08);
+    width: 100%;
+    transition: opacity 500ms ease-in;
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    &.visible {
+        opacity: 1;
+    }
+}
+
+.hands-container {
+    // animation-name: rotateX;
+    // animation-iteration-count: infinite;
+    // animation-duration: 10s;
+    // animation-direction: alternate;
+    // transform: rotateX(60deg);
+    font-size: 150px;
+    -webkit-text-stroke: 3px white;
+    -webkit-text-fill-color: transparent;
+}
+
+.back-button, .user-volume {
+    display: none !important;
+}
+
+@keyframes rotateX {
+    0% {
+        transform: rotateX(0deg);
+    }
+
+    10% {
+        transform: rotateX(60deg);
+    }
+
+    100% {
+        transform: rotateX(60deg);
+    }
+}
+
+.move-hands-animation {
+    display: inline-block;
+    position: relative;
+    animation-duration: 6s;
+    animation-iteration-count: infinite;
+    animation-name: circleMoveLeft;
+
+    &.reversed {
+        animation-name: circleMoveRight;
+    }
+}
+
+$move-top: 300px;
+$move-side: 300px;
+
+@keyframes circleMoveLeft {
+    0% {
+        top: 0;
+        left: 0;
+    }
+    25% {
+        top: $move-top;
+        left: 0;
+    }
+    50% {
+        top: $move-top;
+        left: -$move-side;
+    }
+    75% {
+        top: 0;
+        left: -$move-side;
+    }
+    100% {
+        top: 0;
+        left: 0;
+    }
+}
+
+@keyframes circleMoveRight {
+    0% {
+        top: 0;
+        left: 0;
+    }
+    25% {
+        top: $move-top;
+        left: 0;
+    }
+    50% {
+        top: $move-top;
+        left: $move-side;
+    }
+    75% {
+        top: 0;
+        left: $move-side;
+    }
+    100% {
+        top: 0;
+        left: 0;
+    }
+}
