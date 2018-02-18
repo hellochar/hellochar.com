@@ -51,30 +51,6 @@ function createAudioGroup(ctx: SketchAudioContext) {
         return node;
     })();
 
-    // // pink noise from http://noisehack.com/generate-noise-web-audio-api/
-    // var noise = (function() {
-    //     var bufferSize = 4096;
-    //     var b0, b1, b2, b3, b4, b5, b6;
-    //     b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
-    //     var node = audioContext.createScriptProcessor(bufferSize, 1, 1);
-    //     node.onaudioprocess = function(e) {
-    //         var output = e.outputBuffer.getChannelData(0);
-    //         for (var i = 0; i < bufferSize; i++) {
-    //             var white = Math.random() * 2 - 1;
-    //             b0 = 0.99886 * b0 + white * 0.0555179;
-    //             b1 = 0.99332 * b1 + white * 0.0750759;
-    //             b2 = 0.96900 * b2 + white * 0.1538520;
-    //             b3 = 0.86650 * b3 + white * 0.3104856;
-    //             b4 = 0.55000 * b4 + white * 0.5329522;
-    //             b5 = -0.7616 * b5 - white * 0.0168980;
-    //             output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-    //             output[i] *= 0.11; // (roughly) compensate for gain
-    //             b6 = white * 0.115926;
-    //         }
-    //     }
-    //     return node;
-    // })();
-
     const noiseSourceGain = ctx.createGain();
     noiseSourceGain.gain.value = 0;
     noise.connect(noiseSourceGain);
@@ -275,8 +251,6 @@ function createAudioGroup(ctx: SketchAudioContext) {
 const attractorGeometry = new THREE.RingGeometry(15, 18, 32);
 const attractorMaterialSolid = new THREE.MeshBasicMaterial({
     side: THREE.DoubleSide,
-    // color: 0xe2cfb3,
-    // color: 0xe1f7e6,
     color: 0xadd6b6,
     transparent: true,
     opacity: 0.6,
@@ -682,8 +656,11 @@ function updateHandMesh(attractor: Attractor, hand: Leap.Hand) {
 
 function mapLeapToThreePosition(position: number[]) {
     const range = [0.2, 0.8];
+    // position[0] is left/right; left is negative, right is positive. each unit is one millimeter
     const x = map(position[0], -200, 200, canvas.width * range[0],  canvas.width * range[1]);
+    // 40 is about 4cm, 1 inch, to 35cm = 13 inches above
     const y = map(position[1], 350, 40,   canvas.height * range[0], canvas.height * range[1]);
+    // put the leap stuff close to the camera so the hand is always visible
     const z = 300;
     return new THREE.Vector3(x, y, z);
 }
@@ -759,21 +736,11 @@ class Instructions extends React.Component<{}, InstructionsState> {
     public render() {
         const numSecondsToShowInstructions = 10;
         const shouldShow = !(this.state.globalFrame - this.state.lastRenderedFrame < 60 * numSecondsToShowInstructions);
-        // const emoji = "\u270b";
-        // const emoji = "\u1f590";
-        // const emoji = "🖐️";
-        const emoji = "🤚";
         return (
             <div className={classnames("line-instructions", {visible: shouldShow} )}>
-                {/* <img className="instructions-image" src="/assets/images/leap motion instructions.png" /> */}
-                {/* <img className="instructions-image" src="/assets/images/leap motion instructions sideways.png" /> */}
                 <img className="instructions-image" src="/assets/images/leap motion instructions overhead.png" />
-                {/* <p className="hands-container">
-                    <span className="move-hands-animation" style={{ transform: "scaleX(-1)"}}>{emoji}</span>
-                    <span className="move-hands-animation reversed">{emoji}</span>
-                </p> */}
-                <p style={{fontSize: "35px", color: "white", position: "absolute", top: "80%"}}>
-                    Point your fingers, palm open, at the TV.
+                <p style={{fontSize: "40px", color: "white", position: "absolute", top: "80%"}}>
+                    Reach your fingers, palms down, at the TV.
                 </p>
             </div>
         );
