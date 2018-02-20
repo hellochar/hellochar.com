@@ -3,14 +3,16 @@ import { BrowserRouter, Route, Switch } from "react-router-dom";
 
 import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
+import { VertexShaderParticles } from "./sketches/vertex_shader_particles";
+import { RenderToTexture } from "./sketches/render_to_texture";
 
 import {
     Cymatics,
+    DontMove,
     Dots,
     Flame,
     Genetics,
     Line,
-    DontMove,
     Waves,
     Waves2,
     Webcam,
@@ -27,6 +29,8 @@ export const Routes = () => (
         <Route path="/genetics" component={() => <FullPageSketch sketch={Genetics} />} />
         <Route path="/webcam" component={() => <FullPageSketch sketch={Webcam} />} />
         <Route path="/dontmove" component={() => <FullPageSketch sketch={DontMove} />} />
+        <Route path="/vertexshaderparticles" component={() => <FullPageSketch sketch={VertexShaderParticles} />} />
+        <Route path="/rtt" component={() => <FullPageSketch sketch={RenderToTexture} />} />
         <Route path="/" component={HomePage} />
     </Switch>
 );
