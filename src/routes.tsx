@@ -5,6 +5,7 @@ import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
 import { VertexShaderParticles } from "./sketches/vertex_shader_particles";
 import { RenderToTexture } from "./sketches/render_to_texture";
+import { TextureForPosition } from "./sketches/texture_for_position";
 
 import {
     Cymatics,
@@ -31,6 +32,7 @@ export const Routes = () => (
         <Route path="/dontmove" component={() => <FullPageSketch sketch={DontMove} />} />
         <Route path="/vertexshaderparticles" component={() => <FullPageSketch sketch={VertexShaderParticles} />} />
         <Route path="/rtt" component={() => <FullPageSketch sketch={RenderToTexture} />} />
+        <Route path="/texture_for_position" component={() => <FullPageSketch sketch={TextureForPosition} />} />
         <Route path="/" component={HomePage} />
     </Switch>
 );
