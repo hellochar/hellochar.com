@@ -26,16 +26,59 @@ export const TextureForPosition = new (class implements ISketch {
         const width = 512;
         const height = 512;
         const numElements = width * height;
-        const dummyBuffer = new Float32Array(numElements * 4);
-        // ok, so I can use this to fill in initial positions. lets test it
-        for (let index = 0; index < dummyBuffer.length; index += 4) {
-            dummyBuffer[index] = Math.sin(index / 1000.) / 2;
-            dummyBuffer[index + 1] = Math.cos(index * 1.6 / 1000.) / 2;
-            dummyBuffer[index + 2] = index / dummyBuffer.length;
-            dummyBuffer[index + 3] = 1;
-        }
-        const texture = new THREE.DataTexture(dummyBuffer, width, height, THREE.RGBAFormat, THREE.FloatType);
-        texture.needsUpdate = true;
+
+        const randomNoiseShader = new THREE.ShaderMaterial({
+            fragmentShader: `
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+void main() {
+    gl_FragColor = vec4(gl_FragCoord.xy / 512., rand(gl_FragCoord.xy * 12.), 1.);
+}
+`,
+            vertexShader: `
+void main() {
+    gl_Position = vec4(position, 1.0);
+}
+`,
+side: THREE.DoubleSide,
+        });
+
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -5, 5);
+        camera.position.z = 1;
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        const scene = new THREE.Scene();
+        const mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), randomNoiseShader);
+        scene.add(mesh);
+        // this.renderer.render(scene, camera);
+
+        const renderTarget = new THREE.WebGLRenderTarget(width, height, {
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType,
+            depthBuffer: false,
+            stencilBuffer: false,
+        });
+        // do the render
+        this.renderer.render(scene, camera, renderTarget);
+        // console.log(renderTarget.texture);
+        // const buffer = new Float32Array(512 * 512 * 4);
+        // // YUUUUUUS THIS WORKS!!!!!!
+        // this.renderer.readRenderTargetPixels(renderTarget, 0, 0, 512, 512, buffer);
+        // console.log(buffer);
+
+        // ok - now to put them together. RTT a texture that's then fed into the point positions
+
+        // const dummyBuffer = new Float32Array(numElements * 4);
+        // // ok, so I can use this to fill in initial positions. lets test it
+        // for (let index = 0; index < dummyBuffer.length; index += 4) {
+        //     dummyBuffer[index] = Math.sin(index / 1000.) / 2;
+        //     dummyBuffer[index + 1] = Math.cos(index * 1.6 / 1000.) / 2;
+        //     dummyBuffer[index + 2] = index / dummyBuffer.length;
+        //     dummyBuffer[index + 3] = 1;
+        // }
+        // const texture = new THREE.DataTexture(dummyBuffer, width, height, THREE.RGBAFormat, THREE.FloatType);
+        // texture.needsUpdate = true;
 
         // ok great now we have a texture with position information. now we feed this into a vert that uses that texture in computing gl_Position
         // the goal here is transforming positionTexture -> points on screen
@@ -78,12 +121,12 @@ void main() {
     // extract this point's position from the texture. We fill in the .uv coord
     vec4 worldPosition = texture2D(positionTexture, uv);
     gl_Position = projectionMatrix * modelViewMatrix * worldPosition;
-    gl_PointSize = 1.;
+    gl_PointSize = 1. / length(cameraPosition - worldPosition.xyz);
 }
 `,
         });
         material.uniforms["positionTexture"] = {
-            value: texture,
+            value: renderTarget.texture,
         };
 
         // wait something's weird here. I have to pair this material with a geometry. I then add a *mesh* to the scene
@@ -131,52 +174,6 @@ void main() {
         // that is, render to a texture.
         // we cannot render to the same texture we're already using.
         // lets first test this by rendering random noise to a texture, and just looking at the data.
-
-        const randomNoiseShader = new THREE.ShaderMaterial({
-            fragmentShader: `
-float rand(vec2 co) {
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
-void main() {
-    gl_FragColor = vec4(rand(gl_FragCoord.xy), gl_FragCoord.y, 0.3, 1.);
-}
-`,
-            vertexShader: `
-void main() {
-    gl_Position = vec4(position, 1.0);
-}
-`,
-side: THREE.DoubleSide,
-        });
-
-        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -5, 5);
-        camera.position.z = 1;
-        camera.lookAt(new THREE.Vector3(0, 0, 0));
-        const scene = new THREE.Scene();
-        const mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), randomNoiseShader);
-        scene.add(mesh);
-        // scene.add(new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), new THREE.MeshBasicMaterial({
-        //     color: 0xff2235,
-        //     side: THREE.DoubleSide,
-        // })));
-        // DEBUG
-        this.renderer.render(scene, camera);
-
-        const renderTarget = new THREE.WebGLRenderTarget(512, 512, {
-            format: THREE.RGBAFormat,
-            type: THREE.FloatType,
-            depthBuffer: false,
-            stencilBuffer: false,
-        });
-        // do the render
-        this.renderer.render(scene, camera, renderTarget);
-        console.log(renderTarget.texture);
-        const buffer = new Float32Array(512 * 512 * 4);
-        // YUUUUUUS THIS WORKS!!!!!!
-        this.renderer.readRenderTargetPixels(renderTarget, 0, 0, 512, 512, buffer);
-        console.log(buffer);
-
     }
 
     get aspectRatio() {
@@ -184,7 +181,7 @@ side: THREE.DoubleSide,
     }
 
     public animate() {
-        // this.controls.update();
-        // this.renderer.render(this.scene, this.camera);
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
     }
 })();
