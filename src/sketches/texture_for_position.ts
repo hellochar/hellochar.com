@@ -23,9 +23,12 @@ export const TextureForPosition = new (class implements ISketch {
         this.renderer = renderer;
         this.audioContext = audioContext;
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);
-        this.camera.position.z = 5;
+        this.camera.position.z = 10;
+        this.camera.position.y = 4;
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
         this.controls = new THREE.OrbitControls(this.camera, renderer.domElement);
+        this.controls.autoRotate = true;
+        this.controls.autoRotateSpeed = 2;
         // AND NOW, WE CREATE A TEXTURE WHERE EACH PIXEL HOLDS 4 FLOATING POINT NUMBERS WITH ACTUAL 32 BIT PRECISION
         const numElements = COMPUTE_TEXTURE_SIDE_LENGTH * COMPUTE_TEXTURE_SIDE_LENGTH;
 
@@ -53,24 +56,10 @@ side: THREE.DoubleSide,
         const scene = new THREE.Scene();
         const mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), randomNoiseShader);
         scene.add(mesh);
-        // this.renderer.render(scene, camera);
 
         // render random initial data into pingpong's initial textures
         this.renderer.render(scene, camera, this.pingPong.currentTarget);
         // logRenderTarget(renderTarget);
-
-        // ok - now to put them together. RTT a texture that's then fed into the point positions
-
-        // const dummyBuffer = new Float32Array(numElements * 4);
-        // // ok, so I can use this to fill in initial positions. lets test it
-        // for (let index = 0; index < dummyBuffer.length; index += 4) {
-        //     dummyBuffer[index] = Math.sin(index / 1000.) / 2;
-        //     dummyBuffer[index + 1] = Math.cos(index * 1.6 / 1000.) / 2;
-        //     dummyBuffer[index + 2] = index / dummyBuffer.length;
-        //     dummyBuffer[index + 3] = 1;
-        // }
-        // const texture = new THREE.DataTexture(dummyBuffer, width, height, THREE.RGBAFormat, THREE.FloatType);
-        // texture.needsUpdate = true;
 
         // ok great now we have a texture with position information. now we feed this into a vert that uses that texture in computing gl_Position
         // the goal here is transforming positionTexture -> points on screen
@@ -122,26 +111,6 @@ void main() {
             value: null,
         };
 
-        // wait something's weird here. I have to pair this material with a geometry. I then add a *mesh* to the scene
-        // and render that mesh with the camera?
-
-        // I should be using a THREE.Points actually
-        // what do I put in the geometry?
-        // I need one *vertex* per point. Like, the Geometry.vertices array should be length width*height,
-        // and every position in the vertices array is already given by `position` in the shader.
-        // So I actually have two arrays of length width*height - first a texture that holds positions,
-        // and also this vertices array.
-        // I *could* just leave the positions totally empty, but it still seems wasteful. Do you just have to
-        // waste that?
-
-        // ok I looked at GPUParticleSystem, but that's a different thing - in GPUParticleSystem,
-        // the particle positions are all attributes that are supplied by CPU.
-
-        // ok - gpgpu protoplanet: yes they use a THREE.Points
-        // yes, they do use the positions - wait jk, the code does absolutely nothing. ok so they just
-        // pass extra unused data. they *do* use the uv though by filling that in manually.
-        // ok, whatever, lets just ignore it. keep moving forward!
-
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(numElements * 3); // leave this empty, we don't use it
         const uvs = new Float32Array(numElements * 2);
@@ -158,16 +127,10 @@ void main() {
         // FUCK yes we've properly connected texture -> points
         const points = new THREE.Points(geometry, this.pointsMaterial);
         this.scene.add(points);
-
         this.scene.add(new THREE.AxisHelper());
 
-        // FUUUUCK YESSS!!!!
-
-        // ok, next step: we connect texture -> texture
-        // that is, render to a texture.
-        // we cannot render to the same texture we're already using.
-        // lets first test this by rendering random noise to a texture, and just looking at the data.
-
+        // do it once just to warm it up
+        this.iteratePingPong();
     }
 
     // ok now, ping-pong two render targets to continuously feed into each other and also into the positions.
@@ -193,16 +156,20 @@ uniform float u_time;
 uniform sampler2D positions;
 varying vec2 v_uv;
 
+// taken from https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
 vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
 vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
 
-float snoise(vec3 v, out vec3 p0, out vec3 p1, out vec3 p2, out vec3 p3) {
+float snoise(vec3 v,
+    out vec3 p0, out vec3 p1, out vec3 p2, out vec3 p3,
+    out vec3 x0, out vec3 x1, out vec3 x2, out vec3 x3
+) {
   const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
   const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
 
 // First corner
   vec3 i  = floor(v + dot(v, C.yyy) );
-  vec3 x0 =   v - i + dot(i, C.xxx) ;
+  x0 =   v - i + dot(i, C.xxx) ;
 
 // Other corners
   vec3 g = step(x0.yzx, x0.xyz);
@@ -211,9 +178,9 @@ float snoise(vec3 v, out vec3 p0, out vec3 p1, out vec3 p2, out vec3 p3) {
   vec3 i2 = max( g.xyz, l.zxy );
 
   //  x0 = x0 - 0. + 0.0 * C
-  vec3 x1 = x0 - i1 + 1.0 * C.xxx;
-  vec3 x2 = x0 - i2 + 2.0 * C.xxx;
-  vec3 x3 = x0 - 1. + 3.0 * C.xxx;
+  x1 = x0 - i1 + 1.0 * C.xxx;
+  x2 = x0 - i2 + 2.0 * C.xxx;
+  x3 = x0 - 1. + 3.0 * C.xxx;
 
 // Permutations
   i = mod(i, 289.0 );
@@ -267,11 +234,13 @@ float snoise(vec3 v, out vec3 p0, out vec3 p1, out vec3 p2, out vec3 p3) {
 
 void main() {
     vec3 position = texture2D(positions, v_uv).xyz;
-    vec3 p0, p1, p2, p3;
-    for (int i = 0; i < 2; i++) {
-        float noise = snoise(position, p0, p1, p2, p3);
-        vec3 offset = mix(p0, p1, (sin(u_time / 100.) + 1.) / 2.);
-        vec3 newPosition = position + p0 / 100.;
+    vec3 p0, p1, p2, p3, x0, x1, x2, x3;
+    for (int i = 0; i < 3; i++) {
+        float noise = snoise(position * 1.6, p0, p1, p2, p3, x0, x1, x2, x3);
+        // vec3 offset = mix(p0, p1, (sin(u_time / 100.) + 1.) / 2.);
+        // vec3 offset = p0 * x0 + p1 * x1 + p2 * x2 + p3 * x3;
+        vec3 offset = p0 + p1 + p2 + p3;
+        vec3 newPosition = position + offset / 100.;
         position = newPosition;
     }
     gl_FragColor = vec4(position, 1.);
@@ -317,8 +286,8 @@ void main() {
         // do the render, now target2 is the latest
         this.renderer.render(scene, camera, nextTarget);
         this.pingPong.currentTarget = nextTarget;
-        this.pointsMaterial.uniforms.positionTexture.value = nextTarget.texture;
         // we also have to hook up nextTarget to the final position
+        this.pointsMaterial.uniforms.positionTexture.value = nextTarget.texture;
     }
 
     // assumes target is rgbaformat
@@ -333,7 +302,9 @@ void main() {
     }
 
     public animate() {
-        this.iteratePingPong();
+        if (performance.now() > 5000) {
+            this.iteratePingPong();
+        }
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
