@@ -5,6 +5,8 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 // goal - use a shader to fill in a texture, which is then used to fill in the positions of particles
 
+const COMPUTE_TEXTURE_SIDE_LENGTH = 1024;
+
 export const TextureForPosition = new (class implements ISketch {
     public id = "texture_for_position";
 
@@ -15,6 +17,8 @@ export const TextureForPosition = new (class implements ISketch {
 
     public audioContext: SketchAudioContext;
 
+    pointsMaterial: THREE.ShaderMaterial;
+
     public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
         this.renderer = renderer;
         this.audioContext = audioContext;
@@ -23,9 +27,7 @@ export const TextureForPosition = new (class implements ISketch {
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
         this.controls = new THREE.OrbitControls(this.camera, renderer.domElement);
         // AND NOW, WE CREATE A TEXTURE WHERE EACH PIXEL HOLDS 4 FLOATING POINT NUMBERS WITH ACTUAL 32 BIT PRECISION
-        const width = 512;
-        const height = 512;
-        const numElements = width * height;
+        const numElements = COMPUTE_TEXTURE_SIDE_LENGTH * COMPUTE_TEXTURE_SIDE_LENGTH;
 
         const randomNoiseShader = new THREE.ShaderMaterial({
             fragmentShader: `
@@ -34,7 +36,7 @@ float rand(vec2 co) {
 }
 
 void main() {
-    gl_FragColor = vec4(gl_FragCoord.xy / 512., rand(gl_FragCoord.xy * 12.), 1.);
+    gl_FragColor = vec4(gl_FragCoord.xy / ${COMPUTE_TEXTURE_SIDE_LENGTH.toFixed(1)} * 10. - 5., rand(gl_FragCoord.xy * 12.) * 10. - 5., 1.);
 }
 `,
             vertexShader: `
@@ -53,19 +55,9 @@ side: THREE.DoubleSide,
         scene.add(mesh);
         // this.renderer.render(scene, camera);
 
-        const renderTarget = new THREE.WebGLRenderTarget(width, height, {
-            format: THREE.RGBAFormat,
-            type: THREE.FloatType,
-            depthBuffer: false,
-            stencilBuffer: false,
-        });
-        // do the render
-        this.renderer.render(scene, camera, renderTarget);
-        // console.log(renderTarget.texture);
-        // const buffer = new Float32Array(512 * 512 * 4);
-        // // YUUUUUUS THIS WORKS!!!!!!
-        // this.renderer.readRenderTargetPixels(renderTarget, 0, 0, 512, 512, buffer);
-        // console.log(buffer);
+        // render random initial data into pingpong's initial textures
+        this.renderer.render(scene, camera, this.pingPong.currentTarget);
+        // logRenderTarget(renderTarget);
 
         // ok - now to put them together. RTT a texture that's then fed into the point positions
 
@@ -82,11 +74,11 @@ side: THREE.DoubleSide,
 
         // ok great now we have a texture with position information. now we feed this into a vert that uses that texture in computing gl_Position
         // the goal here is transforming positionTexture -> points on screen
-        const material = new THREE.ShaderMaterial({
+        this.pointsMaterial = new THREE.ShaderMaterial({
             transparent: true,
             fragmentShader: `
 void main() {
-    gl_FragColor = vec4(0.9, 0.6, 0.6, 0.1);
+    gl_FragColor = vec4(0.9, 0.6, 0.6, 0.5);
 }
             `,
             vertexShader: `
@@ -121,12 +113,13 @@ void main() {
     // extract this point's position from the texture. We fill in the .uv coord
     vec4 worldPosition = texture2D(positionTexture, uv);
     gl_Position = projectionMatrix * modelViewMatrix * worldPosition;
-    gl_PointSize = 1. / length(cameraPosition - worldPosition.xyz);
+    gl_PointSize = 3. / length(cameraPosition - worldPosition.xyz);
 }
 `,
         });
-        material.uniforms["positionTexture"] = {
-            value: renderTarget.texture,
+        this.pointsMaterial.uniforms.positionTexture = {
+            // value: renderTarget.texture,
+            value: null,
         };
 
         // wait something's weird here. I have to pair this material with a geometry. I then add a *mesh* to the scene
@@ -152,18 +145,18 @@ void main() {
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array(numElements * 3); // leave this empty, we don't use it
         const uvs = new Float32Array(numElements * 2);
-        for (let i = 0; i < width; i++) {
-            for (let j = 0; j < height; j++) {
-                const index = (j * width + i) * 2;
-                uvs[index] = i / (width - 1);
-                uvs[index + 1] = j / (height - 1);
+        for (let i = 0; i < COMPUTE_TEXTURE_SIDE_LENGTH; i++) {
+            for (let j = 0; j < COMPUTE_TEXTURE_SIDE_LENGTH; j++) {
+                const index = (j * COMPUTE_TEXTURE_SIDE_LENGTH + i) * 2;
+                uvs[index] = i / (COMPUTE_TEXTURE_SIDE_LENGTH - 1);
+                uvs[index + 1] = j / (COMPUTE_TEXTURE_SIDE_LENGTH - 1);
             }
         }
         geometry.addAttribute("position", new THREE.BufferAttribute(positions, 3));
         geometry.addAttribute("uv", new THREE.BufferAttribute(uvs, 2));
 
         // FUCK yes we've properly connected texture -> points
-        const points = new THREE.Points(geometry, material);
+        const points = new THREE.Points(geometry, this.pointsMaterial);
         this.scene.add(points);
 
         this.scene.add(new THREE.AxisHelper());
@@ -174,6 +167,165 @@ void main() {
         // that is, render to a texture.
         // we cannot render to the same texture we're already using.
         // lets first test this by rendering random noise to a texture, and just looking at the data.
+
+    }
+
+    // ok now, ping-pong two render targets to continuously feed into each other and also into the positions.
+    pingPong = (() => {
+        const target1 = new THREE.WebGLRenderTarget(COMPUTE_TEXTURE_SIDE_LENGTH, COMPUTE_TEXTURE_SIDE_LENGTH, {
+            type: THREE.FloatType,
+            format: THREE.RGBAFormat,
+            depthBuffer: false,
+            stencilBuffer: false,
+        });
+        const target2 = new THREE.WebGLRenderTarget(COMPUTE_TEXTURE_SIDE_LENGTH, COMPUTE_TEXTURE_SIDE_LENGTH, {
+            type: THREE.FloatType,
+            format: THREE.RGBAFormat,
+            depthBuffer: false,
+            stencilBuffer: false,
+        });
+        const currentTarget = target1;
+
+        const positionShader = new THREE.ShaderMaterial({
+            fragmentShader:
+`
+uniform float u_time;
+uniform sampler2D positions;
+varying vec2 v_uv;
+
+vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+
+float snoise(vec3 v, out vec3 p0, out vec3 p1, out vec3 p2, out vec3 p3) {
+  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+// First corner
+  vec3 i  = floor(v + dot(v, C.yyy) );
+  vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+// Other corners
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min( g.xyz, l.zxy );
+  vec3 i2 = max( g.xyz, l.zxy );
+
+  //  x0 = x0 - 0. + 0.0 * C
+  vec3 x1 = x0 - i1 + 1.0 * C.xxx;
+  vec3 x2 = x0 - i2 + 2.0 * C.xxx;
+  vec3 x3 = x0 - 1. + 3.0 * C.xxx;
+
+// Permutations
+  i = mod(i, 289.0 );
+  vec4 p = permute( permute( permute(
+             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+// Gradients
+// ( N*N points uniformly over a square, mapped onto an octahedron.)
+  float n_ = 1.0/7.0; // N=7
+  vec3  ns = n_ * D.wyz - D.xzx;
+
+  vec4 j = p - 49.0 * floor(p * ns.z *ns.z);  //  mod(p,N*N)
+
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+  vec4 x = x_ *ns.x + ns.yyyy;
+  vec4 y = y_ *ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+
+  vec4 b0 = vec4( x.xy, y.xy );
+  vec4 b1 = vec4( x.zw, y.zw );
+
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+  p0 = vec3(a0.xy,h.x);
+  p1 = vec3(a0.zw,h.y);
+  p2 = vec3(a1.xy,h.z);
+  p3 = vec3(a1.zw,h.w);
+
+//Normalise gradients
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+  p0 *= norm.x;
+  p1 *= norm.y;
+  p2 *= norm.z;
+  p3 *= norm.w;
+
+// Mix final noise value
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                dot(p2,x2), dot(p3,x3) ) );
+}
+
+void main() {
+    vec3 position = texture2D(positions, v_uv).xyz;
+    vec3 p0, p1, p2, p3;
+    for (int i = 0; i < 2; i++) {
+        float noise = snoise(position, p0, p1, p2, p3);
+        vec3 offset = mix(p0, p1, (sin(u_time / 100.) + 1.) / 2.);
+        vec3 newPosition = position + p0 / 100.;
+        position = newPosition;
+    }
+    gl_FragColor = vec4(position, 1.);
+}
+`,
+            vertexShader: // we just want a passthrough here
+`
+varying vec2 v_uv;
+
+void main() {
+    gl_Position = vec4(position, 1.);
+    v_uv = uv;
+}
+`,
+        });
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -5, 5);
+        camera.position.z = 1;
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        const scene = new THREE.Scene();
+        const mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), positionShader);
+        scene.add(mesh);
+
+        return {
+            target1,
+            target2,
+            scene,
+            camera,
+            currentTarget,
+            positionShader,
+        };
+    })();
+
+    public iteratePingPong() {
+        const { camera, currentTarget, positionShader, scene, target1, target2 } = this.pingPong;
+        const nextTarget = currentTarget === target1 ? target2 : target1;
+        // set it up to render from target1, into target2
+        positionShader.uniforms.positions = {
+            value: currentTarget.texture,
+        };
+        positionShader.uniforms.u_time = {
+            value: performance.now(),
+        };
+        // do the render, now target2 is the latest
+        this.renderer.render(scene, camera, nextTarget);
+        this.pingPong.currentTarget = nextTarget;
+        this.pointsMaterial.uniforms.positionTexture.value = nextTarget.texture;
+        // we also have to hook up nextTarget to the final position
+    }
+
+    // assumes target is rgbaformat
+    public logRenderTarget(renderTarget: THREE.WebGLRenderTarget) {
+        const buffer = new Float32Array(renderTarget.width * renderTarget.height * 4);
+        this.renderer.readRenderTargetPixels(renderTarget, 0, 0, renderTarget.width, renderTarget.height, buffer);
+        console.log(buffer);
     }
 
     get aspectRatio() {
@@ -181,6 +333,7 @@ void main() {
     }
 
     public animate() {
+        this.iteratePingPong();
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
