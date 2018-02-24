@@ -1,11 +1,16 @@
 const path = require("path");
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 module.exports = {
-    entry: "./src/index.tsx",
+    entry: {
+        app: "./src/index.tsx",
+    },
     output: {
         publicPath: "/",
         path: path.resolve(__dirname, "public"),
-        filename: "app.js"
+        filename: "[name].js",
+        chunkFilename: '[name].bundle.js',
     },
     module: {
         rules: [
@@ -16,13 +21,10 @@ module.exports = {
             },
             {
                 test: /\.scss$/,
-                use: [{
-                    loader: "style-loader" // creates style nodes from JS strings
-                }, {
-                    loader: "css-loader" // translates CSS into CommonJS
-                }, {
-                    loader: "sass-loader" // compiles Sass to CSS
-                }]
+                use: ExtractTextPlugin.extract({
+                    fallback: 'style-loader',
+                    use: ['css-loader', 'sass-loader']
+                })
             }
         ]
     },
@@ -31,5 +33,12 @@ module.exports = {
         alias: {
             'three-examples': path.resolve(__dirname, 'node_modules/three/examples/js/')
         }
-    }
+    },
+    plugins: [
+        new ExtractTextPlugin('style.css'),
+        new HtmlWebpackPlugin({
+            filename: 'index.html',
+            template: 'src/index.template.html'
+        })
+    ]
 };

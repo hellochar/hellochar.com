@@ -10,7 +10,7 @@ module.exports = merge(common, {
   devServer: {
       contentBase: path.join(__dirname, "public"),
       disableHostCheck: true,
-      host: "0.0.0.0",
+      host: "localhost",
       historyApiFallback: true
   },
   plugins: [
@@ -19,7 +19,6 @@ module.exports = merge(common, {
     // }),
     new webpack.optimize.CommonsChunkPlugin({
       name: 'node-static',
-      filename: 'node-static.js',
       minChunks(module, count) {
         var context = module.context;
         return context && context.indexOf('node_modules') >= 0;

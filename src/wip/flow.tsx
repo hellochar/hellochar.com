@@ -11,7 +11,6 @@ class Cell {
     ) {}
 
     calculateChange(before: Cell, after: Cell) {
-        
     }
 }
 
