@@ -102,7 +102,7 @@ class LineStrip {
         this.gridOffsetX = ((this.gridOffsetX + this.dx) % this.gridSize + this.gridSize) % this.gridSize;
         this.gridOffsetY = ((this.gridOffsetY + this.dy) % this.gridSize + this.gridSize) % this.gridSize;
         // console.log(this.gridOffsetX, this.gridOffsetY);
-        this.object.children.forEach((lineMesh: PositionedLine) => {
+        (this.object.children as PositionedLine[]).forEach((lineMesh) => {
             const { x, y, inlineOffsetX, inlineOffsetY } = lineMesh;
             const geometry = lineMesh.geometry as THREE.Geometry;
             permutedLine(
@@ -371,7 +371,7 @@ function setVelocityFromCanvasCoordinates(canvasX: number, canvasY: number) {
     });
 }
 
-export const Waves: ISketch = {
+const Waves: ISketch = {
     id: "waves",
     init,
     animate,
@@ -383,3 +383,5 @@ export const Waves: ISketch = {
     touchmove,
     touchend,
 };
+
+export default Waves;

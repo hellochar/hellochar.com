@@ -14,6 +14,7 @@ $arial-family: Arial, Helvetica Neue, Helvetica, sans-serif;
 
 @import "./routes/index";
 @import "./sketchComponent";
+@import "./sketches/line/index";
 
 * {
     box-sizing: border-box;
@@ -65,4 +66,10 @@ p ~ p {
 
 .root {
     overflow: hidden;
+}
+
+.presentation-mode {
+    .back-button, .user-volume {
+        display: none !important;
+    }
 }

@@ -134,7 +134,11 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         //     if (HAS_SOUND) {
         //         audioContextGain.gain.value = 1;
         //     }
+        // try {
         this.props.sketch.animate(millisElapsed);
+        // } catch (e) {
+        //     console.error(e);
+        // }
         // } else {
         //     $sketchElement.addClass("disabled");
         //     $canvas.blur();
@@ -148,7 +152,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     private initializeSketch(sketch: ISketch, sketchParent: Element) {
         let renderer: THREE.WebGLRenderer;
         try {
-            renderer = this.renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, antialias: true });
+            renderer = this.renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true, antialias: true });
         } catch (e) {
             throw new Error("WebGL error");
         }
@@ -160,7 +164,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         // canvas setup
         const $canvas = $(renderer.domElement);
         $canvas.attr("tabindex", 1);
-        Object.keys(UI_EVENTS).forEach((eventName: keyof typeof UI_EVENTS) => {
+        (Object.keys(UI_EVENTS) as Array<keyof typeof UI_EVENTS>).forEach((eventName) => {
             const callback = sketch[eventName];
             if (callback != null) {
                 $canvas.on(eventName, callback);

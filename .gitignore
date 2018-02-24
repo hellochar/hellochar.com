@@ -4,4 +4,9 @@ Thumbs.db
 *.js.map
 .idea/
 yarn-error.log
-public/app.js
+public/main.js
+public/node-static.js
+public/*.worker.js
+public/style.css
+public/report.html
+public/index.html
