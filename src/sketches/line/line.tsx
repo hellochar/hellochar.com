@@ -2,7 +2,6 @@ import * as classnames from "classnames";
 import { Controller } from "leapjs";
 import { parse } from "query-string";
 import * as React from "react";
-import { CSSTransition } from "react-transition-group";
 import * as THREE from "three";
 
 import { GravityShader } from "../../common/gravityShader";
