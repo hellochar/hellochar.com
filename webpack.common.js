@@ -5,7 +5,7 @@ const webpack = require('webpack');
 
 module.exports = {
   entry: {
-    app: "./src/index.tsx",
+    main: "./src/index.tsx",
   },
   output: {
     publicPath: "/",
