@@ -47,8 +47,7 @@ function resize() {
     camera.updateProjectionMatrix();
 }
 
-export const Genetics: ISketch = {
-    id: "genetics",
+const Genetics: ISketch = {
     init,
     animate,
     dblclick,
@@ -56,3 +55,5 @@ export const Genetics: ISketch = {
     mousedown,
     resize,
 };
+
+export default Genetics;

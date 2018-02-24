@@ -5,9 +5,7 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 // goal - compute particle positions from the vertex shader
 
-export const VertexShaderParticles = new (class implements ISketch {
-    public id = "vertex_shader_particles";
-
+const VertexShaderParticles = new (class implements ISketch {
     public scene = new THREE.Scene();
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
@@ -80,3 +78,5 @@ void main() {
         this.renderer.render(this.scene, this.camera);
     }
 })();
+
+export default VertexShaderParticles;

@@ -8,6 +8,9 @@
         "sourceMap": true,
         "typeRoots": [
             "src/custom-typings"
+        ],
+        "types": [
+            "webpack-env"
         ]
     },
     "include": [

@@ -17,7 +17,7 @@ export type UIEventReciever = {
 };
 
 export interface ISketch extends UIEventReciever {
-    id: string;
+    id?: string;
 
     animate(millisElapsed: number): void;
 

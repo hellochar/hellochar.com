@@ -5,9 +5,7 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 // goal - compute particle positions from the vertex shader
 
-export const RenderToTexture = new (class implements ISketch {
-    public id = "render_to_texture";
-
+const RenderToTexture = new (class implements ISketch {
     public scene = new THREE.Scene();
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
@@ -64,3 +62,5 @@ export const RenderToTexture = new (class implements ISketch {
         this.currentTarget = nextTarget;
     }
 })();
+
+export default RenderToTexture;
