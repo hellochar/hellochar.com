@@ -16,9 +16,7 @@ const POINTS_MATERIAL = new THREE.PointsMaterial({
 });
 
 let now: number = 0;
-export const DontMove = new (class implements ISketch {
-    public id = "dontmove";
-
+const DontMove = new (class implements ISketch {
     public scene = new THREE.Scene();
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.OrthographicCamera;
@@ -151,3 +149,5 @@ export const DontMove = new (class implements ISketch {
         this.composer.render();
     }
 })();
+
+export default DontMove;
