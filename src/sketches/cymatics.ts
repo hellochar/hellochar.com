@@ -284,7 +284,7 @@ function mouseup(event: JQuery.Event) {
     }
 }
 
-export const Cymatics: ISketch = {
+const Cymatics: ISketch = {
     id: "cymatics",
     init,
     animate,
@@ -292,3 +292,5 @@ export const Cymatics: ISketch = {
     mousemove,
     mouseup,
 };
+
+export default Cymatics;

@@ -371,7 +371,7 @@ function setVelocityFromCanvasCoordinates(canvasX: number, canvasY: number) {
     });
 }
 
-export const Waves: ISketch = {
+const Waves: ISketch = {
     id: "waves",
     init,
     animate,
@@ -383,3 +383,5 @@ export const Waves: ISketch = {
     touchmove,
     touchend,
 };
+
+export default Waves;
