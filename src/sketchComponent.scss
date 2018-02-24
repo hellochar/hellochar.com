@@ -25,6 +25,9 @@
         background: #10161A;
         display: block;
         position: relative;
+        &:focus {
+            outline: none;
+        }
     }
 }
 
