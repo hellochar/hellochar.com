@@ -237,18 +237,24 @@ function resize(width: number, height: number) {
     gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(width, height);
 }
 
-export const LineSketch: ISketch = {
-    id: "line",
-    init,
-    instructions: "Click, drag, look, listen.",
-    animate,
-    darkTheme: true,
-    elements: [<Instructions ref={(instructions) => instructionsEl = instructions!} />],
-    mousedown,
-    mousemove,
-    mouseup,
-    resize,
-    touchstart,
-    touchmove,
-    touchend,
-};
+export const LineSketch = new (class extends ISketch {
+    public id = "line";
+    public events = {
+        mousedown,
+        mousemove,
+        mouseup,
+        resize,
+        touchstart,
+        touchmove,
+        touchend,
+    };
+    public elements = [<Instructions ref={(instructions) => instructionsEl = instructions!} />];
+
+    public init() {
+        init(this.renderer, this.audioContext);
+    }
+
+    public animate(millisElapsed: number) {
+        animate(millisElapsed);
+    }
+})();

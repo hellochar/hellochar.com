@@ -165,7 +165,6 @@ class Grid {
 
 let grid: Grid;
 
-let renderer: THREE.WebGLRenderer;
 let camera: THREE.OrthographicCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
@@ -176,98 +175,11 @@ let mousePressed = false;
 const mousePosition = new THREE.Vector2(0, 0);
 const lastMousePosition = new THREE.Vector2(0, 0);
 
-function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
-    renderer = _renderer;
-    // renderer.autoClearColor = false;
-    renderer.setClearColor(0xfcfcfc);
-    renderer.clear();
-    // camera = new THREE.PerspectiveCamera(60, renderer.domElement.width / renderer.domElement.height, 1, 400);
-    const height = 200;
-    const width = renderer.domElement.width / renderer.domElement.height * height;
-    camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 400);
-    camera.position.z = 170;
-
-    scene = new THREE.Scene();
-
-    grid = new Grid(Math.ceil(width), height + 1);
-    grid.cells[Math.floor(grid.width / 2)][Math.floor(grid.height / 2)].positionFunction = (() => {
-        let t = 0;
-        return () => {
-            // t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -1, 1.6515));
-            t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
-            return 20 * Math.sin(t);
-        };
-    })();
-
-    geometry = new THREE.Geometry();
-    grid.cells.forEach((col) => {
-        col.forEach((cell) => {
-            geometry.vertices.push(cell.position);
-            geometry.colors.push(cell.color);
-        });
-    });
-    material = new THREE.PointsMaterial({
-        size: renderer.domElement.height / height,
-        sizeAttenuation: false,
-        vertexColors: THREE.VertexColors,
-    });
-    pointCloud = new THREE.Points(geometry, material);
-    pointCloud.position.set(-grid.width / 2, -grid.height / 2, 0);
-    scene.add(pointCloud);
-
-    raycaster = new THREE.Raycaster();
-    (raycaster.params as any).PointCloud.threshold = 1;
-}
-
-function animate(dt: number) {
-    if (mousePressed) {
-        const gridStart = new THREE.Vector2();
-        const gridEnd = new THREE.Vector2();
-        // raycast to find droplet location
-        raycaster.setFromCamera(mousePosition, camera);
-        raycaster.intersectObject(pointCloud).forEach((intersection) => {
-            const { index } = intersection;
-            const x = Math.floor(index / grid.height);
-            const y = index % grid.height;
-
-            gridStart.set(x, y);
-        });
-
-        raycaster.setFromCamera(lastMousePosition, camera);
-        raycaster.intersectObject(pointCloud).forEach((intersection) => {
-            const { index } = intersection;
-            const x = Math.floor(index / grid.height);
-            const y = index % grid.height;
-
-            gridEnd.set(x, y);
-        });
-
-        const dist = gridStart.distanceTo(gridEnd);
-        for (let i = 0; i <= dist; i++) {
-            const lerped = new THREE.Vector2(gridStart.x, gridStart.y);
-            if (dist > 0) {
-                lerped.lerp(gridEnd, i / dist);
-            }
-            const {x, y} = lerped.floor();
-
-            const cell = grid.cells[x][y];
-            cell.freeze();
-        }
-    }
-
-    grid.step();
-
-    geometry.colorsNeedUpdate = true;
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-    renderer.render(scene, camera);
-    lastMousePosition.set(mousePosition.x, mousePosition.y);
-}
-
 function mousedown(event: JQuery.Event) {
     if (event.which === 1) {
         const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
         const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-        mousePosition.set(mouseX / renderer.domElement.width * 2 - 1, (1 - mouseY / renderer.domElement.height) * 2 - 1);
+        mousePosition.set(mouseX / Cymatics.renderer.domElement.width * 2 - 1, (1 - mouseY / Cymatics.renderer.domElement.height) * 2 - 1);
         mousePressed = true;
     }
 }
@@ -275,7 +187,7 @@ function mousedown(event: JQuery.Event) {
 function mousemove(event: JQuery.Event) {
         const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
         const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-        mousePosition.set(mouseX / renderer.domElement.width * 2 - 1, (1 - mouseY / renderer.domElement.height) * 2 - 1);
+        mousePosition.set(mouseX / Cymatics.renderer.domElement.width * 2 - 1, (1 - mouseY / Cymatics.renderer.domElement.height) * 2 - 1);
 }
 
 function mouseup(event: JQuery.Event) {
@@ -284,13 +196,100 @@ function mouseup(event: JQuery.Event) {
     }
 }
 
-const Cymatics: ISketch = {
-    id: "cymatics",
-    init,
-    animate,
-    mousedown,
-    mousemove,
-    mouseup,
-};
+const Cymatics = new (class extends ISketch {
+    public events = {
+        mousedown,
+        mousemove,
+        mouseup,
+    };
+
+    public id = "cymatics";
+
+    public init() {
+        // renderer.autoClearColor = false;
+        this.renderer.setClearColor(0xfcfcfc);
+        this.renderer.clear();
+        // camera = new THREE.PerspectiveCamera(60, renderer.domElement.width / renderer.domElement.height, 1, 400);
+        const height = 200;
+        const width = height / this.aspectRatio;
+        camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 400);
+        camera.position.z = 170;
+
+        scene = new THREE.Scene();
+
+        grid = new Grid(Math.ceil(width), height + 1);
+        grid.cells[Math.floor(grid.width / 2)][Math.floor(grid.height / 2)].positionFunction = (() => {
+            let t = 0;
+            return () => {
+                // t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -1, 1.6515));
+                t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
+                return 20 * Math.sin(t);
+            };
+        })();
+
+        geometry = new THREE.Geometry();
+        grid.cells.forEach((col) => {
+            col.forEach((cell) => {
+                geometry.vertices.push(cell.position);
+                geometry.colors.push(cell.color);
+            });
+        });
+        material = new THREE.PointsMaterial({
+            size: this.renderer.domElement.height / height,
+            sizeAttenuation: false,
+            vertexColors: THREE.VertexColors,
+        });
+        pointCloud = new THREE.Points(geometry, material);
+        pointCloud.position.set(-grid.width / 2, -grid.height / 2, 0);
+        scene.add(pointCloud);
+
+        raycaster = new THREE.Raycaster();
+        (raycaster.params as any).PointCloud.threshold = 1;
+    }
+
+    public animate(dt: number) {
+        if (mousePressed) {
+            const gridStart = new THREE.Vector2();
+            const gridEnd = new THREE.Vector2();
+            // raycast to find droplet location
+            raycaster.setFromCamera(mousePosition, camera);
+            raycaster.intersectObject(pointCloud).forEach((intersection) => {
+                const { index } = intersection;
+                const x = Math.floor(index / grid.height);
+                const y = index % grid.height;
+
+                gridStart.set(x, y);
+            });
+
+            raycaster.setFromCamera(lastMousePosition, camera);
+            raycaster.intersectObject(pointCloud).forEach((intersection) => {
+                const { index } = intersection;
+                const x = Math.floor(index / grid.height);
+                const y = index % grid.height;
+
+                gridEnd.set(x, y);
+            });
+
+            const dist = gridStart.distanceTo(gridEnd);
+            for (let i = 0; i <= dist; i++) {
+                const lerped = new THREE.Vector2(gridStart.x, gridStart.y);
+                if (dist > 0) {
+                    lerped.lerp(gridEnd, i / dist);
+                }
+                const {x, y} = lerped.floor();
+
+                const cell = grid.cells[x][y];
+                cell.freeze();
+            }
+        }
+
+        grid.step();
+
+        geometry.colorsNeedUpdate = true;
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        this.renderer.render(scene, camera);
+        lastMousePosition.set(mousePosition.x, mousePosition.y);
+    }
+})();
 
 export default Cymatics;

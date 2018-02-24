@@ -135,6 +135,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         //         audioContextGain.gain.value = 1;
         //     }
         // try {
+        this.props.sketch.timeElapsed = timestamp;
         this.props.sketch.animate(millisElapsed);
         // } catch (e) {
         //     console.error(e);
@@ -165,9 +166,11 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         const $canvas = $(renderer.domElement);
         $canvas.attr("tabindex", 1);
         (Object.keys(UI_EVENTS) as Array<keyof typeof UI_EVENTS>).forEach((eventName) => {
-            const callback = sketch[eventName];
-            if (callback != null) {
-                $canvas.on(eventName, callback);
+            if (sketch.events != null) {
+                const callback = sketch.events[eventName];
+                if (callback != null) {
+                    $canvas.on(eventName, callback);
+                }
             }
         });
         // prevent scrolling the viewport
@@ -187,7 +190,8 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
 
         document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
-        sketch.init(renderer, audioContext);
+        sketch.setup(renderer, audioContext);
+        sketch.init();
         requestAnimationFrame(this.animateAndRequestAnimFrame);
     }
 

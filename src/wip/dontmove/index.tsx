@@ -16,30 +16,26 @@ const POINTS_MATERIAL = new THREE.PointsMaterial({
 });
 
 let now: number = 0;
-const DontMove = new (class implements ISketch {
+const DontMove = new (class extends ISketch {
     public scene = new THREE.Scene();
-    private renderer: THREE.WebGLRenderer;
     private camera: THREE.OrthographicCamera;
 
     public composer: THREE.EffectComposer;
     public filter: THREE.ShaderPass;
 
-    public audioContext: SketchAudioContext;
     private workers: Worker[] = [];
 
     public backgroundSubtractor = new WebcamBackgroundSubtractor(VIDEO_WIDTH, VIDEO_HEIGHT);
 
-    public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
-        this.renderer = renderer;
-        this.audioContext = audioContext;
+    public init() {
         this.initWorkers();
         this.initBackgroundSubtractor();
         this.setupCamera();
         this.setupParticles();
-        this.composer = new THREE.EffectComposer(renderer);
+        this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
         const filter = this.filter = new THREE.ShaderPass(ExplodeShader);
-        filter.uniforms.iResolution.value = new THREE.Vector2(renderer.domElement.width, renderer.domElement.height);
+        filter.uniforms.iResolution.value = this.resolution;
         filter.renderToScreen = true;
         this.composer.addPass(filter);
     }

@@ -7,24 +7,19 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 const COMPUTE_TEXTURE_SIDE_LENGTH = 1024;
 
-const TextureForPosition = new (class implements ISketch {
+const TextureForPosition = new (class extends ISketch {
     public scene = new THREE.Scene();
-    private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
     public controls: THREE.OrbitControls;
 
-    public audioContext: SketchAudioContext;
-
     pointsMaterial: THREE.ShaderMaterial;
 
-    public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
-        this.renderer = renderer;
-        this.audioContext = audioContext;
+    public init() {
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);
         this.camera.position.z = 10;
         this.camera.position.y = 4;
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
-        this.controls = new THREE.OrbitControls(this.camera, renderer.domElement);
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.controls.autoRotate = true;
         this.controls.autoRotateSpeed = 2;
         // AND NOW, WE CREATE A TEXTURE WHERE EACH PIXEL HOLDS 4 FLOATING POINT NUMBERS WITH ACTUAL 32 BIT PRECISION

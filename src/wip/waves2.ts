@@ -402,16 +402,24 @@ function setVelocityFromCanvasCoordinates(canvasX: number, canvasY: number) {
     // });
 }
 
-const Waves2: ISketch = {
-    init,
-    animate,
-    mousemove,
-    mousedown,
-    mouseup,
-    resize,
-    touchstart,
-    touchmove,
-    touchend,
-};
+const Waves2 = new (class extends ISketch {
+    public events = {
+        mousemove,
+        mousedown,
+        mouseup,
+        resize,
+        touchstart,
+        touchmove,
+        touchend,
+    };
+
+    init() {
+        init(this.renderer, this.audioContext);
+    }
+
+    animate() {
+        animate();
+    }
+})();
 
 export default Waves2;

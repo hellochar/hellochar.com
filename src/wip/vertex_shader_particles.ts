@@ -5,19 +5,14 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 // goal - compute particle positions from the vertex shader
 
-const VertexShaderParticles = new (class implements ISketch {
+const VertexShaderParticles = new (class extends ISketch {
     public scene = new THREE.Scene();
-    private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
-
-    public audioContext: SketchAudioContext;
 
     public material: THREE.ShaderMaterial;
     public points: THREE.Points;
 
-    public init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
-        this.renderer = renderer;
-        this.audioContext = audioContext;
+    public init() {
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);
         this.camera.position.z = 5;
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -74,7 +69,7 @@ void main() {
     }
 
     public animate() {
-        this.material.uniforms["u_time"].value = performance.now() / 1000;
+        this.material.uniforms.u_time.value = this.timeElapsed / 1000;
         this.renderer.render(this.scene, this.camera);
     }
 })();

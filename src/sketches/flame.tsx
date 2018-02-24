@@ -97,7 +97,6 @@ function stringHash(s: string) {
     return hash;
 }
 
-let renderer: THREE.WebGLRenderer;
 let camera: THREE.PerspectiveCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
@@ -114,8 +113,6 @@ const mousePosition = new THREE.Vector2(0, 0);
 const lastMousePosition = new THREE.Vector2(0, 0);
 let controls: THREE.OrbitControls;
 
-let audioContext: SketchAudioContext;
-
 let globalBranches: Branch[];
 let superPoint: SuperPoint;
 
@@ -123,30 +120,6 @@ let cX = 0, cY = 0;
 const jumpiness = 3;
 
 const nameFromSearch = parse(location.search).name;
-
-function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
-    audioContext = _audioContext;
-    initAudio(_audioContext);
-    scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0, 12, 50);
-
-    renderer = _renderer;
-
-    const aspectRatio = renderer.domElement.height / renderer.domElement.width;
-    camera = new THREE.PerspectiveCamera(60, 1 / aspectRatio, 0.01, 1000);
-    camera.position.z = 3;
-    camera.position.y = 1;
-    camera.lookAt(new THREE.Vector3());
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1;
-    controls.maxDistance = 10;
-    controls.minDistance = 0.1;
-    controls.enableKeys = false;
-    controls.enablePan = false;
-
-    updateName(nameFromSearch);
-}
 
 let noiseGain: GainNode;
 let oscLow: OscillatorNode;
@@ -282,56 +255,6 @@ function initAudio(context: SketchAudioContext) {
 }
 
 let boundingSphere: THREE.Sphere | null;
-function animate() {
-    const time = performance.now() / 3000;
-    cX = 2 * sigmoid(6 * Math.sin(time)) - 1;
-    const velocityVisitor = new VelocityTrackerVisitor();
-    const varianceVisitor = new LengthVarianceTrackerVisitor();
-    const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
-    superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), velocityVisitor, varianceVisitor, countVisitor);
-    if (boundingSphere == null) {
-        geometry.computeBoundingSphere();
-        boundingSphere = geometry.boundingSphere;
-    }
-
-    const velocity = velocityVisitor.computeVelocity();
-    const variance = varianceVisitor.computeVariance();
-    const [count, countDensity] = countVisitor.computeCountAndCountDensity();
-
-    // density ranges from 1 to ~6 or 7 at the high end.
-    // low density 1.5 and below are spaced out, larger fractals
-    // between 1.5 and 3 is a nice variety
-    // anything above 3 is really dense, hard to see
-    const density = countDensity / count;
-
-    const velocityFactor = Math.min(velocity * noiseGainScale, 0.3);
-    const noiseAmplitude = 2 / (1 + density * density);
-    const newNoiseGain = noiseGain.gain.value * 0.9 + 0.1 * velocityFactor * noiseAmplitude;
-    noiseGain.gain.value = (newNoiseGain + 1e-4) * noiseGate;
-
-    const newOscGain = oscGain.gain.value * 0.9 + 0.1 * Math.max(0, Math.min(velocity * velocity * 2000, 0.6) - 0.01);
-    oscGain.gain.value = newOscGain;
-
-    const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
-    oscLow.frequency.value = newOscFreq * oscLowGate;
-
-    const velocitySq = map(velocity * velocity, 1e-8, 0.005, -10, 10);
-    oscHigh.frequency.value = Math.min(map(sigmoid(velocitySq), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate;
-
-    chord.setFrequency(100 + 100 * boundingSphere.radius);
-    chord.setMinorBias(baseThirdBias + velocity * 100 + sigmoid(variance - 3) * 4);
-    chord.setFifthBias(baseFifthBias + countDensity / 3);
-    chord.gain.gain.value = (chord.gain.gain.value * 0.9 + 0.1 * (velocityFactor * count * count / 8) + 3e-5) * chordGate;
-
-    const cameraLength = camera.position.length();
-    compressor.ratio.value = 1 + 3 / cameraLength;
-    audioContext.gain.gain.value = (2.5 / cameraLength) + 0.05;
-
-    controls.update();
-    // console.time("render");
-    renderer.render(scene, camera);
-    // console.timeEnd("render");
-}
 
 function sigmoid(x: number) {
     if (x > 10) {
@@ -386,7 +309,7 @@ function updateName(name: string = "Han") {
     window.history.replaceState({}, null!, newUrl);
     // jumpiness = 30;
     boundingSphere = null;
-    audioContext.gain.gain.value = 0;
+    Flame.audioContext.gain.gain.value = 0;
     const hash = stringHash(name);
     const hashNorm = (hash % 1024) / 1024;
     baseFrequency = map((hash % 2048) / 2048, 0, 1, 10, 6000);
@@ -425,11 +348,6 @@ function updateName(name: string = "Han") {
     scene.add(pointCloud);
 }
 
-function resize() {
-    camera.aspect = renderer.domElement.width / renderer.domElement.height;
-    camera.updateProjectionMatrix();
-}
-
 class FlameNameInput extends React.Component<{}, {}> {
     public render() {
         return (
@@ -451,15 +369,90 @@ class FlameNameInput extends React.Component<{}, {}> {
     }
 }
 
-const Flame: ISketch = {
-    elements: [<FlameNameInput key="input" />],
-    id: "flame",
-    init,
-    animate,
-    dblclick,
-    mousemove,
-    mousedown,
-    resize,
-};
+const Flame = new (class extends ISketch {
+    public elements = [<FlameNameInput key="input" />];
+    public id = "flame";
+    public events = {
+        dblclick,
+        mousemove,
+        mousedown,
+    };
+
+    public init() {
+        initAudio(this.audioContext);
+        scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0, 12, 50);
+
+        camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);
+        camera.position.z = 3;
+        camera.position.y = 1;
+        camera.lookAt(new THREE.Vector3());
+        controls = new THREE.OrbitControls(camera, this.renderer.domElement);
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1;
+        controls.maxDistance = 10;
+        controls.minDistance = 0.1;
+        controls.enableKeys = false;
+        controls.enablePan = false;
+
+        updateName(nameFromSearch);
+    }
+
+    public animate() {
+        const time = performance.now() / 3000;
+        cX = 2 * sigmoid(6 * Math.sin(time)) - 1;
+        const velocityVisitor = new VelocityTrackerVisitor();
+        const varianceVisitor = new LengthVarianceTrackerVisitor();
+        const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
+        superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), velocityVisitor, varianceVisitor, countVisitor);
+        if (boundingSphere == null) {
+            geometry.computeBoundingSphere();
+            boundingSphere = geometry.boundingSphere;
+        }
+
+        const velocity = velocityVisitor.computeVelocity();
+        const variance = varianceVisitor.computeVariance();
+        const [count, countDensity] = countVisitor.computeCountAndCountDensity();
+
+        // density ranges from 1 to ~6 or 7 at the high end.
+        // low density 1.5 and below are spaced out, larger fractals
+        // between 1.5 and 3 is a nice variety
+        // anything above 3 is really dense, hard to see
+        const density = countDensity / count;
+
+        const velocityFactor = Math.min(velocity * noiseGainScale, 0.3);
+        const noiseAmplitude = 2 / (1 + density * density);
+        const newNoiseGain = noiseGain.gain.value * 0.9 + 0.1 * velocityFactor * noiseAmplitude;
+        noiseGain.gain.value = (newNoiseGain + 1e-4) * noiseGate;
+
+        const newOscGain = oscGain.gain.value * 0.9 + 0.1 * Math.max(0, Math.min(velocity * velocity * 2000, 0.6) - 0.01);
+        oscGain.gain.value = newOscGain;
+
+        const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
+        oscLow.frequency.value = newOscFreq * oscLowGate;
+
+        const velocitySq = map(velocity * velocity, 1e-8, 0.005, -10, 10);
+        oscHigh.frequency.value = Math.min(map(sigmoid(velocitySq), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate;
+
+        chord.setFrequency(100 + 100 * boundingSphere.radius);
+        chord.setMinorBias(baseThirdBias + velocity * 100 + sigmoid(variance - 3) * 4);
+        chord.setFifthBias(baseFifthBias + countDensity / 3);
+        chord.gain.gain.value = (chord.gain.gain.value * 0.9 + 0.1 * (velocityFactor * count * count / 8) + 3e-5) * chordGate;
+
+        const cameraLength = camera.position.length();
+        compressor.ratio.value = 1 + 3 / cameraLength;
+        this.audioContext.gain.gain.value = (2.5 / cameraLength) + 0.05;
+
+        controls.update();
+        // console.time("render");
+        this.renderer.render(scene, camera);
+        // console.timeEnd("render");
+    }
+
+    public resize() {
+        camera.aspect = 1 / this.aspectRatio;
+        camera.updateProjectionMatrix();
+    }
+})();
 
 export default Flame;

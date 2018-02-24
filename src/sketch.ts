@@ -1,3 +1,6 @@
+import * as React from "react";
+import * as THREE from "three";
+
 export const UI_EVENTS = {
     click: true,
     dblclick: true,
@@ -16,20 +19,39 @@ export type UIEventReciever = {
     [E in keyof typeof UI_EVENTS]?: JQuery.EventHandler<HTMLElement>;
 };
 
-export interface ISketch extends UIEventReciever {
-    id?: string;
+export abstract class ISketch {
+    public renderer: THREE.WebGLRenderer;
+    public audioContext: SketchAudioContext;
+    public id?: string;
+    public elements?: JSX.Element[];
+    public events?: UIEventReciever;
+    /**
+     * milliseconds since sketch started running.
+     */
+    public timeElapsed: number;
 
-    animate(millisElapsed: number): void;
+    setup(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
+        this.renderer = renderer;
+        this.audioContext = audioContext;
+    }
 
-    init(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext): void;
+    get aspectRatio() {
+        return this.renderer.domElement.height / this.renderer.domElement.width;
+    }
 
-    instructions?: string;
+    get resolution() {
+        return new THREE.Vector2(this.renderer.domElement.width, this.renderer.domElement.height);
+    }
+
+    get canvas() {
+        return this.renderer.domElement;
+    }
+
+    abstract init(): void;
+
+    abstract animate(millisElapsed: number): void;
 
     resize?(width: number, height: number): void;
-
-    darkTheme?: boolean;
-
-    elements?: JSX.Element[];
 
     destroy?(): void;
 }

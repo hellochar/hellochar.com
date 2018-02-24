@@ -221,63 +221,11 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     };
 }
 
-let audioGroup: any;
 const lineStrips: LineStrip[] = [];
 let isTimeFast = false;
 
 // threejs stuff
-let camera: THREE.OrthographicCamera;
 const lineMaterial = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.03 });
-let renderer: THREE.WebGLRenderer;
-let scene: THREE.Scene;
-
-function init(_renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
-    audioGroup = createAudioGroup(audioContext);
-    renderer = _renderer;
-    renderer.autoClearColor = false;
-
-    scene = new THREE.Scene();
-    camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
-    camera.position.z = 500;
-
-    // cheap mobile detection
-    const gridSize = (window.screen.width > 1024) ? 50 : 100;
-    // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 1, gridSize));
-    lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, -1, gridSize));
-    lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 0, 1, gridSize));
-    // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 0, gridSize));
-
-    lineStrips.forEach((lineStrip) => {
-        scene.add(lineStrip.object);
-    });
-
-    resize(_renderer.domElement.width, _renderer.domElement.height);
-    // set a default x/y for the mouse so the wave travels to the bottom-right by default
-}
-
-function animate() {
-    const opacityChangeFactor = 0.1;
-    if (isTimeFast) {
-        lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.23 * opacityChangeFactor;
-        HeightMap.frame += 4;
-    } else {
-        lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.03 * opacityChangeFactor;
-        HeightMap.frame += 1;
-    }
-
-    if (HeightMap.frame % 1000 < 500) {
-        lineMaterial.color.set("rgb(50, 12, 12)");
-    } else {
-        lineMaterial.color.set("rgb(252, 247, 243)");
-    }
-
-    const scale = map(Math.sin(HeightMap.frame / 550), -1, 1, 1, 0.8);
-    camera.scale.set(scale, scale, 1);
-    lineStrips.forEach((lineStrip) => {
-        lineStrip.update();
-    });
-    renderer.render(scene, camera);
-}
 
 // return a number from [0..1] indicating in general how dark the image is; 1.0 means very dark, while 0.0 means very light
 function getDarkness(frame: number) {
@@ -312,31 +260,6 @@ function setVelocityFromMouseEvent(event: JQuery.Event) {
     setVelocityFromCanvasCoordinates(mouseX, mouseY);
 }
 
-function resize(width: number, height: number) {
-    if (width > height) {
-        HeightMap.height = 1200;
-        HeightMap.width = 1200 * width / height;
-    } else {
-        HeightMap.width = 1200;
-        HeightMap.height = 1200 * height / width;
-    }
-    camera.left = -HeightMap.width / 2;
-    camera.top = -HeightMap.height / 2;
-    camera.bottom = HeightMap.height / 2;
-    camera.right = HeightMap.width / 2;
-    camera.updateProjectionMatrix();
-
-    renderer.setClearColor(0xfcfcfc, 1);
-    renderer.clear();
-
-    // draw black again
-    HeightMap.frame = 0;
-
-    lineStrips.forEach((lineStrip) => {
-        lineStrip.resize(HeightMap.width, HeightMap.height);
-    });
-}
-
 function touchstart(event: JQuery.Event) {
     // prevent emulated mouse events from occuring
     event.preventDefault();
@@ -354,7 +277,7 @@ function touchend(event: JQuery.Event) {
 }
 
 function setVelocityFromTouchEvent(event: JQuery.Event) {
-    const canvasOffset = $(renderer.domElement).offset()!;
+    const canvasOffset = $(Waves.renderer.domElement).offset()!;
     const touch = (event.originalEvent as TouchEvent).touches[0];
     const touchX = touch.pageX - canvasOffset.left;
     const touchY = touch.pageY - canvasOffset.top;
@@ -363,25 +286,101 @@ function setVelocityFromTouchEvent(event: JQuery.Event) {
 }
 
 function setVelocityFromCanvasCoordinates(canvasX: number, canvasY: number) {
-    const dx = map(canvasX, 0, renderer.domElement.width, -1, 1) * 2.20;
-    const dy = map(canvasY, 0, renderer.domElement.height, -1, 1) * 2.20;
+    const dx = map(canvasX, 0, Waves.renderer.domElement.width, -1, 1) * 2.20;
+    const dy = map(canvasY, 0, Waves.renderer.domElement.height, -1, 1) * 2.20;
     lineStrips.forEach((lineStrip) => {
         lineStrip.dx = dx;
         lineStrip.dy = dy;
     });
 }
 
-const Waves: ISketch = {
-    id: "waves",
-    init,
-    animate,
-    mousemove,
-    mousedown,
-    mouseup,
-    resize,
-    touchstart,
-    touchmove,
-    touchend,
-};
+const Waves = new (class extends ISketch {
+    public events = {
+        mousemove,
+        mousedown,
+        mouseup,
+        touchstart,
+        touchmove,
+        touchend,
+    };
+
+    public audioGroup: any;
+    public camera: THREE.OrthographicCamera;
+    public scene: THREE.Scene;
+
+    public init() {
+        this.audioGroup = createAudioGroup(this.audioContext);
+        this.renderer.autoClearColor = false;
+
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
+        this.camera.position.z = 500;
+
+        // cheap mobile detection
+        const gridSize = (window.screen.width > 1024) ? 50 : 100;
+        // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 1, gridSize));
+        lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, -1, gridSize));
+        lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 0, 1, gridSize));
+        // lineStrips.push(new LineStrip(HeightMap.width, HeightMap.height, 1, 0, gridSize));
+
+        lineStrips.forEach((lineStrip) => {
+            this.scene.add(lineStrip.object);
+        });
+
+        this.resize(this.renderer.domElement.width, this.renderer.domElement.height);
+        // set a default x/y for the mouse so the wave travels to the bottom-right by default
+    }
+
+    public animate() {
+        const opacityChangeFactor = 0.1;
+        if (isTimeFast) {
+            lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.23 * opacityChangeFactor;
+            HeightMap.frame += 4;
+        } else {
+            lineMaterial.opacity = lineMaterial.opacity * (1 - opacityChangeFactor) + 0.03 * opacityChangeFactor;
+            HeightMap.frame += 1;
+        }
+
+        if (HeightMap.frame % 1000 < 500) {
+            lineMaterial.color.set("rgb(50, 12, 12)");
+        } else {
+            lineMaterial.color.set("rgb(252, 247, 243)");
+        }
+
+        const scale = map(Math.sin(HeightMap.frame / 550), -1, 1, 1, 0.8);
+        this.camera.scale.set(scale, scale, 1);
+        lineStrips.forEach((lineStrip) => {
+            lineStrip.update();
+        });
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    public resize(width: number, height: number) {
+        if (width > height) {
+            HeightMap.height = 1200;
+            HeightMap.width = 1200 * width / height;
+        } else {
+            HeightMap.width = 1200;
+            HeightMap.height = 1200 * height / width;
+        }
+        const camera = this.camera;
+        camera.left = -HeightMap.width / 2;
+        camera.top = -HeightMap.height / 2;
+        camera.bottom = HeightMap.height / 2;
+        camera.right = HeightMap.width / 2;
+        camera.updateProjectionMatrix();
+
+        this.renderer.setClearColor(0xfcfcfc, 1);
+        this.renderer.clear();
+
+        // draw black again
+        HeightMap.frame = 0;
+
+        lineStrips.forEach((lineStrip) => {
+            lineStrip.resize(HeightMap.width, HeightMap.height);
+        });
+    }
+
+})();
 
 export default Waves;
