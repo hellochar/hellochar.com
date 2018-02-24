@@ -125,7 +125,7 @@ void main() {
         // FUCK yes we've properly connected texture -> points
         const points = new THREE.Points(geometry, this.pointsMaterial);
         this.scene.add(points);
-        this.scene.add(new THREE.AxisHelper());
+        this.scene.add(new THREE.AxesHelper());
 
         // do it once just to warm it up
         this.iteratePingPong();

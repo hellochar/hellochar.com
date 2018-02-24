@@ -35,14 +35,14 @@ const RenderToTexture = new (class implements ISketch {
         const geom = new THREE.CubeGeometry(1, 1, 1);
         geom.faces.forEach((f) => console.log(f));
         // geom.faces.forEach((f) => f.materialIndex = 0);
-        this.mesh = new THREE.Mesh(geom, [
+        this.mesh = new THREE.Mesh(geom, new THREE.MultiMaterial([
             new THREE.MeshBasicMaterial({
                 wireframe: true,
                 color: 0xffffff,
                 wireframeLinewidth: 5,
             }),
             this.material,
-        ]);
+        ]));
         this.scene.add(this.mesh);
     }
 
