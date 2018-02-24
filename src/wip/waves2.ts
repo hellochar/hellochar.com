@@ -2,9 +2,9 @@ import * as $ from "jquery";
 import { parse } from "query-string";
 import * as THREE from "three";
 
-import WebcamBackgroundSubtractor from "../common/webcamBackgroundSubtractor";
 import { lerp, map } from "../math";
 import { ISketch, SketchAudioContext } from "../sketch";
+import WebcamBackgroundSubtractor from "./webcamBackgroundSubtractor";
 
 // const LINE_SEGMENT_LENGTH = (window.screen.width > 1024) ? 11 : 22;
 const LINE_SEGMENT_LENGTH = 1;

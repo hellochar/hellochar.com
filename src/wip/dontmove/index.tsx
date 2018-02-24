@@ -3,8 +3,8 @@ import * as THREE from "three";
 
 import Worker = require('worker-loader!./worker');
 import { ExplodeShader } from "../../common/explodeShader";
-import WebcamBackgroundSubtractor from "../../common/webcamBackgroundSubtractor";
 import { ISketch, SketchAudioContext } from "../../sketch";
+import WebcamBackgroundSubtractor from "../webcamBackgroundSubtractor";
 import { NUM_PARTICLES, NUM_WORKERS, VIDEO_HEIGHT, VIDEO_WIDTH } from "./constants";
 import { IForegroundUpdateMessage, IPositionColorUpdateResponse } from "./interfaces";
 
