@@ -755,7 +755,7 @@ class Instructions extends React.Component<{}, InstructionsState> {
     }
 }
 
-export const Line: ISketch = {
+const Line: ISketch = {
     id: "line",
     init,
     instructions: "Click, drag, look, listen.",
@@ -770,3 +770,5 @@ export const Line: ISketch = {
     touchmove,
     touchend,
 };
+
+export default Line;

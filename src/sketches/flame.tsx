@@ -5,7 +5,7 @@ import * as React from "react";
 import * as THREE from "three";
 
 import { createPinkNoise, createWhiteNoise } from "../audio/noise";
-import { AFFINES, Branch, createInterpolatedVariation, createRouterVariation, SuperPoint, UpdateVisitor, VARIATIONS, VelocityTrackerVisitor, LengthVarianceTrackerVisitor, BoxCountVisitor } from "../common/flame";
+import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, UpdateVisitor, VARIATIONS, VelocityTrackerVisitor } from "../common/flame";
 import { lerp, map, sampleArray } from "../math";
 import { ISketch, SketchAudioContext } from "../sketch";
 
@@ -451,7 +451,7 @@ class FlameNameInput extends React.Component<{}, {}> {
     }
 }
 
-export const Flame: ISketch = {
+const Flame: ISketch = {
     elements: [<FlameNameInput key="input" />],
     id: "flame",
     init,
@@ -461,3 +461,5 @@ export const Flame: ISketch = {
     mousedown,
     resize,
 };
+
+export default Flame;

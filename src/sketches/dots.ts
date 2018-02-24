@@ -33,7 +33,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     function detuned(freq: number, centsOffset: number) {
         return freq * Math.pow(2, centsOffset / 1200);
     }
-    const source1 = (function() {
+    const source1 = (() => {
         const node = audioContext.createOscillator();
         node.frequency.value = detuned(BASE_FREQUENCY / 2, 2);
         node.type = "square";
@@ -45,7 +45,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
 
         return gain;
     })();
-    const source2 = (function() {
+    const source2 = (() => {
         const node = audioContext.createOscillator();
         node.frequency.value = BASE_FREQUENCY;
         node.type = "sawtooth";
@@ -149,7 +149,7 @@ const particles: Particle[] = [];
 // threejs stuff
 let camera: THREE.OrthographicCamera;
 let composer: THREE.EffectComposer;
-let filter: THREE.ShaderPass;
+let shader: THREE.ShaderPass;
 let geometry: THREE.Geometry;
 let pointCloud: THREE.Points;
 let renderer: THREE.WebGLRenderer;
@@ -177,10 +177,10 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     instantiatePointCloudAndGeometry();
     composer = new THREE.EffectComposer(renderer);
     composer.addPass(new THREE.RenderPass(scene, camera));
-    filter = new THREE.ShaderPass(ExplodeShader);
-    filter.uniforms.iResolution.value = new THREE.Vector2(canvas.width, canvas.height);
-    filter.renderToScreen = true;
-    composer.addPass(filter);
+    shader = new THREE.ShaderPass(ExplodeShader);
+    shader.uniforms.iResolution.value = new THREE.Vector2(canvas.width, canvas.height);
+    shader.renderToScreen = true;
+    composer.addPass(shader);
 }
 
 function animate(millisElapsed: number) {
@@ -273,7 +273,7 @@ function animate(millisElapsed: number) {
     audioGroup.setFrequency(111 / normalizedVarianceLength);
     audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
-    filter.uniforms.iMouse.value = new THREE.Vector2(mouseX / canvas.width, (canvas.height - mouseY) / canvas.height);
+    shader.uniforms.iMouse.value = new THREE.Vector2(mouseX / canvas.width, (canvas.height - mouseY) / canvas.height);
     // when groupedUpness is 0, shrinkFactor should be 0.98
     // when groupedUpness is 1, shrinkFactor should be 1.0
     // filter.uniforms['shrinkFactor'].value = 0.98 + groupedUpness * 0.03;
@@ -351,7 +351,7 @@ function removeAttractor() {
 function resize(width: number, height: number) {
     camera.right = width;
     camera.bottom = height;
-    filter.uniforms.iResolution.value = new THREE.Vector2(width, height);
+    shader.uniforms.iResolution.value = new THREE.Vector2(width, height);
 
     camera.updateProjectionMatrix();
 }
@@ -381,7 +381,7 @@ function instantiatePointCloudAndGeometry() {
     scene.add(pointCloud);
 }
 
-export const Dots: ISketch = {
+const Dots: ISketch = {
     id: "dots",
     init,
     instructions: "Click, drag, release, look, listen.",
@@ -395,3 +395,5 @@ export const Dots: ISketch = {
     touchmove,
     touchend,
 };
+
+export default Dots;
