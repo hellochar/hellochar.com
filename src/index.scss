@@ -73,6 +73,7 @@ p ~ p {
 }
 
 .line-instructions {
+    pointer-events: none;
     background-color: transparentize($black, 0.08);
     width: 100%;
     transition: opacity 500ms ease-in;
