@@ -1,12 +1,37 @@
 import { Vector2 } from "three";
 
 import { world } from "./index";
-import { Inventory } from "./inventory";
+import { hasInventory, HasInventory, Inventory } from "./inventory";
 
 const CELL_ENERGY_MAX = 100;
 
 export abstract class Tile {
     public constructor(public pos: Vector2) {}
+
+    // test tiles diffusing water around on same-type tiles
+    public step() {
+        if (hasInventory(this)) {
+            const neighbors = world.tileNeighbors(this.pos);
+            const neighborsWithInventory =
+                Array.from(neighbors.values()).filter((tile) => {
+                    return hasInventory(tile) && tile.constructor === this.constructor;
+                }) as any as HasInventory[];
+
+            let avgWater = this.inventory.water;
+            neighborsWithInventory.forEach((tile) => {
+                avgWater += tile.inventory.water;
+            });
+            avgWater /= (neighborsWithInventory.length + 1);
+
+            for (const tile of neighborsWithInventory) {
+                // give water to neighbors that you're less than
+                if (tile.inventory.water < avgWater) {
+                    const diff = Math.floor((avgWater - tile.inventory.water) / (neighborsWithInventory.length + 1));
+                    this.inventory.give(tile.inventory, diff, 0);
+                }
+            }
+        }
+    }
 }
 
 export class Air extends Tile {
