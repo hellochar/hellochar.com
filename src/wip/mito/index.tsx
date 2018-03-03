@@ -19,6 +19,10 @@ export interface Constructor<T> {
     new(...args: any[]): T;
 }
 
+interface ActionStill {
+    type: "still";
+}
+
 interface ActionMove {
     type: "move";
     dir: Vector2;
@@ -29,7 +33,14 @@ interface ActionBuild {
     cellType: Constructor<Cell>;
     position: Vector2;
 }
-type Action = ActionMove | ActionBuild;
+
+interface ActionDrop {
+    type: "drop";
+    water: number;
+    sugar: number;
+}
+
+type Action = ActionStill | ActionMove | ActionBuild | ActionDrop;
 
 class Player {
     public inventory = new Inventory(1000, 100, 100);
@@ -46,11 +57,16 @@ class Player {
 
     public attemptAction(action: Action) {
         switch (action.type) {
+            case "still":
+                break;
             case "move":
                 this.attemptMove(action);
                 break;
             case "build":
                 this.attemptBuild(action);
+                break;
+            case "drop":
+                this.attemptDrop(action);
                 break;
         }
     }
@@ -67,17 +83,41 @@ class Player {
 
     public attemptMove(action: ActionMove) {
         if (this.verifyMove(action)) {
-            const target = this.pos.clone().add(action.dir);
+            const target = world.wrappedPosition(this.pos.clone().add(action.dir));
             // do the move
-            this.pos = world.wrappedPosition(target);
+            this.pos = target;
+            // autopickup resources in the position as possible
+            const targetTile = world.tileAt(target.x, target.y);
+            if (hasInventory(targetTile)) {
+                const inv = targetTile.inventory;
+                inv.give(this.inventory, inv.water, inv.sugar);
+            }
         }
     }
 
     public attemptBuild(action: ActionBuild) {
         // if (this.pos.clone().sub(action.position).manhattanLength)
         // attempt to build. something.
-        const newTile = new action.cellType(action.position);
-        world.setTileAt(action.position, newTile);
+        // just make every cell cost 25 water and 10 sugar for now
+        const waterCost = 25;
+        const sugarCost = 10;
+        const targetTile = world.tileAt(action.position.x, action.position.y);
+        if (!(targetTile instanceof action.cellType) &&
+            this.inventory.water >= waterCost &&
+            this.inventory.sugar >= sugarCost) {
+            const newTile = new action.cellType(action.position);
+            world.setTileAt(action.position, newTile);
+            this.inventory.change(-waterCost, -sugarCost);
+        }
+    }
+
+    public attemptDrop(action: ActionDrop) {
+        // drop as much as you can onto the current tile
+        const currentTile = world.tileAt(this.pos.x, this.pos.y);
+        if (hasInventory(currentTile)) {
+            const { water, sugar } = action;
+            this.inventory.give(currentTile.inventory, water, sugar);
+        }
     }
 }
 
@@ -188,7 +228,7 @@ class World {
     }
 }
 
-const world = new World();
+export const world = new World();
 
 abstract class Renderer<T> {
     constructor(public target: T, public scene: Scene) { }
@@ -310,6 +350,8 @@ class InventoryRenderer extends Renderer<Inventory> {
     );
 
     init() {
+        this.waterMesh.position.x = -0.25;
+        this.sugarMesh.position.x = +0.25;
         // this.object.add(this.waterMesh);
         // this.object.add(this.sugarMesh);
         this.object.position.z = 1;
@@ -327,7 +369,7 @@ class InventoryRenderer extends Renderer<Inventory> {
         if (sugarScale === 0) {
             this.object.remove(this.sugarMesh);
         } else {
-            this.object.add(this.waterMesh);
+            this.object.add(this.sugarMesh);
         }
         this.waterMesh.scale.set(waterScale, waterScale, 1);
         this.sugarMesh.scale.set(sugarScale, sugarScale, 1);
@@ -348,36 +390,44 @@ function createRendererFor<E extends Entity>(object: E, scene: Scene): Renderer<
     }
 }
 
-const ACTION_KEYMAP: { [key: string]: ActionMove } = {
-    w: {
+const ACTION_KEYMAP: { [key: string]: Action } = {
+    "x": {
+        type: "drop",
+        sugar: 0,
+        water: 100, // hack hack we can assume max 100 water, it's fine
+    },
+    ".": {
+        type: "still",
+    },
+    "w": {
         type: "move",
         dir: DIRECTIONS.n,
     },
-    a: {
+    "a": {
         type: "move",
         dir: DIRECTIONS.w,
     },
-    s: {
+    "s": {
         type: "move",
         dir: DIRECTIONS.s,
     },
-    d: {
+    "d": {
         type: "move",
         dir: DIRECTIONS.e,
     },
-    q: {
+    "q": {
         type: "move",
         dir: DIRECTIONS.nw,
     },
-    e: {
+    "e": {
         type: "move",
         dir: DIRECTIONS.ne,
     },
-    z: {
+    "z": {
         type: "move",
         dir: DIRECTIONS.sw,
     },
-    c: {
+    "c": {
         type: "move",
         dir: DIRECTIONS.se,
     },
@@ -415,12 +465,20 @@ const Mito = new (class extends ISketch {
             } else {
                 // go into autoplace tissue
                 if (key === 't') {
-                    const currAutoplaceIndex = AUTOPLACE_LIST.indexOf(this.autoplace);
-                    const nextIndex = (currAutoplaceIndex + 1) % AUTOPLACE_LIST.length;
-                    this.autoplace = AUTOPLACE_LIST[nextIndex];
-                    this.uiRef.setState({
-                        autoplace: this.autoplace,
-                    });
+                    this.autoplace = Tissue;
+                    // const currAutoplaceIndex = AUTOPLACE_LIST.indexOf(this.autoplace);
+                    // const nextIndex = (currAutoplaceIndex + 1) % AUTOPLACE_LIST.length;
+                    // this.autoplace = AUTOPLACE_LIST[nextIndex];
+                    this.uiRef.setState({ autoplace: this.autoplace });
+                } else if (key === 'l') {
+                    this.autoplace = Leaf;
+                    this.uiRef.setState({ autoplace: this.autoplace });
+                } else if (key === 'r') {
+                    this.autoplace = Root;
+                    this.uiRef.setState({ autoplace: this.autoplace });
+                } else if (key === ' ') {
+                    this.autoplace = undefined;
+                    this.uiRef.setState({ autoplace: this.autoplace });
                 }
             }
         },
@@ -462,7 +520,6 @@ const Mito = new (class extends ISketch {
             }
             renderer.destroy();
             this.renderers.delete(e);
-            console.log("removing renderer", renderer);
         }
         world.entities().forEach((entity) => {
             const renderer = this.getOrCreateRenderer(entity);

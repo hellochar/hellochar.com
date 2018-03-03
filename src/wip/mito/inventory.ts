@@ -7,13 +7,16 @@ export class Inventory {
     }
 
     public give(other: Inventory, amountWater: number, amountSugar: number) {
+        if (other === this) {
+            throw new Error("shouldn't give to self");
+        }
         // to check:
         // 1) we have enough water and sugar
         //      if we don't, cap water and sugar to the amount available
         // 2) other has enough space
         //      if it doesn't, scale down to the amount that is available
-        let water = Math.max(amountWater, this.water);
-        let sugar = Math.max(amountSugar, this.sugar);
+        let water = Math.min(amountWater, this.water);
+        let sugar = Math.min(amountSugar, this.sugar);
         const spaceNeeded = water + sugar;
         if (spaceNeeded > other.space()) {
             const capacity = other.space();
