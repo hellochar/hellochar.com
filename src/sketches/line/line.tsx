@@ -96,7 +96,6 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     composer.addPass(gravityShaderPass);
 
     controller = initLeap();
-    console.log(controller);
 }
 
 function animate(millisElapsed: number) {
@@ -157,57 +156,6 @@ function triangleWaveApprox(t: number) {
     return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
 }
 
-function touchstart(event: JQuery.Event) {
-    // prevent emulated mouse events from occuring
-    event.preventDefault();
-    const canvasOffset = $(canvas).offset()!;
-    const touch = (event.originalEvent as TouchEvent).touches[0];
-    const touchX = touch.pageX - canvasOffset.left;
-    let touchY = touch.pageY - canvasOffset.top;
-    // offset the touchY by its radius so the attractor is above the thumb
-    touchY -= 100;
-
-    mouseX = touchX;
-    mouseY = touchY;
-    enableFirstAttractor(touchX, touchY);
-}
-
-function touchmove(event: JQuery.Event) {
-    const canvasOffset = $(canvas).offset()!;
-    const touch = (event.originalEvent as TouchEvent).touches[0];
-    const touchX = touch.pageX - canvasOffset.left;
-    let touchY = touch.pageY - canvasOffset.top;
-    touchY -= 100;
-
-    mouseX = touchX;
-    mouseY = touchY;
-    moveFirstAttractor(touchX, touchY);
-}
-
-function touchend(event: JQuery.Event) {
-    disableFirstAttractor();
-}
-
-function mousedown(event: JQuery.Event) {
-    if (event.which === 1) {
-        mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-        enableFirstAttractor(mouseX, mouseY);
-    }
-}
-
-function mousemove(event: JQuery.Event) {
-    mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-    mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-    moveFirstAttractor(mouseX, mouseY);
-}
-
-function mouseup(event: JQuery.Event) {
-    if (event.which === 1) {
-        disableFirstAttractor();
-    }
-}
-
 function enableFirstAttractor(x: number, y: number) {
     const attractor = attractors[0];
     attractor.x = x;
@@ -229,25 +177,52 @@ function disableFirstAttractor() {
     attractor.power = 0;
 }
 
-function resize(width: number, height: number) {
-    camera.right = width;
-    camera.bottom = height;
-    camera.updateProjectionMatrix();
-
-    gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(width, height);
-}
-
 export const LineSketch = new (class extends ISketch {
     public id = "line";
-    public events = {
-        mousedown,
-        mousemove,
-        mouseup,
-        resize,
-        touchstart,
-        touchmove,
-        touchend,
+    public canvasProps: ISketch["canvasProps"] = {
+        onMouseDown: (event) => {
+            if (event.button === 0) {
+                // TODO simply using pageX/pageY is dangerous, we should really fix this
+                mouseX = event.pageX;
+                mouseY = event.pageY;
+                enableFirstAttractor(mouseX, mouseY);
+            }
+        },
+        onMouseMove: (event) => {
+            mouseX = event.pageX;
+            mouseY = event.pageY;
+            moveFirstAttractor(mouseX, mouseY);
+        },
+        onMouseUp: (event) => {
+            disableFirstAttractor();
+        },
+        onTouchStart: (event) => {
+            // prevent emulated mouse events from occuring
+            event.preventDefault();
+            const touch = event.touches[0];
+            const touchX = touch.pageX;
+            // offset the touchY by its radius so the attractor is above the thumb
+            const touchY = touch.pageY - 100;
+
+            mouseX = touchX;
+            mouseY = touchY;
+            enableFirstAttractor(touchX, touchY);
+        },
+        onTouchMove: (event) => {
+            const touch = event.touches[0];
+            const touchX = touch.pageX;
+            // offset the touchY by its radius so the attractor is above the thumb
+            const touchY = touch.pageY - 100;
+
+            mouseX = touchX;
+            mouseY = touchY;
+            moveFirstAttractor(touchX, touchY);
+        },
+        onTouchEnd: (event) => {
+            disableFirstAttractor();
+        },
     };
+
     public elements = [<Instructions ref={(instructions) => instructionsEl = instructions!} />];
 
     public init() {
@@ -256,5 +231,13 @@ export const LineSketch = new (class extends ISketch {
 
     public animate(millisElapsed: number) {
         animate(millisElapsed);
+    }
+
+    public resize(width: number, height: number) {
+        camera.right = width;
+        camera.bottom = height;
+        camera.updateProjectionMatrix();
+
+        gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(width, height);
     }
 })();

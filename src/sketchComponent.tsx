@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 import * as classnames from "classnames";
 import { Link } from "react-router-dom";
-import { ISketch, SketchAudioContext, UI_EVENTS } from "./sketch";
+import { ISketch, SketchAudioContext } from "./sketch";
 
 const $window = $(window);
 const HAS_SOUND = true;
@@ -35,7 +35,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     private audioContext: SketchAudioContext;
     private userVolume: GainNode;
 
-    private handleRef = (ref: HTMLDivElement | null) => {
+    private handleCanvasRef = (ref: HTMLCanvasElement | null) => {
         if (ref != null) {
             try {
                 this.initializeSketch(this.props.sketch, ref);
@@ -62,7 +62,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         const { status } = this.state;
         if (status === SketchStatus.ERROR) {
             return (
-                <div {...divProps} id={sketch.id} className="sketch-component" ref={this.handleRef}>
+                <div {...divProps} id={sketch.id} className="sketch-component">
                     <p className="sketch-error">
                         Oops - something went wrong! Try again later.
                         <p><Link className="back" to="/">Back</Link></p>
@@ -71,7 +71,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             );
         } else if (status === SketchStatus.ERROR_WEBGL) {
             return (
-                <div {...divProps} id={sketch.id} className="sketch-component" ref={this.handleRef}>
+                <div {...divProps} id={sketch.id} className="sketch-component">
                     <p className="sketch-error">
                         Your browser doesn't support WebGL. Try visiting this page in Chrome.
                         <p><Link className="back" to="/">Back</Link></p>
@@ -79,12 +79,24 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
                 </div>
             );
         } else {
+            const canvasProps = sketch.canvasProps;
+            // TODO optimize
+            const handleTouchMove: React.TouchEventHandler<HTMLCanvasElement> = (event) => {
+                // prevent scrolling the viewport
+                // TODO check if we still need this
+                event.preventDefault();
+                if (canvasProps.onTouchMove) {
+                    canvasProps.onTouchMove(event);
+                }
+            };
+
             return (
-                <div {...divProps} id={sketch.id} className="sketch-component" ref={this.handleRef}>
+                <div {...divProps} id={sketch.id} className="sketch-component">
                     <div className="sketch-elements">
                         { sketch.elements }
                     </div>
                     { this.renderVolumeButton() }
+                    <canvas {...canvasProps} onTouchMove={handleTouchMove} tabIndex={1} ref={this.handleCanvasRef} />
                 </div>
             );
         }
@@ -110,7 +122,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     }
 
     private handleWindowResize = () => {
-        this.setCanvasDimensions(this.renderer, this.renderer.domElement.parentElement!);
+        this.setCanvasDimensions(this.renderer);
         if (this.props.sketch.resize != null) {
             this.props.sketch.resize(this.renderer.domElement.width, this.renderer.domElement.height);
         }
@@ -128,55 +140,23 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     private animateAndRequestAnimFrame = (timestamp: number) => {
         const millisElapsed = timestamp - this.lastTimestamp;
         this.lastTimestamp = timestamp;
-        // if (isElementOnScreen(sketchParent)) {
-        //     $sketchElement.removeClass("disabled");
-        //     $canvas.focus();
-        //     if (HAS_SOUND) {
-        //         audioContextGain.gain.value = 1;
-        //     }
-        // try {
         this.props.sketch.timeElapsed = timestamp;
         this.props.sketch.animate(millisElapsed);
-        // } catch (e) {
-        //     console.error(e);
-        // }
-        // } else {
-        //     $sketchElement.addClass("disabled");
-        //     $canvas.blur();
-        //     audioContextGain.gain.value = 0;
-        // }
         if (this.state.status === SketchStatus.LOADED) {
             requestAnimationFrame(this.animateAndRequestAnimFrame);
         }
     }
 
-    private initializeSketch(sketch: ISketch, sketchParent: Element) {
+    private initializeSketch(sketch: ISketch, canvas: HTMLCanvasElement) {
         let renderer: THREE.WebGLRenderer;
         try {
-            renderer = this.renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true, antialias: true });
+            renderer = this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, preserveDrawingBuffer: true, antialias: true });
         } catch (e) {
             throw new Error("WebGL error");
         }
-        sketchParent.appendChild(renderer.domElement);
-        this.setCanvasDimensions(renderer, sketchParent);
+        this.setCanvasDimensions(renderer);
 
         $window.resize(this.handleWindowResize);
-
-        // canvas setup
-        const $canvas = $(renderer.domElement);
-        $canvas.attr("tabindex", 1);
-        (Object.keys(UI_EVENTS) as Array<keyof typeof UI_EVENTS>).forEach((eventName) => {
-            if (sketch.events != null) {
-                const callback = sketch.events[eventName];
-                if (callback != null) {
-                    $canvas.on(eventName, callback);
-                }
-            }
-        });
-        // prevent scrolling the viewport
-        $canvas.on("touchmove", (event) => {
-            event.preventDefault();
-        });
 
         // initialize and run sketch
         const audioContext = this.audioContext = new AudioContext() as SketchAudioContext;
@@ -211,7 +191,8 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         }
     }
 
-    private setCanvasDimensions(renderer: THREE.WebGLRenderer, sketchParent: Element) {
-        renderer.setSize(sketchParent.clientWidth, sketchParent.clientHeight);
+    private setCanvasDimensions(renderer: THREE.WebGLRenderer) {
+        const parent = renderer.domElement.parentElement!;
+        renderer.setSize(parent.clientWidth, parent.clientHeight);
     }
 }

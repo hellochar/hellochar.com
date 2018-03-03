@@ -1,30 +1,12 @@
 import * as React from "react";
 import * as THREE from "three";
 
-export const UI_EVENTS = {
-    click: true,
-    dblclick: true,
-    mousedown: true,
-    mouseup: true,
-    mousemove: true,
-    touchstart: true,
-    touchmove: true,
-    touchend: true,
-    keyup: true,
-    keydown: true,
-    keypress: true,
-};
-
-export type UIEventReciever = {
-    [E in keyof typeof UI_EVENTS]?: JQuery.EventHandler<HTMLElement>;
-};
-
 export abstract class ISketch {
     public renderer: THREE.WebGLRenderer;
     public audioContext: SketchAudioContext;
     public id?: string;
     public elements?: JSX.Element[];
-    public events?: UIEventReciever;
+    public canvasProps: React.DetailedHTMLProps<React.CanvasHTMLAttributes<HTMLCanvasElement>, HTMLCanvasElement>;
     /**
      * milliseconds since sketch started running.
      */
