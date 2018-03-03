@@ -1,62 +1,11 @@
 import * as React from "react";
-import { Geometry, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, Scene, ShaderMaterial, SphereBufferGeometry, SphereGeometry, Vector2, Vector3, Color, Material } from "three";
+import * as THREE from "three";
+import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, Scene, ShaderMaterial, SphereBufferGeometry, SphereGeometry, Vector2, Vector3 } from "three";
 
 import { ISketch, SketchAudioContext } from "../../sketch";
-import * as THREE from "three";
-
-const CELL_ENERGY_MAX = 100;
-
-class Inventory {
-    constructor(
-        public max: number,
-        public water: number = 0,
-        public sugar: number = 0,
-    ) {
-    }
-
-    public give(other: Inventory, amountWater: number, amountSugar: number) {
-        // to check:
-        // 1) we have enough water and sugar
-        //      if we don't, cap water and sugar to the amount available
-        // 2) other has enough space
-        //      if it doesn't, scale down to the amount that is available
-        let water = Math.max(amountWater, this.water);
-        let sugar = Math.max(amountSugar, this.sugar);
-        const capacityNeeded = water + sugar;
-        if (capacityNeeded > other.capacity()) {
-            const capacity = other.capacity();
-            // scale down the amount to give
-            water = Math.round(water / capacityNeeded * capacity);
-            sugar = Math.round(sugar / capacityNeeded * capacity);
-        }
-        this.change(-water, -sugar);
-        other.change(water, sugar);
-    }
-
-    public change(water: number, sugar: number) {
-        this.water += water;
-        this.sugar += sugar;
-        this.validate();
-    }
-
-    public capacity() {
-        const { max, water, sugar } = this;
-        return max - water - sugar;
-    }
-
-    validate() {
-        const { max, water, sugar } = this;
-        if (water < 0) {
-            throw new Error(`water < 0: ${water}`);
-        }
-        if (sugar < 0) {
-            throw new Error(`sugar < 0: ${sugar}`);
-        }
-        if (water + sugar > max) {
-            throw new Error(`bad inventory: ${water} water + ${sugar} > ${max} max`);
-        }
-    }
-}
+import { hasInventory, Inventory } from "./inventory";
+import { Air, Cell, Leaf, Root, Soil, Tile, Tissue } from "./tile";
+import UI from "./ui";
 
 interface Steppable {
     step(): void;
@@ -66,56 +15,21 @@ function isSteppable(obj: any): obj is Steppable {
     return typeof obj.step === "function";
 }
 
-abstract class Tile {
-    public constructor(public pos: Vector2) {}
-}
-
-class Air extends Tile {
-    public co2() {
-        return 1;
-    }
-
-    public sunlight() {
-        return 1;
-    }
-}
-
-class Soil extends Tile {
-    public inventory = new Inventory(100);
-    constructor(pos: Vector2, water: number) {
-        super(pos);
-        this.inventory.change(water, 0);
-    }
-}
-
-class Cell extends Tile {
-    public energy: number = CELL_ENERGY_MAX;
-}
-
-class Tissue extends Cell {
-    public inventory = new Inventory(100);
-}
-
-class Leaf extends Cell {
-    public step() {
-
-    }
-}
-
-class Root extends Cell {
-    public step() {
-        // const neighbors = World.tileNeighbors(this.pos);
-        // for (const [dir, tile] of neighbors.entries()) {
-
-        // }
-    }
+export interface Constructor<T> {
+    new(...args: any[]): T;
 }
 
 interface ActionMove {
     type: "move";
     dir: Vector2;
 }
-type Action = ActionMove;
+
+interface ActionBuild {
+    type: "build";
+    cellType: Constructor<Cell>;
+    position: Vector2;
+}
+type Action = ActionMove | ActionBuild;
 
 class Player {
     public inventory = new Inventory(1000, 100, 100);
@@ -126,26 +40,44 @@ class Player {
         if (this.action === undefined) {
             throw new Error("tried stepping player before action was filled in!");
         }
-        this.attemptDo(this.action);
+        this.attemptAction(this.action);
         this.action = undefined;
     }
 
-    public attemptDo(action: Action) {
+    public attemptAction(action: Action) {
         switch (action.type) {
             case "move":
                 this.attemptMove(action);
+                break;
+            case "build":
+                this.attemptBuild(action);
+                break;
         }
     }
 
-    public attemptMove(action: ActionMove) {
+    public verifyMove(action: ActionMove) {
         const target = this.pos.clone().add(action.dir);
         const targetTile = world.tileAt(target.x, target.y);
         if (!(targetTile instanceof Tissue)) {
             // can't move!
-        } else {
+            return false;
+        }
+        return true;
+    }
+
+    public attemptMove(action: ActionMove) {
+        if (this.verifyMove(action)) {
+            const target = this.pos.clone().add(action.dir);
             // do the move
             this.pos = world.wrappedPosition(target);
         }
+    }
+
+    public attemptBuild(action: ActionBuild) {
+        // if (this.pos.clone().sub(action.position).manhattanLength)
+        // attempt to build. something.
+        const newTile = new action.cellType(action.position);
+        world.setTileAt(action.position, newTile);
     }
 }
 
@@ -178,7 +110,7 @@ class World {
             new Array(height).fill(undefined).map((__, y) => {
                 const pos = new Vector2(x, y);
                 if (y > height / 2) {
-                    const water = Math.random() * 10;
+                    const water = 20 + Math.random() * 20;
                     const soil = new Soil(pos, water);
                     return soil;
                 } else {
@@ -209,6 +141,12 @@ class World {
         x = ((x % width) + width) % width;
         y = ((y % height) + height) % height;
         return this.grid[x][y];
+    }
+
+    public setTileAt(position: Vector2, tile: Tile): any {
+        const {x, y} = this.wrappedPosition(position);
+        this.grid[x][y] = tile;
+        this.fillCachedEntities();
     }
 
     public wrappedPosition(pos: Vector2) {
@@ -284,46 +222,119 @@ class PlayerRenderer extends Renderer<Player> {
     }
 }
 
-interface TileConstructor {
-    new(...args: any[]): Tile;
-}
-
-const materialMapping = new Map<TileConstructor, Material>();
+const materialMapping = new Map<Constructor<Tile>, Material>();
 materialMapping.set(Air, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     color: new Color("lightblue"),
 }));
 materialMapping.set(Soil, new MeshBasicMaterial({
     side: THREE.DoubleSide,
-    color: new Color("brown"),
+    color: new Color(0x654321),
 }));
 materialMapping.set(Tissue, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     color: new Color("darkgreen"),
 }));
+materialMapping.set(Leaf, new MeshBasicMaterial({
+    side: THREE.DoubleSide,
+    color: new Color(0x3d860b),
+}));
+materialMapping.set(Root, new MeshBasicMaterial({
+    side: THREE.DoubleSide,
+    color: new Color(0x8f6c63),
+}));
 
 function getMaterial(tile: Tile) {
-    return materialMapping.get(tile.constructor as TileConstructor);
+    return materialMapping.get(tile.constructor as Constructor<Tile>);
 }
 
 class TileRenderer extends Renderer<Tile> {
+    public object = new Object3D();
     public mesh: Mesh;
     static geometry = new PlaneBufferGeometry(1, 1);
+    private inventoryRenderer: InventoryRenderer;
 
     init() {
         this.mesh = new Mesh(
             TileRenderer.geometry,
             getMaterial(this.target),
         );
-        this.scene.add(this.mesh);
+        this.object.add(this.mesh);
+
+        if (hasInventory(this.target)) {
+            this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.scene);
+            this.inventoryRenderer.init();
+            this.object.add(this.inventoryRenderer.object);
+        }
+        this.scene.add(this.object);
     }
 
     update() {
-        this.mesh.position.set(this.target.pos.x, this.target.pos.y, 0);
+        this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
+        if (this.inventoryRenderer != null) {
+            this.inventoryRenderer.update();
+        }
     }
 
     destroy() {
-        this.scene.remove(this.mesh);
+        this.scene.remove(this.object);
+        if (this.inventoryRenderer != null) {
+            this.inventoryRenderer.destroy();
+        }
+    }
+}
+
+// we represent Resources as dots of certain colors.
+class InventoryRenderer extends Renderer<Inventory> {
+    public object = new Object3D();
+    static geometry = new PlaneBufferGeometry(1, 1);
+    static waterMaterial = new MeshBasicMaterial({
+        transparent: true,
+        opacity: 0.5,
+        color: new Color("blue"),
+        side: THREE.DoubleSide,
+    });
+    static sugarMaterial = new MeshBasicMaterial({
+        transparent: true,
+        opacity: 0.5,
+        color: new Color("yellow"),
+        side: THREE.DoubleSide,
+    });
+    private waterMesh = new Mesh(
+        InventoryRenderer.geometry,
+        InventoryRenderer.waterMaterial,
+    );
+    private sugarMesh = new Mesh(
+        InventoryRenderer.geometry,
+        InventoryRenderer.sugarMaterial,
+    );
+
+    init() {
+        // this.object.add(this.waterMesh);
+        // this.object.add(this.sugarMesh);
+        this.object.position.z = 1;
+        // don't add to scene yourself
+     }
+
+    update() {
+        const waterScale = this.target.water / this.target.capacity;
+        const sugarScale = this.target.sugar / this.target.capacity;
+        if (waterScale === 0) {
+            this.object.remove(this.waterMesh);
+        } else {
+            this.object.add(this.waterMesh);
+        }
+        if (sugarScale === 0) {
+            this.object.remove(this.sugarMesh);
+        } else {
+            this.object.add(this.waterMesh);
+        }
+        this.waterMesh.scale.set(waterScale, waterScale, 1);
+        this.sugarMesh.scale.set(sugarScale, sugarScale, 1);
+    }
+
+    destroy() {
+        // don't destroy yourself
     }
 }
 
@@ -372,18 +383,45 @@ const ACTION_KEYMAP: { [key: string]: ActionMove } = {
     },
 };
 
+const AUTOPLACE_LIST: Array<Constructor<Cell> | undefined> = [undefined, Tissue, Leaf, Root];
+
 const Mito = new (class extends ISketch {
     public scene = new Scene();
     private camera: THREE.OrthographicCamera;
     public renderers = new Map<Entity, Renderer<Entity>>();
+    // when true, automatically create tissue tiles when walking into soil or dirt
+    public autoplace: Constructor<Cell> | undefined;
+    public elements = [<UI ref={(ref) => this.uiRef = ref! } />];
+    public uiRef: UI;
 
     public events = {
         keypress: (event: JQuery.Event) => {
-            console.log(event);
             const key = event.key!;
             const action = ACTION_KEYMAP[key];
             if (action != null) {
-                world.player.action = action;
+                // autoplace
+                if (this.autoplace !== undefined
+                    && action.type === "move"
+                    && !world.player.verifyMove(action)) {
+                        const buildTissueAction: ActionBuild = {
+                            type: "build",
+                            cellType: this.autoplace,
+                            position: world.player.pos.clone().add(action.dir),
+                        };
+                        world.player.action = buildTissueAction;
+                } else {
+                    world.player.action = action;
+                }
+            } else {
+                // go into autoplace tissue
+                if (key === 't') {
+                    const currAutoplaceIndex = AUTOPLACE_LIST.indexOf(this.autoplace);
+                    const nextIndex = (currAutoplaceIndex + 1) % AUTOPLACE_LIST.length;
+                    this.autoplace = AUTOPLACE_LIST[nextIndex];
+                    this.uiRef.setState({
+                        autoplace: this.autoplace,
+                    });
+                }
             }
         },
     };
@@ -407,6 +445,10 @@ const Mito = new (class extends ISketch {
     }
 
     public animate() {
+        this.uiRef.setState({
+            sugar: world.player.inventory.sugar,
+            water: world.player.inventory.water,
+        });
         if (world.player.action != null) {
             world.step();
         }
@@ -420,6 +462,7 @@ const Mito = new (class extends ISketch {
             }
             renderer.destroy();
             this.renderers.delete(e);
+            console.log("removing renderer", renderer);
         }
         world.entities().forEach((entity) => {
             const renderer = this.getOrCreateRenderer(entity);
