@@ -13,6 +13,7 @@ export const UI_EVENTS = {
     keyup: true,
     keydown: true,
     keypress: true,
+    wheel: true,
 };
 
 export type UIEventReciever = {

@@ -4,7 +4,7 @@ import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Orthograp
 
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, DeadCell, hasEnergy, Leaf, Root, Soil, Tile, Tissue } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, DeadCell, hasEnergy, Leaf, Root, Seed, Soil, Tile, Tissue } from "./tile";
 import { HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
@@ -296,6 +296,10 @@ materialMapping.set(Root, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     color: new Color(0x8f6c63),
 }));
+materialMapping.set(Seed, new MeshBasicMaterial({
+    side: THREE.DoubleSide,
+    color: new Color("rgb(249, 243, 49)"),
+}));
 
 function getMaterial(tile: Tile) {
     // careful - creates a new instance per tile
@@ -527,13 +531,23 @@ const Mito = new (class extends ISketch {
                 }
             }
         },
+        wheel: (event: JQuery.Event) => {
+            const e = event.originalEvent as WheelEvent;
+            // on my mouse, one scroll is + or - 125
+            const delta = -(e.deltaX + e.deltaY) / 125 / 20;
+            const currZoom = this.camera.zoom;
+            const scalar = Math.pow(2, delta);
+            console.log(currZoom);
+            const newZoom = Math.min(Math.max(currZoom * scalar, 1), 2);
+            this.camera.zoom = newZoom;
+            this.camera.updateProjectionMatrix();
+        },
     };
 
     public init() {
         // this.camera = new OrthographicCamera(0, width, 0, height, -100, 100);
         const aspect = this.aspectRatio;
-        const cameraHeight = 8;
-        this.camera = new OrthographicCamera(-cameraHeight / aspect, cameraHeight / aspect, -cameraHeight, cameraHeight, -100, 100);
+        this.camera = new OrthographicCamera(0, 0, 0, 0, -100, 100);
         this.resize(this.canvas.width, this.canvas.height);
     }
 
@@ -568,32 +582,36 @@ const Mito = new (class extends ISketch {
             const renderer = this.getOrCreateRenderer(entity);
             renderer.update();
         });
-        this.camera.position.x = world.player.pos.x;
-        this.camera.position.y = world.player.pos.y;
+        const mouseNorm = new THREE.Vector2(
+            this.mouse.x / this.canvas.width * 2 - 1,
+            -this.mouse.y / this.canvas.height * 2 + 1,
+        );
+
+        this.camera.position.x = world.player.pos.x + mouseNorm.x / 2;
+        this.camera.position.y = world.player.pos.y - mouseNorm.y / 2;
         this.renderer.render(this.scene, this.camera);
 
         // this.mouse.x = event.clientX! / this.canvas.width * 2 - 1;
         // this.mouse.y = -event.clientY! / this.canvas.height * 2 + 1;
-        this.raycaster.setFromCamera({
-            x: this.mouse.x / this.canvas.width * 2 - 1,
-            y: -this.mouse.y / this.canvas.height * 2 + 1,
-        }, this.camera);
+        this.raycaster.setFromCamera(mouseNorm, this.camera);
         const intersects = this.raycaster.intersectObjects(this.scene.children, true);
         // console.log(intersects);
         const i = intersects[0];
-        const {x, y} = i.point;
-        const ix = Math.round(x);
-        const iy = Math.round(y);
-        const thisHoveredTile = world.tileAt(ix, iy);
-        if (thisHoveredTile !== this.hoveredTile) {
-            // this.hoverRef.setState({
-                // show: true,
-            // });
+        if (i != null) {
+            const {x, y} = i.point;
+            const ix = Math.round(x);
+            const iy = Math.round(y);
+            const thisHoveredTile = world.tileAt(ix, iy);
+            if (thisHoveredTile !== this.hoveredTile) {
+                // this.hoverRef.setState({
+                    // show: true,
+                // });
+            }
+            this.hoveredTile = thisHoveredTile;
+            this.hoverRef.setState({
+                tile: this.hoveredTile,
+            });
         }
-        this.hoveredTile = thisHoveredTile;
-        this.hoverRef.setState({
-            tile: this.hoveredTile,
-        });
         this.hudRef.setState({
             sugar: world.player.inventory.sugar,
             water: world.player.inventory.water,
@@ -602,7 +620,7 @@ const Mito = new (class extends ISketch {
 
     public resize(w: number, h: number) {
         const aspect = h / w;
-        const cameraHeight = 5;
+        const cameraHeight = 12;
         this.camera.left = -cameraHeight / aspect;
         this.camera.right = cameraHeight / aspect;
         this.camera.top = -cameraHeight;

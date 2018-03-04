@@ -178,3 +178,19 @@ export class Root extends Cell {
         }
     }
 }
+
+export class Seed extends Cell {
+    public inventory = new Inventory(10000);
+
+    // seeds aggressively take the inventory from neighbors
+    step() {
+        super.step();
+        const neighbors = world.tileNeighbors(this.pos);
+        for (const [dir, neighbor] of neighbors) {
+            if (hasInventory(neighbor)) {
+                // LMAO
+                neighbor.inventory.give(this.inventory, neighbor.inventory.water, neighbor.inventory.sugar);
+            }
+        }
+    }
+}
