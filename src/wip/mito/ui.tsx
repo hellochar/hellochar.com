@@ -1,8 +1,8 @@
 import * as React from "react";
 
 import { Constructor } from "./index";
-import { Cell, Tile, hasEnergy, CELL_ENERGY_MAX } from "./tile";
 import { hasInventory } from "./inventory";
+import { Cell, CELL_ENERGY_MAX, hasEnergy, Tile } from "./tile";
 
 interface HUDState {
     autoplace: Constructor<Cell> | undefined;
