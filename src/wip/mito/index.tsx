@@ -487,7 +487,7 @@ const Mito = new (class extends ISketch {
         },
         click: (event: JQuery.Event) => {
             this.hoverRef.setState({
-                show: true,
+                show: !this.hoverRef.state.show,
             });
         },
         keypress: (event: JQuery.Event) => {
@@ -586,9 +586,9 @@ const Mito = new (class extends ISketch {
         const iy = Math.round(y);
         const thisHoveredTile = world.tileAt(ix, iy);
         if (thisHoveredTile !== this.hoveredTile) {
-            this.hoverRef.setState({
-                show: false,
-            });
+            // this.hoverRef.setState({
+                // show: true,
+            // });
         }
         this.hoveredTile = thisHoveredTile;
         this.hoverRef.setState({
