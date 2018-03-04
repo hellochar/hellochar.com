@@ -1,9 +1,18 @@
 import { Vector2 } from "three";
 
-import { world } from "./index";
+import { Entity, world } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 
-const CELL_ENERGY_MAX = 100;
+export const CELL_ENERGY_MAX = 100;
+const ENERGY_TO_SUGAR_RATIO = 10; // 10 energy per sugar
+
+export interface HasEnergy {
+    energy: number;
+}
+
+export function hasEnergy(e: any): e is HasEnergy {
+    return typeof e.energy === "number";
+}
 
 export abstract class Tile {
     public constructor(public pos: Vector2) {}
@@ -44,7 +53,7 @@ export class Air extends Tile {
     }
 }
 
-export class Soil extends Tile {
+export class Soil extends Tile implements HasInventory {
     public inventory = new Inventory(100);
     constructor(pos: Vector2, water: number = 0) {
         super(pos);
@@ -52,11 +61,40 @@ export class Soil extends Tile {
     }
 }
 
-export class Cell extends Tile {
+export class DeadCell extends Tile {}
+
+export class Cell extends Tile implements HasEnergy {
     public energy: number = CELL_ENERGY_MAX;
+
+    step() {
+        super.step();
+        this.energy -= 1;
+        const neighborsAndSelf = [
+            ...Array.from(world.tileNeighbors(this.pos).values()),
+            this,
+        ];
+        for (const tile of neighborsAndSelf) {
+            if (this.energy < CELL_ENERGY_MAX && hasInventory(tile)) {
+                const wantedEnergy = CELL_ENERGY_MAX - this.energy;
+                const wantedSugar = Math.min(
+                    wantedEnergy / ENERGY_TO_SUGAR_RATIO,
+                    tile.inventory.sugar,
+                );
+                tile.inventory.change(0, -wantedSugar);
+                const gotEnergy = wantedSugar * ENERGY_TO_SUGAR_RATIO;
+                this.energy += gotEnergy;
+            } else {
+                break; // we're all full, eat no more
+            }
+        }
+        if (this.energy <= 0) {
+            // die
+            world.setTileAt(this.pos, new DeadCell(this.pos));
+        }
+    }
 }
 
-export class Tissue extends Cell {
+export class Tissue extends Cell implements HasInventory {
     public inventory = new Inventory(100);
 }
 

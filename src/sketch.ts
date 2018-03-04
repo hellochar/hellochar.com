@@ -35,6 +35,9 @@ export abstract class ISketch {
         this.audioContext = audioContext;
     }
 
+    /**
+     * height / width
+     */
     get aspectRatio() {
         return this.renderer.domElement.height / this.renderer.domElement.width;
     }

@@ -29,9 +29,9 @@ export class Inventory {
     }
 
     public change(water: number, sugar: number) {
+        this.validate(this.water + water, this.sugar + sugar);
         this.water += water;
         this.sugar += sugar;
-        this.validate();
     }
 
     public space() {
@@ -39,8 +39,8 @@ export class Inventory {
         return capacity - water - sugar;
     }
 
-    validate() {
-        const { capacity, water, sugar } = this;
+    validate(water: number, sugar: number) {
+        const { capacity } = this;
         if (water < 0) {
             throw new Error(`water < 0: ${water}`);
         }

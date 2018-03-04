@@ -4,8 +4,10 @@ import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Orthograp
 
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
-import { Air, Cell, Leaf, Root, Soil, Tile, Tissue } from "./tile";
+import { Air, Cell, Leaf, Root, Soil, Tile, Tissue, hasEnergy, CELL_ENERGY_MAX, DeadCell } from "./tile";
 import UI from "./ui";
+
+export type Entity = Tile | Player;
 
 interface Steppable {
     step(): void;
@@ -58,6 +60,7 @@ class Player {
     public attemptAction(action: Action) {
         switch (action.type) {
             case "still":
+                this.attemptStill(action);
                 break;
             case "move":
                 this.attemptMove(action);
@@ -86,12 +89,20 @@ class Player {
             const target = world.wrappedPosition(this.pos.clone().add(action.dir));
             // do the move
             this.pos = target;
-            // autopickup resources in the position as possible
-            const targetTile = world.tileAt(target.x, target.y);
-            if (hasInventory(targetTile)) {
-                const inv = targetTile.inventory;
-                inv.give(this.inventory, inv.water, inv.sugar);
-            }
+            this.autopickup();
+        }
+    }
+
+    public attemptStill(action: ActionStill) {
+        this.autopickup();
+    }
+
+    private autopickup() {
+        // autopickup resources in the position as possible
+        const targetTile = world.tileAt(this.pos.x, this.pos.y);
+        if (hasInventory(targetTile)) {
+            const inv = targetTile.inventory;
+            inv.give(this.inventory, inv.water, inv.sugar);
         }
     }
 
@@ -120,8 +131,6 @@ class Player {
         }
     }
 }
-
-type Entity = Tile | Player;
 
 const width = 50;
 const height = 50;
@@ -271,6 +280,10 @@ materialMapping.set(Soil, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     color: new Color(0x654321),
 }));
+materialMapping.set(DeadCell, new MeshBasicMaterial({
+    side: THREE.DoubleSide,
+    color: new Color(0),
+}));
 materialMapping.set(Tissue, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     color: new Color("darkgreen"),
@@ -285,7 +298,8 @@ materialMapping.set(Root, new MeshBasicMaterial({
 }));
 
 function getMaterial(tile: Tile) {
-    return materialMapping.get(tile.constructor as Constructor<Tile>);
+    // careful - creates a new instance per tile
+    return materialMapping.get(tile.constructor as Constructor<Tile>)!.clone();
 }
 
 class TileRenderer extends Renderer<Tile> {
@@ -311,6 +325,10 @@ class TileRenderer extends Renderer<Tile> {
 
     update() {
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
+        if (hasEnergy(this.target)) {
+            this.mesh.material.transparent = true;
+            this.mesh.material.opacity = this.target.energy / CELL_ENERGY_MAX;
+        }
         if (this.inventoryRenderer != null) {
             this.inventoryRenderer.update();
         }
@@ -485,9 +503,11 @@ const Mito = new (class extends ISketch {
     };
 
     public init() {
-        this.camera = new OrthographicCamera(0, width, 0, height, -100, 100);
-        this.camera.position.z = 1;
-        this.camera.lookAt(new Vector3(0, 0, 0));
+        // this.camera = new OrthographicCamera(0, width, 0, height, -100, 100);
+        const aspect = this.aspectRatio;
+        const cameraHeight = 5;
+        this.camera = new OrthographicCamera(-cameraHeight / aspect, cameraHeight / aspect, -cameraHeight, cameraHeight, -100, 100);
+        this.resize(this.canvas.width, this.canvas.height);
     }
 
     public getOrCreateRenderer(entity: Entity) {
@@ -525,7 +545,21 @@ const Mito = new (class extends ISketch {
             const renderer = this.getOrCreateRenderer(entity);
             renderer.update();
         });
+        this.camera.position.x = world.player.pos.x;
+        this.camera.position.y = world.player.pos.y;
         this.renderer.render(this.scene, this.camera);
+    }
+
+    public resize(w: number, h: number) {
+        const aspect = h / w;
+        const cameraHeight = 5;
+        this.camera.left = -cameraHeight / aspect;
+        this.camera.right = cameraHeight / aspect;
+        this.camera.top = -cameraHeight;
+        this.camera.bottom = cameraHeight;
+        // this.camera.position.z = 1;
+        // this.camera.lookAt(new Vector3(0, 0, 0));
+        this.camera.updateProjectionMatrix();
     }
 })();
 
