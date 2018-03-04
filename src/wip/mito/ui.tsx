@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Constructor } from "./index";
-import { Cell, Tile, hasEnergy } from "./tile";
+import { Cell, Tile, hasEnergy, CELL_ENERGY_MAX } from "./tile";
 import { hasInventory } from "./inventory";
 
 interface HUDState {
@@ -54,7 +54,7 @@ export class TileHover extends React.Component<{}, HoverState> {
             borderRadius: 2,
             border: "1px solid rgb(220, 220, 220)",
         };
-        const energySpan = hasEnergy(tile) ? <span>{tile.energy.toFixed(0)}%</span> : null;
+        const energySpan = hasEnergy(tile) ? <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}%</span> : null;
         const inventorySpan = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
         return (
             <div className="hover" style={style}>

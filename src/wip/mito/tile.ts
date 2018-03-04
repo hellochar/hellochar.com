@@ -3,7 +3,7 @@ import { Vector2 } from "three";
 import { Entity, world } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 
-export const CELL_ENERGY_MAX = 100;
+export const CELL_ENERGY_MAX = 1000;
 const ENERGY_TO_SUGAR_RATIO = 100; // 10 energy per sugar
 
 export interface HasEnergy {

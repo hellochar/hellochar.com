@@ -4,7 +4,7 @@ import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Orthograp
 
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
-import { Air, Cell, Leaf, Root, Soil, Tile, Tissue, hasEnergy, CELL_ENERGY_MAX, DeadCell } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, DeadCell, hasEnergy, Leaf, Root, Soil, Tile, Tissue } from "./tile";
 import { HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
