@@ -21,8 +21,9 @@ export class Inventory {
         if (spaceNeeded > other.space()) {
             const capacity = other.space();
             // scale down the amount to give
-            water = Math.round(water / spaceNeeded * capacity);
-            sugar = Math.round(sugar / spaceNeeded * capacity);
+            // give less than capacity
+            water = Math.floor(water / spaceNeeded * capacity);
+            sugar = Math.floor(sugar / spaceNeeded * capacity);
         }
         this.change(-water, -sugar);
         other.change(water, sugar);

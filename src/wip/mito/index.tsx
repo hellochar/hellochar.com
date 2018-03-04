@@ -409,10 +409,15 @@ function createRendererFor<E extends Entity>(object: E, scene: Scene): Renderer<
 }
 
 const ACTION_KEYMAP: { [key: string]: Action } = {
-    "x": {
+    "1": {
         type: "drop",
         sugar: 0,
-        water: 100, // hack hack we can assume max 100 water, it's fine
+        water: 20, // hack hack we can assume max 100 water, it's fine
+    },
+    "2": {
+        type: "drop",
+        sugar: 20,
+        water: 0, // hack hack we can assume max 100 water, it's fine
     },
     ".": {
         type: "still",
@@ -505,7 +510,7 @@ const Mito = new (class extends ISketch {
     public init() {
         // this.camera = new OrthographicCamera(0, width, 0, height, -100, 100);
         const aspect = this.aspectRatio;
-        const cameraHeight = 5;
+        const cameraHeight = 8;
         this.camera = new OrthographicCamera(-cameraHeight / aspect, cameraHeight / aspect, -cameraHeight, cameraHeight, -100, 100);
         this.resize(this.canvas.width, this.canvas.height);
     }
