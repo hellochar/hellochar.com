@@ -47,7 +47,7 @@ interface ActionDrop {
 type Action = ActionStill | ActionMove | ActionBuild | ActionDrop;
 
 class Player {
-    public inventory = new Inventory(1000, 100, 100);
+    public inventory = new Inventory(1000, 100, 800);
     public action?: Action;
     public constructor(public pos: Vector2) {}
 
@@ -157,6 +157,7 @@ const DIRECTION_NAMES = Object.keys(DIRECTIONS) as Directions[];
 const DIRECTION_VALUES: Vector2[] = DIRECTION_NAMES.map((o) => DIRECTIONS[o]);
 
 class World {
+    private time: number = 0;
     public player: Player = new Player(new Vector2(width / 2, height / 2));
     public grid: Tile[][] = (() => {
         // start with a half water half air
@@ -167,7 +168,7 @@ class World {
                 const pos = new Vector2(x, y);
                 if (y > height / 2) {
                     // const water = Math.floor(20 + Math.random() * 20);
-                    const rockThreshold = map(y - height / 2, 0, height / 2, -1, 0.7);
+                    const rockThreshold = map(y - height / 2, 0, height / 2, -0.7, 0.7);
                     const isRock = noiseRock.simplex2(x / 5, y / 5) < rockThreshold;
                     if (isRock) {
                         const rock = new Rock(pos);
@@ -175,7 +176,8 @@ class World {
                     } else {
                         const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.25, 1), 2);
                         const simplexScalar = 0.2;
-                        const water = Math.sqrt(Math.max(noiseWater.simplex2(x * simplexScalar, y * simplexScalar), 0)) * 100 * heightScalar;
+                        const simplexValue = Math.max(noiseWater.simplex2(x * simplexScalar, y * simplexScalar), 0);
+                        const water = simplexValue > 0.5 ? 100 : 0; // Math.sqrt() * 100 * heightScalar;
                         const soil = new Soil(pos, Math.round(water));
                         return soil;
                     }
@@ -237,7 +239,25 @@ class World {
     }
     private fillCachedEntities() {
         // dear god
-        const flattenedTiles = ([] as Tile[]).concat(...this.grid);
+        let flattenedTiles: Tile[] = [];
+        switch (this.time % 4) {
+            case 0:
+                // start at top-left corner, go down/right
+                flattenedTiles = ([] as Tile[]).concat(...this.grid);
+                break;
+            case 1:
+                // start at top-right corner, go down/left
+                flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse());
+                break;
+            case 2:
+                // start at bottom-left corner, go up/right
+                flattenedTiles = ([] as Tile[]).concat(...this.grid.map((col) => col.slice().reverse()));
+                break;
+            case 3:
+                // start at bottom-right corner, go up/left
+                flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse().map((col) => col.slice().reverse()));
+                break;
+        }
         const newEntities = ([] as Entity[]).concat(flattenedTiles, [this.player]);
         this.cachedEntities = newEntities;
     }
@@ -253,6 +273,7 @@ class World {
         });
         this.fillCachedEntities();
         this.checkResources();
+        this.time++;
     }
 
     public checkResources() {
@@ -376,7 +397,7 @@ class TileRenderer extends Renderer<Tile> {
     }
 
     update() {
-        const darknessAmount = Math.sqrt(Math.min(Math.max(map(this.target.darkness - 1, 0, 3, 0, 1), 0), 1));
+        const darknessAmount = Math.sqrt(Math.min(Math.max(map(this.target.darkness - 1, 0, 2, 0, 1), 0), 1));
         const mat = this.mesh.material as MeshBasicMaterial;
         mat.color = this.originalColor.clone().lerp(new THREE.Color(0), darknessAmount);
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
@@ -606,6 +627,11 @@ const Mito = new (class extends ISketch {
         const aspect = this.aspectRatio;
         this.camera = new OrthographicCamera(0, 0, 0, 0, -100, 100);
         this.resize(this.canvas.width, this.canvas.height);
+        // darkness and water diffuse a few times to stabilize it
+        for (let i = 0; i < 5; i++) {
+            world.player.action = { type: "still" };
+            world.step();
+        }
     }
 
     public getOrCreateRenderer(entity: Entity) {

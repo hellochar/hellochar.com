@@ -60,9 +60,12 @@ export class TileHover extends React.Component<{}, HoverState> {
         };
         const energySpan = hasEnergy(tile) ? <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}%</span> : null;
         const inventorySpan = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
+        const foodSpan = tile instanceof Cell ? <span>{tile.eatingState()}</span> : null;
         return (
             <div className="hover" style={style}>
                 {tile.constructor.name} ({tile.pos.x}, {tile.pos.y}) ({tile.darkness})
+                <br />
+                {foodSpan}
                 <br />
                 {energySpan}
                 <br />
