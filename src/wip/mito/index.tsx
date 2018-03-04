@@ -4,8 +4,10 @@ import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Orthograp
 
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
+import { simplex2 } from "./perlin";
 import { Air, Cell, CELL_ENERGY_MAX, DeadCell, hasEnergy, Leaf, Root, Seed, Soil, Tile, Tissue } from "./tile";
 import { HUD, TileHover } from "./ui";
+import { map } from "../../math/index";
 
 export type Entity = Tile | Player;
 
@@ -159,7 +161,10 @@ class World {
             new Array(height).fill(undefined).map((__, y) => {
                 const pos = new Vector2(x, y);
                 if (y > height / 2) {
-                    const water = Math.floor(20 + Math.random() * 20);
+                    // const water = Math.floor(20 + Math.random() * 20);
+                    const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.25, 1), 2);
+                    const simplexScalar = 0.2;
+                    const water = Math.round(Math.max(simplex2(x * simplexScalar, y * simplexScalar), -0.1) * 90 * heightScalar + 10);
                     const soil = new Soil(pos, water);
                     return soil;
                 } else {
@@ -169,7 +174,7 @@ class World {
         ));
 
         // add a "seed" of tissue around the player
-        const radius = 5;
+        const radius = 3;
         for (let x = -radius; x <= radius; x++) {
             for (let y = -radius; y <= radius; y++) {
                 if (x * x + y * y < radius * radius) {
@@ -234,6 +239,23 @@ class World {
             }
         });
         this.fillCachedEntities();
+        this.checkResources();
+    }
+
+    public checkResources() {
+        let totalSugar = 0;
+        let totalWater = 0;
+        let totalEnergy = 0;
+        this.entities().forEach((e) => {
+            if (hasInventory(e)) {
+                totalSugar += e.inventory.sugar;
+                totalWater += e.inventory.water;
+            }
+            if (hasEnergy(e)) {
+                totalEnergy += e.energy;
+            }
+        });
+        console.log("sugar", totalSugar, "water", totalWater, "energy", totalEnergy);
     }
 }
 
@@ -538,7 +560,7 @@ const Mito = new (class extends ISketch {
             const currZoom = this.camera.zoom;
             const scalar = Math.pow(2, delta);
             console.log(currZoom);
-            const newZoom = Math.min(Math.max(currZoom * scalar, 1), 2);
+            const newZoom = Math.min(Math.max(currZoom * scalar, 0.1), 2);
             this.camera.zoom = newZoom;
             this.camera.updateProjectionMatrix();
         },

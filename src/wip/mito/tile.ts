@@ -86,9 +86,9 @@ export class Cell extends Tile implements HasEnergy {
                 tile.inventory.change(0, -wantedSugar);
                 const gotEnergy = wantedSugar * ENERGY_TO_SUGAR_RATIO;
                 this.energy += gotEnergy;
-                if (gotEnergy > 0) {
-                    console.log(`got ${gotEnergy}, now at ${this.energy}`);
-                }
+                // if (gotEnergy > 0) {
+                //     console.log(`got ${gotEnergy}, now at ${this.energy}`);
+                // }
             } else {
                 break; // we're all full, eat no more
             }
