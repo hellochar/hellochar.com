@@ -6,7 +6,7 @@ import { map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
-import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, hasEnergy, Leaf, Root, Seed, Soil, Tile, Tissue, Rock } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, hasEnergy, Leaf, Rock, Root, Seed, Soil, Tile, Tissue } from "./tile";
 import { HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
@@ -167,7 +167,7 @@ class World {
                 const pos = new Vector2(x, y);
                 if (y > height / 2) {
                     // const water = Math.floor(20 + Math.random() * 20);
-                    const rockThreshold = map(y - height / 2, 0, height / 2, -1, 0.5);
+                    const rockThreshold = map(y - height / 2, 0, height / 2, -1, 0.7);
                     const isRock = noiseRock.simplex2(x / 5, y / 5) < rockThreshold;
                     if (isRock) {
                         const rock = new Rock(pos);
@@ -175,8 +175,8 @@ class World {
                     } else {
                         const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.25, 1), 2);
                         const simplexScalar = 0.2;
-                        const water = Math.round(Math.max(noiseWater.simplex2(x * simplexScalar, y * simplexScalar), -0.1) * 90 * heightScalar + 10);
-                        const soil = new Soil(pos, water);
+                        const water = Math.sqrt(Math.max(noiseWater.simplex2(x * simplexScalar, y * simplexScalar), 0)) * 100 * heightScalar;
+                        const soil = new Soil(pos, Math.round(water));
                         return soil;
                     }
                 } else {
@@ -270,6 +270,13 @@ class World {
         });
         console.log("sugar", totalSugar, "water", totalWater, "energy", totalEnergy);
     }
+
+    // public computeDarkness() {
+
+    //     function floodfill(tile: Tile, darkness: number) {
+
+    //     }
+    // }
 }
 
 export const world = new World();
@@ -350,12 +357,14 @@ class TileRenderer extends Renderer<Tile> {
     public mesh: Mesh;
     static geometry = new PlaneBufferGeometry(1, 1);
     private inventoryRenderer: InventoryRenderer;
+    private originalColor: THREE.Color;
 
     init() {
         this.mesh = new Mesh(
             TileRenderer.geometry,
             getMaterial(this.target),
         );
+        this.originalColor = (this.mesh.material as MeshBasicMaterial).color.clone();
         this.object.add(this.mesh);
 
         if (hasInventory(this.target)) {
@@ -367,6 +376,9 @@ class TileRenderer extends Renderer<Tile> {
     }
 
     update() {
+        const darknessAmount = Math.sqrt(Math.min(Math.max(map(this.target.darkness - 1, 0, 3, 0, 1), 0), 1));
+        const mat = this.mesh.material as MeshBasicMaterial;
+        mat.color = this.originalColor.clone().lerp(new THREE.Color(0), darknessAmount);
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
         if (hasEnergy(this.target)) {
             this.mesh.material.transparent = true;
@@ -374,6 +386,11 @@ class TileRenderer extends Renderer<Tile> {
         }
         if (this.inventoryRenderer != null) {
             this.inventoryRenderer.update();
+            if (darknessAmount === 1) {
+                this.inventoryRenderer.object.visible = false;
+            } else {
+                this.inventoryRenderer.object.visible = true;
+            }
         }
     }
 

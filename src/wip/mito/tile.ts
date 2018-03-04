@@ -16,12 +16,22 @@ export function hasEnergy(e: any): e is HasEnergy {
 }
 
 export abstract class Tile {
+    public darkness = Infinity;
     public constructor(public pos: Vector2) {}
 
     // test tiles diffusing water around on same-type tiles
     public step() {
+        const neighbors = world.tileNeighbors(this.pos);
+        if (this instanceof Cell) {
+            this.darkness = 0;
+        } else {
+            const minDarkness = Array.from(neighbors.values()).reduce((d, t) => {
+                const darknessFromNeighbor = t instanceof Rock ? Infinity : t.darkness + 1;
+                return Math.min(d, darknessFromNeighbor);
+            }, this.darkness);
+            this.darkness = minDarkness;
+        }
         if (hasInventory(this)) {
-            const neighbors = world.tileNeighbors(this.pos);
             const neighborsWithInventory =
                 Array.from(neighbors.values()).filter((tile) => {
                     return hasInventory(tile) && tile.constructor === this.constructor;
@@ -73,6 +83,7 @@ export class DeadCell extends Tile {}
 
 export class Cell extends Tile implements HasEnergy {
     public energy: number = CELL_ENERGY_MAX;
+    public darkness = 0;
 
     step() {
         super.step();

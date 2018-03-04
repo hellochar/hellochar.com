@@ -19,8 +19,12 @@ export class HUD extends React.Component<{}, HUDState> {
 
     public render() {
         const autoplace = this.state.autoplace === undefined ? "none" : this.state.autoplace.name;
+        const styles: React.CSSProperties = {
+            background: "rgba(255, 255, 255, 0.8)",
+            padding: "10px",
+        };
         return (
-            <div className="ui">
+            <div className="ui" style={styles}>
                 <span>autoplace: {autoplace}</span> - <span>water:{this.state.water},</span> <span>sugar:{this.state.sugar}</span>
             </div>
         );
@@ -58,7 +62,7 @@ export class TileHover extends React.Component<{}, HoverState> {
         const inventorySpan = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
         return (
             <div className="hover" style={style}>
-                {tile.constructor.name} ({tile.pos.x}, {tile.pos.y})
+                {tile.constructor.name} ({tile.pos.x}, {tile.pos.y}) ({tile.darkness})
                 <br />
                 {energySpan}
                 <br />
