@@ -2,12 +2,12 @@ import * as React from "react";
 import * as THREE from "three";
 import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, Scene, ShaderMaterial, SphereBufferGeometry, SphereGeometry, Vector2, Vector3 } from "three";
 
+import { map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
-import { simplex2 } from "./perlin";
-import { Air, Cell, CELL_ENERGY_MAX, DeadCell, hasEnergy, Leaf, Root, Seed, Soil, Tile, Tissue } from "./tile";
+import { Noise } from "./perlin";
+import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, hasEnergy, Leaf, Root, Seed, Soil, Tile, Tissue, Rock } from "./tile";
 import { HUD, TileHover } from "./ui";
-import { map } from "../../math/index";
 
 export type Entity = Tile | Player;
 
@@ -112,10 +112,13 @@ class Player {
         // if (this.pos.clone().sub(action.position).manhattanLength)
         // attempt to build. something.
         // just make every cell cost 25 water and 10 sugar for now
-        const waterCost = 25;
-        const sugarCost = 10;
+        // const waterCost = 25;
+        // const sugarCost = 10;
+        const waterCost = 1;
+        const sugarCost = CELL_SUGAR_BUILD_COST;
         const targetTile = world.tileAt(action.position.x, action.position.y);
         if (!(targetTile instanceof action.cellType) &&
+            !(targetTile instanceof Rock) &&
             this.inventory.water >= waterCost &&
             this.inventory.sugar >= sugarCost) {
             const newTile = new action.cellType(action.position);
@@ -135,7 +138,7 @@ class Player {
 }
 
 const width = 50;
-const height = 50;
+const height = 100;
 const DIRECTIONS = {
     nw: new Vector2(-1, -1),
     w : new Vector2(-1,  0),
@@ -157,16 +160,25 @@ class World {
     public player: Player = new Player(new Vector2(width / 2, height / 2));
     public grid: Tile[][] = (() => {
         // start with a half water half air
+        const noiseWater = new Noise();
+        const noiseRock = new Noise();
         const grid = new Array(width).fill(undefined).map((_, x) => (
             new Array(height).fill(undefined).map((__, y) => {
                 const pos = new Vector2(x, y);
                 if (y > height / 2) {
                     // const water = Math.floor(20 + Math.random() * 20);
-                    const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.25, 1), 2);
-                    const simplexScalar = 0.2;
-                    const water = Math.round(Math.max(simplex2(x * simplexScalar, y * simplexScalar), -0.1) * 90 * heightScalar + 10);
-                    const soil = new Soil(pos, water);
-                    return soil;
+                    const rockThreshold = map(y - height / 2, 0, height / 2, -1, 0.5);
+                    const isRock = noiseRock.simplex2(x / 5, y / 5) < rockThreshold;
+                    if (isRock) {
+                        const rock = new Rock(pos);
+                        return rock;
+                    } else {
+                        const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.25, 1), 2);
+                        const simplexScalar = 0.2;
+                        const water = Math.round(Math.max(noiseWater.simplex2(x * simplexScalar, y * simplexScalar), -0.1) * 90 * heightScalar + 10);
+                        const soil = new Soil(pos, water);
+                        return soil;
+                    }
                 } else {
                     return new Air(pos);
                 }
@@ -180,7 +192,8 @@ class World {
                 if (x * x + y * y < radius * radius) {
                     const cx = this.player.pos.x + x;
                     const cy = this.player.pos.y + y;
-                    grid[cx][cy] = new Tissue(new Vector2(cx, cy));
+                    const t = grid[cx][cy] = new Tissue(new Vector2(cx, cy));
+                    // t.inventory.change(5, 5);
                 }
             }
         }
@@ -321,6 +334,10 @@ materialMapping.set(Root, new MeshBasicMaterial({
 materialMapping.set(Seed, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     color: new Color("rgb(249, 243, 49)"),
+}));
+materialMapping.set(Rock, new MeshBasicMaterial({
+    side: THREE.DoubleSide,
+    color: new Color("rgb(12, 18, 51)"),
 }));
 
 function getMaterial(tile: Tile) {
@@ -559,8 +576,9 @@ const Mito = new (class extends ISketch {
             const delta = -(e.deltaX + e.deltaY) / 125 / 20;
             const currZoom = this.camera.zoom;
             const scalar = Math.pow(2, delta);
-            console.log(currZoom);
-            const newZoom = Math.min(Math.max(currZoom * scalar, 0.1), 2);
+            // console.log(currZoom);
+            // zoom of 2 is zooming in
+            const newZoom = Math.min(Math.max(currZoom * scalar, 1), 2.5);
             this.camera.zoom = newZoom;
             this.camera.updateProjectionMatrix();
         },
@@ -591,6 +609,7 @@ const Mito = new (class extends ISketch {
         }
         const oldEntities = Array.from(this.renderers.keys());
         // delete the renderers for entities that have been removed since last render
+        // this is the performance bottleneck, it's O(n^2)
         const removedEntities = oldEntities.filter((e) => world.entities().indexOf(e) === -1);
         for (const e of removedEntities) {
             const renderer = this.renderers.get(e);

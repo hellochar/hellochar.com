@@ -3,8 +3,9 @@ import { Vector2 } from "three";
 import { Entity, world } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 
-export const CELL_ENERGY_MAX = 1000;
-const ENERGY_TO_SUGAR_RATIO = 100; // 10 energy per sugar
+export const CELL_ENERGY_MAX = 500;
+export const ENERGY_TO_SUGAR_RATIO = 500; // 500 energy per sugar
+export const CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
 
 export interface HasEnergy {
     energy: number;
@@ -65,6 +66,8 @@ export class Soil extends Tile implements HasInventory {
         this.inventory.change(water, 0);
     }
 }
+
+export class Rock extends Tile {}
 
 export class DeadCell extends Tile {}
 
@@ -155,7 +158,9 @@ export class Leaf extends Cell {
                 // 0 to 1
                 const reactionFactor = air.co2() * air.sunlight();
                 const tissueWater = tissue.inventory.water;
-                const transform = Math.min(tissueWater, 10) * reactionFactor;
+                // transform only up to 1 at a time
+                // careful this introduces fractional numbers right now - how to fix this?
+                const transform = Math.min(tissueWater, 1) * reactionFactor;
                 tissue.inventory.water -= transform;
                 tissue.inventory.sugar += transform;
             }
@@ -176,6 +181,11 @@ export class Root extends Cell {
                     tile.inventory.give(oppositeTile.inventory, transferAmount, 0);
             }
         }
+        // const tissueNeighbors = Array.from(neighbors.values()).filter((e) => e instanceof Tissue) as Tissue[];
+        // const soilNeighbors = Array.from(neighbors.values()).filter((e) => e instanceof Soil) as Soil[];
+        // for (const soil of soilNeighbors) {
+
+        // }
     }
 }
 

@@ -47,7 +47,7 @@ export class TileHover extends React.Component<{}, HoverState> {
         const style: React.CSSProperties = {
             left: left,
             top: top,
-            width: "100px",
+            width: "120px",
             position: "fixed",
             background: "rgba(255, 255, 255, 0.8)",
             pointerEvents: "none",
@@ -58,7 +58,7 @@ export class TileHover extends React.Component<{}, HoverState> {
         const inventorySpan = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
         return (
             <div className="hover" style={style}>
-                {tile.constructor.name}
+                {tile.constructor.name} ({tile.pos.x}, {tile.pos.y})
                 <br />
                 {energySpan}
                 <br />
