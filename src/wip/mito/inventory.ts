@@ -4,6 +4,7 @@ export class Inventory {
         public water: number = 0,
         public sugar: number = 0,
     ) {
+        this.validate();
     }
 
     public give(other: Inventory, amountWater: number, amountSugar: number) {
@@ -40,8 +41,15 @@ export class Inventory {
         return capacity - water - sugar;
     }
 
-    validate(water: number, sugar: number) {
+    validate(water: number = this.water, sugar: number = this.sugar) {
         const { capacity } = this;
+        if (Math.floor(water) !== water) {
+            throw new Error("water isn't an integer: " + water);
+        }
+        // eh fuck it
+        // if (Math.floor(sugar) !== sugar) {
+        //     throw new Error("sugar isn't an integer: " + sugar);
+        // }
         if (water < 0) {
             throw new Error(`water < 0: ${water}`);
         }

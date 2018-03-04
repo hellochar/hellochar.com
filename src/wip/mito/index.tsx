@@ -5,7 +5,7 @@ import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Orthograp
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Air, Cell, Leaf, Root, Soil, Tile, Tissue, hasEnergy, CELL_ENERGY_MAX, DeadCell } from "./tile";
-import UI from "./ui";
+import { HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
 
@@ -159,7 +159,7 @@ class World {
             new Array(height).fill(undefined).map((__, y) => {
                 const pos = new Vector2(x, y);
                 if (y > height / 2) {
-                    const water = 20 + Math.random() * 20;
+                    const water = Math.floor(20 + Math.random() * 20);
                     const soil = new Soil(pos, water);
                     return soil;
                 } else {
@@ -464,10 +464,32 @@ const Mito = new (class extends ISketch {
     public renderers = new Map<Entity, Renderer<Entity>>();
     // when true, automatically create tissue tiles when walking into soil or dirt
     public autoplace: Constructor<Cell> | undefined;
-    public elements = [<UI ref={(ref) => this.uiRef = ref! } />];
-    public uiRef: UI;
+    public elements = [
+        <HUD ref={(ref) => this.hudRef = ref! } />,
+        <TileHover ref={(ref) => this.hoverRef = ref! } />,
+    ];
+    public hudRef: HUD;
+    public hoverRef: TileHover;
+    public mouse = new THREE.Vector2();
+    public hoveredTile: Tile;
+    private raycaster = new THREE.Raycaster();
 
     public events = {
+        mousemove: (event: JQuery.Event) => {
+            this.mouse.x = event.clientX!;
+            this.mouse.y = event.clientY!;
+            this.hoverRef.setState({
+                left: this.mouse.x,
+                top: this.mouse.y,
+            });
+            // this.mouse.x = event.clientX! / this.canvas.width * 2 - 1;
+            // this.mouse.y = -event.clientY! / this.canvas.height * 2 + 1;
+        },
+        click: (event: JQuery.Event) => {
+            this.hoverRef.setState({
+                show: true,
+            });
+        },
         keypress: (event: JQuery.Event) => {
             const key = event.key!;
             const action = ACTION_KEYMAP[key];
@@ -492,16 +514,16 @@ const Mito = new (class extends ISketch {
                     // const currAutoplaceIndex = AUTOPLACE_LIST.indexOf(this.autoplace);
                     // const nextIndex = (currAutoplaceIndex + 1) % AUTOPLACE_LIST.length;
                     // this.autoplace = AUTOPLACE_LIST[nextIndex];
-                    this.uiRef.setState({ autoplace: this.autoplace });
+                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === 'l') {
                     this.autoplace = Leaf;
-                    this.uiRef.setState({ autoplace: this.autoplace });
+                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === 'r') {
                     this.autoplace = Root;
-                    this.uiRef.setState({ autoplace: this.autoplace });
+                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === ' ') {
                     this.autoplace = undefined;
-                    this.uiRef.setState({ autoplace: this.autoplace });
+                    this.hudRef.setState({ autoplace: this.autoplace });
                 }
             }
         },
@@ -528,10 +550,6 @@ const Mito = new (class extends ISketch {
     }
 
     public animate() {
-        this.uiRef.setState({
-            sugar: world.player.inventory.sugar,
-            water: world.player.inventory.water,
-        });
         if (world.player.action != null) {
             world.step();
         }
@@ -553,6 +571,33 @@ const Mito = new (class extends ISketch {
         this.camera.position.x = world.player.pos.x;
         this.camera.position.y = world.player.pos.y;
         this.renderer.render(this.scene, this.camera);
+
+        // this.mouse.x = event.clientX! / this.canvas.width * 2 - 1;
+        // this.mouse.y = -event.clientY! / this.canvas.height * 2 + 1;
+        this.raycaster.setFromCamera({
+            x: this.mouse.x / this.canvas.width * 2 - 1,
+            y: -this.mouse.y / this.canvas.height * 2 + 1,
+        }, this.camera);
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+        // console.log(intersects);
+        const i = intersects[0];
+        const {x, y} = i.point;
+        const ix = Math.round(x);
+        const iy = Math.round(y);
+        const thisHoveredTile = world.tileAt(ix, iy);
+        if (thisHoveredTile !== this.hoveredTile) {
+            this.hoverRef.setState({
+                show: false,
+            });
+        }
+        this.hoveredTile = thisHoveredTile;
+        this.hoverRef.setState({
+            tile: this.hoveredTile,
+        });
+        this.hudRef.setState({
+            sugar: world.player.inventory.sugar,
+            water: world.player.inventory.water,
+        });
     }
 
     public resize(w: number, h: number) {
