@@ -174,9 +174,9 @@ class World {
         ));
 
         // add a "seed" of tissue around the player
-        const radius = 3;
-        for (let x = -radius; x <= radius; x++) {
-            for (let y = -radius; y <= radius; y++) {
+        const radius = 2.5;
+        for (let x = -Math.floor(radius); x <= Math.ceil(radius); x++) {
+            for (let y = -Math.floor(radius); y <= Math.ceil(radius); y++) {
                 if (x * x + y * y < radius * radius) {
                     const cx = this.player.pos.x + x;
                     const cy = this.player.pos.y + y;
