@@ -3,9 +3,11 @@ import { Vector2 } from "three";
 import { Entity, world } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 
-export const CELL_ENERGY_MAX = 200;
-export const ENERGY_TO_SUGAR_RATIO = 200; // 500 energy per sugar
+export const CELL_ENERGY_MAX = 1000;
+export const ENERGY_TO_SUGAR_RATIO = 1000; // 500 energy per sugar
 export const CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
+
+const SOIL_MAX_WATER = 10;
 
 export interface HasEnergy {
     energy: number;
@@ -70,7 +72,7 @@ export class Air extends Tile {
 }
 
 export class Soil extends Tile implements HasInventory {
-    public inventory = new Inventory(100);
+    public inventory = new Inventory(SOIL_MAX_WATER);
     constructor(pos: Vector2, water: number = 0) {
         super(pos);
         this.inventory.change(water, 0);
@@ -178,7 +180,7 @@ export class Cell extends Tile implements HasEnergy {
 }
 
 export class Tissue extends Cell implements HasInventory {
-    public inventory = new Inventory(100);
+    public inventory = new Inventory(10);
 }
 
 export class Leaf extends Cell {
@@ -217,7 +219,8 @@ export class Root extends Cell {
                 oppositeTile instanceof Tissue) {
                     const soilWater = tile.inventory.water;
                     const tissueWater = oppositeTile.inventory.water;
-                    const transferAmount = Math.ceil(Math.max(0, soilWater - tissueWater) / 2);
+                    // const transferAmount = Math.ceil(Math.max(0, soilWater - tissueWater) / 2);
+                    const transferAmount = 1;
                     tile.inventory.give(oppositeTile.inventory, transferAmount, 0);
             }
         }
@@ -230,7 +233,7 @@ export class Root extends Cell {
 }
 
 export class Seed extends Cell {
-    public inventory = new Inventory(10000);
+    public inventory = new Inventory(1000);
 
     // seeds aggressively take the inventory from neighbors
     step() {

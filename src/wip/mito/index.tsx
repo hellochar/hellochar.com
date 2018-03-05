@@ -48,7 +48,7 @@ interface ActionDrop {
 type Action = ActionStill | ActionMove | ActionBuild | ActionDrop;
 
 class Player {
-    public inventory = new Inventory(1000, 100, 100);
+    public inventory = new Inventory(100, 50, 50);
     public action?: Action;
     public constructor(public pos: Vector2) {}
 
@@ -115,6 +115,12 @@ class Player {
         // just make every cell cost 25 water and 10 sugar for now
         // const waterCost = 25;
         // const sugarCost = 10;
+
+        // disallow building a seed if there already is one
+        if (world.seed != null && action.cellType === Seed) {
+            return;
+        }
+
         const waterCost = 1;
         const sugarCost = CELL_SUGAR_BUILD_COST;
         const targetTile = world.tileAt(action.position.x, action.position.y);
@@ -125,6 +131,9 @@ class Player {
             const newTile = new action.cellType(action.position);
             world.setTileAt(action.position, newTile);
             this.inventory.change(-waterCost, -sugarCost);
+            if (world.seed == null && newTile instanceof Seed) {
+                world.seed = newTile;
+            }
         }
     }
 
@@ -229,7 +238,8 @@ class World {
                         const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.25, 1), 2);
                         const simplexScalar = 0.2;
                         const simplexValue = Math.max(noiseWater.simplex2(x * simplexScalar, y * simplexScalar), 0);
-                        const water = simplexValue > 0.5 ? 100 : 0; // Math.sqrt() * 100 * heightScalar;
+                        // should be soil_max_water
+                        const water = simplexValue > 0.5 ? 10 : 0; // Math.sqrt() * 100 * heightScalar;
                         const soil = new Soil(pos, Math.round(water));
                         return soil;
                     }
@@ -359,9 +369,9 @@ class World {
     }
 
     public checkWinLoss(): GameState {
-        // you win if there's a seed with > 8000 sugar
+        // you win if there's a seed with > 800 resources
         if (this.seed != null) {
-            if (this.seed.inventory.sugar > 8000) {
+            if (this.seed.inventory.sugar + this.seed.inventory.water > 800) {
                 return "win";
             }
         }
@@ -389,7 +399,7 @@ class World {
     }
 }
 
-function lerp2(v: Vector3, t: Vector2, lerp: number) {
+function lerp2(v: Vector3, t: {x: number, y: number}, lerp: number) {
     v.x = v.x * (1 - lerp) + t.x * lerp;
     v.y = v.y * (1 - lerp) + t.y * lerp;
 }
@@ -419,6 +429,7 @@ class PlayerRenderer extends Renderer<Player> {
                 side: THREE.DoubleSide,
             }),
         );
+        lerp2(this.mesh.position, this.target.pos, 1);
         this.scene.add(this.mesh);
     }
 
@@ -555,9 +566,10 @@ class TileRenderer extends Renderer<Tile> {
     }
 }
 
+const RESOURCES_PER_MESH = 1;
+
 // we represent Resources as dots of certain colors.
 class InventoryRenderer extends Renderer<Inventory> {
-    public object = new Object3D();
     static geometry = new PlaneBufferGeometry(1, 1);
     static waterMaterial = new MeshBasicMaterial({
         // map: textureFromSpritesheet(0, 1),
@@ -573,44 +585,96 @@ class InventoryRenderer extends Renderer<Inventory> {
         // color: new Color("yellow"),
         side: THREE.DoubleSide,
     });
-    private waterMesh = new Mesh(
-        InventoryRenderer.geometry,
-        InventoryRenderer.waterMaterial,
-    );
-    private sugarMesh = new Mesh(
-        InventoryRenderer.geometry,
-        InventoryRenderer.sugarMaterial,
-    );
+
+    public object = new Object3D();
+
+    public waters: Mesh[] = [];
+    public sugars: Mesh[] = [];
 
     init() {
-        this.waterMesh.position.x = -0.25;
-        this.sugarMesh.position.x = +0.25;
-        // this.object.add(this.waterMesh);
-        // this.object.add(this.sugarMesh);
         this.object.position.z = 1;
+        for (let i = 0; i < this.target.water / RESOURCES_PER_MESH; i++) {
+            this.createWaterMesh();
+        }
+        for (let i = 0; i < this.target.sugar / RESOURCES_PER_MESH; i++) {
+            this.createWaterMesh();
+        }
+
         // don't add to scene yourself
-     }
+    }
+
+    private updateMeshes(resource: number, array: Mesh[], create: () => void) {
+        const wantedMeshes = Math.ceil(resource / RESOURCES_PER_MESH);
+        while (array.length < wantedMeshes) {
+            create();
+        }
+        while (array.length > wantedMeshes) {
+            const mesh = array.shift()!;
+            this.object.remove(mesh);
+        }
+    }
+
+    quantize(v: Vector3, size: number) {
+        const qv = v.clone();
+        qv.x = Math.floor(v.x / size) * size;
+        qv.y = Math.floor(v.y / size) * size;
+        lerp2(v, qv, 0.9);
+    }
 
     update() {
-        const waterScale = this.target.water / this.target.capacity;
-        const sugarScale = this.target.sugar / this.target.capacity;
-        if (waterScale === 0) {
-            this.object.remove(this.waterMesh);
-        } else {
-            this.object.add(this.waterMesh);
+        this.updateMeshes(this.target.water, this.waters, () => this.createWaterMesh());
+        this.updateMeshes(this.target.sugar, this.sugars, () => this.createSugarMesh());
+        const resources = this.waters.concat(this.sugars);
+        for (const r of resources) {
+            const vel = r.position.clone();
+            vel.x += Math.cos(performance.now() / 3000) * 0.1;
+            vel.y += Math.sin(performance.now() / 3000) * 0.1;
+            const pullStrength = 0.1 + vel.length() * 0.1;
+            vel.multiplyScalar(-pullStrength);
+            for (const l of resources) {
+                if (r === l) {
+                    break;
+                }
+                const offset = r.position.clone().sub(l.position);
+                const lengthSq = offset.lengthSq();
+                if (lengthSq > 0) {
+                    const strength = 0.005 / lengthSq;
+                    vel.add(offset.multiplyScalar(strength));
+                }
+            }
+            // this.quantize(vel, 0.1);
+            r.position.add(vel);
+            // this.quantize(r.position, 0.01);
         }
-        if (sugarScale === 0) {
-            this.object.remove(this.sugarMesh);
-        } else {
-            this.object.add(this.sugarMesh);
-        }
-        this.waterMesh.scale.set(waterScale, waterScale, 1);
-        this.sugarMesh.scale.set(sugarScale, sugarScale, 1);
     }
 
     destroy() {
         // don't destroy yourself
     }
+
+    createWaterMesh() {
+        const mesh = new Mesh(
+            InventoryRenderer.geometry,
+            InventoryRenderer.waterMaterial,
+        );
+        mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
+        mesh.scale.set(0.12, 0.12, 1);
+        this.object.add(mesh);
+        this.waters.push(mesh);
+    }
+
+    createSugarMesh() {
+        const mesh = new Mesh(
+            InventoryRenderer.geometry,
+            InventoryRenderer.sugarMaterial,
+        );
+        mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
+        mesh.scale.set(0.12, 0.12, 1);
+
+        this.object.add(mesh);
+        this.sugars.push(mesh);
+    }
+
 }
 
 function createRendererFor<E extends Entity>(object: E, scene: Scene): Renderer<Entity> {
@@ -768,6 +832,7 @@ const Mito = new (class extends ISketch {
         // this.camera = new OrthographicCamera(0, width, 0, height, -100, 100);
         const aspect = this.aspectRatio;
         this.camera = new OrthographicCamera(0, 0, 0, 0, -100, 100);
+        this.camera.zoom = 1.5;
         this.resize(this.canvas.width, this.canvas.height);
         // darkness and water diffuse a few times to stabilize it
         for (let i = 0; i < 5; i++) {
