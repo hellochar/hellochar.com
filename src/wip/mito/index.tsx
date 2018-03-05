@@ -7,7 +7,7 @@ import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, hasEnergy, Leaf, Rock, Root, Seed, Soil, Tile, Tissue } from "./tile";
-import { HUD, TileHover } from "./ui";
+import { GameStack, HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
 
@@ -121,6 +121,20 @@ class Player {
             !(targetTile instanceof Rock) &&
             this.inventory.water >= waterCost &&
             this.inventory.sugar >= sugarCost) {
+            // if replacing a tile with inventory, try giving resources to neighbors
+            if (hasInventory(targetTile)) {
+                const neighbors = world.tileNeighbors(action.position);
+                for (const neighbor of neighbors.values()) {
+                    if (hasInventory(neighbor)) {
+                        targetTile.inventory.give(neighbor.inventory, targetTile.inventory.water, targetTile.inventory.sugar);
+                    }
+                    if (targetTile.inventory.water === 0 && targetTile.inventory.sugar === 0) {
+                        // we're all done
+                        break;
+                    }
+                }
+            }
+            // there's a chance we just *lose* some water as it overfills capacity
             const newTile = new action.cellType(action.position);
             world.setTileAt(action.position, newTile);
             this.inventory.change(-waterCost, -sugarCost);
@@ -209,6 +223,7 @@ function shuffle<T>(array: T[]) {
 class World {
     private time: number = 0;
     public player: Player = new Player(new Vector2(width / 2, height / 2));
+    public seed?: Seed = undefined;
     public grid: Tile[][] = (() => {
         // start with a half water half air
         const noiseWater = new Noise();
@@ -341,6 +356,20 @@ class World {
         this.checkResources();
     }
 
+    public checkWinLoss(): GameState {
+        // you win if there's a seed with > 8000 sugar
+        if (this.seed != null) {
+            if (this.seed.inventory.sugar > 8000) {
+                return "win";
+            }
+        }
+        // you lose if you're standing on a dead cell
+        if (this.tileAt(this.player.pos.x, this.player.pos.y) instanceof DeadCell) {
+            return "lose";
+        }
+        return "main";
+    }
+
     public checkResources() {
         let totalSugar = 0;
         let totalWater = 0;
@@ -356,13 +385,6 @@ class World {
         });
         console.log("sugar", totalSugar, "water", totalWater, "energy", totalEnergy);
     }
-
-    // public computeDarkness() {
-
-    //     function floodfill(tile: Tile, darkness: number) {
-
-    //     }
-    // }
 }
 
 export const world = new World();
@@ -649,6 +671,8 @@ const ACTION_KEYMAP: { [key: string]: Action } = {
 
 const AUTOPLACE_LIST: Array<Constructor<Cell> | undefined> = [undefined, Tissue, Leaf, Root];
 
+export type GameState = "main" | "win" | "lose";
+
 const Mito = new (class extends ISketch {
     public scene = new Scene();
     private camera: THREE.OrthographicCamera;
@@ -658,12 +682,15 @@ const Mito = new (class extends ISketch {
     public elements = [
         <HUD ref={(ref) => this.hudRef = ref! } />,
         <TileHover ref={(ref) => this.hoverRef = ref! } />,
+        <GameStack ref={(ref) => this.gameStackRef = ref! } />,
     ];
     public hudRef: HUD;
     public hoverRef: TileHover;
+    public gameStackRef: GameStack;
     public mouse = new THREE.Vector2();
     public hoveredTile: Tile;
     private raycaster = new THREE.Raycaster();
+    public gameState: GameState = "main";
 
     public events = {
         mousemove: (event: JQuery.Event) => {
@@ -712,6 +739,9 @@ const Mito = new (class extends ISketch {
                 } else if (key === 'r') {
                     this.autoplace = Root;
                     this.hudRef.setState({ autoplace: this.autoplace });
+                } else if (key === 'f') {
+                    this.autoplace = Seed;
+                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === ' ') {
                     this.autoplace = undefined;
                     this.hudRef.setState({ autoplace: this.autoplace });
@@ -742,6 +772,7 @@ const Mito = new (class extends ISketch {
             world.player.action = { type: "still" };
             world.step();
         }
+        this.gameState = "main";
     }
 
     public getOrCreateRenderer(entity: Entity) {
@@ -759,7 +790,12 @@ const Mito = new (class extends ISketch {
     public animate() {
         if (world.player.action != null) {
             world.step();
+            this.gameState = world.checkWinLoss();
         }
+        // if (world.player.action == null) {
+        //     world.player.action = { type: "still" };
+        // }
+        // world.step();
         const oldEntities = Array.from(this.renderers.keys());
         // delete the renderers for entities that have been removed since last render
         // this is the performance bottleneck, it's O(n^2)
@@ -809,6 +845,9 @@ const Mito = new (class extends ISketch {
         this.hudRef.setState({
             sugar: world.player.inventory.sugar,
             water: world.player.inventory.water,
+        });
+        this.gameStackRef.setState({
+            state: this.gameState,
         });
     }
 

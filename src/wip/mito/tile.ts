@@ -183,6 +183,7 @@ export class Tissue extends Cell implements HasInventory {
 
 export class Leaf extends Cell {
     public step() {
+        super.step();
         const neighbors = world.tileNeighbors(this.pos);
         for (const [dir, tile] of neighbors.entries()) {
             const oppositeTile = world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
@@ -208,6 +209,7 @@ export class Leaf extends Cell {
 
 export class Root extends Cell {
     public step() {
+        super.step();
         const neighbors = world.tileNeighbors(this.pos);
         for (const [dir, tile] of neighbors.entries()) {
             const oppositeTile = world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
