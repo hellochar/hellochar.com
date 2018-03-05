@@ -1,11 +1,12 @@
 import * as React from "react";
 import * as THREE from "three";
-import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PerspectiveCamera, PlaneBufferGeometry, Scene, ShaderMaterial, SphereBufferGeometry, SphereGeometry, Vector2, Vector3 } from "three";
+import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
 import { map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
+import { textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, hasEnergy, Leaf, Rock, Root, Seed, Soil, Tile, Tissue } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
 
@@ -47,7 +48,7 @@ interface ActionDrop {
 type Action = ActionStill | ActionMove | ActionBuild | ActionDrop;
 
 class Player {
-    public inventory = new Inventory(1000, 100, 800);
+    public inventory = new Inventory(1000, 100, 100);
     public action?: Action;
     public constructor(public pos: Vector2) {}
 
@@ -121,20 +122,6 @@ class Player {
             !(targetTile instanceof Rock) &&
             this.inventory.water >= waterCost &&
             this.inventory.sugar >= sugarCost) {
-            // if replacing a tile with inventory, try giving resources to neighbors
-            if (hasInventory(targetTile)) {
-                const neighbors = world.tileNeighbors(action.position);
-                for (const neighbor of neighbors.values()) {
-                    if (hasInventory(neighbor)) {
-                        targetTile.inventory.give(neighbor.inventory, targetTile.inventory.water, targetTile.inventory.sugar);
-                    }
-                    if (targetTile.inventory.water === 0 && targetTile.inventory.sugar === 0) {
-                        // we're all done
-                        break;
-                    }
-                }
-            }
-            // there's a chance we just *lose* some water as it overfills capacity
             const newTile = new action.cellType(action.position);
             world.setTileAt(action.position, newTile);
             this.inventory.change(-waterCost, -sugarCost);
@@ -279,6 +266,21 @@ class World {
 
     public setTileAt(position: Vector2, tile: Tile): any {
         const {x, y} = this.wrappedPosition(position);
+        const oldTile = this.grid[x][y];
+        // if replacing a tile with inventory, try giving resources to neighbors of the same type
+        if (hasInventory(oldTile)) {
+            const neighbors = world.tileNeighbors(position);
+            for (const neighbor of neighbors.values()) {
+                if (hasInventory(neighbor) && neighbor instanceof oldTile.constructor) {
+                    oldTile.inventory.give(neighbor.inventory, oldTile.inventory.water, oldTile.inventory.sugar);
+                }
+                if (oldTile.inventory.water === 0 && oldTile.inventory.sugar === 0) {
+                    // we're all done
+                    break;
+                }
+            }
+        }
+            // there's a chance we just *lose* some water as it overfills capacity
         this.grid[x][y] = tile;
         this.fillCachedEntities();
     }
@@ -387,6 +389,11 @@ class World {
     }
 }
 
+function lerp2(v: Vector3, t: Vector2, lerp: number) {
+    v.x = v.x * (1 - lerp) + t.x * lerp;
+    v.y = v.y * (1 - lerp) + t.y * lerp;
+}
+
 export const world = new World();
 
 abstract class Renderer<T> {
@@ -403,9 +410,12 @@ class PlayerRenderer extends Renderer<Player> {
     public mesh: Mesh;
     init() {
         this.mesh = new Mesh(
-            new THREE.CircleBufferGeometry(0.5, 20),
+            new PlaneBufferGeometry(1, 1),
+            // new THREE.CircleBufferGeometry(0.5, 20),
             new MeshBasicMaterial({
-                color: new Color("lightgreen"),
+                transparent: true,
+                map: textureFromSpritesheet(29, 12, "transparent"),
+                color: new Color("white"),
                 side: THREE.DoubleSide,
             }),
         );
@@ -413,7 +423,8 @@ class PlayerRenderer extends Renderer<Player> {
     }
 
     update() {
-        this.mesh.position.set(this.target.pos.x, this.target.pos.y, 2);
+        lerp2(this.mesh.position, this.target.pos, 0.5);
+        this.mesh.position.z = 2;
     }
 
     destroy() {
@@ -427,62 +438,46 @@ materialMapping.set(Air, new MeshBasicMaterial({
     color: new Color("lightblue"),
 }));
 materialMapping.set(Soil, new MeshBasicMaterial({
+    map: textureFromSpritesheet(8, 11),
+    // map: textureFromSpritesheet(41, 26),
     side: THREE.DoubleSide,
-    color: new Color(0x654321),
+    // color: new Color(0x808080),
+    color: new Color(0x554321),
+}));
+materialMapping.set(Rock, new MeshBasicMaterial({
+    map: textureFromSpritesheet(26, 20),
+    side: THREE.DoubleSide,
+    color: new Color("rgb(32, 38, 41)"),
 }));
 materialMapping.set(DeadCell, new MeshBasicMaterial({
     side: THREE.DoubleSide,
-    color: new Color(0),
+    color: new Color("rgb(128, 128, 128)"),
 }));
 materialMapping.set(Tissue, new MeshBasicMaterial({
+    map: textureFromSpritesheet(6, 31),
     side: THREE.DoubleSide,
-    color: new Color("darkgreen"),
+    color: new Color(0x30ae25),
 }));
 materialMapping.set(Leaf, new MeshBasicMaterial({
+    map: textureFromSpritesheet(9, 31),
+    // map: textureFromSpritesheet(16, 10),
     side: THREE.DoubleSide,
-    color: new Color(0x3d860b),
+    // color: new Color(),
 }));
 materialMapping.set(Root, new MeshBasicMaterial({
+    map: textureFromSpritesheet(0, 31),
     side: THREE.DoubleSide,
-    color: new Color(0x8f6c63),
+    // color: new Color("lightgreen"),
 }));
 materialMapping.set(Seed, new MeshBasicMaterial({
+    map: textureFromSpritesheet(9, 31),
     side: THREE.DoubleSide,
     color: new Color("rgb(249, 243, 49)"),
-}));
-materialMapping.set(Rock, new MeshBasicMaterial({
-    side: THREE.DoubleSide,
-    color: new Color("rgb(12, 18, 51)"),
 }));
 
 function getMaterial(tile: Tile) {
     // careful - creates a new instance per tile
     return materialMapping.get(tile.constructor as Constructor<Tile>)!.clone();
-}
-
-const spriteSize = 16; // 16x16 sprites
-const spriteSheetWidth = 1024;
-const spriteSheetHeight = 512;
-const SPRITESHEET = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png' );
-SPRITESHEET.magFilter = THREE.NearestFilter;
-SPRITESHEET.repeat.set(spriteSize / spriteSheetWidth, spriteSize / spriteSheetHeight);
-SPRITESHEET.flipY = true;
-// SPRITESHEET.offset.set(16 / 1024 * 50, 16 / 512 * 0);
-// console.log(SPRITESHEET);
-
-const cache: { [key: string]: THREE.Texture } = {};
-// x, y are spritesheet coordinates
-function textureFromSpritesheet(x: number, y: number) {
-    const key = `${x},${y}`;
-    if (cache[key] == null) {
-        const texture = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png' );
-        texture.magFilter = THREE.NearestFilter;
-        texture.repeat.set(spriteSize / spriteSheetWidth, spriteSize / spriteSheetHeight);
-        texture.flipY = true;
-        texture.offset.set(spriteSize / spriteSheetWidth * x, spriteSize / spriteSheetHeight * y);
-        cache[key] = texture;
-    }
-    return cache[key];
 }
 
 class TileRenderer extends Renderer<Tile> {
@@ -491,9 +486,10 @@ class TileRenderer extends Renderer<Tile> {
     static geometry = new PlaneBufferGeometry(1, 1);
     static eatingMaterial = new THREE.MeshBasicMaterial({
         side: THREE.DoubleSide,
-        map: textureFromSpritesheet(50, 0),
+        map: textureFromSpritesheet(53, 28, "transparent"),
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.3,
+        color: new THREE.Color("white"),
     });
     private inventoryRenderer: InventoryRenderer;
     private originalColor: THREE.Color;
@@ -508,7 +504,8 @@ class TileRenderer extends Renderer<Tile> {
             TileRenderer.geometry,
             mat,
         );
-        this.eatingMesh.scale.set(0.25, 0.25, 1);
+        this.eatingMesh.position.set(0, 0.4, 0);
+        this.eatingMesh.scale.set(0.2, 0.2, 1);
         this.originalColor = mat.color.clone();
         this.object.add(this.mesh);
 
@@ -518,9 +515,12 @@ class TileRenderer extends Renderer<Tile> {
             this.object.add(this.inventoryRenderer.object);
         }
         this.scene.add(this.object);
+        // for now
+        this.object.scale.set(0.01, 0.01, 1);
     }
 
     update() {
+        lerp2(this.object.scale, new THREE.Vector2(1, 1), 0.1);
         const darknessAmount = Math.sqrt(Math.min(Math.max(map(this.target.darkness - 1, 0, 2, 0, 1), 0), 1));
         const mat = this.mesh.material as MeshBasicMaterial;
         mat.color = this.originalColor.clone().lerp(new THREE.Color(0), darknessAmount);
@@ -560,15 +560,17 @@ class InventoryRenderer extends Renderer<Inventory> {
     public object = new Object3D();
     static geometry = new PlaneBufferGeometry(1, 1);
     static waterMaterial = new MeshBasicMaterial({
+        // map: textureFromSpritesheet(0, 1),
         transparent: true,
-        opacity: 0.5,
-        color: new Color("blue"),
+        opacity: 0.75,
+        color: new Color("rgb(9, 12, 255)"),
         side: THREE.DoubleSide,
     });
     static sugarMaterial = new MeshBasicMaterial({
+        map: textureFromSpritesheet(42, 12, "transparent"),
         transparent: true,
-        opacity: 0.5,
-        color: new Color("yellow"),
+        opacity: 0.9,
+        // color: new Color("yellow"),
         side: THREE.DoubleSide,
     });
     private waterMesh = new Mesh(
@@ -773,6 +775,8 @@ const Mito = new (class extends ISketch {
             world.step();
         }
         this.gameState = "main";
+        this.camera.position.x = world.player.pos.x;
+        this.camera.position.y = world.player.pos.y;
     }
 
     public getOrCreateRenderer(entity: Entity) {
@@ -817,8 +821,11 @@ const Mito = new (class extends ISketch {
             -this.mouse.y / this.canvas.height * 2 + 1,
         );
 
-        this.camera.position.x = world.player.pos.x + mouseNorm.x / 2;
-        this.camera.position.y = world.player.pos.y - mouseNorm.y / 2;
+        const target = new THREE.Vector2(
+            world.player.pos.x + mouseNorm.x / 2,
+            world.player.pos.y - mouseNorm.y / 2,
+        );
+        lerp2(this.camera.position, target, 0.3);
         this.renderer.render(this.scene, this.camera);
 
         // this.mouse.x = event.clientX! / this.canvas.width * 2 - 1;
