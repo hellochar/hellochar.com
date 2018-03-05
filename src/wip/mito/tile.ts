@@ -81,30 +81,38 @@ export class Rock extends Tile {}
 
 export class DeadCell extends Tile {}
 
-const EATING_PHASE_DURATION = 25;
+interface MetabolismState {
+    type: "eating" | "not-eating";
+    duration: number;
+}
 export class Cell extends Tile implements HasEnergy {
     public energy: number = CELL_ENERGY_MAX;
     public darkness = 0;
-    // hunger goes through multiple phases:
-    // 0 = ready to eat whenever you get hungry
-    // 26 - 50 = actively eating
-    // 25 - 1 = resting from eating
-    public hunger = 0;
+    public metabolism: MetabolismState = {
+        type: "not-eating",
+        duration: 0,
+    };
 
-    eatingState() {
-        if (this.hunger <= 0) {
-            if (this.energy < CELL_ENERGY_MAX / 2) {
-                return "hungry";
-            } else {
-                return "not hungry";
+    private stepMetabolism() {
+        // transition from not eating to eating
+        if (this.metabolism.type === "not-eating") {
+            const shouldEat = this.energy < CELL_ENERGY_MAX / 2 && this.metabolism.duration > 25;
+            if (shouldEat) {
+                this.metabolism = {
+                    type: "eating",
+                    duration: 0,
+                };
+            }
+        } else {
+            const shouldStopEating = this.energy > 0.8 * CELL_ENERGY_MAX && this.metabolism.duration > 25 || this.energy === CELL_ENERGY_MAX;
+            if (shouldStopEating) {
+                this.metabolism = {
+                    type: "not-eating",
+                    duration: 0,
+                };
             }
         }
-        if (this.hunger <= EATING_PHASE_DURATION) {
-            return "just ate";
-        }
-        if (this.hunger > EATING_PHASE_DURATION) {
-            return "eating";
-        }
+        this.metabolism.duration++;
     }
 
     step() {
@@ -112,15 +120,8 @@ export class Cell extends Tile implements HasEnergy {
         this.energy -= 1;
         const neighbors = Array.from(world.tileNeighbors(this.pos).values());
         const neighborsAndSelf = [ ...neighbors, this ];
-        const tryEat = this.energy < CELL_ENERGY_MAX / 2 && this.hunger <= 0;
-        const state = this.eatingState();
-        if (tryEat) {
-            this.hunger = 2 * EATING_PHASE_DURATION;
-        }
-        if (this.hunger > 0 && this.hunger <= EATING_PHASE_DURATION) {
-            this.hunger--;
-        } else if (this.hunger > EATING_PHASE_DURATION) {
-            this.hunger--;
+        this.stepMetabolism();
+        if (this.metabolism.type === "eating") {
             for (const tile of neighborsAndSelf) {
                 if (this.energy < CELL_ENERGY_MAX && hasInventory(tile)) {
                     const wantedEnergy = CELL_ENERGY_MAX - this.energy;
@@ -146,20 +147,12 @@ export class Cell extends Tile implements HasEnergy {
                         let energyTransfer = 0;
                         // // take energy from neighbors who have more than you - this might be unstable w/o double buffering
                         // const targetEnergy = averageEnergy;
-                        const targetEnergy = this.energy;
-                        if (neighbor.energy > targetEnergy) {
-                            energyTransfer = Math.floor((neighbor.energy - targetEnergy) / energeticNeighbors.length);
+                        if (neighbor.energy > this.energy) {
+                            // energyTransfer = Math.floor((neighbor.energy - this.energy) / energeticNeighbors.length);
+                            energyTransfer = Math.floor((neighbor.energy - this.energy) / 2);
                             // if (neighbor.energy - energyTransfer < this.energy + energyTransfer) {
                             //     throw new Error("cell energy diffusion: result of transfer gives me more than target");
                             // }
-                        }
-
-                        // give energy to neighbors who have less than you
-                        // if (neighbor.energy < averageEnergy) {
-                        //     energyTransfer = -Math.floor((averageEnergy - neighbor.energy) / energeticNeighbors.length);
-                        // }
-
-                        if (Math.abs(energyTransfer) > 0) {
                             if (neighbor.energy - energyTransfer < 0) {
                                 throw new Error("cell energy diffusion: taking more energy than available");
                             }

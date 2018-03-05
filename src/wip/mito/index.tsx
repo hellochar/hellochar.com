@@ -155,6 +155,56 @@ type Directions = keyof typeof DIRECTIONS;
 
 const DIRECTION_NAMES = Object.keys(DIRECTIONS) as Directions[];
 const DIRECTION_VALUES: Vector2[] = DIRECTION_NAMES.map((o) => DIRECTIONS[o]);
+const DIRECTION_VALUES_RAND = [
+    shuffle(DIRECTION_VALUES.slice()),
+    shuffle(DIRECTION_VALUES.slice()),
+    shuffle(DIRECTION_VALUES.slice()),
+    shuffle(DIRECTION_VALUES.slice()),
+    shuffle(DIRECTION_VALUES.slice()),
+];
+
+// https://stackoverflow.com/a/37580979
+function permute<T>(permutation: T[]) {
+  const length = permutation.length,
+      result = [permutation.slice()],
+      c = new Array(length).fill(0);
+  let i = 1, k, p;
+
+  while (i < length) {
+    if (c[i] < i) {
+      k = i % 2 && c[i];
+      p = permutation[i];
+      permutation[i] = permutation[k];
+      permutation[k] = p;
+      ++c[i];
+      i = 1;
+      result.push(permutation.slice());
+    } else {
+      c[i] = 0;
+      ++i;
+    }
+  }
+  return result;
+}
+
+function shuffle<T>(array: T[]) {
+  let currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
 
 class World {
     private time: number = 0;
@@ -227,7 +277,9 @@ class World {
 
     public tileNeighbors(pos: Vector2) {
         const mapping = new Map<Vector2, Tile>();
-        DIRECTION_VALUES.forEach((v) => {
+        // randomize the neighbor array to reduce aliasing
+        const directions = DIRECTION_VALUES_RAND[this.time % DIRECTION_VALUES_RAND.length];
+        directions.forEach((v) => {
             mapping.set(v, this.tileAt(pos.x + v.x, pos.y + v.y));
         });
         return mapping;
@@ -239,25 +291,38 @@ class World {
     }
     private fillCachedEntities() {
         // dear god
-        let flattenedTiles: Tile[] = [];
-        switch (this.time % 4) {
-            case 0:
-                // start at top-left corner, go down/right
-                flattenedTiles = ([] as Tile[]).concat(...this.grid);
-                break;
-            case 1:
-                // start at top-right corner, go down/left
-                flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse());
-                break;
-            case 2:
-                // start at bottom-left corner, go up/right
-                flattenedTiles = ([] as Tile[]).concat(...this.grid.map((col) => col.slice().reverse()));
-                break;
-            case 3:
-                // start at bottom-right corner, go up/left
-                flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse().map((col) => col.slice().reverse()));
-                break;
+        const flattenedTiles: Tile[] = [];
+        let x = 0, y = 0;
+        for (x = 0; x < width; x++) {
+            for (y = (x + this.time) % 2; y < height; y += 2) {
+                // checkerboard
+                flattenedTiles.push(this.grid[x][y]);
+            }
         }
+        for (x = 0; x < width; x++) {
+            for (y = (x + this.time + 1) % 2; y < height; y += 2) {
+                // opposite checkerboard
+                flattenedTiles.push(this.grid[x][y]);
+            }
+        }
+        // switch (this.time % 4) {
+        //     case 0:
+        //         // start at top-left corner, go down/right
+        //         flattenedTiles = ([] as Tile[]).concat(...this.grid);
+        //         break;
+        //     case 1:
+        //         // start at top-right corner, go down/left
+        //         flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse());
+        //         break;
+        //     case 2:
+        //         // start at bottom-left corner, go up/right
+        //         flattenedTiles = ([] as Tile[]).concat(...this.grid.map((col) => col.slice().reverse()));
+        //         break;
+        //     case 3:
+        //         // start at bottom-right corner, go up/left
+        //         flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse().map((col) => col.slice().reverse()));
+        //         break;
+        // }
         const newEntities = ([] as Entity[]).concat(flattenedTiles, [this.player]);
         this.cachedEntities = newEntities;
     }
@@ -271,9 +336,9 @@ class World {
                 entity.step();
             }
         });
+        this.time++;
         this.fillCachedEntities();
         this.checkResources();
-        this.time++;
     }
 
     public checkResources() {
@@ -373,19 +438,56 @@ function getMaterial(tile: Tile) {
     return materialMapping.get(tile.constructor as Constructor<Tile>)!.clone();
 }
 
+const spriteSize = 16; // 16x16 sprites
+const spriteSheetWidth = 1024;
+const spriteSheetHeight = 512;
+const SPRITESHEET = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png' );
+SPRITESHEET.magFilter = THREE.NearestFilter;
+SPRITESHEET.repeat.set(spriteSize / spriteSheetWidth, spriteSize / spriteSheetHeight);
+SPRITESHEET.flipY = true;
+// SPRITESHEET.offset.set(16 / 1024 * 50, 16 / 512 * 0);
+// console.log(SPRITESHEET);
+
+const cache: { [key: string]: THREE.Texture } = {};
+// x, y are spritesheet coordinates
+function textureFromSpritesheet(x: number, y: number) {
+    const key = `${x},${y}`;
+    if (cache[key] == null) {
+        const texture = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png' );
+        texture.magFilter = THREE.NearestFilter;
+        texture.repeat.set(spriteSize / spriteSheetWidth, spriteSize / spriteSheetHeight);
+        texture.flipY = true;
+        texture.offset.set(spriteSize / spriteSheetWidth * x, spriteSize / spriteSheetHeight * y);
+        cache[key] = texture;
+    }
+    return cache[key];
+}
+
 class TileRenderer extends Renderer<Tile> {
     public object = new Object3D();
     public mesh: Mesh;
     static geometry = new PlaneBufferGeometry(1, 1);
+    static eatingMaterial = new THREE.MeshBasicMaterial({
+        side: THREE.DoubleSide,
+        map: textureFromSpritesheet(50, 0),
+        transparent: true,
+        opacity: 0.8,
+    });
     private inventoryRenderer: InventoryRenderer;
     private originalColor: THREE.Color;
+    private eatingMesh = new Mesh(
+        TileRenderer.geometry,
+        TileRenderer.eatingMaterial,
+    );
 
     init() {
+        const mat = getMaterial(this.target) as MeshBasicMaterial;
         this.mesh = new Mesh(
             TileRenderer.geometry,
-            getMaterial(this.target),
+            mat,
         );
-        this.originalColor = (this.mesh.material as MeshBasicMaterial).color.clone();
+        this.eatingMesh.scale.set(0.25, 0.25, 1);
+        this.originalColor = mat.color.clone();
         this.object.add(this.mesh);
 
         if (hasInventory(this.target)) {
@@ -401,6 +503,14 @@ class TileRenderer extends Renderer<Tile> {
         const mat = this.mesh.material as MeshBasicMaterial;
         mat.color = this.originalColor.clone().lerp(new THREE.Color(0), darknessAmount);
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
+        if (this.target instanceof Cell) {
+            if (this.target.metabolism.type === "eating") {
+                this.eatingMesh.position.z = 1;
+                this.object.add(this.eatingMesh);
+            } else {
+                this.object.remove(this.eatingMesh);
+            }
+        }
         if (hasEnergy(this.target)) {
             this.mesh.material.transparent = true;
             this.mesh.material.opacity = this.target.energy / CELL_ENERGY_MAX;
