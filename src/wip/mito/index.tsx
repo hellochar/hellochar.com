@@ -430,6 +430,7 @@ class PlayerRenderer extends Renderer<Player> {
             }),
         );
         lerp2(this.mesh.position, this.target.pos, 1);
+        this.mesh.position.z = 2;
         this.scene.add(this.mesh);
     }
 
@@ -446,7 +447,7 @@ class PlayerRenderer extends Renderer<Player> {
 const materialMapping = new Map<Constructor<Tile>, Material>();
 materialMapping.set(Air, new MeshBasicMaterial({
     side: THREE.DoubleSide,
-    color: new Color("lightblue"),
+    color: new Color("rgb(209, 243, 255)"),
 }));
 materialMapping.set(Soil, new MeshBasicMaterial({
     map: textureFromSpritesheet(8, 11),
@@ -458,7 +459,7 @@ materialMapping.set(Soil, new MeshBasicMaterial({
 materialMapping.set(Rock, new MeshBasicMaterial({
     map: textureFromSpritesheet(26, 20),
     side: THREE.DoubleSide,
-    color: new Color("rgb(32, 38, 41)"),
+    color: new Color("rgb(63, 77, 84)"),
 }));
 materialMapping.set(DeadCell, new MeshBasicMaterial({
     side: THREE.DoubleSide,
@@ -523,6 +524,7 @@ class TileRenderer extends Renderer<Tile> {
         if (hasInventory(this.target)) {
             this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.scene);
             this.inventoryRenderer.init();
+            this.inventoryRenderer.animationOffset = this.target.pos.x + this.target.pos.y;
             this.object.add(this.inventoryRenderer.object);
         }
         this.scene.add(this.object);
@@ -585,6 +587,7 @@ class InventoryRenderer extends Renderer<Inventory> {
         // color: new Color("yellow"),
         side: THREE.DoubleSide,
     });
+    public animationOffset: number;
 
     public object = new Object3D();
 
@@ -627,8 +630,9 @@ class InventoryRenderer extends Renderer<Inventory> {
         const resources = this.waters.concat(this.sugars);
         for (const r of resources) {
             const vel = r.position.clone();
-            vel.x += Math.cos(performance.now() / 3000) * 0.1;
-            vel.y += Math.sin(performance.now() / 3000) * 0.1;
+            const angle = performance.now() / 3000 + this.animationOffset;
+            vel.x += Math.cos(angle) * 0.2;
+            // vel.y += Math.sin(performance.now() / 3000) * 0.1;
             const pullStrength = 0.1 + vel.length() * 0.1;
             vel.multiplyScalar(-pullStrength);
             for (const l of resources) {
