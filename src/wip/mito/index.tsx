@@ -243,7 +243,8 @@ class World {
                     } else {
                         const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.5, 1), 2);
                         const simplexScalar = 0.2;
-                        const simplexValue = noiseWater.simplex2(x * simplexScalar, y * simplexScalar) + 0.0;
+                        // this 0.1 factor makes a *huge* difference
+                        const simplexValue = noiseWater.simplex2(x * simplexScalar, y * simplexScalar) + 0.1;
                         // should be soil_max_water
                         const water = Math.max(
                             0,
@@ -410,7 +411,7 @@ class World {
                         sunlight = (upSunlight + rightSunlight + leftSunlight) / 3;
                     }
                     // have at least a bit
-                    sunlight = 0.1 + sunlight * 0.9;
+                    sunlight = 0.03 + sunlight * 0.97;
                     t.sunlightCached = sunlight;
                 }
             }
@@ -418,9 +419,9 @@ class World {
     }
 
     public checkWinLoss(): GameState {
-        // you win if there's a seed with > 800 resources
+        // you win if there's a seed with full capacity
         if (this.seed != null) {
-            if (this.seed.inventory.sugar + this.seed.inventory.water > 800) {
+            if (this.seed.inventory.sugar === this.seed.inventory.capacity) {
                 return "win";
             }
         }
@@ -749,11 +750,11 @@ const ACTION_KEYMAP: { [key: string]: Action } = {
     "1": {
         type: "drop",
         sugar: 0,
-        water: 20, // hack hack we can assume max 100 water, it's fine
+        water: 10, // hack hack we can assume max 100 water, it's fine
     },
     "2": {
         type: "drop",
-        sugar: 20,
+        sugar: 10,
         water: 0, // hack hack we can assume max 100 water, it's fine
     },
     ".": {

@@ -199,12 +199,15 @@ export class Tissue extends Cell implements HasInventory {
     public inventory = new Inventory(10);
 }
 
+export const LEAF_MAX_CHANCE = 0.01;
 export class Leaf extends Cell {
-    public lastReactionFactor = 0;
+    public averageEfficiency = 0;
+    public averageSpeed = 0;
     public step() {
         super.step();
         const neighbors = world.tileNeighbors(this.pos);
-        this.lastReactionFactor = 0;
+        this.averageEfficiency = 0;
+        this.averageSpeed = 0;
         let numAir = 0;
 
         for (const [dir, tile] of neighbors.entries()) {
@@ -214,24 +217,26 @@ export class Leaf extends Cell {
                 const air = tile;
                 const tissue = oppositeTile;
                 // 0 to 1
-                const reactionFactor = air.co2() * air.sunlight();
-                this.lastReactionFactor += reactionFactor;
+                const speed = air.sunlight();
+                const efficiency = air.co2();
+                this.averageEfficiency += efficiency;
+                this.averageSpeed += speed;
                 numAir += 1;
-                if (Math.random() < reactionFactor) {
-                    // transform only up to 1 at a time
-                    // careful this introduces fractional numbers right now - how to fix this?
+                if (Math.random() < speed * LEAF_MAX_CHANCE) {
+                    // transform 1 sugar this turn
+                    const wantedSugar = 1;
+                    const wantedWater = Math.round(1 / efficiency);
                     const tissueWater = tissue.inventory.water;
-                    const transform = Math.min(tissueWater, 1);
-                    if (transform > 0) {
-                        tissue.inventory.water -= transform;
-                        tissue.inventory.sugar += transform;
+                    if (tissueWater >= wantedWater) {
+                        tissue.inventory.change(-wantedWater, 1);
                         break; // give max one sugar per turn
                     }
                 }
             }
         }
         if (numAir > 0) {
-            this.lastReactionFactor /= numAir;
+            this.averageEfficiency /= numAir;
+            // this.averageSpeed /= numAir;
         }
     }
 }
@@ -269,7 +274,7 @@ export class Seed extends Cell {
         for (const [dir, neighbor] of neighbors) {
             if (hasInventory(neighbor)) {
                 // LMAO
-                neighbor.inventory.give(this.inventory, neighbor.inventory.water, neighbor.inventory.sugar);
+                neighbor.inventory.give(this.inventory, 0, neighbor.inventory.sugar);
             }
         }
     }
