@@ -301,7 +301,7 @@ class World {
                                         20,
                                         simplexValue > 0.5 ? 20 * heightScalar : 0, // Math.sqrt() * 100 * heightScalar;
                                     )));
-                        if (heightScalar > 0.75 && simplexValue > 1) {
+                        if (heightScalar > 0.6 && simplexValue > 1) {
                             return new Fountain(pos, water);
                         } else {
                             return new Soil(pos, water);
