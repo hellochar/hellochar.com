@@ -2,7 +2,7 @@ import * as React from "react";
 import * as THREE from "three";
 import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
-import { map } from "../../math/index";
+import { map, lerp } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
@@ -116,14 +116,20 @@ class Player {
         // const waterCost = 25;
         // const sugarCost = 10;
 
+        const targetTile = world.tileAt(action.position.x, action.position.y);
+
         // disallow building a seed if there already is one
         if (world.seed != null && action.cellType === Seed) {
             return;
         }
 
+        // disallow building over a seed
+        if (targetTile instanceof Seed) {
+            return;
+        }
+
         const waterCost = 1;
         const sugarCost = CELL_SUGAR_BUILD_COST;
-        const targetTile = world.tileAt(action.position.x, action.position.y);
         if (!(targetTile instanceof action.cellType) &&
             !(targetTile instanceof Rock) &&
             this.inventory.water >= waterCost &&
@@ -147,8 +153,8 @@ class Player {
     }
 }
 
-const width = 50;
-const height = 100;
+export const width = 50;
+export const height = 100;
 const DIRECTIONS = {
     nw: new Vector2(-1, -1),
     w : new Vector2(-1,  0),
@@ -229,17 +235,22 @@ class World {
                 const pos = new Vector2(x, y);
                 if (y > height / 2) {
                     // const water = Math.floor(20 + Math.random() * 20);
-                    const rockThreshold = map(y - height / 2, 0, height / 2, -0.7, 0.7);
+                    const rockThreshold = map(y - height / 2, 0, height / 2, -0.7, 0.3);
                     const isRock = noiseRock.simplex2(x / 5, y / 5) < rockThreshold;
                     if (isRock) {
                         const rock = new Rock(pos);
                         return rock;
                     } else {
-                        const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.25, 1), 2);
+                        const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.5, 1), 2);
                         const simplexScalar = 0.2;
-                        const simplexValue = Math.max(noiseWater.simplex2(x * simplexScalar, y * simplexScalar), 0);
+                        const simplexValue = noiseWater.simplex2(x * simplexScalar, y * simplexScalar) + 0.0;
                         // should be soil_max_water
-                        const water = simplexValue > 0.5 ? 10 : 0; // Math.sqrt() * 100 * heightScalar;
+                        const water = Math.max(
+                            0,
+                            Math.min(
+                            20,
+                            simplexValue > 0.5 ? 20 * heightScalar : 0, // Math.sqrt() * 100 * heightScalar;
+                            ));
                         const soil = new Soil(pos, Math.round(water));
                         return soil;
                     }
@@ -332,6 +343,9 @@ class World {
                 flattenedTiles.push(this.grid[x][y]);
             }
         }
+        if (this.time % 4 < 2) {
+            flattenedTiles.reverse();
+        }
         // switch (this.time % 4) {
         //     case 0:
         //         // start at top-left corner, go down/right
@@ -356,6 +370,7 @@ class World {
 
     // iterate through all the actions
     public step() {
+        this.computeSunlight();
         const entities = this.entities();
         // dear god
         entities.forEach((entity) => {
@@ -366,6 +381,40 @@ class World {
         this.time++;
         this.fillCachedEntities();
         this.checkResources();
+    }
+
+    public computeSunlight() {
+        // sunlight is special - we step downards from the top; neighbors don't affect the calculation so we don't have buffering problems
+        // const directionalBias = Math.cos(this.time / 100);
+        for (let y = 0; y <= height / 2; y++) {
+            for (let x = 0; x < width; x++) {
+                const t = world.tileAt(x, y);
+                if (t instanceof Air) {
+                    let sunlight = 0;
+                    if (y === 0) {
+                        sunlight = 1;
+                    } else {
+                        const tileUp = world.tileAt(x, y - 1);
+                        const tileRight = world.tileAt(x + 1, y - 1);
+                        const tileLeft = world.tileAt(x - 1, y - 1);
+                        const upSunlight = tileUp instanceof Air ? tileUp.sunlightCached : 0;
+                        const rightSunlight = tileRight instanceof Air ? tileRight.sunlightCached : 0;
+                        const leftSunlight = tileLeft instanceof Air ? tileLeft.sunlightCached : 0;
+                        // if (directionalBias > 0) {
+                        //     // light travels to the right
+                        //     sunlight = rightSunlight * directionalBias + upSunlight * (1 - directionalBias);
+                        // } else {
+                        //     sunlight = leftSunlight * -directionalBias + upSunlight * (1 - (-directionalBias));
+                        // }
+                        // sunlight = upSunlight * 0.5 + rightSunlight * 0.25 + leftSunlight * 0.25;
+                        sunlight = (upSunlight + rightSunlight + leftSunlight) / 3;
+                    }
+                    // have at least a bit
+                    sunlight = 0.1 + sunlight * 0.9;
+                    t.sunlightCached = sunlight;
+                }
+            }
+        }
     }
 
     public checkWinLoss(): GameState {
@@ -399,9 +448,9 @@ class World {
     }
 }
 
-function lerp2(v: Vector3, t: {x: number, y: number}, lerp: number) {
-    v.x = v.x * (1 - lerp) + t.x * lerp;
-    v.y = v.y * (1 - lerp) + t.y * lerp;
+function lerp2(v: Vector3, t: {x: number, y: number}, l: number) {
+    v.x = v.x * (1 - l) + t.x * l;
+    v.y = v.y * (1 - l) + t.y * l;
 }
 
 export const world = new World();
@@ -524,7 +573,7 @@ class TileRenderer extends Renderer<Tile> {
         if (hasInventory(this.target)) {
             this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.scene);
             this.inventoryRenderer.init();
-            this.inventoryRenderer.animationOffset = this.target.pos.x + this.target.pos.y;
+            this.inventoryRenderer.animationOffset = (this.target.pos.x + this.target.pos.y) / 2;
             this.object.add(this.inventoryRenderer.object);
         }
         this.scene.add(this.object);
@@ -534,9 +583,14 @@ class TileRenderer extends Renderer<Tile> {
 
     update() {
         lerp2(this.object.scale, new THREE.Vector2(1, 1), 0.1);
-        const darknessAmount = Math.sqrt(Math.min(Math.max(map(this.target.darkness - 1, 0, 2, 0, 1), 0), 1));
+        let lightAmount = Math.sqrt(Math.min(Math.max(map(1 - this.target.darkness, 0, 1, 0, 1), 0), 1));
+        if (this.target instanceof Air) {
+            // lightAmount *= (1 + this.target.sunlight()) / 2;
+            lightAmount = this.target.sunlight();
+            // shadowAmount = this.target.sunlight();
+        }
         const mat = this.mesh.material as MeshBasicMaterial;
-        mat.color = this.originalColor.clone().lerp(new THREE.Color(0), darknessAmount);
+        mat.color = new THREE.Color(0).lerp(this.originalColor, lightAmount);
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
         if (this.target instanceof Cell) {
             if (this.target.metabolism.type === "eating") {
@@ -552,7 +606,7 @@ class TileRenderer extends Renderer<Tile> {
         }
         if (this.inventoryRenderer != null) {
             this.inventoryRenderer.update();
-            if (darknessAmount === 1) {
+            if (lightAmount === 0) {
                 this.inventoryRenderer.object.visible = false;
             } else {
                 this.inventoryRenderer.object.visible = true;
@@ -826,7 +880,8 @@ const Mito = new (class extends ISketch {
             const scalar = Math.pow(2, delta);
             // console.log(currZoom);
             // zoom of 2 is zooming in
-            const newZoom = Math.min(Math.max(currZoom * scalar, 1), 2.5);
+            // const newZoom = Math.min(Math.max(currZoom * scalar, 1), 2.5);
+            const newZoom = currZoom * scalar;
             this.camera.zoom = newZoom;
             this.camera.updateProjectionMatrix();
         },

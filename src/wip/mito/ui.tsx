@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Constructor, GameState } from "./index";
 import { hasInventory } from "./inventory";
-import { Cell, CELL_ENERGY_MAX, hasEnergy, Tile } from "./tile";
+import { Cell, CELL_ENERGY_MAX, hasEnergy, Tile, Leaf, Air } from "./tile";
 
 interface HUDState {
     autoplace: Constructor<Cell> | undefined;
@@ -98,16 +98,19 @@ export class TileHover extends React.Component<{}, HoverState> {
         };
         const energySpan = hasEnergy(tile) ? <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}%</span> : null;
         const inventorySpan = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
-        const foodSpan = tile instanceof Cell ? <span>{JSON.stringify(tile.metabolism, null, 4)}</span> : null;
+        const foodSpan = tile instanceof Cell ? <span>{tile.metabolism.type}</span> : null;
+        const leafReactionFactorSpan = tile instanceof Leaf ? <span>rf: {(tile.lastReactionFactor * 100).toFixed(0)}%</span> : null;
+        const airSpan = tile instanceof Air ? <span>sunlight: {tile.sunlight()}</span> : null;
+        const spans = [energySpan, inventorySpan, foodSpan, leafReactionFactorSpan, airSpan];
+        const children = ([] as JSX.Element[]).concat(
+            ...spans.map((span) => {
+                return span == null ? [] : [<br />, span];
+            }),
+        );
         return (
             <div className="hover" style={style}>
                 {tile.constructor.name} ({tile.pos.x}, {tile.pos.y}) ({tile.darkness})
-                <br />
-                {foodSpan}
-                <br />
-                {energySpan}
-                <br />
-                {inventorySpan}
+                { children }
             </div>
         );
     }

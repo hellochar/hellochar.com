@@ -1,13 +1,14 @@
 import { Vector2 } from "three";
 
-import { Entity, world } from "./index";
+import { Entity, world, height } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
+import { map } from "../../math/index";
 
-export const CELL_ENERGY_MAX = 1000;
-export const ENERGY_TO_SUGAR_RATIO = 1000; // 500 energy per sugar
+export const CELL_ENERGY_MAX = 2000;
+export const ENERGY_TO_SUGAR_RATIO = 2000;
 export const CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
 
-const SOIL_MAX_WATER = 10;
+const SOIL_MAX_WATER = 20;
 
 export interface HasEnergy {
     energy: number;
@@ -28,8 +29,13 @@ export abstract class Tile {
             this.darkness = 0;
         } else {
             const minDarkness = Array.from(neighbors.values()).reduce((d, t) => {
-                const darknessFromNeighbor = t instanceof Rock ? Infinity : t.darkness + 1;
-                return Math.min(d, darknessFromNeighbor);
+                const contrib = Math.max(0.2, map(this.pos.y, height / 2, height, 0.2, 1));
+                const darknessFromNeighbor = t instanceof Rock ? Infinity : t.darkness + contrib;
+                if (t instanceof Cell) {
+                    return 0;
+                } else {
+                    return Math.min(d, darknessFromNeighbor);
+                }
             }, this.darkness);
             this.darkness = minDarkness;
         }
@@ -62,12 +68,22 @@ export abstract class Tile {
 }
 
 export class Air extends Tile {
+    public sunlightCached: number = 1;
+    public constructor(public pos: Vector2) {
+        super(pos);
+        this.darkness = 0;
+    }
+
+    step() {
+        // don't compute dark/light
+    }
+
     public co2() {
-        return 1;
+        return map(this.pos.y, height / 2, 0, 0.1, 1);
     }
 
     public sunlight() {
-        return 1;
+        return this.sunlightCached;
     }
 }
 
@@ -184,9 +200,13 @@ export class Tissue extends Cell implements HasInventory {
 }
 
 export class Leaf extends Cell {
+    public lastReactionFactor = 0;
     public step() {
         super.step();
         const neighbors = world.tileNeighbors(this.pos);
+        this.lastReactionFactor = 0;
+        let numAir = 0;
+
         for (const [dir, tile] of neighbors.entries()) {
             const oppositeTile = world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
             if (tile instanceof Air &&
@@ -195,16 +215,23 @@ export class Leaf extends Cell {
                 const tissue = oppositeTile;
                 // 0 to 1
                 const reactionFactor = air.co2() * air.sunlight();
-                const tissueWater = tissue.inventory.water;
-                // transform only up to 1 at a time
-                // careful this introduces fractional numbers right now - how to fix this?
-                const transform = Math.min(tissueWater, 1) * reactionFactor;
-                if (transform > 0) {
-                    tissue.inventory.water -= transform;
-                    tissue.inventory.sugar += transform;
-                    break; // give max one sugar per turn
+                this.lastReactionFactor += reactionFactor;
+                numAir += 1;
+                if (Math.random() < reactionFactor) {
+                    // transform only up to 1 at a time
+                    // careful this introduces fractional numbers right now - how to fix this?
+                    const tissueWater = tissue.inventory.water;
+                    const transform = Math.min(tissueWater, 1);
+                    if (transform > 0) {
+                        tissue.inventory.water -= transform;
+                        tissue.inventory.sugar += transform;
+                        break; // give max one sugar per turn
+                    }
                 }
             }
+        }
+        if (numAir > 0) {
+            this.lastReactionFactor /= numAir;
         }
     }
 }
