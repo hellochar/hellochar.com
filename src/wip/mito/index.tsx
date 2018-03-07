@@ -7,7 +7,7 @@ import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
-import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, hasEnergy, Leaf, Rock, Root, Seed, Soil, Tile, Tissue } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, hasEnergy, Leaf, Rock, Root, Seed, Soil, Tile, Tissue, Fountain } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
@@ -251,15 +251,20 @@ class World {
                         const simplexScalar = 0.2;
                         // this 0.1 factor makes a *huge* difference
                         const simplexValue = noiseWater.simplex2(x * simplexScalar, y * simplexScalar) + 0.2;
-                        // should be soil_max_water
-                        const water = Math.max(
-                            1,
-                            Math.min(
-                            20,
-                            simplexValue > 0.5 ? 20 * heightScalar : 0, // Math.sqrt() * 100 * heightScalar;
-                            ));
-                        const soil = new Soil(pos, Math.round(water));
-                        return soil;
+                        const water =
+                            Math.round(
+                                Math.max(
+                                    1,
+                                    Math.min(
+                                        // should be soil_max_water, isn't cuz of dependency cycles messing up instantiation
+                                        20,
+                                        simplexValue > 0.5 ? 20 * heightScalar : 0, // Math.sqrt() * 100 * heightScalar;
+                                    )));
+                        if (heightScalar > 0.75 && simplexValue > 1) {
+                            return new Fountain(pos, water);
+                        } else {
+                            return new Soil(pos, water);
+                        }
                     }
                 } else {
                     return new Air(pos);
@@ -517,6 +522,10 @@ materialMapping.set(Soil, new MeshBasicMaterial({
     // color: new Color(0x808080),
     color: new Color(0x554321),
 }));
+materialMapping.set(Fountain, new MeshBasicMaterial({
+    map: textureFromSpritesheet(56 / 16, 38 / 16),
+    side: THREE.DoubleSide,
+}));
 materialMapping.set(Rock, new MeshBasicMaterial({
     map: textureFromSpritesheet(26, 20),
     side: THREE.DoubleSide,
@@ -595,7 +604,8 @@ class TileRenderer extends Renderer<Tile> {
 
     update() {
         lerp2(this.object.scale, new THREE.Vector2(1, 1), 0.1);
-        let lightAmount = Math.sqrt(Math.min(Math.max(map(1 - this.target.darkness, 0, 1, 0, 1), 0), 1));
+        // let lightAmount = Math.sqrt(Math.min(Math.max(map(1 - this.target.darkness, 0, 1, 0, 1), 0), 1));
+        let lightAmount = 1;
         if (this.target instanceof Air) {
             // lightAmount *= (1 + this.target.sunlight()) / 2;
             lightAmount = this.target.sunlight();
@@ -702,8 +712,8 @@ class InventoryRenderer extends Renderer<Inventory> {
             const angle = performance.now() / 3000 + this.animationOffset;
             vel.x += Math.cos(angle) * 0.2;
             // vel.y += Math.sin(performance.now() / 3000) * 0.1;
-            const pullStrength = 0.1 + vel.length() * 0.1;
-            vel.multiplyScalar(-pullStrength);
+            const goTowardsCenterStrength = 0.1 + vel.length() * 0.1;
+            vel.multiplyScalar(-goTowardsCenterStrength);
             for (const l of resources) {
                 if (r === l) {
                     break;
@@ -711,7 +721,7 @@ class InventoryRenderer extends Renderer<Inventory> {
                 const offset = r.position.clone().sub(l.position);
                 const lengthSq = offset.lengthSq();
                 if (lengthSq > 0) {
-                    const strength = 0.005 / lengthSq;
+                    const strength = 0.003 / lengthSq;
                     vel.add(offset.multiplyScalar(strength));
                 }
             }
@@ -835,12 +845,12 @@ const Mito = new (class extends ISketch {
         mousemove: (event: JQuery.Event) => {
             this.mouse.x = event.clientX!;
             this.mouse.y = event.clientY!;
-            this.hoverRef.setState({
-                left: this.mouse.x,
-                top: this.mouse.y,
-            });
-            // this.mouse.x = event.clientX! / this.canvas.width * 2 - 1;
-            // this.mouse.y = -event.clientY! / this.canvas.height * 2 + 1;
+            if (this.hoverRef != null) {
+                this.hoverRef.setState({
+                    left: this.mouse.x,
+                    top: this.mouse.y,
+                });
+            }
         },
         click: (event: JQuery.Event) => {
             this.hoverRef.setState({

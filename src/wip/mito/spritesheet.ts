@@ -16,6 +16,8 @@ const SPRITESHEET = new THREE.TextureLoader().load( '/assets/images/roguelikeShe
 const cache: { [key: string]: THREE.Texture } = {};
 // x, y are spritesheet coordinates, starting top-left and going down/right
 export function textureFromSpritesheet(x: number, y: number, backgroundColor = "white") {
+    x = Math.floor(x);
+    y = Math.floor(y);
     const key = `${x},${y}`;
     if (cache[key] == null) {
         const canvas = $("<canvas>").attr("width", 16).attr("height", 16)[0] as HTMLCanvasElement;

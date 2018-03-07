@@ -99,6 +99,16 @@ export class Rock extends Tile {}
 
 export class DeadCell extends Tile {}
 
+export class Fountain extends Soil {
+    step() {
+        super.step();
+        if (this.inventory.space() > 1) {
+            // just constantly give yourself water
+            this.inventory.change(1, 0);
+        }
+    }
+}
+
 interface MetabolismState {
     type: "eating" | "not-eating";
     duration: number;
@@ -267,9 +277,9 @@ export class Cell extends Tile implements HasEnergy {
             droopSum += right.droopY;
             num++;
         }
-        // special case - if there's no support and nothing below me, just totally fall
+        // special case - if there's no support and nothing below me, just start freefalling
         if (!hasSupportBelow && num === 1) {
-            this.droopY = 1;
+            this.droopY += 0.5;
         } else {
             this.droopY = droopSum / num;
         }
