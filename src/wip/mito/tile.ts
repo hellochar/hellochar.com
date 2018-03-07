@@ -371,3 +371,15 @@ export class Seed extends Cell {
         }
     }
 }
+
+export class Transport extends Tissue {
+    public dir: Vector2 = DIRECTIONS.n;
+
+    step() {
+        super.step();
+        const targetTile = world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
+        if (targetTile instanceof Cell && hasInventory(targetTile)) {
+            this.inventory.give(targetTile.inventory, 1, 1);
+        }
+    }
+}

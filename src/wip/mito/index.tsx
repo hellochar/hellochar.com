@@ -2,12 +2,13 @@ import * as React from "react";
 import * as THREE from "three";
 import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
+import { BufferAttribute } from "three";
 import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
-import { textureFromSpritesheet } from "./spritesheet";
-import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, hasEnergy, Leaf, Rock, Root, Seed, Soil, Tile, Tissue, Fountain } from "./tile";
+import { arrowUpMaterial, textureFromSpritesheet } from "./spritesheet";
+import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, hasEnergy, Leaf, Rock, Root, Seed, Soil, Tile, Tissue, Transport } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
@@ -39,13 +40,20 @@ interface ActionBuild {
     position: Vector2;
 }
 
+interface ActionBuildTransport {
+    type: "build-transport";
+    cellType: Constructor<Transport>;
+    position: Vector2;
+    dir: Vector2;
+}
+
 interface ActionDrop {
     type: "drop";
     water: number;
     sugar: number;
 }
 
-type Action = ActionStill | ActionMove | ActionBuild | ActionDrop;
+type Action = ActionStill | ActionMove | ActionBuild | ActionBuildTransport | ActionDrop;
 
 class Player {
     public inventory = new Inventory(100, 50, 50);
@@ -58,6 +66,14 @@ class Player {
         }
         this.attemptAction(this.action);
         this.action = undefined;
+        const tile = world.tileAt(this.pos.x, this.pos.y);
+        if (tile instanceof Transport) {
+            const action: ActionMove = {
+                type: "move",
+                dir: tile.dir,
+            };
+            this.attemptAction(action);
+        }
     }
 
     public attemptAction(action: Action) {
@@ -70,6 +86,9 @@ class Player {
                 break;
             case "build":
                 this.attemptBuild(action);
+                break;
+            case "build-transport":
+                this.attemptBuildTransport(action);
                 break;
             case "drop":
                 this.attemptDrop(action);
@@ -109,17 +128,12 @@ class Player {
         }
     }
 
-    public attemptBuild(action: ActionBuild) {
-        // if (this.pos.clone().sub(action.position).manhattanLength)
-        // attempt to build. something.
-        // just make every cell cost 25 water and 10 sugar for now
-        // const waterCost = 25;
-        // const sugarCost = 10;
-
-        const targetTile = world.tileAt(action.position.x, action.position.y);
+    public tryConstructingNewCell<T>(position: Vector2, cellType: Constructor<T>) {
+        const targetTile = world.tileAt(position.x, position.y);
 
         // disallow building a seed if there already is one
-        if (world.seed != null && action.cellType === Seed) {
+        // todo fix typings on constructor vs typeof
+        if (world.seed != null && (cellType as any) === Seed) {
             return;
         }
 
@@ -130,16 +144,33 @@ class Player {
 
         const waterCost = 1;
         const sugarCost = CELL_SUGAR_BUILD_COST;
-        if (!(targetTile instanceof action.cellType) &&
+        if (!(targetTile instanceof cellType) &&
             !(targetTile instanceof Rock) &&
             this.inventory.water >= waterCost &&
             this.inventory.sugar >= sugarCost) {
-            const newTile = new action.cellType(action.position);
-            world.setTileAt(action.position, newTile);
             this.inventory.change(-waterCost, -sugarCost);
-            if (world.seed == null && newTile instanceof Seed) {
-                world.seed = newTile;
+            const newTile = new cellType(position);
+            return newTile;
+        } else {
+            return undefined;
+        }
+    }
+
+    public attemptBuild(action: ActionBuild) {
+        const newCell = this.tryConstructingNewCell(action.position, action.cellType);
+        if (newCell != null) {
+            world.setTileAt(action.position, newCell);
+            if (world.seed == null && newCell instanceof Seed) {
+                world.seed = newCell;
             }
+        }
+    }
+
+    public attemptBuildTransport(action: ActionBuildTransport) {
+        const newCell = this.tryConstructingNewCell(action.position, action.cellType);
+        if (newCell != null) {
+            newCell.dir = action.dir;
+            world.setTileAt(action.position, newCell);
         }
     }
 
@@ -236,7 +267,7 @@ class World {
                 const pos = new Vector2(x, y);
                 const soilLevel =
                     height / 2
-                    - 8 * (noiseHeight.perlin2(0, x / 5) + 1) / 2
+                    - 4 * (noiseHeight.perlin2(0, x / 5) + 1) / 2
                     - 16 * (noiseHeight.perlin2(10, x / 20 + 10))
                     ;
                 if (y > soilLevel) {
@@ -540,6 +571,12 @@ materialMapping.set(Tissue, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     color: new Color(0x30ae25),
 }));
+materialMapping.set(Transport, materialMapping.get(Tissue)!);
+// materialMapping.set(Transport, new MeshBasicMaterial({
+//     map: arrowUpMaterial(),
+//     side: THREE.DoubleSide,
+//     color: new THREE.Color("rgb(42, 138, 25)"),
+// }));
 materialMapping.set(Leaf, new MeshBasicMaterial({
     map: textureFromSpritesheet(9, 31),
     // map: textureFromSpritesheet(16, 10),
@@ -566,7 +603,7 @@ class TileRenderer extends Renderer<Tile> {
     public object = new Object3D();
     public mesh: Mesh;
     static geometry = new PlaneBufferGeometry(1, 1);
-    static eatingMaterial = new THREE.MeshBasicMaterial({
+    static eatingMaterial = new MeshBasicMaterial({
         side: THREE.DoubleSide,
         map: textureFromSpritesheet(53, 28, "transparent"),
         transparent: true,
@@ -582,8 +619,10 @@ class TileRenderer extends Renderer<Tile> {
 
     init() {
         const mat = getMaterial(this.target) as MeshBasicMaterial;
+        // const geom = (this.target instanceof Transport) ? TileRenderer.geometry.clone() : TileRenderer.geometry;
+        const geom = TileRenderer.geometry;
         this.mesh = new Mesh(
-            TileRenderer.geometry,
+            geom,
             mat,
         );
         this.eatingMesh.position.set(0, 0.4, 0);
@@ -600,12 +639,26 @@ class TileRenderer extends Renderer<Tile> {
         this.scene.add(this.object);
         // for now
         this.object.scale.set(0.01, 0.01, 1);
+
+        if (this.target instanceof Transport) {
+            const dir = new Vector3(this.target.dir.x, this.target.dir.y, 0).normalize();
+            const length = 0.3;
+            const start = new Vector3(dir.x * -length / 2, dir.y * -length / 2, 0.1);
+            const arrow = new THREE.ArrowHelper(
+                dir,
+                start,
+                length,
+                0xffffff,
+                0.1,
+                0.1);
+            this.object.add(arrow);
+        }
     }
 
     update() {
         lerp2(this.object.scale, new THREE.Vector2(1, 1), 0.1);
-        // let lightAmount = Math.sqrt(Math.min(Math.max(map(1 - this.target.darkness, 0, 1, 0, 1), 0), 1));
-        let lightAmount = 1;
+        let lightAmount = Math.sqrt(Math.min(Math.max(map(1 - this.target.darkness, 0, 1, 0, 1), 0), 1));
+        // let lightAmount = 1;
         if (this.target instanceof Air) {
             // lightAmount *= (1 + this.target.sunlight()) / 2;
             lightAmount = this.target.sunlight();
@@ -624,6 +677,16 @@ class TileRenderer extends Renderer<Tile> {
             } else {
                 this.object.remove(this.eatingMesh);
             }
+
+            // if (this.target instanceof Transport) {
+            //     const geom = this.mesh.geometry as PlaneBufferGeometry;
+            //     const uvs = geom.getAttribute("uv") as BufferAttribute;
+            //     uvs.setDynamic(true);
+            //     for (let i = 0; i < uvs.count; i++) {
+            //         uvs.setX(i, uvs.getX(i) + this.target.dir.x * 0.01);
+            //         uvs.setY(i, uvs.getY(i) + this.target.dir.y * 0.01);
+            //     }
+            // }
         }
         if (hasEnergy(this.target)) {
             this.mesh.material.transparent = true;
@@ -818,8 +881,6 @@ const ACTION_KEYMAP: { [key: string]: Action } = {
     },
 };
 
-const AUTOPLACE_LIST: Array<Constructor<Cell> | undefined> = [undefined, Tissue, Leaf, Root];
-
 export type GameState = "main" | "win" | "lose";
 
 const Mito = new (class extends ISketch {
@@ -862,15 +923,23 @@ const Mito = new (class extends ISketch {
             const action = ACTION_KEYMAP[key];
             if (action != null) {
                 // autoplace
-                if (this.autoplace !== undefined
-                    && action.type === "move"
-                    && !world.player.verifyMove(action)) {
-                        const buildTissueAction: ActionBuild = {
+                if (this.autoplace !== undefined && action.type === "move") {
+                    if (this.autoplace === Transport) {
+                        const buildTransportAction: ActionBuildTransport = {
+                            type: "build-transport",
+                            cellType: Transport,
+                            position: world.player.pos.clone(),
+                            dir: action.dir,
+                        };
+                        world.player.action = buildTransportAction;
+                    } else if (!world.player.verifyMove(action)) {
+                        const buildAction: ActionBuild = {
                             type: "build",
                             cellType: this.autoplace,
                             position: world.player.pos.clone().add(action.dir),
                         };
-                        world.player.action = buildTissueAction;
+                        world.player.action = buildAction;
+                    }
                 } else {
                     world.player.action = action;
                 }
@@ -878,9 +947,9 @@ const Mito = new (class extends ISketch {
                 // go into autoplace tissue
                 if (key === 't') {
                     this.autoplace = Tissue;
-                    // const currAutoplaceIndex = AUTOPLACE_LIST.indexOf(this.autoplace);
-                    // const nextIndex = (currAutoplaceIndex + 1) % AUTOPLACE_LIST.length;
-                    // this.autoplace = AUTOPLACE_LIST[nextIndex];
+                    this.hudRef.setState({ autoplace: this.autoplace });
+                } else if (key === 'T') {
+                    this.autoplace = Transport;
                     this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === 'l') {
                     this.autoplace = Leaf;
@@ -952,23 +1021,24 @@ const Mito = new (class extends ISketch {
         if (world.player.action != null) {
             world.step();
             this.gameState = world.checkWinLoss();
+
+            const oldEntities = Array.from(this.renderers.keys());
+            // delete the renderers for entities that have been removed since last render
+            // this is the performance bottleneck, it's O(n^2)
+            const removedEntities = oldEntities.filter((e) => world.entities().indexOf(e) === -1);
+            for (const e of removedEntities) {
+                const renderer = this.renderers.get(e);
+                if (renderer == null) {
+                    throw new Error(`Couldn't find renderer for ${e}!`);
+                }
+                renderer.destroy();
+                this.renderers.delete(e);
+            }
         }
         // if (world.player.action == null) {
         //     world.player.action = { type: "still" };
         // }
         // world.step();
-        const oldEntities = Array.from(this.renderers.keys());
-        // delete the renderers for entities that have been removed since last render
-        // this is the performance bottleneck, it's O(n^2)
-        const removedEntities = oldEntities.filter((e) => world.entities().indexOf(e) === -1);
-        for (const e of removedEntities) {
-            const renderer = this.renderers.get(e);
-            if (renderer == null) {
-                throw new Error(`Couldn't find renderer for ${e}!`);
-            }
-            renderer.destroy();
-            this.renderers.delete(e);
-        }
         world.entities().forEach((entity) => {
             const renderer = this.getOrCreateRenderer(entity);
             renderer.update();

@@ -24,6 +24,8 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
         const texture = new THREE.Texture(canvas);
         texture.magFilter = THREE.NearestFilter;
         texture.flipY = true;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
         SPRITESHEET.addEventListener("update", () => {
             const image = SPRITESHEET.image;
             const context = canvas.getContext("2d")!;
@@ -55,29 +57,9 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
     return cache[key];
 }
 
-// export function getOpaqueMaterialAt(x: number, y: number, tileSet: string) {
-//     var key = x + "," + y;
-//     if (materialCache[key]) {
-//         return materialCache[key];
-//     }
-
-//     var texture = new THREE.Texture(canvas);
-//     texture.magFilter = THREE.NearestFilter;
-//     texture.wrapS = THREE.RepeatWrapping;
-//     texture.wrapT = THREE.RepeatWrapping;
-
-//     var sourceTexture = MATERIALS[tileSet].map;
-//     sourceTexture.addEventListener("update", () => {
-//         var image = sourceTexture.image;
-//         var context = canvas.getContext("2d");
-//         context.drawImage(image, 16 * x, image.height - 16 * y - 16, 16, 16, 0, 0, 16, 16);
-//         texture.needsUpdate = true;
-//     });
-
-//     var material = new THREE.MeshBasicMaterial({
-//         map: texture,
-//         side: THREE.DoubleSide
-//     });
-//     materialCache[key] = material;
-//     return material;
-// }
+const ARROW_UP = new THREE.TextureLoader().load( '/assets/images/arrow_up16x16.png' );
+ARROW_UP.magFilter = THREE.NearestFilter;
+ARROW_UP.flipY = true;
+export function arrowUpMaterial() {
+    return ARROW_UP;
+}
