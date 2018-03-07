@@ -44,18 +44,19 @@ export abstract class Tile {
             this.darkness = minDarkness;
         }
         if (hasInventory(this)) {
-            const neighborsWithInventory =
+            const self = this;
+            const neighborsWithMore =
                 Array.from(neighbors.values()).filter((tile) => {
-                    return hasInventory(tile) && tile.constructor === this.constructor;
+                    return hasInventory(tile) && tile.constructor === this.constructor && tile.inventory.water > self.inventory.water;
                 }) as any as HasInventory[];
 
-            let avgWater = this.inventory.water;
-            neighborsWithInventory.forEach((tile) => {
-                avgWater += tile.inventory.water;
-            });
-            avgWater /= (neighborsWithInventory.length + 1);
+            // let avgWater = this.inventory.water;
+            // neighborsWithInventory.forEach((tile) => {
+            //     avgWater += tile.inventory.water;
+            // });
+            // avgWater /= (neighborsWithInventory.length + 1);
 
-            for (const tile of neighborsWithInventory) {
+            for (const tile of neighborsWithMore) {
                 // // give water to neighbors that you're less than
                 // if (tile.inventory.water < avgWater) {
                 //     const diff = Math.floor((avgWater - tile.inventory.water) / (neighborsWithInventory.length + 1));
@@ -63,7 +64,8 @@ export abstract class Tile {
                 // }
                 // take water from neighbors that you're bigger than
                 if (tile.inventory.water > this.inventory.water) {
-                    const diff = Math.floor((tile.inventory.water - this.inventory.water) / (neighborsWithInventory.length + 1));
+                    const diff = Math.floor((tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1));
+                    // const diff = Math.floor((tile.inventory.water - this.inventory.water) / 2);
                     tile.inventory.give(this.inventory, diff, 0);
                 }
             }
