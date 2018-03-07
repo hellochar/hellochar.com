@@ -22,6 +22,10 @@ export abstract class Tile {
     public darkness = Infinity;
     public constructor(public pos: Vector2) {}
 
+    public lightAmount() {
+        return Math.sqrt(Math.min(Math.max(map(1 - this.darkness, 0, 1, 0, 1), 0), 1));
+    }
+
     // test tiles diffusing water around on same-type tiles
     public step() {
         const neighbors = world.tileNeighbors(this.pos);
@@ -72,6 +76,10 @@ export class Air extends Tile {
     public constructor(public pos: Vector2) {
         super(pos);
         this.darkness = 0;
+    }
+
+    public lightAmount() {
+        return this.sunlight();
     }
 
     step() {

@@ -60,6 +60,16 @@ class Player {
     public action?: Action;
     public constructor(public pos: Vector2) {}
 
+    public droopPos() {
+        const tile = world.tileAt(this.pos.x, this.pos.y);
+        if (tile instanceof Cell) {
+            const t = this.pos.clone();
+            t.y += tile.droopY;
+            return t;
+        }
+        return this.pos;
+    }
+
     public step() {
         if (this.action === undefined) {
             throw new Error("tried stepping player before action was filled in!");
@@ -532,7 +542,7 @@ class PlayerRenderer extends Renderer<Player> {
     }
 
     update() {
-        lerp2(this.mesh.position, this.target.pos, 0.5);
+        lerp2(this.mesh.position, this.target.droopPos(), 0.5);
         this.mesh.position.z = 2;
     }
 
@@ -563,6 +573,7 @@ materialMapping.set(Rock, new MeshBasicMaterial({
     color: new Color("rgb(63, 77, 84)"),
 }));
 materialMapping.set(DeadCell, new MeshBasicMaterial({
+    map: textureFromSpritesheet(137 / 16, 374 / 16),
     side: THREE.DoubleSide,
     color: new Color("rgb(128, 128, 128)"),
 }));
@@ -638,7 +649,9 @@ class TileRenderer extends Renderer<Tile> {
         }
         this.scene.add(this.object);
         // for now
-        this.object.scale.set(0.01, 0.01, 1);
+        if (this.target instanceof Cell) {
+            this.object.scale.set(0.01, 0.01, 1);
+        }
 
         if (this.target instanceof Transport) {
             const dir = new Vector3(this.target.dir.x, this.target.dir.y, 0).normalize();
@@ -657,13 +670,7 @@ class TileRenderer extends Renderer<Tile> {
 
     update() {
         lerp2(this.object.scale, new THREE.Vector2(1, 1), 0.1);
-        let lightAmount = Math.sqrt(Math.min(Math.max(map(1 - this.target.darkness, 0, 1, 0, 1), 0), 1));
-        // let lightAmount = 1;
-        if (this.target instanceof Air) {
-            // lightAmount *= (1 + this.target.sunlight()) / 2;
-            lightAmount = this.target.sunlight();
-            // shadowAmount = this.target.sunlight();
-        }
+        const lightAmount = this.target.lightAmount();
         const mat = this.mesh.material as MeshBasicMaterial;
         mat.color = new THREE.Color(0).lerp(this.originalColor, lightAmount);
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
@@ -689,8 +696,9 @@ class TileRenderer extends Renderer<Tile> {
             // }
         }
         if (hasEnergy(this.target)) {
-            this.mesh.material.transparent = true;
-            this.mesh.material.opacity = this.target.energy / CELL_ENERGY_MAX;
+            mat.color.lerp(new THREE.Color(0), 1 - this.target.energy / CELL_ENERGY_MAX);
+            // this.mesh.material.transparent = true;
+            // this.mesh.material.opacity = this.target.energy / CELL_ENERGY_MAX;
         }
         if (this.inventoryRenderer != null) {
             this.inventoryRenderer.update();
@@ -898,7 +906,7 @@ const Mito = new (class extends ISketch {
     public hoverRef: TileHover;
     public gameStackRef: GameStack;
     public mouse = new THREE.Vector2();
-    public hoveredTile: Tile;
+    public hoveredTile?: Tile;
     private raycaster = new THREE.Raycaster();
     public gameState: GameState = "main";
 
@@ -939,6 +947,11 @@ const Mito = new (class extends ISketch {
                             position: world.player.pos.clone().add(action.dir),
                         };
                         world.player.action = buildAction;
+                        if (this.autoplace === Root || this.autoplace === Leaf) {
+                            this.autoplace = undefined;
+                        }
+                    } else {
+                        world.player.action = action;
                     }
                 } else {
                     world.player.action = action;
@@ -947,24 +960,19 @@ const Mito = new (class extends ISketch {
                 // go into autoplace tissue
                 if (key === 't') {
                     this.autoplace = Tissue;
-                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === 'T') {
                     this.autoplace = Transport;
-                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === 'l') {
                     this.autoplace = Leaf;
-                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === 'r') {
                     this.autoplace = Root;
-                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === 'f') {
                     this.autoplace = Seed;
-                    this.hudRef.setState({ autoplace: this.autoplace });
                 } else if (key === ' ') {
                     this.autoplace = undefined;
-                    this.hudRef.setState({ autoplace: this.autoplace });
                 }
             }
+            this.hudRef.setState({ autoplace: this.autoplace });
         },
         wheel: (event: JQuery.Event) => {
             const e = event.originalEvent as WheelEvent;
@@ -1066,12 +1074,11 @@ const Mito = new (class extends ISketch {
             const ix = Math.round(x);
             const iy = Math.round(y);
             const thisHoveredTile = world.tileAt(ix, iy);
-            if (thisHoveredTile !== this.hoveredTile) {
-                // this.hoverRef.setState({
-                    // show: true,
-                // });
+            if (thisHoveredTile.lightAmount() === 0) {
+                this.hoveredTile = undefined;
+            } else {
+                this.hoveredTile = thisHoveredTile;
             }
-            this.hoveredTile = thisHoveredTile;
             this.hoverRef.setState({
                 tile: this.hoveredTile,
             });

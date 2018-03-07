@@ -82,31 +82,36 @@ export class TileHover extends React.Component<{}, HoverState> {
     };
 
     public render() {
-        const {tile, left, top} = this.state;
-        if (tile == null || !this.state.show) {
+        const {tile, left, top, show} = this.state;
+        if (!show) {
             return null;
         }
         const style: React.CSSProperties = {
             left: left,
             top: top,
             width: "120px",
+            minHeight: "25px",
             position: "fixed",
             background: "rgba(255, 255, 255, 0.8)",
             pointerEvents: "none",
             borderRadius: 2,
             border: "1px solid rgb(220, 220, 220)",
         };
-        const energySpan = hasEnergy(tile) ? <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}%</span> : null;
-        const inventorySpan = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
-        const foodSpan = tile instanceof Cell ? <span>{tile.metabolism.type}, {tile.droopY}</span> : null;
-        const leafReactionFactorSpan = tile instanceof Leaf ? (
+        if (tile == null) {
+            return <div className="hover" style={style}>Unknown</div>;
+        }
+
+        const energyInfo = hasEnergy(tile) ? <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}%</span> : null;
+        const inventoryInfo = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
+        const cellInfo = tile instanceof Cell ? <span>{tile.metabolism.type}, {(tile.droopY * 200).toFixed(0)}% droop</span> : null;
+        const leafInfo = tile instanceof Leaf ? (
             <div>
                 <div>{(1 / (tile.averageSpeed * LEAF_MAX_CHANCE)).toFixed(0)} turns per reaction</div>
                 <div>{(1 / tile.averageEfficiency).toFixed(2)} water per sugar</div>
             </div>
         ) : null;
         const airSpan = tile instanceof Air ? <span>sunlight: {(tile.sunlight() * 100).toFixed(0)}%, co2: {(tile.co2() * 100).toFixed(0)}%</span> : null;
-        const spans = [energySpan, inventorySpan, foodSpan, leafReactionFactorSpan, airSpan];
+        const spans = [energyInfo, inventoryInfo, cellInfo, leafInfo, airSpan];
         const children = ([] as JSX.Element[]).concat(
             ...spans.map((span) => {
                 return span == null ? [] : [<br />, span];
