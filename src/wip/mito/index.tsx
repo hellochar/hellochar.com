@@ -2,7 +2,7 @@ import * as React from "react";
 import * as THREE from "three";
 import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
-import { map, lerp } from "../../math/index";
+import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
@@ -155,7 +155,7 @@ class Player {
 
 export const width = 50;
 export const height = 100;
-const DIRECTIONS = {
+export const DIRECTIONS = {
     nw: new Vector2(-1, -1),
     w : new Vector2(-1,  0),
     sw: new Vector2(-1, +1),
@@ -167,10 +167,10 @@ const DIRECTIONS = {
     se: new Vector2(+1, +1),
 };
 
-type Directions = keyof typeof DIRECTIONS;
+export type Directions = keyof typeof DIRECTIONS;
 
-const DIRECTION_NAMES = Object.keys(DIRECTIONS) as Directions[];
-const DIRECTION_VALUES: Vector2[] = DIRECTION_NAMES.map((o) => DIRECTIONS[o]);
+export const DIRECTION_NAMES = Object.keys(DIRECTIONS) as Directions[];
+export const DIRECTION_VALUES: Vector2[] = DIRECTION_NAMES.map((o) => DIRECTIONS[o]);
 const DIRECTION_VALUES_RAND = [
     shuffle(DIRECTION_VALUES.slice()),
     shuffle(DIRECTION_VALUES.slice()),
@@ -371,7 +371,7 @@ class World {
         //         flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse().map((col) => col.slice().reverse()));
         //         break;
         // }
-        const newEntities = ([] as Entity[]).concat(flattenedTiles, [this.player]);
+        const newEntities = ([this.player] as Entity[]).concat(flattenedTiles);
         this.cachedEntities = newEntities;
     }
 
@@ -392,7 +392,7 @@ class World {
 
     public computeSunlight() {
         // sunlight is special - we step downards from the top; neighbors don't affect the calculation so we don't have buffering problems
-        // const directionalBias = Math.cos(this.time / 100);
+        const directionalBias = Math.cos(this.time * Math.PI * 2 / 2000);
         for (let y = 0; y <= height * 0.6; y++) {
             for (let x = 0; x < width; x++) {
                 const t = world.tileAt(x, y);
@@ -407,14 +407,14 @@ class World {
                         const upSunlight = tileUp instanceof Air ? tileUp.sunlightCached : 0;
                         const rightSunlight = tileRight instanceof Air ? tileRight.sunlightCached : 0;
                         const leftSunlight = tileLeft instanceof Air ? tileLeft.sunlightCached : 0;
-                        // if (directionalBias > 0) {
-                        //     // light travels to the right
-                        //     sunlight = rightSunlight * directionalBias + upSunlight * (1 - directionalBias);
-                        // } else {
-                        //     sunlight = leftSunlight * -directionalBias + upSunlight * (1 - (-directionalBias));
-                        // }
+                        if (directionalBias > 0) {
+                            // light travels to the right
+                            sunlight = rightSunlight * directionalBias + upSunlight * (1 - directionalBias);
+                        } else {
+                            sunlight = leftSunlight * -directionalBias + upSunlight * (1 - (-directionalBias));
+                        }
                         // sunlight = upSunlight * 0.5 + rightSunlight * 0.25 + leftSunlight * 0.25;
-                        sunlight = (upSunlight + rightSunlight + leftSunlight) / 3;
+                        sunlight = sunlight * 0.5 + ((upSunlight + rightSunlight + leftSunlight) / 3) * 0.5;
                     }
                     // have at least a bit
                     sunlight = 0.03 + sunlight * 0.97;
@@ -424,10 +424,10 @@ class World {
         }
     }
 
-    public computeStress() {
-        // each cell looks at their neighboring 8 cells and tries to give their stress to the neighbor
-        // if the neighbor is soil or rock, it's 100% free
-    }
+    // public computeStress() {
+    //     // each cell looks at their neighboring 8 cells and tries to give their stress to the neighbor
+    //     // if the neighbor is soil or rock, it's 100% free
+    // }
 
     public checkWinLoss(): GameState {
         // you win if there's a seed with full capacity
@@ -605,6 +605,9 @@ class TileRenderer extends Renderer<Tile> {
         mat.color = new THREE.Color(0).lerp(this.originalColor, lightAmount);
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
         if (this.target instanceof Cell) {
+            // this.object.position.x += this.target.offset.x;
+            // this.object.position.y += this.target.offset.y;
+            this.object.position.y += this.target.droopY;
             if (this.target.metabolism.type === "eating") {
                 this.eatingMesh.position.z = 1;
                 this.object.add(this.eatingMesh);
@@ -913,6 +916,14 @@ const Mito = new (class extends ISketch {
         this.gameState = "main";
         this.camera.position.x = world.player.pos.x;
         this.camera.position.y = world.player.pos.y;
+
+        const airBg = new THREE.Mesh(
+            new PlaneBufferGeometry(width, height),
+            materialMapping.get(Air)!.clone(),
+        );
+        airBg.position.x = width / 2 - 0.5;
+        airBg.position.y = height / 2 - 0.5;
+        this.scene.add(airBg);
     }
 
     public getOrCreateRenderer(entity: Entity) {

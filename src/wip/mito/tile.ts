@@ -1,7 +1,7 @@
 import { Vector2 } from "three";
 
 import { map } from "../../math/index";
-import { Entity, height, world } from "./index";
+import { DIRECTIONS, Entity, height, world } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 
 export const CELL_ENERGY_MAX = 2000;
@@ -75,11 +75,11 @@ export class Air extends Tile {
     }
 
     step() {
-        // don't compute dark/light
+        // don't compute dark/light or water diffusion
     }
 
     public co2() {
-        return map(this.pos.y, height / 2, 0, 0.1, 1);
+        return map(this.pos.y, height / 2, 0, 0.5, 1);
     }
 
     public sunlight() {
@@ -110,7 +110,9 @@ export class Cell extends Tile implements HasEnergy {
         type: "not-eating",
         duration: 0,
     };
-    public stress = new Vector2();
+    // offset [-0.5, 0.5] means you're still "inside" this cell, going out of it will break you
+    // public offset = new Vector2();
+    public droopY = 0;
 
     private stepMetabolism() {
         // transition from not eating to eating
@@ -137,7 +139,8 @@ export class Cell extends Tile implements HasEnergy {
     step() {
         super.step();
         this.energy -= 1;
-        const neighbors = Array.from(world.tileNeighbors(this.pos).values());
+        const tileNeighbors = world.tileNeighbors(this.pos);
+        const neighbors = Array.from(tileNeighbors.values());
         const neighborsAndSelf = [ ...neighbors, this ];
         this.stepMetabolism();
         if (this.metabolism.type === "eating") {
@@ -190,11 +193,85 @@ export class Cell extends Tile implements HasEnergy {
             }
         }
 
-        // this.stepStress();
+        // this.stepStress(tileNeighbors);
+        this.stepDroop(tileNeighbors);
+        if (this.droopY > 0.5) {
+            world.setTileAt(this.pos, new Air(this.pos.clone()));
+            this.pos.y += 1;
+            this.droopY -= 1;
+            // lol whatever lets just test it out
+            world.setTileAt(this.pos, this);
+        }
 
         if (this.energy <= 0) {
             // die
             world.setTileAt(this.pos, new DeadCell(this.pos));
+        }
+    }
+
+    // stepStress(tileNeighbors: Map<Vector2, Tile>) {
+    //     // start with +y down for gravity
+    //     const totalForce = new Vector2(0, 1);
+    //     // pretend like you're spring connected to nearby cells,
+    //     // and find the equilibrium position as your offset
+    //     for (const [dir, neighbor] of tileNeighbors) {
+    //         let springTightness = 0;
+    //         // neighbor's world position
+    //         let neighborX = neighbor.pos.x,
+    //             neighborY = neighbor.pos.y;
+    //         if (neighbor instanceof Cell) {
+    //             neighborX += neighbor.offset.x;
+    //             neighborY += neighbor.offset.y;
+    //             springTightness = 0.1;
+    //         } else if (neighbor instanceof Rock || neighbor instanceof Soil) {
+    //             springTightness = 1;
+    //         }
+    //         const offX = this.pos.x + this.offset.x - neighborX;
+    //         const offY = this.pos.y + this.offset.y - neighborY;
+    //         // world offset
+    //         const offset = new Vector2(offX, offY);
+    //         totalForce.x += offX * springTightness;
+    //         totalForce.y += offY * springTightness;
+    //     }
+
+    //     this.offset.x += totalForce.x * 0.01;
+    //     this.offset.y += totalForce.y * 0.01;
+    // }
+
+    stepDroop(tileNeighbors: Map<Vector2, Tile>) {
+        const below = tileNeighbors.get(DIRECTIONS.s)!;
+        const belowLeft = tileNeighbors.get(DIRECTIONS.sw)!;
+        const belowRight = tileNeighbors.get(DIRECTIONS.se)!;
+        const left = tileNeighbors.get(DIRECTIONS.w)!;
+        const right = tileNeighbors.get(DIRECTIONS.e)!;
+
+        this.droopY += 0.04;
+
+        let hasSupportBelow = false;
+        for (const cell of [below, belowLeft, belowRight]) {
+            if (cell instanceof Rock || cell instanceof Soil) {
+                this.droopY = 0;
+                return;
+            } else if (cell instanceof Cell) {
+                this.droopY = Math.min(this.droopY, cell.droopY);
+                hasSupportBelow = true;
+            }
+        }
+        let droopSum = this.droopY;
+        let num = 1;
+        if (left instanceof Cell) {
+            droopSum += left.droopY;
+            num++;
+        }
+        if (right instanceof Cell) {
+            droopSum += right.droopY;
+            num++;
+        }
+        // special case - if there's no support and nothing below me, just totally fall
+        if (!hasSupportBelow && num === 1) {
+            this.droopY = 1;
+        } else {
+            this.droopY = droopSum / num;
         }
     }
 }
@@ -228,11 +305,12 @@ export class Leaf extends Cell {
                 numAir += 1;
                 if (Math.random() < speed * LEAF_MAX_CHANCE) {
                     // transform 1 sugar this turn
-                    const wantedSugar = 1;
-                    const wantedWater = Math.round(1 / efficiency);
+                    const wantedSugar = efficiency;
+                    // const neededWater = Math.round(1 / efficiency);
+                    const neededWater = 1 / efficiency;
                     const tissueWater = tissue.inventory.water;
-                    if (tissueWater >= wantedWater) {
-                        tissue.inventory.change(-wantedWater, 1);
+                    if (tissueWater >= neededWater) {
+                        tissue.inventory.change(-neededWater, 1);
                         break; // give max one sugar per turn
                     }
                 }

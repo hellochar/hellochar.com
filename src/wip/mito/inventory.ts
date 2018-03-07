@@ -43,9 +43,9 @@ export class Inventory {
 
     validate(water: number = this.water, sugar: number = this.sugar) {
         const { capacity } = this;
-        if (Math.floor(water) !== water) {
-            throw new Error("water isn't an integer: " + water);
-        }
+        // if (Math.floor(water) !== water) {
+        //     throw new Error("water isn't an integer: " + water);
+        // }
         // eh fuck it
         // if (Math.floor(sugar) !== sugar) {
         //     throw new Error("sugar isn't an integer: " + sugar);

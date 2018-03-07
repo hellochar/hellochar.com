@@ -98,11 +98,11 @@ export class TileHover extends React.Component<{}, HoverState> {
         };
         const energySpan = hasEnergy(tile) ? <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}%</span> : null;
         const inventorySpan = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
-        const foodSpan = tile instanceof Cell ? <span>{tile.metabolism.type}</span> : null;
+        const foodSpan = tile instanceof Cell ? <span>{tile.metabolism.type}, {tile.droopY}</span> : null;
         const leafReactionFactorSpan = tile instanceof Leaf ? (
             <div>
                 <div>{(1 / (tile.averageSpeed * LEAF_MAX_CHANCE)).toFixed(0)} turns per reaction</div>
-                <div>{Math.round(1 / tile.averageEfficiency)} water per sugar</div>
+                <div>{(1 / tile.averageEfficiency).toFixed(2)} water per sugar</div>
             </div>
         ) : null;
         const airSpan = tile instanceof Air ? <span>sunlight: {(tile.sunlight() * 100).toFixed(0)}%, co2: {(tile.co2() * 100).toFixed(0)}%</span> : null;
