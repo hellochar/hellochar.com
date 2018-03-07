@@ -1,8 +1,8 @@
 import { Vector2 } from "three";
 
-import { Entity, world, height } from "./index";
-import { hasInventory, HasInventory, Inventory } from "./inventory";
 import { map } from "../../math/index";
+import { Entity, height, world } from "./index";
+import { hasInventory, HasInventory, Inventory } from "./inventory";
 
 export const CELL_ENERGY_MAX = 2000;
 export const ENERGY_TO_SUGAR_RATIO = 2000;
@@ -110,6 +110,7 @@ export class Cell extends Tile implements HasEnergy {
         type: "not-eating",
         duration: 0,
     };
+    public stress = new Vector2();
 
     private stepMetabolism() {
         // transition from not eating to eating
@@ -188,6 +189,9 @@ export class Cell extends Tile implements HasEnergy {
                 }
             }
         }
+
+        // this.stepStress();
+
         if (this.energy <= 0) {
             // die
             world.setTileAt(this.pos, new DeadCell(this.pos));

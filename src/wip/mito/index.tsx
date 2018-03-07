@@ -424,6 +424,11 @@ class World {
         }
     }
 
+    public computeStress() {
+        // each cell looks at their neighboring 8 cells and tries to give their stress to the neighbor
+        // if the neighbor is soil or rock, it's 100% free
+    }
+
     public checkWinLoss(): GameState {
         // you win if there's a seed with full capacity
         if (this.seed != null) {

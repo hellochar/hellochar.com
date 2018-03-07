@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Constructor, GameState } from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, hasEnergy, Leaf, Tile, LEAF_MAX_CHANCE } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, hasEnergy, Leaf, LEAF_MAX_CHANCE, Tile } from "./tile";
 
 interface HUDState {
     autoplace: Constructor<Cell> | undefined;
