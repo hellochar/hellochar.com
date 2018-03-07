@@ -230,10 +230,16 @@ class World {
         // start with a half water half air
         const noiseWater = new Noise();
         const noiseRock = new Noise();
+        const noiseHeight = new Noise();
         const grid = new Array(width).fill(undefined).map((_, x) => (
             new Array(height).fill(undefined).map((__, y) => {
                 const pos = new Vector2(x, y);
-                if (y > height / 2) {
+                const soilLevel =
+                    height / 2
+                    - 8 * (noiseHeight.perlin2(0, x / 5) + 1) / 2
+                    - 16 * (noiseHeight.perlin2(10, x / 20 + 10))
+                    ;
+                if (y > soilLevel) {
                     // const water = Math.floor(20 + Math.random() * 20);
                     const rockThreshold = map(y - height / 2, 0, height / 2, -0.7, 0.3);
                     const isRock = noiseRock.simplex2(x / 5, y / 5) < rockThreshold;
@@ -387,7 +393,7 @@ class World {
     public computeSunlight() {
         // sunlight is special - we step downards from the top; neighbors don't affect the calculation so we don't have buffering problems
         // const directionalBias = Math.cos(this.time / 100);
-        for (let y = 0; y <= height / 2; y++) {
+        for (let y = 0; y <= height * 0.6; y++) {
             for (let x = 0; x < width; x++) {
                 const t = world.tileAt(x, y);
                 if (t instanceof Air) {
