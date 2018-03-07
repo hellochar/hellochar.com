@@ -250,10 +250,10 @@ class World {
                         const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.5, 1), 2);
                         const simplexScalar = 0.2;
                         // this 0.1 factor makes a *huge* difference
-                        const simplexValue = noiseWater.simplex2(x * simplexScalar, y * simplexScalar) + 0.1;
+                        const simplexValue = noiseWater.simplex2(x * simplexScalar, y * simplexScalar) + 0.2;
                         // should be soil_max_water
                         const water = Math.max(
-                            0,
+                            1,
                             Math.min(
                             20,
                             simplexValue > 0.5 ? 20 * heightScalar : 0, // Math.sqrt() * 100 * heightScalar;
