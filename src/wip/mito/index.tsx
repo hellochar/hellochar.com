@@ -981,6 +981,7 @@ const Mito = new (class extends ISketch {
         keypress: (event: JQuery.Event) => {
             const key = event.key!;
             this.tryAction(key);
+            event.stopPropagation();
         },
         wheel: (event: JQuery.Event) => {
             const e = event.originalEvent as WheelEvent;
@@ -1064,9 +1065,6 @@ const Mito = new (class extends ISketch {
         this.camera.position.x = world.player.pos.x;
         this.camera.position.y = world.player.pos.y;
 
-        // $(document.body).on("keypress", this.events.keypress);
-        $(document.body).on("keydown", this.events.keypress);
-
         // const airBg = new THREE.Mesh(
         //     new PlaneBufferGeometry(width, height),
         //     materialMapping.get(Air)!.clone(),
@@ -1074,10 +1072,6 @@ const Mito = new (class extends ISketch {
         // airBg.position.x = width / 2 - 0.5;
         // airBg.position.y = height / 2 - 0.5;
         // this.scene.add(airBg);
-    }
-
-    public destroy() {
-        $(document.body).off("keydown", this.events.keypress);
     }
 
     public getOrCreateRenderer(entity: Entity) {
@@ -1093,6 +1087,9 @@ const Mito = new (class extends ISketch {
     }
 
     public animate() {
+        if (document.activeElement !== this.canvas) {
+            this.canvas.focus();
+        }
         if (world.player.action != null) {
             world.step();
             this.gameState = world.checkWinLoss();
@@ -1134,7 +1131,6 @@ const Mito = new (class extends ISketch {
         // this.mouse.y = -event.clientY! / this.canvas.height * 2 + 1;
         this.raycaster.setFromCamera(mouseNorm, this.camera);
         const intersects = this.raycaster.intersectObjects(this.scene.children, true);
-        // console.log(intersects);
         const i = intersects[0];
         if (i != null) {
             const {x, y} = i.point;
