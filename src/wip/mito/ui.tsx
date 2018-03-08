@@ -297,7 +297,10 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
             <div>
                 <h2>Attribution</h2>
                 <p>
-                Tiles: <a href="http://kenney.nl/assets?s=roguelike" target="_blank">Kenney.nl Roguelike Assets</a>
+                    Tiles: <a href="http://kenney.nl/assets?s=roguelike" target="_blank">Kenney.nl Roguelike Assets</a>
+                </p>
+                <p>
+                    Perlin noise: <a href="https://github.com/josephg/noisejs" target="_blank">josephg/noisejs</a>
                 </p>
                 <p>
                     Part of 7drl 2018: <a href="http://7drl.org/" target="_blank">http://7drl.org/</a>
