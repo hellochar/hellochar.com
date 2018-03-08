@@ -610,11 +610,28 @@ function getMaterial(tile: Tile) {
     return materialMapping.get(tile.constructor as Constructor<Tile>)!.clone();
 }
 
+// const AIR_COLORSCALE = [
+//     new Color("rgb(91, 117, 154)"),
+//     new Color("rgb(158, 179, 196)"),
+//     new Color("hsv(35, 7%, 99%)"),
+// ];
+
+// const AIR_COLORSCALE = [
+//     new Color("hsl(14, 81%, 52%)"),
+//     new Color("hsl(34, 61%, 72%)"),
+//     new Color("hsl(61, 54%, 87%)"),
+//     new Color("hsl(67, 35%, 99%)"),
+//     new Color("hsl(213, 63%, 52%)"),
+//     // new Color("hsl(37, 35%, 99%)"),
+// ];
+
 const AIR_COLORSCALE = [
-    new Color("rgb(91, 117, 154)"),
-    new Color("rgb(158, 179, 196)"),
-    new Color("hsv(35, 7%, 99%)"),
+    new Color("hsl(34, 61%, 56%)"),
+    new Color("hsl(67, 31%, 55%)"),
+    new Color("hsl(213, 63%, 58%)"),
+    // new Color("hsl(37, 35%, 99%)"),
 ];
+
 // const AIR_COLORSCALE = [
 //     new Color("rgb(146, 215, 255)"),
 //     new Color("rgb(53, 125, 210)"),

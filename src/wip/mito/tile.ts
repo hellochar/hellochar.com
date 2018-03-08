@@ -64,8 +64,9 @@ export abstract class Tile {
                 // }
                 // take water from neighbors that you're bigger than
                 if (tile.inventory.water > this.inventory.water) {
-                    const diff = Math.floor((tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1));
-                    // const diff = Math.floor((tile.inventory.water - this.inventory.water) / 2);
+                    // const diff = Math.floor((tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1));
+                    // const diff = Math.round((tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1));
+                    const diff = Math.floor((tile.inventory.water - this.inventory.water) / 2);
                     tile.inventory.give(this.inventory, diff, 0);
                 }
             }
