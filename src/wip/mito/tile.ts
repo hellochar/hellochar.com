@@ -10,6 +10,9 @@ export const ENERGY_TO_SUGAR_RATIO = 2000;
 export const CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
 
 export const SOIL_MAX_WATER = 20;
+export const TISSUE_INVENTORY_CAPACITY = 6;
+export const LEAF_MAX_CHANCE = 0.01;
+export const WATER_DIFFUSION_RATE = 0.01;
 
 export interface HasEnergy {
     energy: number;
@@ -54,12 +57,6 @@ export abstract class Tile {
                     return hasInventory(tile) && isSubclass && tile.inventory.water > self.inventory.water;
                 }) as any as HasInventory[];
 
-            // let avgWater = this.inventory.water;
-            // neighborsWithInventory.forEach((tile) => {
-            //     avgWater += tile.inventory.water;
-            // });
-            // avgWater /= (neighborsWithInventory.length + 1);
-
             for (const tile of neighborsWithMore) {
                 // // give water to neighbors that you're less than
                 // if (tile.inventory.water < avgWater) {
@@ -67,11 +64,29 @@ export abstract class Tile {
                 //     this.inventory.give(tile.inventory, diff, 0);
                 // }
                 // take water from neighbors that you're bigger than
-                if (tile.inventory.water > this.inventory.water) {
+                if (tile.inventory.water > this.inventory.water + 1) {
                     // const diff = Math.floor((tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1));
-                    // const diff = Math.round((tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1));
-                    const diff = Math.floor((tile.inventory.water - this.inventory.water) / 2);
-                    tile.inventory.give(this.inventory, diff, 0);
+
+                    // const diff = (tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1);
+                    // const diffLow = Math.floor(diff);
+                    // const diffHigh = Math.ceil(diff);
+                    // if (diffLow !== diffHigh) {
+                    //     const fract = diff - diffLow;
+                    //     if (Math.random() < fract) {
+                    //         tile.inventory.give(this.inventory, diffLow, 0);
+                    //     } else {
+                    //         tile.inventory.give(this.inventory, diffHigh, 0);
+                    //     }
+                    // } else {
+                    //     // perfect integer
+                    //     // const diff = Math.floor((tile.inventory.water - this.inventory.water) / 2);
+                    //     tile.inventory.give(this.inventory, diff, 0);
+                    // }
+
+                    const diffusionChance = (tile.inventory.water - this.inventory.water) * WATER_DIFFUSION_RATE;
+                    if (Math.random() < diffusionChance) {
+                        tile.inventory.give(this.inventory, 1, 0);
+                    }
                 }
             }
         }
@@ -197,7 +212,7 @@ export class Cell extends Tile implements HasEnergy {
         // if (this.metabolism.type === "eating") {
         if (true) {
             for (const tile of neighborsAndSelf) {
-                if (hasInventory(tile)) {
+                if (hasInventory(tile) && !(tile instanceof Fruit)) {
                     if (this.energy < CELL_ENERGY_MAX) {
                         const wantedEnergy = CELL_ENERGY_MAX - this.energy;
                         const wantedSugar = Math.min(
@@ -225,7 +240,7 @@ export class Cell extends Tile implements HasEnergy {
                         // const targetEnergy = averageEnergy;
                         if (neighbor.energy > this.energy) {
                             // energyTransfer = Math.floor((neighbor.energy - this.energy) / energeticNeighbors.length);
-                            energyTransfer = Math.floor((neighbor.energy - this.energy) / 2);
+                            energyTransfer = Math.floor((neighbor.energy - this.energy) * 0.25);
                             // if (neighbor.energy - energyTransfer < this.energy + energyTransfer) {
                             //     throw new Error("cell energy diffusion: result of transfer gives me more than target");
                             // }
@@ -336,13 +351,11 @@ export class Cell extends Tile implements HasEnergy {
     }
 }
 
-export const TISSUE_INVENTORY_CAPACITY = 10;
 export class Tissue extends Cell implements HasInventory {
     static displayName = "Tissue";
     public inventory = new Inventory(TISSUE_INVENTORY_CAPACITY);
 }
 
-export const LEAF_MAX_CHANCE = 0.02;
 export class Leaf extends Cell {
     static displayName = "Leaf";
     public averageEfficiency = 0;
@@ -361,8 +374,16 @@ export class Leaf extends Cell {
                 const air = tile;
                 const tissue = oppositeTile;
                 // 0 to 1
-                const speed = air.sunlight();
-                const efficiency = air.co2();
+                // const speed = air.sunlight();
+                // const efficiency = air.co2();
+                const speed = air.co2();
+                const efficiency = air.sunlight();
+                // so, right now - speed is sunlight so it's always the same speed
+                // efficiency is co2 so you're more efficient in taller places
+
+                // what about the flip?
+                // speedier in taller places
+                // efficiency is determined by how dark the place is? that sounds
                 this.averageEfficiency += efficiency;
                 this.averageSpeed += speed;
                 numAir += 1;
@@ -416,7 +437,7 @@ export class Root extends Cell {
 
 export class Fruit extends Cell {
     static displayName = "Fruit";
-    public inventory = new Inventory(1000);
+    public inventory = new Inventory(1100);
 
     // seeds aggressively take the inventory from neighbors
     step() {
@@ -433,13 +454,16 @@ export class Fruit extends Cell {
 
 export class Transport extends Tissue {
     static displayName = "Transport";
+    public inventory = new Inventory(1);
     public dir: Vector2;
 
     step() {
+        // transport hungers at double speed
+        this.energy -= 1;
         super.step();
         const targetTile = world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
         if (targetTile instanceof Cell && hasInventory(targetTile)) {
-            this.inventory.give(targetTile.inventory, 1, 1);
+            this.inventory.give(targetTile.inventory, 1, 0);
         }
     }
 }

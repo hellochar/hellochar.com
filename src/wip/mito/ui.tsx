@@ -4,7 +4,7 @@ import { Action } from "./action";
 import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, world, PLAYER_MAX_INVENTORY } from "./index";
 import Mito from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, Tile, Tissue, Transport, SOIL_MAX_WATER, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, TISSUE_INVENTORY_CAPACITY } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, Tile, Tissue, Transport, SOIL_MAX_WATER, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, TISSUE_INVENTORY_CAPACITY, WATER_DIFFUSION_RATE } from "./tile";
 
 interface HUDProps {
     // onAutoplaceSet: (cellType: Constructor<Cell>) => void;
@@ -123,7 +123,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         if (world.fruit == null) {
             return <div>No Fruit. {this.renderBuildButton("F", { style: { display: "inline-block" }})}</div>;
         } else {
-            return <div>You bear Fruit! {world.fruit.inventory.sugar} of 1000 sugar!</div>;
+            return <div>You bear Fruit! {world.fruit.inventory.sugar.toFixed(2)} of {1000} sugar!</div>;
         }
     }
 
@@ -222,8 +222,8 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <p>
                         Mito is a game where you play the single cell responsible for the growth and success of a plant-based life form.
                         Build cell Tissue to expand your reach. Build Roots underground to suck up water nearby. Build Leaves to convert
-                        that water into sugar, which is required to upkeep your plant, keep expanding, and finally load your fruit. You win
-                        the game by building and loading a Fruit with 1000 sugar (you can only build one fruit per game).
+                        that water into sugar, which is required to upkeep your plant, keep expanding, and finally load your fruit. <b>You win
+                        the game by building and loading the Fruit with 1000 sugar (you can only build one fruit per game).</b>
                     </p>
                     <h3>You</h3>
                     <p>
@@ -247,7 +247,8 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     </p>
                     <h3>Water</h3>
                     <p>
-                        Water is one of the main two resources. Water diffuses from high concentrations to low concentrations.
+                        Water is one of the main two resources.
+                        Water slowly diffuses from high to low densities (difference 2 required) at about 1 unit per {(1 / WATER_DIFFUSION_RATE).toFixed(0)} turns.
                         Obtain water in the ground through Roots. Leaves require water to photosynthesize. You require water to build.
                     </p>
                     <h3>Sugar</h3>
@@ -282,7 +283,8 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     </p>
                     <h3>Transport</h3>
                     <p>
-                        Transports move 1 water and 1 sugar from its own Tile in the direction it was laid per turn.
+                        Transports move 1 water from its own Tile in the direction it was laid per turn, as well as moving you. Transports
+                        only have 1 resource slot. Transport hungers at double speed.
                     </p>
                     <h3>The Fruit</h3>
                     <p>
@@ -293,6 +295,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <p>
                     <ol>
                         <li>Click around to see the different properties of each tile.</li>
+                        <li>You can scroll out infinitely far.</li>
                         <li>Build leaves early.</li>
                         <li>Leaves higher up have better water/sugar ratios, determined by the co2 percentage in the air.</li>
                         <li>Explore underground for water reservoires and Fountains.</li>

@@ -284,7 +284,7 @@ class World {
                                     Math.min(
                                         // should be soil_max_water, isn't cuz of dependency cycles messing up instantiation
                                         20,
-                                        simplexValue > 0.5 ? 20 * heightScalar : 0, // Math.sqrt() * 100 * heightScalar;
+                                        simplexValue > 0.4 ? 20 * heightScalar : 0, // Math.sqrt() * 100 * heightScalar;
                                     )));
                         if (heightScalar > 0.6 && simplexValue > 1) {
                             return new Fountain(pos, water);
@@ -464,7 +464,8 @@ class World {
     public checkWinLoss(): GameState {
         // you win if there's a seed with full capacity
         if (this.fruit != null) {
-            if (this.fruit.inventory.sugar === this.fruit.inventory.capacity) {
+            // if (this.fruit.inventory.sugar > this.fruit.inventory.capacity) {
+            if (this.fruit.inventory.sugar > 1000) {
                 return "win";
             }
         }
@@ -853,7 +854,7 @@ class InventoryRenderer extends Renderer<Inventory> {
             InventoryRenderer.geometry,
             InventoryRenderer.waterMaterial,
         );
-        mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
+        mesh.position.set((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, 0);
         mesh.scale.set(InventoryRenderer.resourceMeshScale, InventoryRenderer.resourceMeshScale, 1);
         this.object.add(mesh);
         this.waters.push(mesh);
@@ -864,7 +865,8 @@ class InventoryRenderer extends Renderer<Inventory> {
             InventoryRenderer.geometry,
             InventoryRenderer.sugarMaterial,
         );
-        mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
+        // mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
+        mesh.position.set((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, 0);
         mesh.scale.set(InventoryRenderer.resourceMeshScale, InventoryRenderer.resourceMeshScale, 1);
 
         this.object.add(mesh);
@@ -993,6 +995,11 @@ const Mito = new (class extends ISketch {
             const key = event.key!;
             this.tryAction(key);
             event.stopPropagation();
+        },
+        keydown: (event: JQuery.Event) => {
+            if (event.key! === "Escape") {
+                this.tryAction(event.key!);
+            }
         },
         wheel: (event: JQuery.Event) => {
             const e = event.originalEvent as WheelEvent;
