@@ -1,7 +1,7 @@
 import { Vector2 } from "three";
 
 import { map } from "../../math/index";
-import { DIRECTIONS, Entity, height, world } from "./index";
+import { DIRECTIONS, Entity, height, world, Constructor } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 
 export const CELL_ENERGY_MAX = 2000;
@@ -18,7 +18,12 @@ export function hasEnergy(e: any): e is HasEnergy {
     return typeof e.energy === "number";
 }
 
+export type TileConstructor = Constructor<Tile> & {
+    displayName: string;
+};
+
 export abstract class Tile {
+    static displayName = "Tile";
     public darkness = Infinity;
     public constructor(public pos: Vector2) {}
 
@@ -75,6 +80,7 @@ export abstract class Tile {
 }
 
 export class Air extends Tile {
+    static displayName = "Air";
     public sunlightCached: number = 1;
     public constructor(public pos: Vector2) {
         super(pos);
@@ -99,6 +105,7 @@ export class Air extends Tile {
 }
 
 export class Soil extends Tile implements HasInventory {
+    static displayName = "Soil";
     public inventory = new Inventory(SOIL_MAX_WATER);
     constructor(pos: Vector2, water: number = 0) {
         super(pos);
@@ -106,11 +113,16 @@ export class Soil extends Tile implements HasInventory {
     }
 }
 
-export class Rock extends Tile {}
+export class Rock extends Tile {
+    static displayName = "Rock";
+}
 
-export class DeadCell extends Tile {}
+export class DeadCell extends Tile {
+    static displayName = "Dead Cell";
+}
 
 export class Fountain extends Soil {
+    static displayName = "Fountain";
     private cooldown = 0;
     constructor(pos: Vector2, water: number = 0, public turnsPerWater = 10) {
         super(pos, water);
@@ -133,38 +145,39 @@ interface MetabolismState {
     duration: number;
 }
 export class Cell extends Tile implements HasEnergy {
+    static displayName = "Cell";
     public energy: number = CELL_ENERGY_MAX;
     public darkness = 0;
-    public metabolism: MetabolismState = {
-        type: "not-eating",
-        duration: 0,
-    };
+    // public metabolism: MetabolismState = {
+    //     type: "not-eating",
+    //     duration: 0,
+    // };
     // offset [-0.5, 0.5] means you're still "inside" this cell, going out of it will break you
     // public offset = new Vector2();
     public droopY = 0;
 
-    private stepMetabolism() {
-        // transition from not eating to eating
-        if (this.metabolism.type === "not-eating") {
-            // const shouldEat = this.energy < CELL_ENERGY_MAX / 2 && this.metabolism.duration > 25;
-            const shouldEat = this.energy < CELL_ENERGY_MAX / 2;
-            if (shouldEat) {
-                this.metabolism = {
-                    type: "eating",
-                    duration: 0,
-                };
-            }
-        } else {
-            const shouldStopEating = this.metabolism.duration > 30;
-            if (shouldStopEating) {
-                this.metabolism = {
-                    type: "not-eating",
-                    duration: 0,
-                };
-            }
-        }
-        this.metabolism.duration++;
-    }
+    // private stepMetabolism() {
+    //     // transition from not eating to eating
+    //     if (this.metabolism.type === "not-eating") {
+    //         // const shouldEat = this.energy < CELL_ENERGY_MAX / 2 && this.metabolism.duration > 25;
+    //         const shouldEat = this.energy < CELL_ENERGY_MAX / 2;
+    //         if (shouldEat) {
+    //             this.metabolism = {
+    //                 type: "eating",
+    //                 duration: 0,
+    //             };
+    //         }
+    //     } else {
+    //         const shouldStopEating = this.metabolism.duration > 30;
+    //         if (shouldStopEating) {
+    //             this.metabolism = {
+    //                 type: "not-eating",
+    //                 duration: 0,
+    //             };
+    //         }
+    //     }
+    //     this.metabolism.duration++;
+    // }
 
     step() {
         super.step();
@@ -172,7 +185,7 @@ export class Cell extends Tile implements HasEnergy {
         const tileNeighbors = world.tileNeighbors(this.pos);
         const neighbors = Array.from(tileNeighbors.values());
         const neighborsAndSelf = [ ...neighbors, this ];
-        this.stepMetabolism();
+        // this.stepMetabolism();
         // if (this.metabolism.type === "eating") {
         if (true) {
             for (const tile of neighborsAndSelf) {
@@ -311,11 +324,13 @@ export class Cell extends Tile implements HasEnergy {
 }
 
 export class Tissue extends Cell implements HasInventory {
+    static displayName = "Tissue";
     public inventory = new Inventory(5);
 }
 
 export const LEAF_MAX_CHANCE = 0.01;
 export class Leaf extends Cell {
+    static displayName = "Leaf";
     public averageEfficiency = 0;
     public averageSpeed = 0;
     public step() {
@@ -362,6 +377,7 @@ export class Leaf extends Cell {
 }
 
 export class Root extends Cell {
+    static displayName = "Root";
     public step() {
         super.step();
         const neighbors = world.tileNeighbors(this.pos);
@@ -385,6 +401,7 @@ export class Root extends Cell {
 }
 
 export class Seed extends Cell {
+    static displayName = "Seed";
     public inventory = new Inventory(1000);
 
     // seeds aggressively take the inventory from neighbors
@@ -401,6 +418,7 @@ export class Seed extends Cell {
 }
 
 export class Transport extends Tissue {
+    static displayName = "Transport";
     public dir: Vector2 = DIRECTIONS.n;
 
     step() {

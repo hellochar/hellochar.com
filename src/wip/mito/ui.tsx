@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Constructor, GameState } from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, hasEnergy, Leaf, LEAF_MAX_CHANCE, Tile } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, hasEnergy, Leaf, LEAF_MAX_CHANCE, Tile, TileConstructor } from "./tile";
 
 interface HUDState {
     autoplace: Constructor<Cell> | undefined;
@@ -101,17 +101,7 @@ export class TileHover extends React.Component<{}, HoverState> {
             return <div className="hover" style={style}>Unknown</div>;
         }
 
-        const energyInfo = hasEnergy(tile) ? <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}%</span> : null;
-        const inventoryInfo = hasInventory(tile) ? <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span> : null;
-        const cellInfo = tile instanceof Cell ? <span>{tile.metabolism.type}, {(tile.droopY * 200).toFixed(0)}% droop</span> : null;
-        const leafInfo = tile instanceof Leaf ? (
-            <div>
-                <div>{(1 / (tile.averageSpeed * LEAF_MAX_CHANCE)).toFixed(0)} turns per reaction</div>
-                <div>{(1 / tile.averageEfficiency).toFixed(2)} water per sugar</div>
-            </div>
-        ) : null;
-        const airSpan = tile instanceof Air ? <span>sunlight: {(tile.sunlight() * 100).toFixed(0)}%, co2: {(tile.co2() * 100).toFixed(0)}%</span> : null;
-        const spans = [energyInfo, inventoryInfo, cellInfo, leafInfo, airSpan];
+        const spans = [this.energyInfo(tile), this.inventoryInfo(tile), this.cellInfo(tile), this.leafInfo(tile), this.airInfo(tile)];
         const children = ([] as JSX.Element[]).concat(
             ...spans.map((span) => {
                 return span == null ? [] : [<br />, span];
@@ -119,9 +109,55 @@ export class TileHover extends React.Component<{}, HoverState> {
         );
         return (
             <div className="hover" style={style}>
-                {tile.constructor.name} ({tile.pos.x}, {tile.pos.y}) ({tile.darkness})
+                {/* {(tile.constructor as TileConstructor).displayName} ({tile.pos.x}, {tile.pos.y}) ({tile.darkness}) */}
+                {(tile.constructor as TileConstructor).displayName}
                 { children }
             </div>
         );
+    }
+
+    private leafInfo(tile: Tile) {
+        return tile instanceof Leaf ? (
+            <div>
+                <div>{(1 / (tile.averageSpeed * LEAF_MAX_CHANCE)).toFixed(0)} turns per reaction</div>
+                <div>{(1 / tile.averageEfficiency).toFixed(2)} water per sugar</div>
+            </div>
+        ) : null;
+    }
+
+    private airInfo(tile: Tile) {
+        return tile instanceof Air ? <span>sunlight: {(tile.sunlight() * 100).toFixed(0)}%, co2: {(tile.co2() * 100).toFixed(0)}%</span> : null;
+    }
+
+    private energyInfo(tile: Tile) {
+        if (hasEnergy(tile)) {
+            return <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}% energy</span>;
+        }
+        return null;
+    }
+
+    private inventoryInfo(tile: Tile) {
+        if (hasInventory(tile)) {
+            // return <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span>;
+            const waterInfo = (tile.inventory.water > 0) ? <span>{tile.inventory.water} water</span> : null;
+            const sugarInfo = (tile.inventory.sugar > 0) ? <span>{tile.inventory.sugar.toFixed(2)} sugar</span> : null;
+            // const children = ([] as React.ReactNode[]).concat(
+            //     ...[waterInfo, sugarInfo].map((infoEl) => {
+            //         return infoEl == null ? [] : [", ", infoEl];
+            //     }),
+            // );
+            return <span className="inventory-info">{waterInfo}{sugarInfo}</span>;
+        }
+    }
+
+    private cellInfo(tile: Tile) {
+        if (tile instanceof Cell) {
+            if (tile.droopY * 200 > 1) {
+                return <span>{(tile.droopY * 200).toFixed(0)}% droop</span>;
+            } else {
+                return null;
+            }
+        }
+        return null;
     }
 }

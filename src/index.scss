@@ -73,3 +73,9 @@ p ~ p {
         display: none !important;
     }
 }
+
+.inventory-info {
+    span~span:before {
+        content: ", ";
+    }
+}
