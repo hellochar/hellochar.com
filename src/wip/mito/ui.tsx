@@ -1,10 +1,10 @@
 import * as React from "react";
 
 import { Action } from "./action";
-import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, world } from "./index";
+import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, world, PLAYER_MAX_INVENTORY } from "./index";
 import Mito from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, Tile, Tissue, Transport } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, Tile, Tissue, Transport, SOIL_MAX_WATER, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, TISSUE_INVENTORY_CAPACITY } from "./tile";
 
 interface HUDProps {
     // onAutoplaceSet: (cellType: Constructor<Cell>) => void;
@@ -132,10 +132,18 @@ export class HUD extends React.Component<HUDProps, HUDState> {
             background: "rgba(255, 255, 255, 0.8)",
             padding: "10px",
         };
+        let capacitySpan: JSX.Element | null = null;
+        if (this.state.water + this.state.sugar >= PLAYER_MAX_INVENTORY) {
+            capacitySpan = <span style={{color: "black"}}> (maxed) </span>;
+        }
         return (
             <div className="mito-hud" style={hudStyles}>
                 <div style={{fontWeight: "bold"}}>
-                    <span className="mito-hud-water">{this.state.water} water</span>, <span className="mito-hud-sugar">{this.state.sugar.toFixed(2)} sugar</span>
+                    <span className="mito-hud-water">
+                        {this.state.water} water
+                    </span>, <span className="mito-hud-sugar">
+                        {this.state.sugar.toFixed(2)} sugar
+                    </span>{capacitySpan}
                 </div>
                 <br />
                 {this.renderFruitUI()}
@@ -219,16 +227,21 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     </p>
                     <h3>You</h3>
                     <p>
-                        You can carry max 100 resources, and you automatically suck in any resources you're standing over.
+                        You can carry max {world.player.inventory.capacity} resources, and you automatically suck in any resources you're standing over.
                         You can only walk on Tissue (and Transport).
                         You start at the center of the map, with soil below and air above.
                     </p>
-                    <h3>Soil and Air</h3>
+                    <h3>Soil and Underground</h3>
                     <p>
-                        Belowground, Soil holds water, rocks block your way, and occasionally Fountains (at the very bottom) are a permanent source of water.
+                        Underground, Soil holds water, rocks block your way, and occasionally Fountains (at the very bottom) are a permanent source of water.
+                        Soil holds up to {SOIL_MAX_WATER} water at a time.
+                        Fountains emit one water per {FOUNTAINS_TURNS_PER_WATER} turns.
+                    </p>
+                    <h3>Air and Aboveground</h3>
+                    <p>
                         Aboveground, Air provides both sunlight and co2.
                         Sunlight determines the speed at which reactions happen and are affected by shadows.
-                        Co2 determines the ratio of waters-per-sugar and get better as you build higher up.
+                        Co2 determines the ratio of waters-per-sugar and gets better as you build higher up. Orange is low co2, blue is high co2.
                         Gravity will pull down on your structures, so make sure they're structurally sound.
                         Your structures cast shadows on the leaves below in relation to the sun, which gently sways left to right.
                     </p>
@@ -251,11 +264,11 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <h3>Cells</h3>
                     <p>
                         All cells require energy upkeep and will automatically eat sugar on their tile, or get energy from their neighbors.
-                        Each cell consumes 1 sugar every 2000 turns.
+                        Each cell consumes 1 sugar every {ENERGY_TO_SUGAR_RATIO} turns.
                     </p>
                     <h3>Tissue</h3>
                     <p>
-                        You may walk on tissue. Each tissue carries up to 3 resources.
+                        Tissue connects your plant together, you may only walk on Tissue. Each Tissue carries up to {TISSUE_INVENTORY_CAPACITY} resources.
                     </p>
                     <h3>Roots</h3>
                     <p>
@@ -265,7 +278,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <h3>Leaves</h3>
                     <p>
                         When exposed to Air, Leaves convert water to sugar. Leaves also use Pairings between opposite direction Air/Tissue with water.
-                        In perfect sunlight, leave produce on average 1 sugar per 100 turns per pair.
+                        In perfect sunlight, leave produce on average 1 sugar per {(1 / LEAF_MAX_CHANCE).toFixed(0)} turns per pair.
                     </p>
                     <h3>Transport</h3>
                     <p>

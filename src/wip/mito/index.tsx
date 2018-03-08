@@ -29,16 +29,26 @@ export interface Constructor<T> {
     displayName: string;
 }
 
+export const PLAYER_MAX_INVENTORY = 100;
 class Player {
-    public inventory = new Inventory(100, 50, 50);
+    public inventory = new Inventory(PLAYER_MAX_INVENTORY, 50, 50);
     public action?: Action;
     public constructor(public pos: Vector2) {}
 
-    public droopPos() {
+    public droopY() {
         const tile = world.tileAt(this.pos.x, this.pos.y);
         if (tile instanceof Cell) {
+            return tile.droopY;
+        } else {
+            return 0;
+        }
+    }
+
+    public droopPos() {
+        const droopY = this.droopY();
+        if (droopY !== 0) {
             const t = this.pos.clone();
-            t.y += tile.droopY;
+            t.y += droopY;
             return t;
         }
         return this.pos;
@@ -143,6 +153,7 @@ class Player {
     public attemptBuild(action: ActionBuild) {
         const newCell = this.tryConstructingNewCell(action.position, action.cellType);
         if (newCell != null) {
+            newCell.droopY = this.droopY();
             world.setTileAt(action.position, newCell);
             if (world.fruit == null && newCell instanceof Fruit) {
                 world.fruit = newCell;
@@ -923,7 +934,7 @@ export const ACTION_KEYMAP: { [key: string]: Action } = {
 export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
     t: Tissue,
     l: Leaf,
-    R: Root,
+    r: Root,
     F: Fruit,
     T: Transport,
 };

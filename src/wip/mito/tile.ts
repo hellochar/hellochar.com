@@ -9,7 +9,7 @@ export const CELL_ENERGY_MAX = 2000;
 export const ENERGY_TO_SUGAR_RATIO = 2000;
 export const CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
 
-const SOIL_MAX_WATER = 20;
+export const SOIL_MAX_WATER = 20;
 
 export interface HasEnergy {
     energy: number;
@@ -49,7 +49,9 @@ export abstract class Tile {
             const self = this;
             const neighborsWithMore =
                 Array.from(neighbors.values()).filter((tile) => {
-                    return hasInventory(tile) && tile.constructor === this.constructor && tile.inventory.water > self.inventory.water;
+                    // this allows tissue and transports to diffuse water
+                    const isSubclass = tile instanceof this.constructor || this instanceof tile.constructor;
+                    return hasInventory(tile) && isSubclass && tile.inventory.water > self.inventory.water;
                 }) as any as HasInventory[];
 
             // let avgWater = this.inventory.water;
@@ -126,10 +128,11 @@ export class DeadCell extends Tile {
     static displayName = "Dead Cell";
 }
 
+export const FOUNTAINS_TURNS_PER_WATER = 10;
 export class Fountain extends Soil {
     static displayName = "Fountain";
     private cooldown = 0;
-    constructor(pos: Vector2, water: number = 0, public turnsPerWater = 10) {
+    constructor(pos: Vector2, water: number = 0, public turnsPerWater = FOUNTAINS_TURNS_PER_WATER) {
         super(pos, water);
     }
     step() {
@@ -316,8 +319,9 @@ export class Cell extends Tile implements HasEnergy {
                 this.droopY = 0;
                 return;
             } else if (cell instanceof Cell) {
-                this.droopY = cell.droopY;
+                this.droopY = Math.min(this.droopY, cell.droopY);
                 hasSupportBelow = true;
+                return;
             }
         }
 
@@ -332,12 +336,13 @@ export class Cell extends Tile implements HasEnergy {
     }
 }
 
+export const TISSUE_INVENTORY_CAPACITY = 10;
 export class Tissue extends Cell implements HasInventory {
     static displayName = "Tissue";
-    public inventory = new Inventory(5);
+    public inventory = new Inventory(TISSUE_INVENTORY_CAPACITY);
 }
 
-export const LEAF_MAX_CHANCE = 0.01;
+export const LEAF_MAX_CHANCE = 0.02;
 export class Leaf extends Cell {
     static displayName = "Leaf";
     public averageEfficiency = 0;
@@ -428,7 +433,7 @@ export class Fruit extends Cell {
 
 export class Transport extends Tissue {
     static displayName = "Transport";
-    public dir: Vector2 = DIRECTIONS.n;
+    public dir: Vector2;
 
     step() {
         super.step();
