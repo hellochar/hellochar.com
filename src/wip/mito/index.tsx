@@ -12,6 +12,7 @@ import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
+import { hookUpAudio } from "./audio";
 
 export type Entity = Tile | Player;
 
@@ -546,9 +547,10 @@ materialMapping.set(Air, new MeshBasicMaterial({
 materialMapping.set(Soil, new MeshBasicMaterial({
     map: textureFromSpritesheet(8, 11),
     // map: textureFromSpritesheet(41, 26),
+    // map: textureFromSpritesheet(679 / 16, 438 / 16),
     side: THREE.DoubleSide,
-    // color: new Color(0x808080),
-    color: new Color(0x554321),
+    // color: new Color(0xcccccc),
+    color: new Color("rgb(112, 89, 44)"),
 }));
 materialMapping.set(Fountain, new MeshBasicMaterial({
     map: textureFromSpritesheet(56 / 16, 38 / 16),
@@ -576,13 +578,15 @@ materialMapping.set(Transport, materialMapping.get(Tissue)!);
 //     color: new THREE.Color("rgb(42, 138, 25)"),
 // }));
 materialMapping.set(Leaf, new MeshBasicMaterial({
-    map: textureFromSpritesheet(9, 31),
+    // map: textureFromSpritesheet(9, 31),
+    map: textureFromSpritesheet(55 / 16, 280 / 16),
     // map: textureFromSpritesheet(16, 10),
     side: THREE.DoubleSide,
-    // color: new Color(),
+    // color: new Color("rgb(9, 112, 0)"),
 }));
 materialMapping.set(Root, new MeshBasicMaterial({
-    map: textureFromSpritesheet(0, 31),
+    // map: textureFromSpritesheet(0, 31),
+    map: textureFromSpritesheet(59 / 16, 327 / 16),
     side: THREE.DoubleSide,
     // color: new Color("lightgreen"),
 }));
@@ -612,9 +616,16 @@ function getMaterial(tile: Tile) {
 //     // new Color("hsl(37, 35%, 99%)"),
 // ];
 
+// const AIR_COLORSCALE = [
+//     new Color("hsl(34, 61%, 56%)"),
+//     new Color("hsl(67, 31%, 55%)"),
+//     new Color("hsl(213, 63%, 58%)"),
+//     // new Color("hsl(37, 35%, 99%)"),
+// ];
+
 const AIR_COLORSCALE = [
-    new Color("hsl(34, 61%, 56%)"),
     new Color("hsl(67, 31%, 55%)"),
+    new Color("hsl(180, 31%, 76%)"),
     new Color("hsl(213, 63%, 58%)"),
     // new Color("hsl(37, 35%, 99%)"),
 ];
@@ -759,6 +770,8 @@ class InventoryRenderer extends Renderer<Inventory> {
         // map: textureFromSpritesheet(0, 1),
         transparent: true,
         opacity: 0.75,
+        // color: new Color("rgb(12, 41, 255)"),
+        // color: new Color("rgb(29, 42, 255)"),
         color: new Color("rgb(9, 12, 255)"),
         side: THREE.DoubleSide,
     });
@@ -1069,6 +1082,7 @@ const Mito = new (class extends ISketch {
     }
 
     public init() {
+        hookUpAudio(this.audioContext);
         // this.camera = new OrthographicCamera(0, width, 0, height, -100, 100);
         const aspect = this.aspectRatio;
         this.camera = new OrthographicCamera(0, 0, 0, 0, -100, 100);
