@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { Action } from "./action";
 import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, world } from "./index";
+import Mito from "./index";
 import { hasInventory } from "./inventory";
 import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, Tile, Tissue, Transport } from "./tile";
 
@@ -14,6 +15,7 @@ interface HUDState {
     autoplace: Constructor<Cell> | undefined;
     water: number;
     sugar: number;
+    expanded?: boolean;
 }
 
 export class HUD extends React.Component<HUDProps, HUDState> {
@@ -21,6 +23,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         water: 0,
         sugar: 0,
         autoplace: undefined,
+        expanded: true,
     };
 
     ensureCanvasFocus(e: React.SyntheticEvent<any>) {
@@ -95,6 +98,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
             this.renderButton('1', "Drop water"),
             this.renderButton('2', "Drop sugar"),
             this.renderButton('.', "Wait a turn"),
+            this.renderButton('?', "Instructions"),
         ];
     }
 
@@ -158,6 +162,10 @@ export class GameStack extends React.Component<{}, GameStackState> {
         state: "main",
     };
 
+    handlePlay = () => {
+        Mito.gameState = "main";
+    }
+
     public render() {
         const style: React.CSSProperties = {
             width: "100%",
@@ -177,13 +185,125 @@ export class GameStack extends React.Component<{}, GameStackState> {
                 You won!
                 </div>
             );
-        } else {
+        } else if (this.state.state === "lose") {
             return (
                 <div className="screen-lose" style={style}>
                 You lost!
                 </div>
             );
+        } else if (this.state.state === "instructions") {
+            return <Instructions play={this.handlePlay} />;
         }
+    }
+}
+
+interface InstructionsProps {
+    play: () => void;
+}
+
+class Instructions extends React.PureComponent<InstructionsProps, {}> {
+    render() {
+        return (
+            <div className="mito-instructions">
+                <div className="mito-instructions-container">
+                    <div className="esc" onClick={(e) => this.props.play()}>Back (Esc)</div>
+                    <h1>Mito</h1>
+                    <div className="play-button" onClick={(e) => this.props.play()}>
+                        Play
+                    </div>
+                    <p>
+                        Mito is a game where you play the single cell responsible for the growth and success of a plant-based life form.
+                        Build cell Tissue to expand your reach. Build Roots underground to suck up water nearby. Build Leaves to convert
+                        that water into sugar, which is required to upkeep your plant, keep expanding, and finally load your fruit. You win
+                        the game by building and loading a Fruit with 1000 sugar (you can only build one fruit per game).
+                    </p>
+                    <h3>You</h3>
+                    <p>
+                        You can carry max 100 resources, and you automatically suck in any resources you're standing over.
+                        You can only walk on Tissue (and Transport).
+                        You start at the center of the map, with soil below and air above.
+                    </p>
+                    <h3>Soil and Air</h3>
+                    <p>
+                        Belowground, Soil holds water, rocks block your way, and occasionally Fountains (at the very bottom) are a permanent source of water.
+                        Aboveground, Air provides both sunlight and co2.
+                        Sunlight determines the speed at which reactions happen and are affected by shadows.
+                        Co2 determines the ratio of waters-per-sugar and get better as you build higher up.
+                        Gravity will pull down on your structures, so make sure they're structurally sound.
+                        Your structures cast shadows on the leaves below in relation to the sun, which gently sways left to right.
+                    </p>
+                    <h3>Water</h3>
+                    <p>
+                        Water is one of the main two resources. Water diffuses from high concentrations to low concentrations.
+                        Obtain water in the ground through Roots. Leaves require water to photosynthesize. You require water to build.
+                    </p>
+                    <h3>Sugar</h3>
+                    <p>
+                        Sugar is the other main resource. Sugar does not diffuse. Leaves convert water into sugar. Obtain sugar by putting
+                        water next to leaves. Cells require sugar to survive. You require sugar to build.
+                    </p>
+                    <h3>Building</h3>
+                    <p>
+                        Build Tissue, Leaves, Roots, and The Fruit by toggling "build mode" on and walking into Air or Soil.
+                        Build Transport over existing tissue by walking around. Building costs 1 sugar and 1 water.
+                        You can build Tissue over Leaves and Roots - be careful!
+                    </p>
+                    <h3>Cells</h3>
+                    <p>
+                        All cells require energy upkeep and will automatically eat sugar on their tile, or get energy from their neighbors.
+                        Each cell consumes 1 sugar every 2000 turns.
+                    </p>
+                    <h3>Tissue</h3>
+                    <p>
+                        You may walk on tissue. Each tissue carries up to 3 resources.
+                    </p>
+                    <h3>Roots</h3>
+                    <p>
+                        Roots are the only way to get water. Each turn Roots transport one water per neighboring soil into the Tissue in the
+                        opposite direction (so the Tissue North of the root get water in the South tile). This is called a Pairing.
+                    </p>
+                    <h3>Leaves</h3>
+                    <p>
+                        When exposed to Air, Leaves convert water to sugar. Leaves also use Pairings between opposite direction Air/Tissue with water.
+                        In perfect sunlight, leave produce on average 1 sugar per 100 turns per pair.
+                    </p>
+                    <h3>Transport</h3>
+                    <p>
+                        Transports move 1 water and 1 sugar from its own Tile in the direction it was laid per turn.
+                    </p>
+                    <h3>The Fruit</h3>
+                    <p>
+                        You can only build one Fruit, and it is the goal of the game to fill it up with resources. Fruit has up to 1000 sugar storage
+                        and aggressively pulls in every available sugar in its surrounding vicinity.
+                    </p>
+                    <h2>Tips</h2>
+                    <p>
+                    <ol>
+                        <li>Click around to see the different properties of each tile.</li>
+                        <li>Build leaves early.</li>
+                        <li>Leaves higher up have better water/sugar ratios, determined by the co2 percentage in the air.</li>
+                        <li>Explore underground for water reservoires and Fountains.</li>
+                        <li>Build transports to carry water back up the plant.</li>
+                    </ol>
+                    </p>
+                    {this.renderCredit()}
+                </div>
+            </div>
+        );
+    }
+
+    renderCredit() {
+        return (
+            <div>
+                <h2>Attribution</h2>
+                <p>
+                Tiles: <a href="http://kenney.nl/assets?s=roguelike" target="_blank">Kenney.nl Roguelike Assets</a>
+                </p>
+                <p>
+                    Part of 7drl 2018: <a href="http://7drl.org/" target="_blank">http://7drl.org/</a>
+                </p>
+            </div>
+        );
     }
 }
 

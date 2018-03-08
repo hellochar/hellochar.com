@@ -1,8 +1,9 @@
 import { Vector2 } from "three";
 
 import { map } from "../../math/index";
-import { DIRECTIONS, Entity, height, world } from "./index";
+import { DIRECTIONS, Entity, height, width, world } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
+import { Noise } from "./perlin";
 
 export const CELL_ENERGY_MAX = 2000;
 export const ENERGY_TO_SUGAR_RATIO = 2000;
@@ -75,12 +76,15 @@ export abstract class Tile {
     }
 }
 
+const noiseCo2 = new Noise();
 export class Air extends Tile {
     static displayName = "Air";
     public sunlightCached: number = 1;
+    public _co2: number;
     public constructor(public pos: Vector2) {
         super(pos);
         this.darkness = 0;
+        this._co2 = 1;
     }
 
     public lightAmount() {
@@ -88,11 +92,16 @@ export class Air extends Tile {
     }
 
     step() {
+        const base = map(this.pos.y, height / 2, 0, 0.5, 1.15);
+        const scaleX = map(this.pos.y, height / 2, 0, 4, 9);
+        // const offset = noiseCo2.perlin3(94.2321 - this.pos.x / scaleX, 3221 - this.pos.y / 2.5, world.time / 5 + 93.1) * 0.2;
+        const offset = noiseCo2.perlin3(94.231 + (this.pos.x - width / 2) / scaleX, 2312 + this.pos.y / 8, world.time / 1000 + 93.1) * 0.25;
         // don't compute dark/light or water diffusion
+        this._co2 = Math.max(Math.min(base + offset, 1), 0.4);
     }
 
     public co2() {
-        return map(this.pos.y, height / 2, 0, 0.5, 1);
+        return this._co2;
     }
 
     public sunlight() {
@@ -238,6 +247,10 @@ export class Cell extends Tile implements HasEnergy {
         // this.stepStress(tileNeighbors);
         this.stepDroop(tileNeighbors);
         if (this.droopY > 0.5) {
+            // make the player ride the train!
+            if (world.player.pos.equals(this.pos)) {
+                world.player.pos.y += 1;
+            }
             world.setTileAt(this.pos, new Air(this.pos.clone()));
             this.pos.y += 1;
             this.droopY -= 1;

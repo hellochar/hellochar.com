@@ -1,3 +1,4 @@
+import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
@@ -5,12 +6,12 @@ import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, Orthograp
 import { BufferAttribute } from "three";
 import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
+import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
-import { Action, ActionMove, ActionStill, ActionBuild, ActionBuildTransport, ActionDrop } from "./action";
 
 export type Entity = Tile | Player;
 
@@ -237,7 +238,7 @@ function shuffle<T>(array: T[]) {
 }
 
 class World {
-    private time: number = 0;
+    public time: number = 0;
     public player: Player = new Player(new Vector2(width / 2, height / 2));
     public fruit?: Fruit = undefined;
     public grid: Tile[][] = (() => {
@@ -281,7 +282,8 @@ class World {
                         }
                     }
                 } else {
-                    return new Air(pos);
+                    const air = new Air(pos);
+                    return air;
                 }
             })
         ));
@@ -679,6 +681,18 @@ class TileRenderer extends Renderer<Tile> {
         lerp2(this.object.scale, new THREE.Vector2(1, 1), 0.1);
         const lightAmount = this.target.lightAmount();
         const mat = this.mesh.material as MeshBasicMaterial;
+        if (this.target instanceof Air) {
+            const colorIndex = map(this.target.co2(), 0.40, 1.001, 0, AIR_COLORSCALE.length - 1);
+            const startColorIndex = Math.floor(colorIndex);
+            const startColor = AIR_COLORSCALE[startColorIndex];
+            this.originalColor = startColor.clone();
+            if (startColorIndex !== AIR_COLORSCALE.length - 1) {
+                const alpha = colorIndex - startColorIndex;
+                const endColorIndex = startColorIndex + 1;
+                const endColor = AIR_COLORSCALE[endColorIndex];
+                this.originalColor.lerp(endColor, alpha);
+            }
+        }
         mat.color = new THREE.Color(0).lerp(this.originalColor, lightAmount);
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
         if (this.target instanceof Cell) {
@@ -914,7 +928,7 @@ export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
     T: Transport,
 };
 
-export type GameState = "main" | "win" | "lose";
+export type GameState = "main" | "win" | "lose" | "instructions";
 
 const Mito = new (class extends ISketch {
     public scene = new Scene();
@@ -946,7 +960,7 @@ const Mito = new (class extends ISketch {
     public mouse = new THREE.Vector2();
     public hoveredTile?: Tile;
     private raycaster = new THREE.Raycaster();
-    public gameState: GameState = "main";
+    public gameState: GameState = "instructions";
 
     public events = {
         mousemove: (event: JQuery.Event) => {
@@ -984,6 +998,17 @@ const Mito = new (class extends ISketch {
     };
 
     tryAction(key: string) {
+        if (key === "?") {
+            this.gameState = (this.gameState === "instructions" ? "main" : "instructions");
+            return;
+        }
+        if (this.gameState === "instructions") {
+            if (key === "Escape") {
+                this.gameState = "main";
+            }
+            // block further actions
+            return;
+        }
         const action = ACTION_KEYMAP[key];
         if (action != null) {
             // autoplace
@@ -1035,9 +1060,12 @@ const Mito = new (class extends ISketch {
             world.player.action = { type: "still" };
             world.step();
         }
-        this.gameState = "main";
+        // this.gameState = "instructions";
         this.camera.position.x = world.player.pos.x;
         this.camera.position.y = world.player.pos.y;
+
+        // $(document.body).on("keypress", this.events.keypress);
+        $(document.body).on("keydown", this.events.keypress);
 
         // const airBg = new THREE.Mesh(
         //     new PlaneBufferGeometry(width, height),
@@ -1046,6 +1074,10 @@ const Mito = new (class extends ISketch {
         // airBg.position.x = width / 2 - 0.5;
         // airBg.position.y = height / 2 - 0.5;
         // this.scene.add(airBg);
+    }
+
+    public destroy() {
+        $(document.body).off("keydown", this.events.keypress);
     }
 
     public getOrCreateRenderer(entity: Entity) {
