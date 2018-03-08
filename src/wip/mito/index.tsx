@@ -554,7 +554,7 @@ class PlayerRenderer extends Renderer<Player> {
 const materialMapping = new Map<Constructor<Tile>, Material>();
 materialMapping.set(Air, new MeshBasicMaterial({
     side: THREE.DoubleSide,
-    color: new Color("rgb(209, 243, 255)"),
+    // color: new Color("rgb(209, 243, 255)"),
 }));
 materialMapping.set(Soil, new MeshBasicMaterial({
     map: textureFromSpritesheet(8, 11),
@@ -610,6 +610,17 @@ function getMaterial(tile: Tile) {
     return materialMapping.get(tile.constructor as Constructor<Tile>)!.clone();
 }
 
+const AIR_COLORSCALE = [
+    new Color("rgb(91, 117, 154)"),
+    new Color("rgb(158, 179, 196)"),
+    new Color("hsv(35, 7%, 99%)"),
+];
+// const AIR_COLORSCALE = [
+//     new Color("rgb(146, 215, 255)"),
+//     new Color("rgb(53, 125, 210)"),
+//     new Color("rgb(56, 117, 154)"),
+// ];
+
 class TileRenderer extends Renderer<Tile> {
     public object = new Object3D();
     public mesh: Mesh;
@@ -638,7 +649,21 @@ class TileRenderer extends Renderer<Tile> {
         );
         this.eatingMesh.position.set(0, 0.4, 0);
         this.eatingMesh.scale.set(0.2, 0.2, 1);
-        this.originalColor = mat.color.clone();
+        if (this.target instanceof Air) {
+            const colorIndex = map(this.target.co2(), 0.40, 1.001, 0, AIR_COLORSCALE.length - 1);
+            const startColorIndex = Math.floor(colorIndex);
+            const startColor = AIR_COLORSCALE[startColorIndex];
+            this.originalColor = startColor.clone();
+            console.log(`${this.target.co2()} turns into index ${colorIndex} `);
+            if (startColorIndex !== AIR_COLORSCALE.length - 1) {
+                const alpha = colorIndex - startColorIndex;
+                const endColorIndex = startColorIndex + 1;
+                const endColor = AIR_COLORSCALE[endColorIndex];
+                this.originalColor.lerp(endColor, alpha);
+            }
+        } else {
+            this.originalColor = mat.color.clone();
+        }
         this.object.add(this.mesh);
 
         if (hasInventory(this.target)) {
@@ -1004,13 +1029,13 @@ const Mito = new (class extends ISketch {
         this.camera.position.x = world.player.pos.x;
         this.camera.position.y = world.player.pos.y;
 
-        const airBg = new THREE.Mesh(
-            new PlaneBufferGeometry(width, height),
-            materialMapping.get(Air)!.clone(),
-        );
-        airBg.position.x = width / 2 - 0.5;
-        airBg.position.y = height / 2 - 0.5;
-        this.scene.add(airBg);
+        // const airBg = new THREE.Mesh(
+        //     new PlaneBufferGeometry(width, height),
+        //     materialMapping.get(Air)!.clone(),
+        // );
+        // airBg.position.x = width / 2 - 0.5;
+        // airBg.position.y = height / 2 - 0.5;
+        // this.scene.add(airBg);
     }
 
     public getOrCreateRenderer(entity: Entity) {
