@@ -7,9 +7,10 @@ import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
-import { arrowUpMaterial, textureFromSpritesheet } from "./spritesheet";
+import { textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
+import { Action, ActionMove, ActionStill, ActionBuild, ActionBuildTransport, ActionDrop } from "./action";
 
 export type Entity = Tile | Player;
 
@@ -26,36 +27,6 @@ export interface Constructor<T> {
     // lmao
     displayName: string;
 }
-
-interface ActionStill {
-    type: "still";
-}
-
-interface ActionMove {
-    type: "move";
-    dir: Vector2;
-}
-
-interface ActionBuild {
-    type: "build";
-    cellType: Constructor<Cell>;
-    position: Vector2;
-}
-
-interface ActionBuildTransport {
-    type: "build-transport";
-    cellType: Constructor<Transport>;
-    position: Vector2;
-    dir: Vector2;
-}
-
-interface ActionDrop {
-    type: "drop";
-    water: number;
-    sugar: number;
-}
-
-type Action = ActionStill | ActionMove | ActionBuild | ActionBuildTransport | ActionDrop;
 
 class Player {
     public inventory = new Inventory(100, 50, 50);
@@ -653,21 +624,14 @@ class TileRenderer extends Renderer<Tile> {
     });
     private inventoryRenderer: InventoryRenderer;
     private originalColor: THREE.Color;
-    // private eatingMesh = new Mesh(
-    //     TileRenderer.geometry,
-    //     TileRenderer.eatingMaterial,
-    // );
 
     init() {
         const mat = getMaterial(this.target) as MeshBasicMaterial;
-        // const geom = (this.target instanceof Transport) ? TileRenderer.geometry.clone() : TileRenderer.geometry;
         const geom = TileRenderer.geometry;
         this.mesh = new Mesh(
             geom,
             mat,
         );
-        // this.eatingMesh.position.set(0, 0.4, 0);
-        // this.eatingMesh.scale.set(0.2, 0.2, 1);
         if (this.target instanceof Air) {
             const colorIndex = map(this.target.co2(), 0.40, 1.001, 0, AIR_COLORSCALE.length - 1);
             const startColorIndex = Math.floor(colorIndex);
@@ -745,10 +709,10 @@ class TileRenderer extends Renderer<Tile> {
             // this.mesh.material.opacity = this.target.energy / CELL_ENERGY_MAX;
         }
         if (this.inventoryRenderer != null) {
-            this.inventoryRenderer.update();
             if (lightAmount === 0) {
                 this.inventoryRenderer.object.visible = false;
             } else {
+                this.inventoryRenderer.update();
                 this.inventoryRenderer.object.visible = true;
             }
         }
@@ -761,8 +725,6 @@ class TileRenderer extends Renderer<Tile> {
         }
     }
 }
-
-const RESOURCES_PER_MESH = 1;
 
 // we represent Resources as dots of certain colors.
 class InventoryRenderer extends Renderer<Inventory> {
@@ -790,10 +752,10 @@ class InventoryRenderer extends Renderer<Inventory> {
 
     init() {
         this.object.position.z = 1;
-        for (let i = 0; i < this.target.water / RESOURCES_PER_MESH; i++) {
+        for (let i = 0; i < this.target.water; i++) {
             this.createWaterMesh();
         }
-        for (let i = 0; i < this.target.sugar / RESOURCES_PER_MESH; i++) {
+        for (let i = 0; i < this.target.sugar; i++) {
             this.createWaterMesh();
         }
 
@@ -801,13 +763,22 @@ class InventoryRenderer extends Renderer<Inventory> {
     }
 
     private updateMeshes(resource: number, array: Mesh[], create: () => void) {
-        const wantedMeshes = Math.ceil(resource / RESOURCES_PER_MESH);
+        const wantedMeshes = Math.ceil(resource);
         while (array.length < wantedMeshes) {
             create();
         }
         while (array.length > wantedMeshes) {
             const mesh = array.shift()!;
             this.object.remove(mesh);
+        }
+        for (const mesh of array) {
+            mesh.scale.set(InventoryRenderer.resourceMeshScale, InventoryRenderer.resourceMeshScale, 1);
+        }
+        const fract = resource - Math.floor(resource);
+        if (array.length > 0 && fract > 0) {
+            const scale = InventoryRenderer.resourceMeshScale * fract;
+            const lastMesh = array[array.length - 1];
+            lastMesh.scale.set(scale, scale, 1);
         }
     }
 
@@ -850,13 +821,15 @@ class InventoryRenderer extends Renderer<Inventory> {
         // don't destroy yourself
     }
 
+    static resourceMeshScale = .12;
+
     createWaterMesh() {
         const mesh = new Mesh(
             InventoryRenderer.geometry,
             InventoryRenderer.waterMaterial,
         );
         mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
-        mesh.scale.set(0.12, 0.12, 1);
+        mesh.scale.set(InventoryRenderer.resourceMeshScale, InventoryRenderer.resourceMeshScale, 1);
         this.object.add(mesh);
         this.waters.push(mesh);
     }
@@ -867,7 +840,7 @@ class InventoryRenderer extends Renderer<Inventory> {
             InventoryRenderer.sugarMaterial,
         );
         mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
-        mesh.scale.set(0.12, 0.12, 1);
+        mesh.scale.set(InventoryRenderer.resourceMeshScale, InventoryRenderer.resourceMeshScale, 1);
 
         this.object.add(mesh);
         this.sugars.push(mesh);
@@ -885,7 +858,7 @@ function createRendererFor<E extends Entity>(object: E, scene: Scene): Renderer<
     }
 }
 
-const ACTION_KEYMAP: { [key: string]: Action } = {
+export const ACTION_KEYMAP: { [key: string]: Action } = {
     "1": {
         type: "drop",
         sugar: 0,
@@ -933,9 +906,9 @@ const ACTION_KEYMAP: { [key: string]: Action } = {
     },
 };
 
-export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> | undefined } = {
+export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
     t: Tissue,
-    L: Leaf,
+    l: Leaf,
     R: Root,
     F: Fruit,
     T: Transport,
@@ -950,7 +923,20 @@ const Mito = new (class extends ISketch {
     // when true, automatically create tissue tiles when walking into soil or dirt
     public autoplace: Constructor<Cell> | undefined;
     public elements = [
-        <HUD ref={(ref) => this.hudRef = ref! } />,
+        <HUD
+            ref={(ref) => this.hudRef = ref!}
+            // onAutoplaceSet={(autoplace) => {
+            //     if (autoplace === this.autoplace) {
+            //         this.autoplace = undefined;
+            //     } else {
+            //         this.autoplace = autoplace;
+            //     }
+            //     this.hudRef.setState({ autoplace: this.autoplace });
+            // }}
+            onTryActionKey={(key) => {
+                this.tryAction(key);
+            }}
+        />,
         <TileHover ref={(ref) => this.hoverRef = ref! } />,
         <GameStack ref={(ref) => this.gameStackRef = ref! } />,
     ];
@@ -980,44 +966,7 @@ const Mito = new (class extends ISketch {
         },
         keypress: (event: JQuery.Event) => {
             const key = event.key!;
-            const action = ACTION_KEYMAP[key];
-            if (action != null) {
-                // autoplace
-                if (this.autoplace !== undefined && action.type === "move") {
-                    if (this.autoplace === Transport) {
-                        const buildTransportAction: ActionBuildTransport = {
-                            type: "build-transport",
-                            cellType: Transport,
-                            position: world.player.pos.clone(),
-                            dir: action.dir,
-                        };
-                        world.player.action = buildTransportAction;
-                    } else if (!world.player.verifyMove(action)) {
-                        const buildAction: ActionBuild = {
-                            type: "build",
-                            cellType: this.autoplace,
-                            position: world.player.pos.clone().add(action.dir),
-                        };
-                        world.player.action = buildAction;
-                        if (this.autoplace === Root || this.autoplace === Leaf || this.autoplace === Fruit) {
-                            this.autoplace = undefined;
-                        }
-                    } else {
-                        world.player.action = action;
-                    }
-                } else {
-                    world.player.action = action;
-                }
-            } else {
-                if (key in BUILD_HOTKEYS) {
-                    if (this.autoplace === BUILD_HOTKEYS[key]) {
-                        this.autoplace = undefined;
-                    } else {
-                        this.autoplace = BUILD_HOTKEYS[key];
-                    }
-                }
-            }
-            this.hudRef.setState({ autoplace: this.autoplace });
+            this.tryAction(key);
         },
         wheel: (event: JQuery.Event) => {
             const e = event.originalEvent as WheelEvent;
@@ -1033,6 +982,47 @@ const Mito = new (class extends ISketch {
             this.camera.updateProjectionMatrix();
         },
     };
+
+    tryAction(key: string) {
+        const action = ACTION_KEYMAP[key];
+        if (action != null) {
+            // autoplace
+            if (this.autoplace !== undefined && action.type === "move") {
+                if (this.autoplace === Transport) {
+                    const buildTransportAction: ActionBuildTransport = {
+                        type: "build-transport",
+                        cellType: Transport,
+                        position: world.player.pos.clone(),
+                        dir: action.dir,
+                    };
+                    world.player.action = buildTransportAction;
+                } else if (!world.player.verifyMove(action)) {
+                    const buildAction: ActionBuild = {
+                        type: "build",
+                        cellType: this.autoplace,
+                        position: world.player.pos.clone().add(action.dir),
+                    };
+                    world.player.action = buildAction;
+                    if (this.autoplace === Root || this.autoplace === Leaf || this.autoplace === Fruit) {
+                        this.autoplace = undefined;
+                    }
+                } else {
+                    world.player.action = action;
+                }
+            } else {
+                world.player.action = action;
+            }
+        } else {
+            if (key in BUILD_HOTKEYS) {
+                if (this.autoplace === BUILD_HOTKEYS[key] || BUILD_HOTKEYS[key] === Fruit && world.fruit != null) {
+                    this.autoplace = undefined;
+                } else {
+                    this.autoplace = BUILD_HOTKEYS[key];
+                }
+            }
+        }
+        this.hudRef.setState({ autoplace: this.autoplace });
+    }
 
     public init() {
         // this.camera = new OrthographicCamera(0, width, 0, height, -100, 100);

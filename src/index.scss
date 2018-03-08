@@ -82,4 +82,33 @@ p ~ p {
 
 .mito-hud {
     text-align: initial;
+    font-size: 20px;
+
+    .mito-hud-button {
+        border-radius: 2px;
+        border: 1px solid transparent;
+
+        &:hover {
+            border: 1px solid rgb(12, 12, 21);
+        }
+
+        .mito-hud-button-hotkey {
+            font-family: 'Courier New', Courier, monospace;
+        }
+    }
+
+    .mito-hud-water {
+        color: rgb(90, 120, 255);
+    }
+
+    .mito-hud-sugar {
+        color: rgb(221, 185, 65);
+    }
+
+    .d-pad {
+        $size: 30px;
+        display: grid;
+        grid-template: $size $size #{$size} / $size $size $size;
+        justify-items: stretch;
+    }
 }

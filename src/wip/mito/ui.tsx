@@ -1,8 +1,14 @@
 import * as React from "react";
 
-import { BUILD_HOTKEYS, Constructor, GameState, world } from "./index";
+import { Action } from "./action";
+import { BUILD_HOTKEYS, Constructor, GameState, world, DIRECTION_NAMES, ACTION_KEYMAP } from "./index";
 import { hasInventory } from "./inventory";
 import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Tile } from "./tile";
+
+interface HUDProps {
+    // onAutoplaceSet: (cellType: Constructor<Cell>) => void;
+    onTryActionKey: (key: string) => void;
+}
 
 interface HUDState {
     autoplace: Constructor<Cell> | undefined;
@@ -10,28 +16,40 @@ interface HUDState {
     sugar: number;
 }
 
-export class HUD extends React.Component<{}, HUDState> {
+export class HUD extends React.Component<HUDProps, HUDState> {
     state: HUDState = {
         water: 0,
         sugar: 0,
         autoplace: undefined,
     };
 
-    public render() {
-        const styles: React.CSSProperties = {
-            background: "rgba(255, 255, 255, 0.8)",
-            padding: "10px",
-        };
-        const els: JSX.Element[] = [];
+    ensureCanvasFocus(e: React.SyntheticEvent<any>) {
+        e.preventDefault();
+        const canvas = document.getElementsByTagName("canvas")[0];
+        canvas.focus();
+    }
+
+    renderButton(key: string, text?: string, props?: React.HTMLProps<HTMLDivElement>) {
+        return (
+            <div className="mito-hud-button mito-hud-build-item" onClick={(e) => {
+                this.props.onTryActionKey(key);
+                this.ensureCanvasFocus(e);
+            }} {...props}>
+                <span className="mito-hud-button-hotkey">{key}</span>{text != null ? " - " + text : null}
+            </div>
+        );
+    }
+
+    renderBuildEls() {
+        const buildEls: JSX.Element[] = [];
         for (const key in BUILD_HOTKEYS) {
             const cellType = BUILD_HOTKEYS[key];
             // skip building fruit when one already exists
             if (world.fruit != null && cellType === Fruit) {
-                return;
+                continue;
             }
-            let text = cellType === undefined ? "clear building" : cellType.displayName;
-            const style: React.CSSProperties = {
-            };
+            let text = `Build ${cellType.displayName}`;
+            const style: React.CSSProperties = {};
             if (this.state.autoplace === cellType) {
                 style.fontWeight = "bold";
                 style.textDecoration = "underline";
@@ -45,19 +63,53 @@ export class HUD extends React.Component<{}, HUDState> {
                     style.color = "red";
                 }
             }
-            const el = (
-                <div>
-                    <span style={style}>
-                        <span>{key}</span> - {text}
-                    </span>
-                </div>
-            );
-            els.push(el);
+            const el = this.renderButton(key, text, { style });
+            buildEls.push(el);
+        }
+        return buildEls;
+    }
+
+    public renderSecondEls() {
+        return [
+            this.renderButton('1', "Drop water"),
+            this.renderButton('2', "Drop sugar"),
+            this.renderButton('.', "Wait a turn"),
+        ];
+    }
+
+    public renderDPad() {
+        const els: JSX.Element[] = [];
+        for (const key of "qwea.dzsc".split("")) {
+            const action = ACTION_KEYMAP[key];
+            els.push(this.renderButton(key, undefined, {
+                style: {
+
+                },
+            }));
         }
         return (
-            <div className="mito-hud" style={styles}>
-                <span>water:{this.state.water},</span> <span>sugar:{this.state.sugar}</span>
-                {...els}
+            <div className="d-pad">
+            {els}
+            </div>
+        );
+    }
+
+    public render() {
+        const hudStyles: React.CSSProperties = {
+            background: "rgba(255, 255, 255, 0.8)",
+            padding: "10px",
+        };
+        return (
+            <div className="mito-hud" style={hudStyles}>
+                <div style={{fontWeight: "bold"}}>
+                    <span className="mito-hud-water">{this.state.water} water</span>, <span className="mito-hud-sugar">{this.state.sugar.toFixed(2)} sugar</span>
+                </div>
+                <br />
+                {this.renderBuildEls()}
+                <br />
+                {this.renderSecondEls()}
+                <br />
+                {this.renderDPad()}
             </div>
         );
     }

@@ -57,9 +57,9 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
     return cache[key];
 }
 
-const ARROW_UP = new THREE.TextureLoader().load( '/assets/images/arrow_up16x16.png' );
-ARROW_UP.magFilter = THREE.NearestFilter;
-ARROW_UP.flipY = true;
-export function arrowUpMaterial() {
-    return ARROW_UP;
-}
+// const ARROW_UP = new THREE.TextureLoader().load( '/assets/images/arrow_up16x16.png' );
+// ARROW_UP.magFilter = THREE.NearestFilter;
+// ARROW_UP.flipY = true;
+// export function arrowUpMaterial() {
+//     return ARROW_UP;
+// }

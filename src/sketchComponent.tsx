@@ -40,6 +40,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             try {
                 this.initializeSketch(this.props.sketch, ref);
                 this.setState({ status: SketchStatus.LOADED });
+                this.handleDocumentFocus();
             } catch (e) {
                 if (e.message === "WebGL error") {
                     this.setState({ status: SketchStatus.ERROR_WEBGL });
@@ -114,6 +115,11 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         if (this.props.sketch.resize != null) {
             this.props.sketch.resize(this.renderer.domElement.width, this.renderer.domElement.height);
         }
+    }
+
+    private handleDocumentFocus = () => {
+        (document.activeElement as HTMLElement).blur();
+        this.renderer.domElement.focus();
     }
 
     private handleVisibilityChange = () => {
