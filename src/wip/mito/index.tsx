@@ -56,7 +56,7 @@ interface ActionDrop {
 type Action = ActionStill | ActionMove | ActionBuild | ActionBuildTransport | ActionDrop;
 
 class Player {
-    public inventory = new Inventory(100, 50, 50);
+    public inventory = new Inventory(100, 20, 20);
     public action?: Action;
     public constructor(public pos: Vector2) {}
 

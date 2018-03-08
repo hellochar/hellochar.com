@@ -110,11 +110,19 @@ export class Rock extends Tile {}
 export class DeadCell extends Tile {}
 
 export class Fountain extends Soil {
+    private cooldown = 0;
+    constructor(pos: Vector2, water: number = 0, public turnsPerWater = 10) {
+        super(pos, water);
+    }
     step() {
         super.step();
-        if (this.inventory.space() > 1) {
+        if (this.cooldown > 0) {
+            this.cooldown--;
+        }
+        if (this.inventory.space() > 1 && this.cooldown <= 0) {
             // just constantly give yourself water
             this.inventory.change(1, 0);
+            this.cooldown = this.turnsPerWater;
         }
     }
 }
@@ -137,7 +145,8 @@ export class Cell extends Tile implements HasEnergy {
     private stepMetabolism() {
         // transition from not eating to eating
         if (this.metabolism.type === "not-eating") {
-            const shouldEat = this.energy < CELL_ENERGY_MAX / 2 && this.metabolism.duration > 25;
+            // const shouldEat = this.energy < CELL_ENERGY_MAX / 2 && this.metabolism.duration > 25;
+            const shouldEat = this.energy < CELL_ENERGY_MAX / 2;
             if (shouldEat) {
                 this.metabolism = {
                     type: "eating",
@@ -145,7 +154,7 @@ export class Cell extends Tile implements HasEnergy {
                 };
             }
         } else {
-            const shouldStopEating = this.energy > 0.8 * CELL_ENERGY_MAX && this.metabolism.duration > 25 || this.energy === CELL_ENERGY_MAX;
+            const shouldStopEating = this.metabolism.duration > 30;
             if (shouldStopEating) {
                 this.metabolism = {
                     type: "not-eating",
@@ -163,22 +172,25 @@ export class Cell extends Tile implements HasEnergy {
         const neighbors = Array.from(tileNeighbors.values());
         const neighborsAndSelf = [ ...neighbors, this ];
         this.stepMetabolism();
-        if (this.metabolism.type === "eating") {
+        // if (this.metabolism.type === "eating") {
+        if (true) {
             for (const tile of neighborsAndSelf) {
-                if (this.energy < CELL_ENERGY_MAX && hasInventory(tile)) {
-                    const wantedEnergy = CELL_ENERGY_MAX - this.energy;
-                    const wantedSugar = Math.min(
-                        wantedEnergy / ENERGY_TO_SUGAR_RATIO,
-                        tile.inventory.sugar,
-                    );
-                    tile.inventory.change(0, -wantedSugar);
-                    const gotEnergy = wantedSugar * ENERGY_TO_SUGAR_RATIO;
-                    this.energy += gotEnergy;
-                    // if (gotEnergy > 0) {
-                    //     console.log(`got ${gotEnergy}, now at ${this.energy}`);
-                    // }
-                } else {
-                    break; // we're all full, eat no more
+                if (hasInventory(tile)) {
+                    if (this.energy < CELL_ENERGY_MAX) {
+                        const wantedEnergy = CELL_ENERGY_MAX - this.energy;
+                        const wantedSugar = Math.min(
+                            wantedEnergy / ENERGY_TO_SUGAR_RATIO,
+                            tile.inventory.sugar,
+                        );
+                        tile.inventory.change(0, -wantedSugar);
+                        const gotEnergy = wantedSugar * ENERGY_TO_SUGAR_RATIO;
+                        this.energy += gotEnergy;
+                        // if (gotEnergy > 0) {
+                        //     console.log(`got ${gotEnergy}, now at ${this.energy}`);
+                        // }
+                    } else {
+                        break; // we're all full, eat no more
+                    }
                 }
             }
             if (this.energy < CELL_ENERGY_MAX) {
