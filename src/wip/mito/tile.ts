@@ -275,10 +275,18 @@ export class Cell extends Tile implements HasEnergy {
         const below = tileNeighbors.get(DIRECTIONS.s)!;
         const belowLeft = tileNeighbors.get(DIRECTIONS.sw)!;
         const belowRight = tileNeighbors.get(DIRECTIONS.se)!;
+
         const left = tileNeighbors.get(DIRECTIONS.w)!;
         const right = tileNeighbors.get(DIRECTIONS.e)!;
 
+        const above = tileNeighbors.get(DIRECTIONS.n)!;
+        const aboveLeft = tileNeighbors.get(DIRECTIONS.nw)!;
+        const aboveRight = tileNeighbors.get(DIRECTIONS.ne)!;
+
         this.droopY += 0.04;
+        if (this.energy < CELL_ENERGY_MAX / 2) {
+            this.droopY += 0.02;
+        }
 
         let hasSupportBelow = false;
         for (const cell of [below, belowLeft, belowRight]) {
@@ -286,31 +294,24 @@ export class Cell extends Tile implements HasEnergy {
                 this.droopY = 0;
                 return;
             } else if (cell instanceof Cell) {
-                this.droopY = Math.min(this.droopY, cell.droopY);
+                this.droopY = cell.droopY;
                 hasSupportBelow = true;
             }
         }
-        let droopSum = this.droopY;
-        let num = 1;
-        if (left instanceof Cell) {
-            droopSum += left.droopY;
-            num++;
-        }
-        if (right instanceof Cell) {
-            droopSum += right.droopY;
-            num++;
-        }
+
+        const springNeighborCells = [aboveLeft, above, aboveRight, left, right, this].filter((n) => n instanceof Cell) as Cell[];
+
         // special case - if there's no support and nothing below me, just start freefalling
-        if (!hasSupportBelow && num === 1) {
+        if (!hasSupportBelow && springNeighborCells.length === 1) {
             this.droopY += 0.5;
         } else {
-            this.droopY = droopSum / num;
+            this.droopY = springNeighborCells.reduce((sum, n) => sum + n.droopY, 0) / springNeighborCells.length;
         }
     }
 }
 
 export class Tissue extends Cell implements HasInventory {
-    public inventory = new Inventory(10);
+    public inventory = new Inventory(5);
 }
 
 export const LEAF_MAX_CHANCE = 0.01;
@@ -340,7 +341,11 @@ export class Leaf extends Cell {
                     // transform 1 sugar this turn
                     const wantedSugar = efficiency;
                     // const neededWater = Math.round(1 / efficiency);
-                    const neededWater = 1 / efficiency;
+                    const neededWaterFract = 1 / efficiency;
+                    const waterLow = Math.floor(neededWaterFract);
+                    const waterHigh = Math.ceil(neededWaterFract);
+                    const chance = neededWaterFract - waterLow;
+                    const neededWater = Math.random() < chance ? waterLow : waterHigh;
                     const tissueWater = tissue.inventory.water;
                     if (tissueWater >= neededWater) {
                         tissue.inventory.change(-neededWater, 1);

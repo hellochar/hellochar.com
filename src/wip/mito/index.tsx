@@ -56,7 +56,7 @@ interface ActionDrop {
 type Action = ActionStill | ActionMove | ActionBuild | ActionBuildTransport | ActionDrop;
 
 class Player {
-    public inventory = new Inventory(100, 20, 20);
+    public inventory = new Inventory(100, 50, 50);
     public action?: Action;
     public constructor(public pos: Vector2) {}
 
@@ -651,10 +651,10 @@ class TileRenderer extends Renderer<Tile> {
     });
     private inventoryRenderer: InventoryRenderer;
     private originalColor: THREE.Color;
-    private eatingMesh = new Mesh(
-        TileRenderer.geometry,
-        TileRenderer.eatingMaterial,
-    );
+    // private eatingMesh = new Mesh(
+    //     TileRenderer.geometry,
+    //     TileRenderer.eatingMaterial,
+    // );
 
     init() {
         const mat = getMaterial(this.target) as MeshBasicMaterial;
@@ -664,8 +664,8 @@ class TileRenderer extends Renderer<Tile> {
             geom,
             mat,
         );
-        this.eatingMesh.position.set(0, 0.4, 0);
-        this.eatingMesh.scale.set(0.2, 0.2, 1);
+        // this.eatingMesh.position.set(0, 0.4, 0);
+        // this.eatingMesh.scale.set(0.2, 0.2, 1);
         if (this.target instanceof Air) {
             const colorIndex = map(this.target.co2(), 0.40, 1.001, 0, AIR_COLORSCALE.length - 1);
             const startColorIndex = Math.floor(colorIndex);
@@ -717,15 +717,16 @@ class TileRenderer extends Renderer<Tile> {
         mat.color = new THREE.Color(0).lerp(this.originalColor, lightAmount);
         this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
         if (this.target instanceof Cell) {
+            this.object.position.z = -1;
             // this.object.position.x += this.target.offset.x;
             // this.object.position.y += this.target.offset.y;
             this.object.position.y += this.target.droopY;
-            if (this.target.metabolism.type === "eating") {
-                this.eatingMesh.position.z = 1;
-                this.object.add(this.eatingMesh);
-            } else {
-                this.object.remove(this.eatingMesh);
-            }
+            // if (this.target.metabolism.type === "eating") {
+            //     // this.eatingMesh.position.z = 1;
+            //     // this.object.add(this.eatingMesh);
+            // } else {
+            //     // this.object.remove(this.eatingMesh);
+            // }
 
             // if (this.target instanceof Transport) {
             //     const geom = this.mesh.geometry as PlaneBufferGeometry;
