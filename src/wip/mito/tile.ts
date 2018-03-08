@@ -1,7 +1,7 @@
 import { Vector2 } from "three";
 
 import { map } from "../../math/index";
-import { DIRECTIONS, Entity, height, world, Constructor } from "./index";
+import { DIRECTIONS, Entity, height, world } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 
 export const CELL_ENERGY_MAX = 2000;
@@ -17,10 +17,6 @@ export interface HasEnergy {
 export function hasEnergy(e: any): e is HasEnergy {
     return typeof e.energy === "number";
 }
-
-export type TileConstructor = Constructor<Tile> & {
-    displayName: string;
-};
 
 export abstract class Tile {
     static displayName = "Tile";
@@ -400,8 +396,8 @@ export class Root extends Cell {
     }
 }
 
-export class Seed extends Cell {
-    static displayName = "Seed";
+export class Fruit extends Cell {
+    static displayName = "Fruit";
     public inventory = new Inventory(1000);
 
     // seeds aggressively take the inventory from neighbors
@@ -429,3 +425,13 @@ export class Transport extends Tissue {
         }
     }
 }
+
+// export class Vacuole extends Tissue {
+//     static displayName = "Vacuole";
+//     public invnetory = new Inventory()
+
+//     step() {
+//         super.step();
+
+//     }
+// }

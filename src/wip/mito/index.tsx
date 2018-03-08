@@ -8,7 +8,7 @@ import { ISketch, SketchAudioContext } from "../../sketch";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { arrowUpMaterial, textureFromSpritesheet } from "./spritesheet";
-import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, hasEnergy, Leaf, Rock, Root, Seed, Soil, Tile, Tissue, Transport } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
@@ -23,6 +23,8 @@ function isSteppable(obj: any): obj is Steppable {
 
 export interface Constructor<T> {
     new(...args: any[]): T;
+    // lmao
+    displayName: string;
 }
 
 interface ActionStill {
@@ -143,12 +145,12 @@ class Player {
 
         // disallow building a seed if there already is one
         // todo fix typings on constructor vs typeof
-        if (world.seed != null && (cellType as any) === Seed) {
+        if (world.fruit != null && (cellType as any) === Fruit) {
             return;
         }
 
         // disallow building over a seed
-        if (targetTile instanceof Seed) {
+        if (targetTile instanceof Fruit) {
             return;
         }
 
@@ -170,8 +172,8 @@ class Player {
         const newCell = this.tryConstructingNewCell(action.position, action.cellType);
         if (newCell != null) {
             world.setTileAt(action.position, newCell);
-            if (world.seed == null && newCell instanceof Seed) {
-                world.seed = newCell;
+            if (world.fruit == null && newCell instanceof Fruit) {
+                world.fruit = newCell;
             }
         }
     }
@@ -266,7 +268,7 @@ function shuffle<T>(array: T[]) {
 class World {
     private time: number = 0;
     public player: Player = new Player(new Vector2(width / 2, height / 2));
-    public seed?: Seed = undefined;
+    public fruit?: Fruit = undefined;
     public grid: Tile[][] = (() => {
         // start with a half water half air
         const noiseWater = new Noise();
@@ -477,8 +479,8 @@ class World {
 
     public checkWinLoss(): GameState {
         // you win if there's a seed with full capacity
-        if (this.seed != null) {
-            if (this.seed.inventory.sugar === this.seed.inventory.capacity) {
+        if (this.fruit != null) {
+            if (this.fruit.inventory.sugar === this.fruit.inventory.capacity) {
                 return "win";
             }
         }
@@ -599,7 +601,7 @@ materialMapping.set(Root, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     // color: new Color("lightgreen"),
 }));
-materialMapping.set(Seed, new MeshBasicMaterial({
+materialMapping.set(Fruit, new MeshBasicMaterial({
     map: textureFromSpritesheet(9, 31),
     side: THREE.DoubleSide,
     color: new Color("rgb(249, 243, 49)"),
@@ -671,7 +673,6 @@ class TileRenderer extends Renderer<Tile> {
             const startColorIndex = Math.floor(colorIndex);
             const startColor = AIR_COLORSCALE[startColorIndex];
             this.originalColor = startColor.clone();
-            console.log(`${this.target.co2()} turns into index ${colorIndex} `);
             if (startColorIndex !== AIR_COLORSCALE.length - 1) {
                 const alpha = colorIndex - startColorIndex;
                 const endColorIndex = startColorIndex + 1;
@@ -932,6 +933,14 @@ const ACTION_KEYMAP: { [key: string]: Action } = {
     },
 };
 
+export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> | undefined } = {
+    t: Tissue,
+    L: Leaf,
+    R: Root,
+    F: Fruit,
+    T: Transport,
+};
+
 export type GameState = "main" | "win" | "lose";
 
 const Mito = new (class extends ISketch {
@@ -990,7 +999,7 @@ const Mito = new (class extends ISketch {
                             position: world.player.pos.clone().add(action.dir),
                         };
                         world.player.action = buildAction;
-                        if (this.autoplace === Root || this.autoplace === Leaf) {
+                        if (this.autoplace === Root || this.autoplace === Leaf || this.autoplace === Fruit) {
                             this.autoplace = undefined;
                         }
                     } else {
@@ -1000,19 +1009,12 @@ const Mito = new (class extends ISketch {
                     world.player.action = action;
                 }
             } else {
-                // go into autoplace tissue
-                if (key === 't') {
-                    this.autoplace = Tissue;
-                } else if (key === 'T') {
-                    this.autoplace = Transport;
-                } else if (key === 'l') {
-                    this.autoplace = Leaf;
-                } else if (key === 'r') {
-                    this.autoplace = Root;
-                } else if (key === 'f') {
-                    this.autoplace = Seed;
-                } else if (key === ' ') {
-                    this.autoplace = undefined;
+                if (key in BUILD_HOTKEYS) {
+                    if (this.autoplace === BUILD_HOTKEYS[key]) {
+                        this.autoplace = undefined;
+                    } else {
+                        this.autoplace = BUILD_HOTKEYS[key];
+                    }
                 }
             }
             this.hudRef.setState({ autoplace: this.autoplace });

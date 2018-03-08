@@ -1,8 +1,8 @@
 import * as React from "react";
 
-import { Constructor, GameState } from "./index";
+import { BUILD_HOTKEYS, Constructor, GameState, world } from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, hasEnergy, Leaf, LEAF_MAX_CHANCE, Tile, TileConstructor } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Tile } from "./tile";
 
 interface HUDState {
     autoplace: Constructor<Cell> | undefined;
@@ -18,14 +18,46 @@ export class HUD extends React.Component<{}, HUDState> {
     };
 
     public render() {
-        const autoplace = this.state.autoplace === undefined ? "none" : this.state.autoplace.name;
         const styles: React.CSSProperties = {
             background: "rgba(255, 255, 255, 0.8)",
             padding: "10px",
         };
+        const els: JSX.Element[] = [];
+        for (const key in BUILD_HOTKEYS) {
+            const cellType = BUILD_HOTKEYS[key];
+            // skip building fruit when one already exists
+            if (world.fruit != null && cellType === Fruit) {
+                return;
+            }
+            let text = cellType === undefined ? "clear building" : cellType.displayName;
+            const style: React.CSSProperties = {
+            };
+            if (this.state.autoplace === cellType) {
+                style.fontWeight = "bold";
+                style.textDecoration = "underline";
+                style.color = "rgb(45, 220, 40)";
+                if (this.state.water === 0) {
+                    text += " (need water!)";
+                    style.color = "red";
+                }
+                if (this.state.sugar === 0) {
+                    text += " (need sugar!)";
+                    style.color = "red";
+                }
+            }
+            const el = (
+                <div>
+                    <span style={style}>
+                        <span>{key}</span> - {text}
+                    </span>
+                </div>
+            );
+            els.push(el);
+        }
         return (
-            <div className="ui" style={styles}>
-                <span>autoplace: {autoplace}</span> - <span>water:{this.state.water},</span> <span>sugar:{this.state.sugar}</span>
+            <div className="mito-hud" style={styles}>
+                <span>water:{this.state.water},</span> <span>sugar:{this.state.sugar}</span>
+                {...els}
             </div>
         );
     }
@@ -110,7 +142,7 @@ export class TileHover extends React.Component<{}, HoverState> {
         return (
             <div className="hover" style={style}>
                 {/* {(tile.constructor as TileConstructor).displayName} ({tile.pos.x}, {tile.pos.y}) ({tile.darkness}) */}
-                {(tile.constructor as TileConstructor).displayName}
+                {(tile.constructor as Constructor<Tile>).displayName}
                 { children }
             </div>
         );
