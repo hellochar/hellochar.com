@@ -1,9 +1,9 @@
 import * as React from "react";
 
 import { Action } from "./action";
-import { BUILD_HOTKEYS, Constructor, GameState, world, DIRECTION_NAMES, ACTION_KEYMAP } from "./index";
+import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, world } from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Tile } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, Tile, Tissue, Transport } from "./tile";
 
 interface HUDProps {
     // onAutoplaceSet: (cellType: Constructor<Cell>) => void;
@@ -40,33 +40,54 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         );
     }
 
-    renderBuildEls() {
-        const buildEls: JSX.Element[] = [];
+    renderBuildButton(key: string, props?: React.HTMLProps<HTMLDivElement>) {
+        const cellType = BUILD_HOTKEYS[key];
+        // skip building fruit when one already exists
+        if (world.fruit != null && cellType === Fruit) {
+            return null;
+        }
+        let text: string;
+        if (cellType === Tissue) {
+            text = `Build ${cellType.displayName}`;
+        } else if (cellType === Leaf || cellType === Root) {
+            text = `Build one ${cellType.displayName}`;
+        } else if (cellType === Fruit) {
+            text = `Build the ${cellType.displayName}`;
+        } else if (cellType === Transport) {
+            text = `Lay ${cellType.displayName} underneath`;
+        } else {
+            text = `Build ${cellType.displayName}`;
+        }
+        const style: React.CSSProperties = {...(props || { style: {} }).style};
+        if (this.state.autoplace === cellType) {
+            style.fontWeight = "bold";
+            style.textDecoration = "underline";
+            style.color = "rgb(45, 220, 40)";
+            if (this.state.water === 0) {
+                text += " (need water!)";
+                style.color = "red";
+            }
+            if (this.state.sugar === 0) {
+                text += " (need sugar!)";
+                style.color = "red";
+            }
+        }
+        return this.renderButton(key, text, { ...props, style });
+    }
+
+    renderAllBuildButtons() {
+        const buttons: JSX.Element[] = [];
         for (const key in BUILD_HOTKEYS) {
-            const cellType = BUILD_HOTKEYS[key];
-            // skip building fruit when one already exists
-            if (world.fruit != null && cellType === Fruit) {
+            if (key === "F") {
+                // fruit is coverec by the fruit ui
                 continue;
             }
-            let text = `Build ${cellType.displayName}`;
-            const style: React.CSSProperties = {};
-            if (this.state.autoplace === cellType) {
-                style.fontWeight = "bold";
-                style.textDecoration = "underline";
-                style.color = "rgb(45, 220, 40)";
-                if (this.state.water === 0) {
-                    text += " (need water!)";
-                    style.color = "red";
-                }
-                if (this.state.sugar === 0) {
-                    text += " (need sugar!)";
-                    style.color = "red";
-                }
+            const el = this.renderBuildButton(key);
+            if (el != null) {
+                buttons.push(el);
             }
-            const el = this.renderButton(key, text, { style });
-            buildEls.push(el);
         }
-        return buildEls;
+        return buttons;
     }
 
     public renderSecondEls() {
@@ -94,6 +115,14 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         );
     }
 
+    public renderFruitUI() {
+        if (world.fruit == null) {
+            return <div>No Fruit. {this.renderBuildButton("F", { style: { display: "inline-block" }})}</div>;
+        } else {
+            return <div>You bear Fruit! {world.fruit.inventory.sugar} of 1000 sugar!</div>;
+        }
+    }
+
     public render() {
         const hudStyles: React.CSSProperties = {
             background: "rgba(255, 255, 255, 0.8)",
@@ -105,11 +134,16 @@ export class HUD extends React.Component<HUDProps, HUDState> {
                     <span className="mito-hud-water">{this.state.water} water</span>, <span className="mito-hud-sugar">{this.state.sugar.toFixed(2)} sugar</span>
                 </div>
                 <br />
-                {this.renderBuildEls()}
+                {this.renderFruitUI()}
+                <br />
+                {this.renderAllBuildButtons()}
                 <br />
                 {this.renderSecondEls()}
                 <br />
+                <div className="classybr" />
+                <br />
                 {this.renderDPad()}
+                <br />
             </div>
         );
     }

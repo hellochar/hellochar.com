@@ -82,14 +82,18 @@ p ~ p {
 
 .mito-hud {
     text-align: initial;
-    font-size: 20px;
+    font-size: 16px;
 
     .mito-hud-button {
         border-radius: 2px;
-        border: 1px solid transparent;
+        border: 1px solid transparentize($gray3, 0.8);
+        margin: 2px;
+        padding: 2px;
+        cursor: pointer;
 
         &:hover {
-            border: 1px solid rgb(12, 12, 21);
+            border: 1px solid $black;
+            box-shadow: 2px 2px 2px transparentize($black, 0.8);
         }
 
         .mito-hud-button-hotkey {
@@ -106,9 +110,15 @@ p ~ p {
     }
 
     .d-pad {
-        $size: 30px;
+        $size: 25px;
         display: grid;
         grid-template: $size $size #{$size} / $size $size $size;
         justify-items: stretch;
+        align-items: stretch;
+        justify-content: center;
     }
+}
+
+.classybr {
+    border-bottom: 1px solid $gray3;
 }
