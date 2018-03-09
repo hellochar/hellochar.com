@@ -868,6 +868,7 @@ class TileRenderer extends Renderer<Tile> {
         }
 
         if (hasTilePairs(this.target)) {
+            const pairColor = this.target instanceof Leaf ? 0xffc90e : InventoryRenderer.waterMaterial.color.getHex();
             const pairs = this.target.tilePairs;
             if (pairs.length !== this.pairsLines.length) {
                 // redo pairs
@@ -875,8 +876,7 @@ class TileRenderer extends Renderer<Tile> {
                 this.pairsLines = pairs.map((dir) => {
                     const length = dir.length() * 2 - 0.25;
                     const arrowDir = new THREE.Vector3(dir.x, dir.y, 0).normalize();
-                    const color = mat.color.getHex();
-                    const arrowHelper = new THREE.ArrowHelper(arrowDir, arrowDir.clone().multiplyScalar(-length / 2), length, color, 0, 0);
+                    const arrowHelper = new THREE.ArrowHelper(arrowDir, arrowDir.clone().multiplyScalar(-length / 2), length, pairColor, 0, 0);
                     arrowHelper.position.z = 0.1;
                     this.object.add(arrowHelper);
                     return arrowHelper;

@@ -420,7 +420,6 @@ export class Leaf extends Cell {
                     if (tissueWater >= neededWater) {
                         tissue.inventory.change(-neededWater, 1);
                         this.didConvert = true;
-                        break; // give max one sugar per turn
                     }
                 }
             }
