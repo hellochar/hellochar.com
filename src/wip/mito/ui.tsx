@@ -240,8 +240,8 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <h3>Air and Aboveground</h3>
                     <p>
                         Aboveground, Air provides both sunlight and co2.
-                        Sunlight determines the speed at which reactions happen and are affected by shadows.
-                        Co2 determines the ratio of waters-per-sugar and gets better as you build higher up. Orange is low co2, blue is high co2.
+                        Sunlight determines the ratio of waters-per-sugar at which reactions happen and are affected by shadows.
+                        Co2 determines the speed of reaction and gets better as you build higher up. Orange is low co2, blue is high co2.
                         Gravity will pull down on your structures, so make sure they're structurally sound.
                         Your structures cast shadows on the leaves below in relation to the sun, which gently sways left to right.
                     </p>
@@ -280,7 +280,10 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <h3>Leaves</h3>
                     <p>
                         When exposed to Air, Leaves convert water to sugar. Leaves also use Pairings between opposite direction Air/Tissue with water.
-                        In perfect sunlight, leave produce on average 1 sugar per {(1 / LEAF_MAX_CHANCE).toFixed(0)} turns per pair.
+                        In perfect co2, leave produce on average 1 sugar per {(1 / LEAF_MAX_CHANCE).toFixed(0)} turns per pair.
+                        Leaf efficiency is heavily influenced by co2 and sunlight of its neighboring Air.
+                        If your leaf is in too much shadow, it will not be able to photosynthesize.
+                        Leaves higher up produce sugar faster.
                     </p>
                     <h3>Transport</h3>
                     <p>

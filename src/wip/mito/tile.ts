@@ -13,7 +13,7 @@ export const CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
 
 export const SOIL_MAX_WATER = 20;
 export const TISSUE_INVENTORY_CAPACITY = 6;
-export const LEAF_MAX_CHANCE = 0.01;
+export const LEAF_MAX_CHANCE = 0.02;
 export const WATER_DIFFUSION_RATE = 0.01;
 
 export interface HasEnergy {
@@ -330,9 +330,9 @@ export class Cell extends Tile implements HasEnergy {
         const aboveLeft = tileNeighbors.get(DIRECTIONS.nw)!;
         const aboveRight = tileNeighbors.get(DIRECTIONS.ne)!;
 
-        this.droopY += 0.04;
+        this.droopY += 0.03;
         if (this.energy < CELL_ENERGY_MAX / 2) {
-            this.droopY += 0.02;
+            this.droopY += 0.03;
         }
 
         let hasSupportBelow = false;
@@ -351,7 +351,7 @@ export class Cell extends Tile implements HasEnergy {
 
         // special case - if there's no support and nothing below me, just start freefalling
         if (!hasSupportBelow && springNeighborCells.length === 1) {
-            this.droopY += 0.5;
+            this.droopY += 1;
         } else {
             this.droopY = springNeighborCells.reduce((sum, n) => sum + n.droopY, 0) / springNeighborCells.length;
         }
@@ -403,9 +403,6 @@ export class Leaf extends Cell {
                 // const efficiency = air.co2();
                 const speed = air.co2();
                 const efficiency = air.sunlight();
-                // so, right now - speed is sunlight so it's always the same speed
-                // efficiency is co2 so you're more efficient in taller places
-
                 // what about the flip?
                 // speedier in taller places
                 // efficiency is determined by how dark the place is? that sounds

@@ -1,7 +1,7 @@
 import * as $ from "jquery";
+import * as THREE from "three";
 
 import { SketchAudioContext } from "../../sketch";
-import * as THREE from "three";
 
 function makeNodeOfAudioAsset(ctx: SketchAudioContext, assetName: string): Unit {
     const audio = (
