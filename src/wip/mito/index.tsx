@@ -11,7 +11,7 @@ import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuf
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
-import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport, hasTilePairs } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
@@ -475,7 +475,6 @@ class World {
 
     // iterate through all the actions
     public step() {
-        this.computeSunlight();
         const entities = this.entities();
         // dear god
         entities.forEach((entity) => {
@@ -483,6 +482,7 @@ class World {
                 entity.step();
             }
         });
+        this.computeSunlight();
         this.time++;
         this.fillCachedEntities();
         this.checkResources();
@@ -515,7 +515,7 @@ class World {
                         sunlight = sunlight * 0.5 + ((upSunlight + rightSunlight + leftSunlight) / 3) * 0.5;
                     }
                     // have at least a bit
-                    sunlight = 0.05 + sunlight * 0.95;
+                    sunlight = 0.2 + sunlight * 0.8;
                     t.sunlightCached = sunlight;
                 }
             }
@@ -717,11 +717,15 @@ class TileRenderer extends Renderer<Tile> {
         opacity: 0.3,
         color: new THREE.Color("white"),
     });
+    static lineMaterial = new THREE.LineBasicMaterial({
+        // color: 0xffffff,
+    });
     private inventoryRenderer: InventoryRenderer;
     private originalColor: THREE.Color;
     // private audio: THREE.PositionalAudio;
     private audio: THREE.Audio;
     private lastAudioValueTracker = 0;
+    private pairsLines: THREE.ArrowHelper[] = [];
 
     init() {
         const mat = getMaterial(this.target) as MeshBasicMaterial;
@@ -861,6 +865,23 @@ class TileRenderer extends Renderer<Tile> {
                 this.audio.play();
             }
             this.lastAudioValueTracker = newAudioValueTracker;
+        }
+
+        if (hasTilePairs(this.target)) {
+            const pairs = this.target.tilePairs;
+            if (pairs.length !== this.pairsLines.length) {
+                // redo pairs
+                this.pairsLines.forEach((line) => this.object.remove(line));
+                this.pairsLines = pairs.map((dir) => {
+                    const length = dir.length() * 2 - 0.25;
+                    const arrowDir = new THREE.Vector3(dir.x, dir.y, 0).normalize();
+                    const color = mat.color.getHex();
+                    const arrowHelper = new THREE.ArrowHelper(arrowDir, arrowDir.clone().multiplyScalar(-length / 2), length, color, 0, 0);
+                    arrowHelper.position.z = 0.1;
+                    this.object.add(arrowHelper);
+                    return arrowHelper;
+                });
+            }
         }
     }
 

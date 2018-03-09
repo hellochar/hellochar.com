@@ -358,11 +358,20 @@ export class Tissue extends Cell implements HasInventory {
     public inventory = new Inventory(TISSUE_INVENTORY_CAPACITY);
 }
 
+interface IHasTilePairs {
+    tilePairs: Vector2[];
+}
+
+export function hasTilePairs(t: any): t is IHasTilePairs {
+    return t.tilePairs instanceof Array;
+}
+
 export class Leaf extends Cell {
     static displayName = "Leaf";
     public averageEfficiency = 0;
     public averageSpeed = 0;
     public didConvert = false;
+    public tilePairs: Vector2[] = []; // implied that the opposite direction is connected
 
     constructor(pos: Vector2) {
         super(pos);
@@ -375,11 +384,13 @@ export class Leaf extends Cell {
         this.averageEfficiency = 0;
         this.averageSpeed = 0;
         let numAir = 0;
+        this.tilePairs = [];
 
         for (const [dir, tile] of neighbors.entries()) {
             const oppositeTile = world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
             if (tile instanceof Air &&
                 oppositeTile instanceof Tissue) {
+                this.tilePairs.push(dir);
                 const air = tile;
                 const tissue = oppositeTile;
                 // 0 to 1
@@ -424,26 +435,29 @@ export class Leaf extends Cell {
 export class Root extends Cell {
     static displayName = "Root";
     public waterTransferAmount = 0;
+    public tilePairs: Vector2[] = []; // implied that the opposite direction is connected
 
     public step() {
         super.step();
         this.waterTransferAmount = 0;
+        this.tilePairs = [];
         const neighbors = world.tileNeighbors(this.pos);
         for (const [dir, tile] of neighbors.entries()) {
             const oppositeTile = world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
             if (tile instanceof Soil &&
                 oppositeTile instanceof Tissue) {
-                    const soilWater = tile.inventory.water;
-                    const tissueWater = oppositeTile.inventory.water;
-                    // const transferAmount = Math.ceil(Math.max(0, soilWater - tissueWater) / 2);
-                    if (tile.inventory.water > 0) {
-                        const {water: transferAmount} = tile.inventory.give(oppositeTile.inventory, 1, 0);
-                        if (transferAmount > 0) {
-                            this.waterTransferAmount += transferAmount;
-                            // add a random to trigger the !== on water transfer audio
-                            this.waterTransferAmount += Math.random() * 0.0001;
-                        }
+                this.tilePairs.push(dir);
+                const soilWater = tile.inventory.water;
+                const tissueWater = oppositeTile.inventory.water;
+                // const transferAmount = Math.ceil(Math.max(0, soilWater - tissueWater) / 2);
+                if (tile.inventory.water > 0) {
+                    const {water: transferAmount} = tile.inventory.give(oppositeTile.inventory, 1, 0);
+                    if (transferAmount > 0) {
+                        this.waterTransferAmount += transferAmount;
+                        // add a random to trigger the !== on water transfer audio
+                        this.waterTransferAmount += Math.random() * 0.0001;
                     }
+                }
             }
         }
         // const tissueNeighbors = Array.from(neighbors.values()).filter((e) => e instanceof Tissue) as Tissue[];
