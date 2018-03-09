@@ -1,11 +1,11 @@
 import { Vector2 } from "three";
+import * as THREE from "three";
 
 import { map } from "../../math/index";
 import { DIRECTIONS, Entity, height, width, world } from "./index";
+import Mito from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
-import * as THREE from "three";
-import Mito from "./index";
 
 export const CELL_ENERGY_MAX = 2000;
 export const ENERGY_TO_SUGAR_RATIO = 2000;

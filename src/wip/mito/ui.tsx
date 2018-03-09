@@ -1,10 +1,10 @@
 import * as React from "react";
 
 import { Action } from "./action";
-import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, world, PLAYER_MAX_INVENTORY } from "./index";
+import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, PLAYER_MAX_INVENTORY, world } from "./index";
 import Mito from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, Tile, Tissue, Transport, SOIL_MAX_WATER, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, TISSUE_INVENTORY_CAPACITY, WATER_DIFFUSION_RATE } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, SOIL_MAX_WATER, Tile, Tissue, TISSUE_INVENTORY_CAPACITY, Transport, WATER_DIFFUSION_RATE } from "./tile";
 
 interface HUDProps {
     // onAutoplaceSet: (cellType: Constructor<Cell>) => void;

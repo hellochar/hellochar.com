@@ -268,7 +268,7 @@ class World {
     public time: number = 0;
     public player: Player = new Player(new Vector2(width / 2, height / 2));
     public fruit?: Fruit = undefined;
-    public grid: Tile[][] = (() => {
+    private gridEnvironment: Tile[][] = (() => {
         // start with a half water half air
         const noiseWater = new Noise();
         const noiseRock = new Noise();
@@ -315,18 +315,22 @@ class World {
             })
         ));
 
-        // add a "seed" of tissue around the player
+        return grid;
+    })();
+
+    private gridCells: Array<Array<Cell | null>> = (() => {
         const radius = 2.5;
-        for (let x = -Math.floor(radius); x <= Math.ceil(radius); x++) {
-            for (let y = -Math.floor(radius); y <= Math.ceil(radius); y++) {
-                if (x * x + y * y < radius * radius) {
-                    const cx = this.player.pos.x + x;
-                    const cy = this.player.pos.y + y;
-                    const t = grid[cx][cy] = new Tissue(new Vector2(cx, cy));
-                    // t.inventory.change(5, 5);
+        const grid = new Array(width).fill(undefined).map((_, x) => (
+            new Array(height).fill(undefined).map((__, y) => {
+                const pos = new Vector2(x, y);
+                // add a "seed" of tissue around the player
+                if (this.player.pos.distanceTo(pos) < radius) {
+                    return new Tissue(pos);
+                } else {
+                    return null;
                 }
-            }
-        }
+            })
+        ));
         return grid;
     })();
 
@@ -338,15 +342,23 @@ class World {
         if (!this.isValidPosition(x, y)) {
             return null;
         }
-        return this.grid[x][y];
+        const cell = this.gridCells[x][y];
+        if (cell != null) {
+            return cell;
+        } else {
+            return this.gridEnvironment[x][y];
+        }
     }
 
+    // Rules for replacement:
+    // if tile is environment, clear out the gridCell and set the gridEnvironment.
+    // if tile is cell, set gridCell, leave gridEnvironment alone.
     public setTileAt(position: Vector2, tile: Tile): any {
         const {x, y} = position;
         if (!this.isValidPosition(x, y)) {
             throw new Error(`invalid position ${x}, ${y} `);
         }
-        const oldTile = this.grid[x][y];
+        const oldTile = this.tileAt(x, y)!;
         // if replacing a tile with inventory, try giving resources to neighbors of the same type
         if (hasInventory(oldTile)) {
             const neighbors = world.tileNeighbors(position);
@@ -360,8 +372,16 @@ class World {
                 }
             }
         }
-            // there's a chance we just *lose* some water as it overfills capacity
-        this.grid[x][y] = tile;
+
+        // there's a chance we straight up lose some water as it overfills capacity
+        if (tile instanceof Cell) {
+            // set gridCell only
+            this.gridCells[x][y] = tile;
+        } else {
+            // hackhack - we should call .die() on gridCells[x][y] but we already have with the oldTile code above
+            this.gridCells[x][y] = null;
+            this.gridEnvironment[x][y] = tile;
+        }
         this.fillCachedEntities();
     }
 
@@ -388,6 +408,12 @@ class World {
         return mapping;
     }
 
+    // only use for rendering
+    private cachedRenderableEntities: Entity[];
+    public renderableEntities() {
+        return this.cachedRenderableEntities;
+    }
+
     private cachedEntities: Entity[];
     public entities() {
         return this.cachedEntities;
@@ -399,13 +425,13 @@ class World {
         for (x = 0; x < width; x++) {
             for (y = (x + this.time) % 2; y < height; y += 2) {
                 // checkerboard
-                flattenedTiles.push(this.grid[x][y]);
+                flattenedTiles.push(this.tileAt(x, y)!);
             }
         }
         for (x = 0; x < width; x++) {
             for (y = (x + this.time + 1) % 2; y < height; y += 2) {
                 // opposite checkerboard
-                flattenedTiles.push(this.grid[x][y]);
+                flattenedTiles.push(this.tileAt(x, y)!);
             }
         }
         if (this.time % 4 < 2) {
@@ -431,6 +457,20 @@ class World {
         // }
         const newEntities = ([this.player] as Entity[]).concat(flattenedTiles);
         this.cachedEntities = newEntities;
+
+        (() => {
+            const entities: Entity[] = [this.player];
+            for (x = 0; x < width; x++) {
+                for (y = 0; y < height; y++) {
+                    entities.push(this.gridEnvironment[x][y]);
+                    const cellMaybe = this.gridCells[x][y];
+                    if (cellMaybe != null) {
+                        entities.push(cellMaybe);
+                    }
+                }
+            }
+            this.cachedRenderableEntities = entities;
+        })();
     }
 
     // iterate through all the actions
@@ -544,6 +584,8 @@ class PlayerRenderer extends Renderer<Player> {
             // new THREE.CircleBufferGeometry(0.5, 20),
             new MeshBasicMaterial({
                 transparent: true,
+                depthWrite: false,
+                depthTest: false,
                 map: textureFromSpritesheet(29, 12, "transparent"),
                 color: new Color("white"),
                 side: THREE.DoubleSide,
@@ -568,6 +610,7 @@ class PlayerRenderer extends Renderer<Player> {
 const materialMapping = new Map<Constructor<Tile>, Material>();
 materialMapping.set(Air, new MeshBasicMaterial({
     side: THREE.DoubleSide,
+    depthWrite: false,
     // color: new Color("rgb(209, 243, 255)"),
 }));
 materialMapping.set(Soil, new MeshBasicMaterial({
@@ -577,6 +620,7 @@ materialMapping.set(Soil, new MeshBasicMaterial({
     side: THREE.DoubleSide,
     // color: new Color(0xcccccc),
     color: new Color("rgb(112, 89, 44)"),
+    depthWrite: false,
 }));
 materialMapping.set(Fountain, new MeshBasicMaterial({
     map: textureFromSpritesheet(56 / 16, 38 / 16),
@@ -751,9 +795,9 @@ class TileRenderer extends Renderer<Tile> {
             }
         }
         mat.color = new THREE.Color(0).lerp(this.originalColor, lightAmount);
-        this.object.position.set(this.target.pos.x, this.target.pos.y, 0);
+        const zIndex = this.target instanceof Cell ? 1 : 0;
+        this.object.position.set(this.target.pos.x, this.target.pos.y, zIndex);
         if (this.target instanceof Cell) {
-            this.object.position.z = -1;
             // this.object.position.x += this.target.offset.x;
             // this.object.position.y += this.target.offset.y;
             this.object.position.y += this.target.droopY;
@@ -776,8 +820,6 @@ class TileRenderer extends Renderer<Tile> {
         }
         if (hasEnergy(this.target)) {
             mat.color.lerp(new THREE.Color(0), 1 - this.target.energy / CELL_ENERGY_MAX);
-            // this.mesh.material.transparent = true;
-            // this.mesh.material.opacity = this.target.energy / CELL_ENERGY_MAX;
         }
         if (this.inventoryRenderer != null) {
             if (lightAmount === 0) {
@@ -1164,6 +1206,8 @@ const Mito = new (class extends ISketch {
             world.step();
         }
         // this.gameState = "instructions";
+        this.camera.position.z = 10;
+        this.camera.lookAt(new THREE.Vector3(0, 0, 0));
         this.camera.position.x = world.player.pos.x;
         this.camera.position.y = world.player.pos.y;
 
@@ -1208,7 +1252,8 @@ const Mito = new (class extends ISketch {
             const oldEntities = Array.from(this.renderers.keys());
             // delete the renderers for entities that have been removed since last render
             // this is the performance bottleneck, it's O(n^2)
-            const removedEntities = oldEntities.filter((e) => world.entities().indexOf(e) === -1);
+            const renderableEntities = world.renderableEntities();
+            const removedEntities = oldEntities.filter((e) => renderableEntities.indexOf(e) === -1);
             for (const e of removedEntities) {
                 const renderer = this.renderers.get(e);
                 if (renderer == null) {
@@ -1224,7 +1269,8 @@ const Mito = new (class extends ISketch {
         //     world.player.action = { type: "still" };
         // }
         // world.step();
-        world.entities().forEach((entity) => {
+        // world.entities().forEach((entity) => {
+        world.renderableEntities().forEach((entity) => {
             const renderer = this.getOrCreateRenderer(entity);
             renderer.update();
         });
