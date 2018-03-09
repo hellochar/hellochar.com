@@ -7,7 +7,7 @@ import { BufferAttribute } from "three";
 import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
-import { build, footsteps, hookUpAudio, blopBuffer, suckWaterBuffer, drums, strings } from "./audio";
+import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
@@ -93,6 +93,9 @@ class Player {
 
     public verifyMove(action: ActionMove) {
         const target = this.pos.clone().add(action.dir);
+        if (!world.isValidPosition(target.x, target.y)) {
+            return false;
+        }
         const targetTile = world.tileAt(target.x, target.y);
         if (!(targetTile instanceof Tissue)) {
             // can't move!
@@ -107,9 +110,8 @@ class Player {
             footsteps.gain.gain.cancelScheduledValues(0);
             footsteps.gain.gain.value = 0.2;
             footsteps.gain.gain.linearRampToValueAtTime(0, Mito.audioContext.currentTime + 0.05);
-            const target = world.wrappedPosition(this.pos.clone().add(action.dir));
             // do the move
-            this.pos = target;
+            this.pos.add(action.dir);
             this.autopickup();
         }
     }
@@ -129,6 +131,10 @@ class Player {
 
     public tryConstructingNewCell<T>(position: Vector2, cellType: Constructor<T>) {
         const targetTile = world.tileAt(position.x, position.y);
+        if (targetTile == null) {
+            // out of bounds/out of map
+            return;
+        }
 
         // disallow building a seed if there already is one
         // todo fix typings on constructor vs typeof
@@ -328,14 +334,18 @@ class World {
         this.fillCachedEntities();
     }
 
-    public tileAt(x: number, y: number) {
-        x = ((x % width) + width) % width;
-        y = ((y % height) + height) % height;
+    public tileAt(x: number, y: number): Tile | null {
+        if (!this.isValidPosition(x, y)) {
+            return null;
+        }
         return this.grid[x][y];
     }
 
     public setTileAt(position: Vector2, tile: Tile): any {
-        const {x, y} = this.wrappedPosition(position);
+        const {x, y} = position;
+        if (!this.isValidPosition(x, y)) {
+            throw new Error(`invalid position ${x}, ${y} `);
+        }
         const oldTile = this.grid[x][y];
         // if replacing a tile with inventory, try giving resources to neighbors of the same type
         if (hasInventory(oldTile)) {
@@ -355,11 +365,12 @@ class World {
         this.fillCachedEntities();
     }
 
-    public wrappedPosition(pos: Vector2) {
-        let {x, y} = pos;
-        x = ((x % width) + width) % width;
-        y = ((y % height) + height) % height;
-        return new Vector2(x, y);
+    public isValidPosition(x: number, y: number) {
+        if (x >= width || x < 0 || y >= height || y < 0) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public tileNeighbors(pos: Vector2) {
@@ -367,7 +378,12 @@ class World {
         // randomize the neighbor array to reduce aliasing
         const directions = DIRECTION_VALUES_RAND[this.time % DIRECTION_VALUES_RAND.length];
         directions.forEach((v) => {
-            mapping.set(v, this.tileAt(pos.x + v.x, pos.y + v.y));
+            const x = pos.x + v.x;
+            const y = pos.y + v.y;
+            const tile = this.tileAt(x, y);
+            if (tile != null) {
+                mapping.set(v, tile);
+            }
         });
         return mapping;
     }
@@ -446,11 +462,11 @@ class World {
                         const tileUp = world.tileAt(x, y - 1);
                         const tileRight = world.tileAt(x + 1, y - 1);
                         const tileLeft = world.tileAt(x - 1, y - 1);
-                        const upSunlight = tileUp instanceof Air ? tileUp.sunlightCached : 0;
-                        const rightSunlight = tileRight instanceof Air ? tileRight.sunlightCached : 0;
-                        const leftSunlight = tileLeft instanceof Air ? tileLeft.sunlightCached : 0;
+                        const upSunlight = tileUp instanceof Air ? tileUp.sunlightCached : tileUp == null ? 1 : 0;
+                        const rightSunlight = tileRight instanceof Air ? tileRight.sunlightCached : tileRight == null ? 1 : 0;
+                        const leftSunlight = tileLeft instanceof Air ? tileLeft.sunlightCached : tileLeft == null ? 1 : 0;
                         if (directionalBias > 0) {
-                            // light travels to the right
+                            // positive light travels to the right
                             sunlight = rightSunlight * directionalBias + upSunlight * (1 - directionalBias);
                         } else {
                             sunlight = leftSunlight * -directionalBias + upSunlight * (1 - (-directionalBias));
@@ -459,7 +475,7 @@ class World {
                         sunlight = sunlight * 0.5 + ((upSunlight + rightSunlight + leftSunlight) / 3) * 0.5;
                     }
                     // have at least a bit
-                    sunlight = 0.03 + sunlight * 0.97;
+                    sunlight = 0.05 + sunlight * 0.95;
                     t.sunlightCached = sunlight;
                 }
             }
@@ -533,6 +549,7 @@ class PlayerRenderer extends Renderer<Player> {
                 side: THREE.DoubleSide,
             }),
         );
+        console.log("created player renderer");
         lerp2(this.mesh.position, this.target.pos, 1);
         this.mesh.position.z = 2;
         this.scene.add(this.mesh);
@@ -1039,7 +1056,6 @@ const Mito = new (class extends ISketch {
     public gameState: GameState = "instructions";
     public audioListener = new THREE.AudioListener();
 
-
     public events = {
         mousemove: (event: JQuery.Event) => {
             this.mouse.x = event.clientX!;
@@ -1234,14 +1250,16 @@ const Mito = new (class extends ISketch {
             const ix = Math.round(x);
             const iy = Math.round(y);
             const thisHoveredTile = world.tileAt(ix, iy);
-            if (thisHoveredTile.lightAmount() === 0) {
-                this.hoveredTile = undefined;
-            } else {
-                this.hoveredTile = thisHoveredTile;
+            if (thisHoveredTile != null) {
+                if (thisHoveredTile.lightAmount() === 0) {
+                    this.hoveredTile = undefined;
+                } else {
+                    this.hoveredTile = thisHoveredTile;
+                }
+                this.hoverRef.setState({
+                    tile: this.hoveredTile,
+                });
             }
-            this.hoverRef.setState({
-                tile: this.hoveredTile,
-            });
         }
         this.hudRef.setState({
             sugar: world.player.inventory.sugar,

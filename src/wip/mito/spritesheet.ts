@@ -46,6 +46,7 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
                 16,
             );
             texture.needsUpdate = true;
+            console.log("updated spritesheet for ", x, y);
         });
         // const texture = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png' );
         // texture.magFilter = THREE.NearestFilter;
