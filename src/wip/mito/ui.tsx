@@ -316,6 +316,9 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     Tiles: <a href="http://kenney.nl/assets?s=roguelike" target="_blank">Kenney.nl Roguelike Assets</a>
                 </p>
                 <p>
+                    Pop sound when leaves convert: <a href="http://soundbible.com/2067-Blop.html" target="_blank">Blop by Mark DiAngelo</a> (<a href="https://creativecommons.org/licenses/by/3.0/us/">CC BY 3.0 US</a>)
+                </p>
+                <p>
                     Perlin noise: <a href="https://github.com/josephg/noisejs" target="_blank">josephg/noisejs</a>
                 </p>
                 <p>

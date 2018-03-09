@@ -7,7 +7,7 @@ import { BufferAttribute } from "three";
 import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
-import { build, footsteps, hookUpAudio } from "./audio";
+import { build, footsteps, hookUpAudio, blopBuffer } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
@@ -658,6 +658,9 @@ class TileRenderer extends Renderer<Tile> {
     });
     private inventoryRenderer: InventoryRenderer;
     private originalColor: THREE.Color;
+    // private audio: THREE.PositionalAudio;
+    private audio: THREE.Audio;
+    private lastDidConvert = false;
 
     init() {
         const mat = getMaterial(this.target) as MeshBasicMaterial;
@@ -706,6 +709,11 @@ class TileRenderer extends Renderer<Tile> {
                 0.1,
                 0.1);
             this.object.add(arrow);
+        }
+
+        if (this.target instanceof Leaf) {
+            this.audio = new THREE.Audio(Mito.audioListener);
+            this.object.add(this.audio);
         }
     }
 
@@ -761,6 +769,23 @@ class TileRenderer extends Renderer<Tile> {
                 this.inventoryRenderer.update();
                 this.inventoryRenderer.object.visible = true;
             }
+        }
+        if (this.target instanceof Leaf) {
+            const newDidConvert = this.target.didConvert;
+            if (newDidConvert !== this.lastDidConvert && newDidConvert) {
+                this.audio.setBuffer(blopBuffer);
+                const dist = this.target.pos.distanceToSquared(world.player.pos);
+                const volume = Math.min(1, 1 / (1 + dist / 25));
+                this.audio.setVolume(volume);
+                // this.audio.setRefDistance(2);
+                // play blop sound
+                this.audio.play();
+            }
+            this.lastDidConvert = newDidConvert;
+            // this.audio.setBuffer(blopBuffer);
+            // this.audio.setRefDistance(2);
+            // play blop sound
+            // this.audio.play();
         }
     }
 
@@ -996,6 +1021,8 @@ const Mito = new (class extends ISketch {
     public hoveredTile?: Tile;
     private raycaster = new THREE.Raycaster();
     public gameState: GameState = "instructions";
+    public audioListener = new THREE.AudioListener();
+
 
     public events = {
         mousemove: (event: JQuery.Event) => {
@@ -1096,6 +1123,8 @@ const Mito = new (class extends ISketch {
         const aspect = this.aspectRatio;
         this.camera = new OrthographicCamera(0, 0, 0, 0, -100, 100);
         this.camera.zoom = 1.5;
+        this.camera.add(this.audioListener);
+
         this.resize(this.canvas.width, this.canvas.height);
         // darkness and water diffuse a few times to stabilize it
         for (let i = 0; i < 5; i++) {

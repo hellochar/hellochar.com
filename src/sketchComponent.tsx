@@ -57,7 +57,12 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
 
     public render() {
         if (this.userVolume != null) {
-            this.userVolume.gain.value = this.state.volumeEnabled ? 1 : 0;
+            // this.userVolume.gain.value = this.state.volumeEnabled ? 1 : 0;
+            if (this.state.volumeEnabled && this.audioContext.state === "suspended") {
+                this.audioContext.resume();
+            } else if (!this.state.volumeEnabled && this.audioContext.state === "running") {
+                this.audioContext.suspend();
+            }
         }
         const {sketch, ...divProps} = this.props;
         const { status } = this.state;
@@ -186,6 +191,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
 
         // initialize and run sketch
         const audioContext = this.audioContext = new AudioContext() as SketchAudioContext;
+        (THREE.AudioContext as any).setContext(audioContext);
 
         this.userVolume = audioContext.createGain();
         this.userVolume.gain.value = 0.8;

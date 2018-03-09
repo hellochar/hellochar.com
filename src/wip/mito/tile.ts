@@ -4,6 +4,8 @@ import { map } from "../../math/index";
 import { DIRECTIONS, Entity, height, width, world } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
+import * as THREE from "three";
+import Mito from "./index";
 
 export const CELL_ENERGY_MAX = 2000;
 export const ENERGY_TO_SUGAR_RATIO = 2000;
@@ -360,8 +362,15 @@ export class Leaf extends Cell {
     static displayName = "Leaf";
     public averageEfficiency = 0;
     public averageSpeed = 0;
+    public didConvert = false;
+
+    constructor(pos: Vector2) {
+        super(pos);
+    }
+
     public step() {
         super.step();
+        this.didConvert = false;
         const neighbors = world.tileNeighbors(this.pos);
         this.averageEfficiency = 0;
         this.averageSpeed = 0;
@@ -399,6 +408,7 @@ export class Leaf extends Cell {
                     const tissueWater = tissue.inventory.water;
                     if (tissueWater >= neededWater) {
                         tissue.inventory.change(-neededWater, 1);
+                        this.didConvert = true;
                         break; // give max one sugar per turn
                     }
                 }
