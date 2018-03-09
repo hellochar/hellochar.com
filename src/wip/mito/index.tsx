@@ -13,6 +13,10 @@ import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport, hasTilePairs } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
+import { Float32BufferAttribute } from "three";
+import { BufferGeometry } from "three";
+import { Line } from "three";
+import { LineBasicMaterial } from "three";
 
 export type Entity = Tile | Player;
 
@@ -725,7 +729,7 @@ class TileRenderer extends Renderer<Tile> {
     // private audio: THREE.PositionalAudio;
     private audio: THREE.Audio;
     private lastAudioValueTracker = 0;
-    private pairsLines: THREE.ArrowHelper[] = [];
+    private pairsLines: THREE.Line[] = [];
 
     init() {
         const mat = getMaterial(this.target) as MeshBasicMaterial;
@@ -757,10 +761,18 @@ class TileRenderer extends Renderer<Tile> {
             this.object.add(this.inventoryRenderer.object);
         }
         this.scene.add(this.object);
-        // for now
+
+        const zIndex = this.target instanceof Cell ? 1 : 0;
+        this.object.position.set(this.target.pos.x, this.target.pos.y, zIndex);
+
         if (this.target instanceof Cell) {
             this.object.scale.set(0.01, 0.01, 1);
+        } else {
+            this.object.matrixAutoUpdate = false;
+            this.mesh.matrixAutoUpdate = false;
         }
+        this.object.updateMatrix();
+        this.mesh.updateMatrix();
 
         if (this.target instanceof Transport) {
             const dir = new Vector3(this.target.dir.x, this.target.dir.y, 0).normalize();
@@ -799,28 +811,8 @@ class TileRenderer extends Renderer<Tile> {
             }
         }
         mat.color = new THREE.Color(0).lerp(this.originalColor, lightAmount);
-        const zIndex = this.target instanceof Cell ? 1 : 0;
-        this.object.position.set(this.target.pos.x, this.target.pos.y, zIndex);
         if (this.target instanceof Cell) {
-            // this.object.position.x += this.target.offset.x;
-            // this.object.position.y += this.target.offset.y;
-            this.object.position.y += this.target.droopY;
-            // if (this.target.metabolism.type === "eating") {
-            //     // this.eatingMesh.position.z = 1;
-            //     // this.object.add(this.eatingMesh);
-            // } else {
-            //     // this.object.remove(this.eatingMesh);
-            // }
-
-            // if (this.target instanceof Transport) {
-            //     const geom = this.mesh.geometry as PlaneBufferGeometry;
-            //     const uvs = geom.getAttribute("uv") as BufferAttribute;
-            //     uvs.setDynamic(true);
-            //     for (let i = 0; i < uvs.count; i++) {
-            //         uvs.setX(i, uvs.getX(i) + this.target.dir.x * 0.01);
-            //         uvs.setY(i, uvs.getY(i) + this.target.dir.y * 0.01);
-            //     }
-            // }
+            this.object.position.set(this.target.pos.x, this.target.pos.y + this.target.droopY, 1);
         }
         if (hasEnergy(this.target)) {
             mat.color.lerp(new THREE.Color(0), 1 - this.target.energy / CELL_ENERGY_MAX);
@@ -876,13 +868,40 @@ class TileRenderer extends Renderer<Tile> {
                 this.pairsLines = pairs.map((dir) => {
                     const length = dir.length() * 2 - 0.25;
                     const arrowDir = new THREE.Vector3(dir.x, dir.y, 0).normalize();
-                    const arrowHelper = new THREE.ArrowHelper(arrowDir, arrowDir.clone().multiplyScalar(-length / 2), length, pairColor, 0, 0);
+                    const arrowHelper = this.makeLine(arrowDir, arrowDir.clone().multiplyScalar(-length / 2), length, pairColor);
                     arrowHelper.position.z = 0.1;
                     this.object.add(arrowHelper);
                     return arrowHelper;
                 });
             }
         }
+    }
+
+    static lineGeometry = (() => {
+        const g = new BufferGeometry();
+        g.addAttribute('position', new Float32BufferAttribute([0, 0, 0, 0, 1, 0], 3));
+        return g;
+    })();
+
+    private makeLine(dir: Vector3, origin: Vector3, length: number, color: number) {
+        // copied from https://github.com/mrdoob/three.js/blob/master/src/helpers/ArrowHelper.js
+        const line = new Line(TileRenderer.lineGeometry, new LineBasicMaterial({ color: color }));
+        line.position.copy(origin);
+
+        // dir is assumed to be normalized
+        if (dir.y > 0.99999) {
+            line.quaternion.set(0, 0, 0, 1);
+        } else if (dir.y < - 0.99999) {
+            line.quaternion.set(1, 0, 0, 0);
+        } else {
+            const axis = new Vector3(dir.z, 0, - dir.x).normalize();
+            const radians = Math.acos(dir.y);
+            line.quaternion.setFromAxisAngle(axis, radians);
+        }
+        line.scale.set(1, Math.max(0, length), 1);
+        line.updateMatrix();
+        line.matrixAutoUpdate = false;
+        return line;
     }
 
     destroy() {
