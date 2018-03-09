@@ -10,7 +10,7 @@ import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, Acti
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
-import { textureFromSpritesheet } from "./spritesheet";
+import { textureFromSpritesheet, fruitTexture } from "./spritesheet";
 import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport, hasTilePairs } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
 import { Float32BufferAttribute } from "three";
@@ -665,9 +665,9 @@ materialMapping.set(Root, new MeshBasicMaterial({
     // color: new Color("lightgreen"),
 }));
 materialMapping.set(Fruit, new MeshBasicMaterial({
-    map: textureFromSpritesheet(9, 31),
+    map: fruitTexture,
     side: THREE.DoubleSide,
-    color: new Color("rgb(249, 243, 49)"),
+    transparent: true,
 }));
 
 function getMaterial(tile: Tile) {

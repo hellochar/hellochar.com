@@ -324,6 +324,9 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                 <p>
                     Part of 7drl 2018: <a href="http://7drl.org/" target="_blank">http://7drl.org/</a>
                 </p>
+                <p>
+                    Fruit icon: <a href='https://www.freepik.com/free-vector/fruits-set-pixel-icons_1001072.htm'>Designed by Freepik</a>
+                </p>
             </div>
         );
     }

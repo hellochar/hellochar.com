@@ -13,6 +13,8 @@ const SPRITESHEET = new THREE.TextureLoader().load( '/assets/images/roguelikeShe
 // SPRITESHEET.offset.set(16 / 1024 * 50, 16 / 512 * 0);
 // console.log(SPRITESHEET);
 
+export const fruitTexture = new THREE.TextureLoader().load('/assets/images/fruit.png');
+
 const cache: { [key: string]: THREE.Texture } = {};
 // x, y are spritesheet coordinates, starting top-left and going down/right
 export function textureFromSpritesheet(x: number, y: number, backgroundColor = "white") {

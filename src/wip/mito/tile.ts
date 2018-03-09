@@ -103,7 +103,17 @@ export class Air extends Tile {
     public constructor(public pos: Vector2) {
         super(pos);
         this.darkness = 0;
-        this._co2 = 1;
+        this.computeCo2();
+    }
+
+    private computeCo2() {
+        const base = map(this.pos.y, height / 2, 0, 0.5, 1.15);
+        const scaleX = map(this.pos.y, height / 2, 0, 4, 9);
+        // const offset = noiseCo2.perlin3(94.2321 - this.pos.x / scaleX, 3221 - this.pos.y / 2.5, world.time / 5 + 93.1) * 0.2;
+        const time = world == null ? 0 : world.time;
+        const offset = noiseCo2.perlin3(94.231 + (this.pos.x - width / 2) / scaleX, 2312 + this.pos.y / 8, time / 1000 + 93.1) * 0.25;
+        // don't compute dark/light or water diffusion
+        this._co2 = Math.max(Math.min(base + offset, 1), 0.4);
     }
 
     public lightAmount() {
@@ -111,12 +121,7 @@ export class Air extends Tile {
     }
 
     step() {
-        const base = map(this.pos.y, height / 2, 0, 0.5, 1.15);
-        const scaleX = map(this.pos.y, height / 2, 0, 4, 9);
-        // const offset = noiseCo2.perlin3(94.2321 - this.pos.x / scaleX, 3221 - this.pos.y / 2.5, world.time / 5 + 93.1) * 0.2;
-        const offset = noiseCo2.perlin3(94.231 + (this.pos.x - width / 2) / scaleX, 2312 + this.pos.y / 8, world.time / 1000 + 93.1) * 0.25;
-        // don't compute dark/light or water diffusion
-        this._co2 = Math.max(Math.min(base + offset, 1), 0.4);
+        this.computeCo2();
     }
 
     public co2() {
