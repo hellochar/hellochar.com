@@ -423,8 +423,11 @@ export class Leaf extends Cell {
 
 export class Root extends Cell {
     static displayName = "Root";
+    public waterTransferAmount = 0;
+
     public step() {
         super.step();
+        this.waterTransferAmount = 0;
         const neighbors = world.tileNeighbors(this.pos);
         for (const [dir, tile] of neighbors.entries()) {
             const oppositeTile = world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
@@ -433,8 +436,14 @@ export class Root extends Cell {
                     const soilWater = tile.inventory.water;
                     const tissueWater = oppositeTile.inventory.water;
                     // const transferAmount = Math.ceil(Math.max(0, soilWater - tissueWater) / 2);
-                    const transferAmount = 1;
-                    tile.inventory.give(oppositeTile.inventory, transferAmount, 0);
+                    if (tile.inventory.water > 0) {
+                        const {water: transferAmount} = tile.inventory.give(oppositeTile.inventory, 1, 0);
+                        if (transferAmount > 0) {
+                            this.waterTransferAmount += transferAmount;
+                            // add a random to trigger the !== on water transfer audio
+                            this.waterTransferAmount += Math.random() * 0.0001;
+                        }
+                    }
             }
         }
         // const tissueNeighbors = Array.from(neighbors.values()).filter((e) => e instanceof Tissue) as Tissue[];

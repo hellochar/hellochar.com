@@ -28,6 +28,7 @@ export class Inventory {
         }
         this.change(-water, -sugar);
         other.change(water, sugar);
+        return {water, sugar};
     }
 
     public change(water: number, sugar: number) {

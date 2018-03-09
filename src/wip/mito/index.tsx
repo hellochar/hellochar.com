@@ -7,7 +7,7 @@ import { BufferAttribute } from "three";
 import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
-import { build, footsteps, hookUpAudio, blopBuffer } from "./audio";
+import { build, footsteps, hookUpAudio, blopBuffer, suckWaterBuffer } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
@@ -660,7 +660,7 @@ class TileRenderer extends Renderer<Tile> {
     private originalColor: THREE.Color;
     // private audio: THREE.PositionalAudio;
     private audio: THREE.Audio;
-    private lastDidConvert = false;
+    private lastAudioValueTracker = 0;
 
     init() {
         const mat = getMaterial(this.target) as MeshBasicMaterial;
@@ -711,7 +711,7 @@ class TileRenderer extends Renderer<Tile> {
             this.object.add(arrow);
         }
 
-        if (this.target instanceof Leaf) {
+        if (this.target instanceof Leaf || this.target instanceof Root) {
             this.audio = new THREE.Audio(Mito.audioListener);
             this.object.add(this.audio);
         }
@@ -771,8 +771,8 @@ class TileRenderer extends Renderer<Tile> {
             }
         }
         if (this.target instanceof Leaf) {
-            const newDidConvert = this.target.didConvert;
-            if (newDidConvert !== this.lastDidConvert && newDidConvert) {
+            const newAudioValueTracker = this.target.didConvert ? 1 : 0;
+            if (newAudioValueTracker !== this.lastAudioValueTracker && newAudioValueTracker > 0) {
                 this.audio.setBuffer(blopBuffer);
                 const dist = this.target.pos.distanceToSquared(world.player.pos);
                 const volume = Math.min(1, 1 / (1 + dist / 25));
@@ -781,11 +781,27 @@ class TileRenderer extends Renderer<Tile> {
                 // play blop sound
                 this.audio.play();
             }
-            this.lastDidConvert = newDidConvert;
+            this.lastAudioValueTracker = newAudioValueTracker;
             // this.audio.setBuffer(blopBuffer);
             // this.audio.setRefDistance(2);
             // play blop sound
             // this.audio.play();
+        }
+
+        if (this.target instanceof Root) {
+            const newAudioValueTracker = this.target.waterTransferAmount;
+            if (newAudioValueTracker !== this.lastAudioValueTracker) {
+                this.audio.setBuffer(suckWaterBuffer);
+                const baseVolume = this.target.waterTransferAmount / (2 + this.target.waterTransferAmount);
+                const dist = this.target.pos.distanceToSquared(world.player.pos);
+                const volume = Math.min(1, 1 / (1 + dist / 25)) * baseVolume;
+                this.audio.setVolume(volume);
+                if (this.audio.source != null) {
+                    this.audio.stop();
+                }
+                this.audio.play();
+            }
+            this.lastAudioValueTracker = newAudioValueTracker;
         }
     }
 
