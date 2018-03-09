@@ -7,7 +7,7 @@ import { BufferAttribute } from "three";
 import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
-import { hookUpAudio, footsteps, footstepsAudio } from "./audio";
+import { build, footsteps, hookUpAudio } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
@@ -103,10 +103,10 @@ class Player {
 
     public attemptMove(action: ActionMove) {
         if (this.verifyMove(action)) {
-            footstepsAudio.currentTime = Math.random() * 0.05;
-            footsteps.gain.cancelScheduledValues(0);
-            footsteps.gain.value = 0.2;
-            footsteps.gain.linearRampToValueAtTime(0, Mito.audioContext.currentTime + 0.05);
+            footsteps.audio.currentTime = Math.random() * 0.05;
+            footsteps.gain.gain.cancelScheduledValues(0);
+            footsteps.gain.gain.value = 0.2;
+            footsteps.gain.gain.linearRampToValueAtTime(0, Mito.audioContext.currentTime + 0.05);
             const target = world.wrappedPosition(this.pos.clone().add(action.dir));
             // do the move
             this.pos = target;
@@ -149,6 +149,11 @@ class Player {
             this.inventory.sugar >= sugarCost) {
             this.inventory.change(-waterCost, -sugarCost);
             const newTile = new cellType(position);
+
+            build.audio.currentTime = 0;
+            build.gain.gain.cancelScheduledValues(0);
+            build.gain.gain.value = 0.2;
+            build.gain.gain.exponentialRampToValueAtTime(0.0001, Mito.audioContext.currentTime + 0.50);
             return newTile;
         } else {
             return undefined;

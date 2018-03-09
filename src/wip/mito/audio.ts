@@ -2,7 +2,7 @@ import * as $ from "jquery";
 
 import { SketchAudioContext } from "../../sketch";
 
-function makeNodeOfAudioAsset(ctx: SketchAudioContext, assetName: string) {
+function makeNodeOfAudioAsset(ctx: SketchAudioContext, assetName: string): Unit {
     const audio = (
         $("<audio autoplay loop>")
             // .append(`<source src="/assets/audio/mito/${assetName}.ogg" type="audio/ogg">`)
@@ -15,8 +15,13 @@ function makeNodeOfAudioAsset(ctx: SketchAudioContext, assetName: string) {
     return {audio, gain};
 }
 
-export let footsteps: GainNode;
-export let footstepsAudio: HTMLAudioElement;
+interface Unit {
+    gain: GainNode;
+    audio: HTMLAudioElement;
+}
+
+export let footsteps: Unit;
+export let build: Unit;
 
 export function hookUpAudio(ctx: SketchAudioContext) {
     // const mito = makeNodeOfAudioAsset(ctx, "mito");
@@ -24,11 +29,13 @@ export function hookUpAudio(ctx: SketchAudioContext) {
     mito.gain.value = 0.5;
     mito.connect(ctx.gain);
 
-    const node = makeNodeOfAudioAsset(ctx, "footsteps");
-    footsteps = node.gain;
-    footstepsAudio = node.audio;
-    footsteps.gain.value = 0;
-    footsteps.connect(ctx.gain);
+    footsteps = makeNodeOfAudioAsset(ctx, "footsteps");
+    footsteps.gain.gain.value = 0;
+    footsteps.gain.connect(ctx.gain);
+
+    build = makeNodeOfAudioAsset(ctx, "build");
+    build.gain.gain.value = 0;
+    build.gain.connect(ctx.gain);
 }
 
 // export function hookUpAudio(ctx: SketchAudioContext) {
