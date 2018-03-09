@@ -261,6 +261,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                         Build Tissue, Leaves, Roots, and The Fruit by toggling "build mode" on and walking into Air or Soil.
                         Build Transport over existing tissue by walking around. Building costs 1 sugar and 1 water.
                         You can build Tissue over Leaves and Roots - be careful!
+                        When you build above ground, Cells will Droop if they're not properly supported underneath them.
                     </p>
                     <h3>Cells</h3>
                     <p>
@@ -283,8 +284,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     </p>
                     <h3>Transport</h3>
                     <p>
-                        Transports move 1 water from its own Tile in the direction it was laid per turn, as well as moving you. Transports
-                        only have 1 resource slot. Transport hungers at double speed.
+                        Transports move 1 water from its own Tile in the direction it was laid per turn, as well as moving you. Transport hungers at double speed.
                     </p>
                     <h3>The Fruit</h3>
                     <p>

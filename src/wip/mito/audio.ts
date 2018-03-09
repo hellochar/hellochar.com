@@ -6,7 +6,7 @@ import * as THREE from "three";
 function makeNodeOfAudioAsset(ctx: SketchAudioContext, assetName: string): Unit {
     const audio = (
         $("<audio autoplay loop>")
-            // .append(`<source src="/assets/audio/mito/${assetName}.ogg" type="audio/ogg">`)
+            .append(`<source src="/assets/audio/mito/${assetName}.ogg" type="audio/ogg">`)
             .append(`<source src="/assets/audio/mito/${assetName}.mp3" type="audio/mp3">`)
             .append(`<source src="/assets/audio/mito/${assetName}.wav" type="audio/wav">`) as JQuery<HTMLAudioElement>
     )[0];
@@ -21,6 +21,10 @@ interface Unit {
     audio: HTMLAudioElement;
 }
 
+export let mito: Unit;
+export let strings: Unit;
+export let drums: Unit;
+
 export let footsteps: Unit;
 export let build: Unit;
 
@@ -28,10 +32,29 @@ export let blopBuffer: THREE.AudioBuffer;
 export let suckWaterBuffer: THREE.AudioBuffer;
 
 export function hookUpAudio(ctx: SketchAudioContext) {
-    // const mito = makeNodeOfAudioAsset(ctx, "mito");
-    const {gain: mito} = makeNodeOfAudioAsset(ctx, "mito-base");
-    mito.gain.value = 0.5;
-    mito.connect(ctx.gain);
+    let numDone = 0;
+    function oneMoreLoaded() {
+        numDone++;
+        if (numDone === 3) {
+            mito.audio.currentTime = 0;
+            strings.audio.currentTime = 0;
+            drums.audio.currentTime = 0;
+            mito.gain.connect(ctx.gain);
+            strings.gain.connect(ctx.gain);
+            drums.gain.connect(ctx.gain);
+        }
+    }
+    mito = makeNodeOfAudioAsset(ctx, "mito-base");
+    mito.audio.oncanplaythrough = oneMoreLoaded;
+    mito.gain.gain.value = 0.5;
+
+    strings = makeNodeOfAudioAsset(ctx, "mito-strings");
+    strings.audio.oncanplaythrough = oneMoreLoaded;
+    strings.gain.gain.value = 0.0;
+
+    drums = makeNodeOfAudioAsset(ctx, "mito-drums");
+    drums.audio.oncanplaythrough = oneMoreLoaded;
+    drums.gain.gain.value = 0.0;
 
     footsteps = makeNodeOfAudioAsset(ctx, "footsteps");
     footsteps.gain.gain.value = 0;

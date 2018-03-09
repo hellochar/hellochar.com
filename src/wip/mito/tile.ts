@@ -473,7 +473,6 @@ export class Fruit extends Cell {
 
 export class Transport extends Tissue {
     static displayName = "Transport";
-    public inventory = new Inventory(1);
     public dir: Vector2;
 
     step() {

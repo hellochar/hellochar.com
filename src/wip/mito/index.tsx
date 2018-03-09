@@ -7,7 +7,7 @@ import { BufferAttribute } from "three";
 import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
-import { build, footsteps, hookUpAudio, blopBuffer, suckWaterBuffer } from "./audio";
+import { build, footsteps, hookUpAudio, blopBuffer, suckWaterBuffer, drums, strings } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
 import { textureFromSpritesheet } from "./spritesheet";
@@ -1158,6 +1158,7 @@ const Mito = new (class extends ISketch {
         // airBg.position.x = width / 2 - 0.5;
         // airBg.position.y = height / 2 - 0.5;
         // this.scene.add(airBg);
+        this.updateAmbientAudio();
     }
 
     public getOrCreateRenderer(entity: Entity) {
@@ -1170,6 +1171,14 @@ const Mito = new (class extends ISketch {
         } else {
             return renderer;
         }
+    }
+
+    public updateAmbientAudio() {
+        const yPos = world.player.pos.y;
+        const drumVolume = map(yPos, height / 2, height, 0, 0.5);
+        const stringsVolume = map(yPos, height / 2, 0, 0, 0.5);
+        drums.gain.gain.value = Math.max(0, drumVolume);
+        strings.gain.gain.value = Math.max(0, stringsVolume);
     }
 
     public animate() {
@@ -1192,6 +1201,8 @@ const Mito = new (class extends ISketch {
                 renderer.destroy();
                 this.renderers.delete(e);
             }
+
+            this.updateAmbientAudio();
         }
         // if (world.player.action == null) {
         //     world.player.action = { type: "still" };
