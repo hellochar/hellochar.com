@@ -132,11 +132,11 @@ let compressor: DynamicsCompressorNode;
 
 function initAudio(context: SketchAudioContext) {
     compressor = context.createDynamicsCompressor();
-    compressor.threshold.value = -40;
-    compressor.knee.value = 35;
-    compressor.attack.value = 0.1;
-    compressor.release.value = 0.25;
-    compressor.ratio.value = 1.8;
+    compressor.threshold.setValueAtTime(-40, 0);
+    compressor.knee.setValueAtTime(35, 0);
+    compressor.attack.setValueAtTime(0.1, 0);
+    compressor.release.setValueAtTime(0.25, 0);
+    compressor.ratio.setValueAtTime(1.8, 0);
 
     // const noise = createPinkNoise(context);
     const noise = createWhiteNoise(context);
@@ -146,7 +146,7 @@ function initAudio(context: SketchAudioContext) {
     noiseGain.connect(compressor);
 
     oscLow = context.createOscillator();
-    oscLow.frequency.value = 0;
+    oscLow.frequency.setValueAtTime(0, 0);
     oscLow.type = "square";
     oscLow.start(0);
     const oscLowGain = context.createGain();
@@ -155,12 +155,12 @@ function initAudio(context: SketchAudioContext) {
 
     filter = context.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = 100;
-    filter.Q.value = 2.18;
+    filter.frequency.setValueAtTime(100, 0);
+    filter.Q.setValueAtTime(2.18, 0);
     oscLowGain.connect(filter);
 
     oscHigh = context.createOscillator();
-    oscHigh.frequency.value = 0;
+    oscHigh.frequency.setValueAtTime(0, 0);
     oscHigh.type = "triangle";
     oscHigh.start(0);
     oscHighGain = context.createGain();
@@ -218,15 +218,15 @@ function initAudio(context: SketchAudioContext) {
         let fifthBias = 0;
 
         function recompute() {
-            root.frequency.value = rootFreq;
+            root.frequency.setValueAtTime(rootFreq, 0);
             const thirdScaleNote = 4 - minorBias;
             const thirdFreqScale = Math.pow(2, thirdScaleNote / 12);
-            third.frequency.value = rootFreq * thirdFreqScale;
+            third.frequency.setValueAtTime(rootFreq * thirdFreqScale, 0);
             const fifthScaleNote = 7 + fifthBias;
             const fifthFreqScale = Math.pow(2, fifthScaleNote / 12);
-            fifth.frequency.value = rootFreq * fifthFreqScale;
-            sub.frequency.value = rootFreq / 2;
-            sub2.frequency.value = rootFreq / 4;
+            fifth.frequency.setValueAtTime(rootFreq * fifthFreqScale, 0);
+            sub.frequency.setValueAtTime(rootFreq / 2, 0);
+            sub2.frequency.setValueAtTime(rootFreq / 4, 0);
         }
 
         return {
@@ -313,9 +313,9 @@ function updateName(name: string = "Han") {
     const hashNorm = (hash % 1024) / 1024;
     baseFrequency = map((hash % 2048) / 2048, 0, 1, 10, 6000);
     const hash2 = hash * hash + hash * 31 + 9;
-    filter.frequency.value = map((hash2 % 2e12) / 2e12, 0, 1, 120, 400);
+    filter.frequency.setValueAtTime(map((hash2 % 2e12) / 2e12, 0, 1, 120, 400), 0);
     const hash3 = hash2 * hash2 + hash2 * 31 + 9;
-    filter.Q.value = map((hash3 % 2e12) / 2e12, 0, 1, 5, 8);
+    filter.Q.setValueAtTime(map((hash3 % 2e12) / 2e12, 0, 1, 5, 8), 0);
     baseLowFrequency = map((hash3 % 10) / 10, 0, 1, 10, 20);
     noiseGainScale = map((hash2 * hash3 % 100) / 100, 0, 1, 3, 6);
     baseThirdBias = (hash2 % 4) / 4;
@@ -431,10 +431,14 @@ const Flame = new (class extends ISketch {
         oscGain.gain.setTargetAtTime(newOscGain, oscGain.context.currentTime, 0.016);
 
         const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
-        oscLow.frequency.value = newOscFreq * oscLowGate;
+        oscLow.frequency.setTargetAtTime(newOscFreq * oscLowGate, oscLow.context.currentTime, 0.016);
 
         const velocitySq = map(velocity * velocity, 1e-8, 0.005, -10, 10);
-        oscHigh.frequency.value = Math.min(map(sigmoid(velocitySq), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate;
+        oscHigh.frequency.setTargetAtTime(
+            Math.min(map(sigmoid(velocitySq), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate,
+            oscHigh.context.currentTime,
+            0.016,
+        );
 
         if (audioHasChord) {
             chord.setFrequency(100 + 100 * boundingSphere.radius);
@@ -445,7 +449,7 @@ const Flame = new (class extends ISketch {
         }
 
         const cameraLength = camera.position.length();
-        compressor.ratio.value = 1 + 3 / cameraLength;
+        compressor.ratio.setTargetAtTime(1 + 3 / cameraLength, this.audioContext.currentTime, 0.016);
         this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
 
         controls.update();
