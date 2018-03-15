@@ -131,7 +131,6 @@ let filter: BiquadFilterNode;
 let compressor: DynamicsCompressorNode;
 
 function initAudio(context: SketchAudioContext) {
-    context.gain.gain.value = 0;
     compressor = context.createDynamicsCompressor();
     compressor.threshold.value = -40;
     compressor.knee.value = 35;
@@ -142,7 +141,7 @@ function initAudio(context: SketchAudioContext) {
     // const noise = createPinkNoise(context);
     const noise = createWhiteNoise(context);
     noiseGain = context.createGain();
-    noiseGain.gain.value = 0.0;
+    noiseGain.gain.setValueAtTime(0, 0);
     noise.connect(noiseGain);
     noiseGain.connect(compressor);
 
@@ -151,7 +150,7 @@ function initAudio(context: SketchAudioContext) {
     oscLow.type = "square";
     oscLow.start(0);
     const oscLowGain = context.createGain();
-    oscLowGain.gain.value = 0.6;
+    oscLowGain.gain.setValueAtTime(0.6, 0);
     oscLow.connect(oscLowGain);
 
     filter = context.createBiquadFilter();
@@ -165,11 +164,11 @@ function initAudio(context: SketchAudioContext) {
     oscHigh.type = "triangle";
     oscHigh.start(0);
     oscHighGain = context.createGain();
-    oscHighGain.gain.value = 0.05;
+    oscHighGain.gain.setValueAtTime(0.05, 0);
     oscHigh.connect(oscHighGain);
 
     oscGain = context.createGain();
-    oscGain.gain.value = 0.0;
+    oscGain.gain.setValueAtTime(0.0, 0);
     filter.connect(oscGain);
     oscHighGain.connect(oscGain);
     oscGain.connect(compressor);
@@ -188,25 +187,25 @@ function initAudio(context: SketchAudioContext) {
         fifth.type = "sine";
         fifth.start(0);
         const fifthGain = context.createGain();
-        fifthGain.gain.value = 0.7;
+        fifthGain.gain.setValueAtTime(0.7, 0);
         fifth.connect(fifthGain);
 
         const sub = context.createOscillator();
         sub.type = "triangle";
         sub.start(0);
         const subGain = context.createGain();
-        subGain.gain.value = 0.9;
+        subGain.gain.setValueAtTime(0.9, 0);
         sub.connect(subGain);
 
         const sub2 = context.createOscillator();
         sub2.type = "triangle";
         sub2.start(0);
         const sub2Gain = context.createGain();
-        sub2Gain.gain.value = 0.8;
+        sub2Gain.gain.setValueAtTime(0.8, 0);
         sub2.connect(sub2Gain);
 
         const gain = context.createGain();
-        gain.gain.value = 0;
+        gain.gain.setValueAtTime(0, 0);
         root.connect(gain);
         third.connect(gain);
         fifthGain.connect(gain);
@@ -299,17 +298,17 @@ let baseLowFrequency = 0;
 let noiseGainScale = 0;
 let baseThirdBias = 0;
 let baseFifthBias = 0;
-let noiseGate = 0;
+let audioHasNoise = false;
+let audioHasChord = false;
 let oscLowGate = 0;
 let oscHighGate = 0;
-let chordGate = 0;
 function updateName(name: string = "Han") {
     const {origin, pathname} = window.location;
     const newUrl = `${origin}${pathname}?name=${name}`;
     window.history.replaceState({}, null!, newUrl);
     // jumpiness = 30;
     boundingSphere = null;
-    Flame.audioContext.gain.gain.value = 0;
+    Flame.audioContext.gain.gain.setValueAtTime(0, 0);
     const hash = stringHash(name);
     const hashNorm = (hash % 1024) / 1024;
     baseFrequency = map((hash % 2048) / 2048, 0, 1, 10, 6000);
@@ -323,10 +322,10 @@ function updateName(name: string = "Han") {
     baseFifthBias = (hash3 % 3) / 3;
 
     // basically boolean randoms; we don't want mod 2 cuz the hashes are related to each other at that small level
-    noiseGate = (hash3 % 100) < 50 ? 0 : 1;
+    audioHasNoise = (hash3 % 100) >= 50;
     oscLowGate = (hash2 * hash3 % 96) < 48 ? 0 : 1;
     oscHighGate = (hash3 * hash3 % 4000) < 2000 ? 0 : 1;
-    chordGate = (hash + hash2 + hash3) % 44 < 22 ? 0 : 1;
+    audioHasChord = (hash + hash2 + hash3) % 44 >= 22;
 
     cY = map(hashNorm, 0, 1, -2.5, 2.5);
     globalBranches = randomBranches(name);
@@ -421,12 +420,15 @@ const Flame = new (class extends ISketch {
         const density = countDensity / count;
 
         const velocityFactor = Math.min(velocity * noiseGainScale, 0.3);
-        const noiseAmplitude = 2 / (1 + density * density);
-        const newNoiseGain = noiseGain.gain.value * 0.9 + 0.1 * velocityFactor * noiseAmplitude;
-        noiseGain.gain.value = (newNoiseGain + 1e-4) * noiseGate;
+        if (audioHasNoise) {
+            const noiseAmplitude = 2 / (1 + density * density);
+            // smooth out density random noise
+            const target = noiseGain.gain.value * 0.9 + 0.1 * (velocityFactor * noiseAmplitude + 1e-4);
+            noiseGain.gain.setTargetAtTime(target, noiseGain.context.currentTime, 0.016);
+        }
 
         const newOscGain = oscGain.gain.value * 0.9 + 0.1 * Math.max(0, Math.min(velocity * velocity * 2000, 0.6) - 0.01);
-        oscGain.gain.value = newOscGain;
+        oscGain.gain.setTargetAtTime(newOscGain, oscGain.context.currentTime, 0.016);
 
         const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
         oscLow.frequency.value = newOscFreq * oscLowGate;
@@ -434,14 +436,17 @@ const Flame = new (class extends ISketch {
         const velocitySq = map(velocity * velocity, 1e-8, 0.005, -10, 10);
         oscHigh.frequency.value = Math.min(map(sigmoid(velocitySq), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate;
 
-        chord.setFrequency(100 + 100 * boundingSphere.radius);
-        chord.setMinorBias(baseThirdBias + velocity * 100 + sigmoid(variance - 3) * 4);
-        chord.setFifthBias(baseFifthBias + countDensity / 3);
-        chord.gain.gain.value = (chord.gain.gain.value * 0.9 + 0.1 * (velocityFactor * count * count / 8) + 3e-5) * chordGate;
+        if (audioHasChord) {
+            chord.setFrequency(100 + 100 * boundingSphere.radius);
+            chord.setMinorBias(baseThirdBias + velocity * 100 + sigmoid(variance - 3) * 4);
+            chord.setFifthBias(baseFifthBias + countDensity / 3);
+            const target = (chord.gain.gain.value * 0.9 + 0.1 * (velocityFactor * count * count / 8) + 3e-5);
+            chord.gain.gain.setTargetAtTime(target, chord.gain.context.currentTime, 0.016);
+        }
 
         const cameraLength = camera.position.length();
         compressor.ratio.value = 1 + 3 / cameraLength;
-        this.audioContext.gain.gain.value = (2.5 / cameraLength) + 0.05;
+        this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
 
         controls.update();
         // console.time("render");
