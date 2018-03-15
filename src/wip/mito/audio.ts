@@ -1,6 +1,7 @@
 import * as $ from "jquery";
 import * as THREE from "three";
 
+import devlog from "../../common/devlog";
 import { SketchAudioContext } from "../../sketch";
 
 function makeNodeOfAudioAsset(ctx: SketchAudioContext, assetName: string): Unit {
@@ -72,10 +73,10 @@ export function hookUpAudio(ctx: SketchAudioContext) {
             blopBuffer = audioBuffer;
         },
         (xhr: ProgressEvent) => {
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            devlog((xhr.loaded / xhr.total * 100) + '% loaded');
         },
         (err: any) => {
-            console.log('An error happened');
+            devlog('An error happened');
         },
     );
     loader.load(
@@ -84,10 +85,10 @@ export function hookUpAudio(ctx: SketchAudioContext) {
             suckWaterBuffer = audioBuffer;
         },
         (xhr: ProgressEvent) => {
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            devlog((xhr.loaded / xhr.total * 100) + '% loaded');
         },
         (err: any) => {
-            console.log('An error happened');
+            devlog('An error happened');
         },
     );
 }

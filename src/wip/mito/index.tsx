@@ -4,19 +4,20 @@ import * as THREE from "three";
 import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
 import { BufferAttribute } from "three";
+import { LineBasicMaterial } from "three";
+import { Line } from "three";
+import { BufferGeometry } from "three";
+import { Float32BufferAttribute } from "three";
+import devlog from "../../common/devlog";
 import { lerp, map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
-import { textureFromSpritesheet, fruitTexture } from "./spritesheet";
-import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Transport, hasTilePairs } from "./tile";
+import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
+import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
-import { Float32BufferAttribute } from "three";
-import { BufferGeometry } from "three";
-import { Line } from "three";
-import { LineBasicMaterial } from "three";
 
 export type Entity = Tile | Player;
 
@@ -559,7 +560,7 @@ class World {
                 totalEnergy += e.energy;
             }
         });
-        console.log("sugar", totalSugar, "water", totalWater, "energy", totalEnergy);
+        devlog("sugar", totalSugar, "water", totalWater, "energy", totalEnergy);
     }
 }
 
@@ -595,7 +596,7 @@ class PlayerRenderer extends Renderer<Player> {
                 side: THREE.DoubleSide,
             }),
         );
-        console.log("created player renderer");
+        devlog("created player renderer");
         lerp2(this.mesh.position, this.target.pos, 1);
         this.mesh.position.z = 2;
         this.scene.add(this.mesh);

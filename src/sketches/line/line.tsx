@@ -4,6 +4,7 @@ import { parse } from "query-string";
 import * as React from "react";
 import * as THREE from "three";
 
+import devlog from "../../common/devlog";
 import { GravityShader } from "../../common/gravityShader";
 import { map } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
@@ -95,7 +96,7 @@ function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext)
     composer.addPass(gravityShaderPass);
 
     controller = initLeap();
-    console.log(controller);
+    devlog(controller);
 }
 
 function animate(millisElapsed: number) {
@@ -110,7 +111,6 @@ function animate(millisElapsed: number) {
         if (attractor.power > 0 && attractor.power < 1400) {
             // attractor.power += (100 - attractor.power) * 0.001;
             attractor.power *= 1.005;
-            console.log("moving to", attractor.power);
         }
     });
 

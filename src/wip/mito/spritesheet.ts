@@ -1,5 +1,6 @@
 import * as $ from "jquery";
 import * as THREE from "three";
+import devlog from "../../common/devlog";
 
 const spriteSize = 16; // 16x16 sprites
 const spriteSheetWidth = 1024;
@@ -48,7 +49,7 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
                 16,
             );
             texture.needsUpdate = true;
-            console.log("updated spritesheet for ", x, y);
+            devlog("updated spritesheet for ", x, y);
         });
         // const texture = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png' );
         // texture.magFilter = THREE.NearestFilter;

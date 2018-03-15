@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as THREE from "three";
 
+import devlog from "../common/devlog";
 import { ISketch, SketchAudioContext } from "../sketch";
 
 // goal - compute particle positions from the vertex shader
@@ -29,7 +30,7 @@ const RenderToTexture = new (class extends ISketch {
             color: 0xff00ff,
         });
         const geom = new THREE.CubeGeometry(1, 1, 1);
-        geom.faces.forEach((f) => console.log(f));
+        geom.faces.forEach((f) => devlog(f));
         // geom.faces.forEach((f) => f.materialIndex = 0);
         this.mesh = new THREE.Mesh(geom, new THREE.MultiMaterial([
             new THREE.MeshBasicMaterial({

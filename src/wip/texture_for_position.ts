@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as THREE from "three";
 
+import devlog from "../common/devlog";
 import { ISketch, SketchAudioContext } from "../sketch";
 
 // goal - use a shader to fill in a texture, which is then used to fill in the positions of particles
@@ -287,7 +288,7 @@ void main() {
     public logRenderTarget(renderTarget: THREE.WebGLRenderTarget) {
         const buffer = new Float32Array(renderTarget.width * renderTarget.height * 4);
         this.renderer.readRenderTargetPixels(renderTarget, 0, 0, renderTarget.width, renderTarget.height, buffer);
-        console.log(buffer);
+        devlog(buffer);
     }
 
     get aspectRatio() {
