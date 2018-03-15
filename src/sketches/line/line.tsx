@@ -125,7 +125,7 @@ function animate(millisElapsed: number) {
     stepParticles(particles, nonzeroAttractors);
     const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } = computeStats(particles);
 
-    audioGroup.sourceLfo.frequency.value = flatRatio;
+    audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
     if (normalizedEntropy !== 0) {
         // audioGroup.setFrequency(222 / normalizedEntropy);
         audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
