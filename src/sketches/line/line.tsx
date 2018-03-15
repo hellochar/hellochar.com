@@ -16,252 +16,229 @@ import { IParticle, resetToOriginalPosition, stepParticles } from "./particle";
 import { createParticlePoints } from "./particlePoints";
 import { computeStats } from "./particleStats";
 
-export const NUM_PARTICLES = Number(parse(location.search).p) ||
-    // cheap mobile detection
-    (screen.width > 1024 ? 20000 : 5000);
-
-export const attractors = [
-    makeAttractor(),
-    makeAttractor(),
-    makeAttractor(),
-    makeAttractor(),
-    makeAttractor(),
-];
-
-export let instructionsEl: Instructions;
-
-export let globalFrame = 0;
-
-export function setMousePosition(mx: number, my: number) {
-    mouseX = mx;
-    mouseY = my;
-}
-
-let audioContext: SketchAudioContext;
-let audioGroup: any;
-export let canvas: HTMLCanvasElement;
-const particles: IParticle[] = [];
-let returnToStartPower = 0.0;
-
-export let mouseX = 0, mouseY = 0;
-
-let controller: Controller;
-
-// threejs stuff
-let camera: THREE.OrthographicCamera;
-let composer: THREE.EffectComposer;
-let gravityShaderPass: THREE.ShaderPass;
-let points: THREE.Points;
-let renderer: THREE.WebGLRenderer;
-export let scene: THREE.Scene;
-
-function init(_renderer: THREE.WebGLRenderer, _audioContext: SketchAudioContext) {
-    renderer = _renderer;
-    audioContext = _audioContext;
-    canvas = _renderer.domElement;
-
-    audioGroup = createAudioGroup(audioContext);
-
-    scene = new THREE.Scene();
-
-    camera = new THREE.OrthographicCamera(0, canvas.width, 0, canvas.height, 1, 1000);
-    camera.position.z = 500;
-
-    attractors.forEach((attractor) => {
-        scene.add(attractor.mesh);
-    });
-
-    for (let i = 0; i < NUM_PARTICLES; i++) {
-        particles[i] = {
-            x: 0,
-            y: 0,
-            dx: 0,
-            dy: 0,
-            vertex: null,
-        };
-        resetToOriginalPosition(particles[i], i);
-    }
-    points = createParticlePoints(particles);
-    scene.add(points);
-
-    composer = new THREE.EffectComposer(renderer);
-    composer.addPass(new THREE.RenderPass(scene, camera));
-    gravityShaderPass = new THREE.ShaderPass(GravityShader);
-    gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(canvas.width, canvas.height);
-    const gamma = parse(location.search).gamma;
-    if (gamma) {
-        gravityShaderPass.uniforms.gamma.value = gamma;
-    }
-    gravityShaderPass.renderToScreen = true;
-    composer.addPass(gravityShaderPass);
-
-    controller = initLeap();
-    devlog(controller);
-}
-
-function animate(millisElapsed: number) {
-    attractors.forEach((attractor) => {
-        attractor.mesh.position.z = -100;
-        attractor.mesh.children.forEach((child, idx) => {
-            child.rotation.y += (10 - idx) / 20 * attractor.power;
-        });
-        attractor.mesh.rotation.x = 0.8; // attractor.power + 0.1;
-        const scale = Math.sqrt(attractor.power) / 5;
-        attractor.mesh.scale.set(scale, scale, scale);
-        if (attractor.power > 0 && attractor.power < 1400) {
-            // attractor.power += (100 - attractor.power) * 0.001;
-            attractor.power *= 1.005;
-        }
-    });
-
-    gravityShaderPass.uniforms.iMouse.value.set(attractors[0].x, renderer.domElement.height - attractors[0].y);
-
-    if (returnToStartPower > 0 && returnToStartPower < 1) {
-        returnToStartPower *= 1.01;
-    }
-
-    const nonzeroAttractors = attractors.filter((attractor) => attractor.power !== 0);
-
-    stepParticles(particles, nonzeroAttractors);
-    const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } = computeStats(particles);
-
-    audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
-    if (normalizedEntropy !== 0) {
-        // audioGroup.setFrequency(222 / normalizedEntropy);
-        audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
-    }
-
-    // const noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
-    const noiseFreq = 2000 * normalizedVarianceLength;
-    audioGroup.setNoiseFrequency(noiseFreq);
-
-    const groupedUpness = Math.sqrt(averageVel / varianceLength);
-    audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 5.);
-
-    const mouseDistanceToCenter = Math.sqrt(Math.pow(mouseX - averageX, 2) + Math.pow(mouseY - averageY, 2));
-    const normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(canvas.width * canvas.height);
-    // const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
-    const backgroundVolume = 1.00;
-    audioGroup.setBackgroundVolume(backgroundVolume);
-
-    gravityShaderPass.uniforms.iGlobalTime.value = audioContext.currentTime / 1;
-    gravityShaderPass.uniforms.G.value = triangleWaveApprox(audioContext.currentTime / 5) * (groupedUpness + 0.50) * 15000;
-    gravityShaderPass.uniforms.iMouseFactor.value = (1 / 15) / (groupedUpness + 1);
-    // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
-
-    (points.geometry as THREE.Geometry).verticesNeedUpdate = true;
-    composer.render();
-    globalFrame++;
-    if (instructionsEl != null) {
-        instructionsEl.setGlobalFrame(globalFrame);
-        const isLeapMotionControllerValid = controller.lastFrame.valid;
-        instructionsEl.setLeapMotionControllerValid(isLeapMotionControllerValid);
-    }
-}
-
-// 3 orders of fft for triangle wave
-function triangleWaveApprox(t: number) {
-    return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
-}
-
-function touchstart(event: JQuery.Event) {
-    // prevent emulated mouse events from occuring
-    event.preventDefault();
-    const canvasOffset = $(canvas).offset()!;
-    const touch = (event.originalEvent as TouchEvent).touches[0];
-    const touchX = touch.pageX - canvasOffset.left;
-    let touchY = touch.pageY - canvasOffset.top;
-    // offset the touchY by its radius so the attractor is above the thumb
-    touchY -= 100;
-
-    mouseX = touchX;
-    mouseY = touchY;
-    enableFirstAttractor(touchX, touchY);
-}
-
-function touchmove(event: JQuery.Event) {
-    const canvasOffset = $(canvas).offset()!;
-    const touch = (event.originalEvent as TouchEvent).touches[0];
-    const touchX = touch.pageX - canvasOffset.left;
-    let touchY = touch.pageY - canvasOffset.top;
-    touchY -= 100;
-
-    mouseX = touchX;
-    mouseY = touchY;
-    moveFirstAttractor(touchX, touchY);
-}
-
-function touchend(event: JQuery.Event) {
-    disableFirstAttractor();
-}
-
-function mousedown(event: JQuery.Event) {
-    if (event.which === 1) {
-        mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-        enableFirstAttractor(mouseX, mouseY);
-    }
-}
-
-function mousemove(event: JQuery.Event) {
-    mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-    mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-    moveFirstAttractor(mouseX, mouseY);
-}
-
-function mouseup(event: JQuery.Event) {
-    if (event.which === 1) {
-        disableFirstAttractor();
-    }
-}
-
-function enableFirstAttractor(x: number, y: number) {
-    const attractor = attractors[0];
-    attractor.x = x;
-    attractor.y = y;
-    attractor.power = 1;
-    gravityShaderPass.uniforms.iMouse.value.set(x, renderer.domElement.height - y);
-    returnToStartPower = 0;
-}
-
-function moveFirstAttractor(x: number, y: number) {
-    const attractor = attractors[0];
-    attractor.x = x;
-    attractor.y = y;
-    attractor.mesh.position.set(x, y, 0);
-}
-
-function disableFirstAttractor() {
-    const attractor = attractors[0];
-    attractor.power = 0;
-}
-
-function resize(width: number, height: number) {
-    camera.right = width;
-    camera.bottom = height;
-    camera.updateProjectionMatrix();
-
-    gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(width, height);
-}
-
-export const LineSketch = new (class extends ISketch {
-    public id = "line";
+// tslint:disable-next-line:new-parens
+export class LineSketch extends ISketch {
     public events = {
-        mousedown,
-        mousemove,
-        mouseup,
-        resize,
-        touchstart,
-        touchmove,
-        touchend,
+        touchstart: (event: JQuery.Event) => {
+            // prevent emulated mouse events from occuring
+            event.preventDefault();
+            const canvasOffset = $(this.canvas).offset()!;
+            const touch = (event.originalEvent as TouchEvent).touches[0];
+            const touchX = touch.pageX - canvasOffset.left;
+            let touchY = touch.pageY - canvasOffset.top;
+            // offset the touchY by its radius so the attractor is above the thumb
+            touchY -= 100;
+
+            this.mouseX = touchX;
+            this.mouseY = touchY;
+            this.enableFirstAttractor(touchX, touchY);
+        },
+
+        touchmove: (event: JQuery.Event) => {
+            const canvasOffset = $(this.canvas).offset()!;
+            const touch = (event.originalEvent as TouchEvent).touches[0];
+            const touchX = touch.pageX - canvasOffset.left;
+            let touchY = touch.pageY - canvasOffset.top;
+            touchY -= 100;
+
+            this.mouseX = touchX;
+            this.mouseY = touchY;
+            this.moveFirstAttractor(touchX, touchY);
+        },
+
+        touchend: (event: JQuery.Event) => {
+            this.disableFirstAttractor();
+        },
+
+        mousedown: (event: JQuery.Event) => {
+            if (event.which === 1) {
+                this.mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+                this.mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+                this.enableFirstAttractor(this.mouseX, this.mouseY);
+            }
+        },
+
+        mousemove: (event: JQuery.Event) => {
+            this.mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+            this.mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+            this.moveFirstAttractor(this.mouseX, this.mouseY);
+        },
+
+        mouseup: (event: JQuery.Event) => {
+            if (event.which === 1) {
+                this.disableFirstAttractor();
+            }
+        },
     };
-    public elements = [<Instructions ref={(instructions) => instructionsEl = instructions!} />];
+    public elements = [<Instructions ref={(instructions) => this.instructionsEl = instructions} />];
+    public instructionsEl: Instructions | null = null;
+    public NUM_PARTICLES = Number(parse(location.search).p) ||
+        // cheap mobile detection
+        (screen.width > 1024 ? 20000 : 5000);
+
+    public attractors = [
+        makeAttractor(),
+        makeAttractor(),
+        makeAttractor(),
+        makeAttractor(),
+        makeAttractor(),
+    ];
+
+    public globalFrame = 0;
+
+    public setMousePosition(mx: number, my: number) {
+        this.mouseX = mx;
+        this.mouseY = my;
+    }
+
+    public audioGroup: any;
+    public particles: IParticle[] = [];
+    public returnToStartPower = 0.0;
+
+    public mouseX = 0;
+    public mouseY = 0;
+
+    public controller: Controller;
+
+    // threejs stuff
+    public camera: THREE.OrthographicCamera;
+    public composer: THREE.EffectComposer;
+    public gravityShaderPass: THREE.ShaderPass;
+    public points: THREE.Points;
+    public scene: THREE.Scene;
 
     public init() {
-        init(this.renderer, this.audioContext);
+        this.audioGroup = createAudioGroup(this.audioContext);
+
+        this.scene = new THREE.Scene();
+
+        this.camera = new THREE.OrthographicCamera(0, this.canvas.width, 0, this.canvas.height, 1, 1000);
+        this.camera.position.z = 500;
+
+        this.attractors.forEach((attractor) => {
+            this.scene.add(attractor.mesh);
+        });
+
+        for (let i = 0; i < this.NUM_PARTICLES; i++) {
+            this.particles[i] = {
+                x: 0,
+                y: 0,
+                dx: 0,
+                dy: 0,
+                vertex: null,
+            };
+            resetToOriginalPosition(this.particles[i], i);
+        }
+        this.points = createParticlePoints(this.particles);
+        this.scene.add(this.points);
+
+        this.composer = new THREE.EffectComposer(this.renderer);
+        this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
+        this.gravityShaderPass = new THREE.ShaderPass(GravityShader);
+        this.gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(this.canvas.width, this.canvas.height);
+        const gamma = parse(location.search).gamma;
+        if (gamma) {
+            this.gravityShaderPass.uniforms.gamma.value = gamma;
+        }
+        this.gravityShaderPass.renderToScreen = true;
+        this.composer.addPass(this.gravityShaderPass);
+
+        this.controller = initLeap();
+        devlog(this.controller);
     }
 
     public animate(millisElapsed: number) {
-        animate(millisElapsed);
+        this.attractors.forEach((attractor) => {
+            attractor.mesh.position.z = -100;
+            attractor.mesh.children.forEach((child, idx) => {
+                child.rotation.y += (10 - idx) / 20 * attractor.power;
+            });
+            attractor.mesh.rotation.x = 0.8; // attractor.power + 0.1;
+            const scale = Math.sqrt(attractor.power) / 5;
+            attractor.mesh.scale.set(scale, scale, scale);
+            if (attractor.power > 0 && attractor.power < 1400) {
+                // attractor.power += (100 - attractor.power) * 0.001;
+                attractor.power *= 1.005;
+            }
+        });
+
+        this.gravityShaderPass.uniforms.iMouse.value.set(this.attractors[0].x, this.renderer.domElement.height - this.attractors[0].y);
+
+        if (this.returnToStartPower > 0 && this.returnToStartPower < 1) {
+            this.returnToStartPower *= 1.01;
+        }
+
+        const nonzeroAttractors = this.attractors.filter((attractor) => attractor.power !== 0);
+
+        stepParticles(this.particles, nonzeroAttractors);
+        const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } = computeStats(this.particles);
+
+        this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
+        if (normalizedEntropy !== 0) {
+            this.
+                // audioGroup.setFrequency(222 / normalizedEntropy);
+                audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
+        }
+
+        // const noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
+        const noiseFreq = 2000 * normalizedVarianceLength;
+        this.audioGroup.setNoiseFrequency(noiseFreq);
+
+        const groupedUpness = Math.sqrt(averageVel / varianceLength);
+        this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 5.);
+
+        const mouseDistanceToCenter = Math.sqrt(Math.pow(this.mouseX - averageX, 2) + Math.pow(this.mouseY - averageY, 2));
+        const normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(this.canvas.width * this.canvas.height);
+        // const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
+        const backgroundVolume = 1.00;
+        this.audioGroup.setBackgroundVolume(backgroundVolume);
+
+        this.gravityShaderPass.uniforms.iGlobalTime.value = this.audioContext.currentTime / 1;
+        this.gravityShaderPass.uniforms.G.value = this.triangleWaveApprox(this.audioContext.currentTime / 5) * (groupedUpness + 0.50) * 15000;
+        this.gravityShaderPass.uniforms.iMouseFactor.value = (1 / 15) / (groupedUpness + 1);
+        // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
+
+        (this.points.geometry as THREE.Geometry).verticesNeedUpdate = true;
+        this.composer.render();
+        this.globalFrame++;
+        if (this.instructionsEl != null) {
+            this.instructionsEl.setGlobalFrame(this.globalFrame);
+            const isLeapMotionControllerValid = this.controller.lastFrame.valid;
+            this.instructionsEl.setLeapMotionControllerValid(isLeapMotionControllerValid);
+        }
     }
-})();
+
+    // 3 orders of fft for triangle wave
+    public triangleWaveApprox(t: number) {
+        return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
+    }
+
+    public enableFirstAttractor(x: number, y: number) {
+        const attractor = this.attractors[0];
+        attractor.x = x;
+        attractor.y = y;
+        attractor.power = 1;
+        this.gravityShaderPass.uniforms.iMouse.value.set(x, this.renderer.domElement.height - y);
+        this.returnToStartPower = 0;
+    }
+
+    public moveFirstAttractor(x: number, y: number) {
+        const attractor = this.attractors[0];
+        attractor.x = x;
+        attractor.y = y;
+        attractor.mesh.position.set(x, y, 0);
+    }
+
+    public disableFirstAttractor() {
+        const attractor = this.attractors[0];
+        attractor.power = 0;
+    }
+
+    public resize(width: number, height: number) {
+        this.camera.right = width;
+        this.camera.bottom = height;
+        this.camera.updateProjectionMatrix();
+
+        this.gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(width, height);
+    }
+}
