@@ -380,7 +380,7 @@ const Dots = new (class extends ISketch {
             particles[i].vertex = vertex;
         }
 
-        const starTexture = THREE.ImageUtils.loadTexture("/assets/sketches/line/star.png");
+        const starTexture = new THREE.TextureLoader().load("/assets/sketches/line/star.png");
         starTexture.minFilter = THREE.NearestFilter;
         const material = new THREE.PointsMaterial({
             size: 15,
