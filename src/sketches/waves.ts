@@ -164,7 +164,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     $("body").append(backgroundAudio);
 
     const backgroundAudioGain = audioContext.createGain();
-    backgroundAudioGain.gain.value = 0.0;
+    backgroundAudioGain.gain.setValueAtTime(0.0, 0);
     sourceNode.connect(backgroundAudioGain);
     backgroundAudioGain.connect(audioContext.gain);
 
@@ -189,7 +189,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
         function setBiquadParameters(frame: number) {
             a0 = getDarkness(frame + 10) * 0.8;
             b1 = map(Math.pow(HeightMap.getWaviness(frame), 2), 0, 1, -0.92, -0.27);
-            backgroundAudioGain.gain.value = map(getDarkness(frame + 10), 0, 1, 1, 0.8);
+            backgroundAudioGain.gain.setTargetAtTime(map(getDarkness(frame + 10), 0, 1, 1, 0.8), audioContext.currentTime, 0.016);
         }
 
         node.onaudioprocess = (e) => {
@@ -212,7 +212,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     noise.connect(biquadFilter);
 
     const biquadFilterGain = audioContext.createGain();
-    biquadFilterGain.gain.value = 0.01;
+    biquadFilterGain.gain.setValueAtTime(0.01, 0);
     biquadFilter.connect(biquadFilterGain);
 
     biquadFilterGain.connect(audioContext.gain);
