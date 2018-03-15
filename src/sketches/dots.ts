@@ -35,7 +35,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     }
     const source1 = (() => {
         const node = audioContext.createOscillator();
-        node.frequency.value = detuned(BASE_FREQUENCY / 2, 2);
+        node.frequency.setValueAtTime(detuned(BASE_FREQUENCY / 2, 2), 0);
         node.type = "square";
         node.start(0);
 
@@ -47,7 +47,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     })();
     const source2 = (() => {
         const node = audioContext.createOscillator();
-        node.frequency.value = BASE_FREQUENCY;
+        node.frequency.setValueAtTime(BASE_FREQUENCY, 0);
         node.type = "sawtooth";
         node.start(0);
 
@@ -62,7 +62,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     sourceGain.gain.setValueAtTime(0.0, 0);
 
     const lfo = audioContext.createOscillator();
-    lfo.frequency.value = 8.66;
+    lfo.frequency.setValueAtTime(8.66, 0);
     lfo.start(0);
 
     const lfoGain = audioContext.createGain();
@@ -72,13 +72,13 @@ function createAudioGroup(audioContext: SketchAudioContext) {
 
     const filter = audioContext.createBiquadFilter();
     filter.type = "bandpass";
-    filter.frequency.value = 0;
-    filter.Q.value = 5.18;
+    filter.frequency.setValueAtTime(0, 0);
+    filter.Q.setValueAtTime(5.18, 0);
 
     const filter2 = audioContext.createBiquadFilter();
     filter2.type = "bandpass";
-    filter2.frequency.value = 0;
-    filter2.Q.value = 5.18;
+    filter2.frequency.setValueAtTime(0, 0);
+    filter2.Q.setValueAtTime(5.18, 0);
 
     const filterGain = audioContext.createGain();
     filterGain.gain.setValueAtTime(0.7, 0);
@@ -102,9 +102,9 @@ function createAudioGroup(audioContext: SketchAudioContext) {
         filter2,
         filterGain,
         setFrequency(freq: number) {
-            filter.frequency.value = freq;
-            filter2.frequency.value = freq;
-            lfoGain.gain.setValueAtTime(freq * .06, 0);
+            filter.frequency.setTargetAtTime(freq, audioContext.currentTime, 0.016);
+            filter2.frequency.setTargetAtTime(freq, audioContext.currentTime, 0.016);
+            lfoGain.gain.setTargetAtTime(freq * .06, audioContext.currentTime, 0.016);
         },
         setVolume(volume: number) {
             sourceGain.gain.setValueAtTime(volume, 0);
@@ -346,7 +346,7 @@ const Dots = new (class extends ISketch {
         const normalizedVarianceLength = varianceLength / (0.28866 * (this.canvas.width + this.canvas.height) / 2);
 
         const groupedUpness = Math.sqrt(averageVel / varianceLength);
-        this.audioGroup.lfo.frequency.value = flatRatio;
+        this.audioGroup.lfo.frequency.setTargetAtTime(flatRatio, this.audioContext.currentTime, 0.016);
         this.audioGroup.setFrequency(111 / normalizedVarianceLength);
         this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
