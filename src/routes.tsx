@@ -1,25 +1,12 @@
 import * as React from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 
+import getSketches from "./getSketches";
 import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
 import { ISketch } from "./sketch";
-
-function getSketches(context: __WebpackModuleApi.RequireContext) {
-    return context.keys().map((key) => {
-        const sketchModule = context(key);
-        const sketch = sketchModule.default as ISketch;
-        if (sketch.id == null) {
-            const match = /\.\/(\w+)$/.exec(key)!;
-            const id = match[1];
-            sketch.id = id;
-        }
-        return sketch;
-    });
-}
-
-const sketches = getSketches(require.context("./sketches", true, /\.\/\w+$/));
-const wipSketches = getSketches(require.context("./wip", true, /\.\/\w+$/));
+import * as sketches from "./sketches";
+import * as wipSketches from "./wip";
 
 const sketchRoutes = sketches.map((sketch) => {
     const path = `/${sketch.id}`;

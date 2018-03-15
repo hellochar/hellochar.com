@@ -535,7 +535,6 @@ class World {
     public checkWinLoss(): GameState {
         // you win if there's a seed with full capacity
         if (this.fruit != null) {
-            // if (this.fruit.inventory.sugar > this.fruit.inventory.capacity) {
             if (this.fruit.inventory.sugar > 1000) {
                 return "win";
             }

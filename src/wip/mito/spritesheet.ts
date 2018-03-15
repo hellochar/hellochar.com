@@ -1,4 +1,3 @@
-import * as $ from "jquery";
 import * as THREE from "three";
 import devlog from "../../common/devlog";
 
@@ -8,11 +7,6 @@ const spriteSheetHeight = 512;
 const SPRITESHEET = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png', (() => {
     SPRITESHEET.dispatchEvent({type: "update"});
 }));
-// SPRITESHEET.magFilter = THREE.NearestFilter;
-// SPRITESHEET.repeat.set(spriteSize / spriteSheetWidth, spriteSize / spriteSheetHeight);
-// SPRITESHEET.flipY = true;
-// SPRITESHEET.offset.set(16 / 1024 * 50, 16 / 512 * 0);
-// console.log(SPRITESHEET);
 
 export const fruitTexture = new THREE.TextureLoader().load('/assets/images/fruit.png');
 
@@ -23,7 +17,9 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
     y = Math.floor(y);
     const key = `${x},${y}`;
     if (cache[key] == null) {
-        const canvas = $("<canvas>").attr("width", 16).attr("height", 16)[0] as HTMLCanvasElement;
+        const canvas = document.createElement("canvas");
+        canvas.width = spriteSize;
+        canvas.height = spriteSize;
         const texture = new THREE.Texture(canvas);
         texture.magFilter = THREE.NearestFilter;
         texture.flipY = true;
@@ -33,37 +29,25 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
             const image = SPRITESHEET.image;
             const context = canvas.getContext("2d")!;
             context.fillStyle = backgroundColor;
-            context.fillRect(0, 0, 16, 16);
+            context.fillRect(0, 0, spriteSize, 16);
             // context.fillStyle = "white";
             // flip the image vertically
             context.drawImage(image,
                 // sx, sy, sWidth, sHeight
-                16 * x,
-                16 * y,
-                16,
-                16,
+                spriteSize * x,
+                spriteSize * y,
+                spriteSize,
+                spriteSize,
                 // dx, dy, dWidth, dHeight
                 0,
                 0,
-                16,
-                16,
+                spriteSize,
+                spriteSize,
             );
             texture.needsUpdate = true;
-            devlog("updated spritesheet for ", x, y);
+            devlog("updated spritesheet for", x, y);
         });
-        // const texture = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png' );
-        // texture.magFilter = THREE.NearestFilter;
-        // texture.repeat.set(spriteSize / spriteSheetWidth, spriteSize / spriteSheetHeight);
-        // texture.flipY = true;
-        // texture.offset.set(spriteSize / spriteSheetWidth * x, spriteSize / spriteSheetHeight * y);
         cache[key] = texture;
     }
     return cache[key];
 }
-
-// const ARROW_UP = new THREE.TextureLoader().load( '/assets/images/arrow_up16x16.png' );
-// ARROW_UP.magFilter = THREE.NearestFilter;
-// ARROW_UP.flipY = true;
-// export function arrowUpMaterial() {
-//     return ARROW_UP;
-// }

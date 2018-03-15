@@ -6,6 +6,7 @@ const webpack = require('webpack');
 module.exports = {
   entry: {
     main: "./src/index.tsx",
+    // wip: "./src/wip/index.ts",
   },
   output: {
     publicPath: "/",
@@ -47,6 +48,6 @@ module.exports = {
         var context = module.context;
         return context && context.indexOf('node_modules') >= 0;
       },
-    }),
+    })
   ]
 };
