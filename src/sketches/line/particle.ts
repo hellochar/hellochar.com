@@ -4,6 +4,7 @@ import { canvas, NUM_PARTICLES } from "./line";
 const GRAVITY_CONSTANT = 280;
 const SIMULATION_SPEED = 2;
 const timeStep = .016 * SIMULATION_SPEED;
+// speed becomes this percentage of its original speed every second
 const PULLING_DRAG_CONSTANT = 0.93075095702;
 const INERTIAL_DRAG_CONSTANT = 0.53913643334;
 

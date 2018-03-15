@@ -17,8 +17,7 @@ import { computeStats } from "./particleStats";
 
 export const NUM_PARTICLES = Number(parse(location.search).p) ||
     // cheap mobile detection
-    (screen.width > 1024 ? 15000 : 5000);
-// speed becomes this percentage of its original speed every second
+    (screen.width > 1024 ? 20000 : 5000);
 
 export const attractors = [
     makeAttractor(),
@@ -108,6 +107,11 @@ function animate(millisElapsed: number) {
         attractor.mesh.rotation.x = 0.8; // attractor.power + 0.1;
         const scale = Math.sqrt(attractor.power) / 5;
         attractor.mesh.scale.set(scale, scale, scale);
+        if (attractor.power > 0 && attractor.power < 1400) {
+            // attractor.power += (100 - attractor.power) * 0.001;
+            attractor.power *= 1.005;
+            console.log("moving to", attractor.power);
+        }
     });
 
     gravityShaderPass.uniforms.iMouse.value.set(attractors[0].x, renderer.domElement.height - attractors[0].y);
@@ -123,8 +127,8 @@ function animate(millisElapsed: number) {
 
     audioGroup.sourceLfo.frequency.value = flatRatio;
     if (normalizedEntropy !== 0) {
-        audioGroup.setFrequency(222 / normalizedEntropy);
-        // audioGroup.setFrequency(500 * normalizedAverageVel * normalizedAverageVel);
+        // audioGroup.setFrequency(222 / normalizedEntropy);
+        audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
     }
 
     // const noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
@@ -132,11 +136,12 @@ function animate(millisElapsed: number) {
     audioGroup.setNoiseFrequency(noiseFreq);
 
     const groupedUpness = Math.sqrt(averageVel / varianceLength);
-    audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
+    audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 25.);
 
     const mouseDistanceToCenter = Math.sqrt(Math.pow(mouseX - averageX, 2) + Math.pow(mouseY - averageY, 2));
     const normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(canvas.width * canvas.height);
-    const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
+    // const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
+    const backgroundVolume = 2.50;
     audioGroup.setBackgroundVolume(backgroundVolume);
 
     gravityShaderPass.uniforms.iGlobalTime.value = audioContext.currentTime / 1;

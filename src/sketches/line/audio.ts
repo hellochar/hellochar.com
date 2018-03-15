@@ -215,10 +215,10 @@ export function createAudioGroup(ctx: SketchAudioContext) {
             noiseFilter.frequency.value = freq;
         },
         setVolume(volume: number) {
-            sourceGain.gain.value = volume / 9;
+            sourceGain.gain.value = volume / 6;
             noiseSourceGain.gain.value = volume * 0.05;
-            chordSource.gain.value = 0.05;
-            chordHigh.gain.value = volume / 40;
+            chordSource.gain.value = 0.10;
+            chordHigh.gain.value = volume / 30;
         },
         setBackgroundVolume(volume: number) {
             backgroundAudioGain.gain.value = volume;
