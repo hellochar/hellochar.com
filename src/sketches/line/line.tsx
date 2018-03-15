@@ -136,12 +136,12 @@ function animate(millisElapsed: number) {
     audioGroup.setNoiseFrequency(noiseFreq);
 
     const groupedUpness = Math.sqrt(averageVel / varianceLength);
-    audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 25.);
+    audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 5.);
 
     const mouseDistanceToCenter = Math.sqrt(Math.pow(mouseX - averageX, 2) + Math.pow(mouseY - averageY, 2));
     const normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(canvas.width * canvas.height);
     // const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
-    const backgroundVolume = 2.50;
+    const backgroundVolume = 1.00;
     audioGroup.setBackgroundVolume(backgroundVolume);
 
     gravityShaderPass.uniforms.iGlobalTime.value = audioContext.currentTime / 1;
@@ -152,9 +152,11 @@ function animate(millisElapsed: number) {
     (points.geometry as THREE.Geometry).verticesNeedUpdate = true;
     composer.render();
     globalFrame++;
-    instructionsEl.setGlobalFrame(globalFrame);
-    const isLeapMotionControllerValid = controller.lastFrame.valid;
-    instructionsEl.setLeapMotionControllerValid(isLeapMotionControllerValid);
+    if (instructionsEl != null) {
+        instructionsEl.setGlobalFrame(globalFrame);
+        const isLeapMotionControllerValid = controller.lastFrame.valid;
+        instructionsEl.setLeapMotionControllerValid(isLeapMotionControllerValid);
+    }
 }
 
 // 3 orders of fft for triangle wave
