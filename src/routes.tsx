@@ -23,12 +23,12 @@ const wipSketches = getSketches(require.context("./wip", true, /\.\/\w+$/));
 
 const sketchRoutes = sketches.map((sketch) => {
     const path = `/${sketch.id}`;
-    return <Route path={path} component={() => <FullPageSketch sketch={sketch} />} />;
+    return <Route key={path} path={path} component={() => <FullPageSketch sketch={sketch} />} />;
 });
 
 const wipSketchRoutes = wipSketches.map((sketch) => {
     const path = `/wip/${sketch.id}`;
-    return <Route path={path} component={() => <FullPageSketch sketch={sketch} />} />;
+    return <Route key={path} path={path} component={() => <FullPageSketch sketch={sketch} />} />;
 });
 
 const WipListing = () => (

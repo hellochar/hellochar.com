@@ -201,7 +201,7 @@ const History2015 = () => (
         Javascript, Arduino, and projection mapping.
         <Images>
             {[
-                <img src="https://lh3.googleusercontent.com/Q7doAntds2iA0yz-j40KqqYDdtoh2P_Mr0MzBFIDbuDdBJxD4hSmq8a2CG_cAb-8Gltnufv38Rz8vd51r_WT-p1CobtgWw03oMDqJoXyHAhFIt8c4K6Q5UAmpHw3ImpL-BKqZHGnaO6dVA_QqXtDDFsQVg_n8HZZzD4t8AQIkqaAaJeIeAVwi8NqmRGX5I8_TUKvdNytkxTRti7BtvBXpZZApZi9Gt-YMuHEGx6rfAgr1AFotzJAU6Sqhs2S0bC0p_6sUcURZ-JQoCT_zizThwin2yAUlFzhWp5GrS60G_N7dN6DyV7fjZodKXtPnRnDleIG5DTVq8oNd5Z0zbHo2afx8xg-sI4bUCabPj7ly0TlR8CSu97mO8Jo7L78KJZjAqc8Mkv1npO6M-y6FnVH7pV0iOYB6d1wmP459FdiKL6hYu9uDFqWgPvTxA19RsH8py90wVDQ273C-UD37fYV9L5As--sL1mLZ60A1rBxhfmSFfcGpVcBw8Wy8nCZH5t5YO5LZmSpvpfh1xtjtbRm-fHiwN6tVmqvoImmllQUtspsbRMOSEdbbdexkgLT81lZ9ar0_DTpSLvCdBjsxHMWel3wmB77EM1Pn0-0JDEEOw=w1632-h918-no" />,
+                <img key={0} src="https://lh3.googleusercontent.com/Q7doAntds2iA0yz-j40KqqYDdtoh2P_Mr0MzBFIDbuDdBJxD4hSmq8a2CG_cAb-8Gltnufv38Rz8vd51r_WT-p1CobtgWw03oMDqJoXyHAhFIt8c4K6Q5UAmpHw3ImpL-BKqZHGnaO6dVA_QqXtDDFsQVg_n8HZZzD4t8AQIkqaAaJeIeAVwi8NqmRGX5I8_TUKvdNytkxTRti7BtvBXpZZApZi9Gt-YMuHEGx6rfAgr1AFotzJAU6Sqhs2S0bC0p_6sUcURZ-JQoCT_zizThwin2yAUlFzhWp5GrS60G_N7dN6DyV7fjZodKXtPnRnDleIG5DTVq8oNd5Z0zbHo2afx8xg-sI4bUCabPj7ly0TlR8CSu97mO8Jo7L78KJZjAqc8Mkv1npO6M-y6FnVH7pV0iOYB6d1wmP459FdiKL6hYu9uDFqWgPvTxA19RsH8py90wVDQ273C-UD37fYV9L5As--sL1mLZ60A1rBxhfmSFfcGpVcBw8Wy8nCZH5t5YO5LZmSpvpfh1xtjtbRm-fHiwN6tVmqvoImmllQUtspsbRMOSEdbbdexkgLT81lZ9ar0_DTpSLvCdBjsxHMWel3wmB77EM1Pn0-0JDEEOw=w1632-h918-no" />,
             ]}
         </Images>
         </p>
@@ -213,7 +213,7 @@ const History2015 = () => (
             detects users when they enter the space and alerts the horses of their presence. As
             users stare into a made up world, the horses stare back at you and wonder the same thing.
             <Images>
-                {[<img src="/assets/images/history/natural_habitat.png" />]}
+                {[<img key={0} src="/assets/images/history/natural_habitat.png" />]}
             </Images>
         </p>
         <p>
@@ -290,7 +290,7 @@ const History2014 = () => (
             different perceptions to the same problem, each player can only interact with objects
             that are similarly colored.
             <Images>
-                {[<img src="https://globalgamejam.org/sites/default/files/styles/game_sidebar__wide/public/game/featured_image/cmyk_screenshot.png?itok=URolMaCD&timestamp=1390780093" />]}
+                {[<img key={0} src="https://globalgamejam.org/sites/default/files/styles/game_sidebar__wide/public/game/featured_image/cmyk_screenshot.png?itok=URolMaCD&timestamp=1390780093" />]}
             </Images>
         </p>
         <p>
@@ -312,7 +312,7 @@ const History2014 = () => (
             <Title>EEG piece</Title>. Read input data from the emotive EEG on a guitarist performing live and use
             it to feed a 3D superformula piece. Made for the Multimedia Orchestra Spring 2014 show.
             <Images>
-                {[<img src="/assets/images/history/multimediaorchestra/eeg.png" />]}
+                {[<img key={0} src="/assets/images/history/multimediaorchestra/eeg.png" />]}
             </Images>
         </p>
         <p>

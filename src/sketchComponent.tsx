@@ -85,10 +85,13 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
                 </div>
             );
         } else {
+            const sketchElementsWithKey = sketch.elements == null
+                ? []
+                : sketch.elements.map((el, idx) => React.cloneElement(el, { key: idx }));
             return (
                 <div {...divProps} id={sketch.id} className="sketch-component" ref={this.handleRef}>
                     <div className="sketch-elements">
-                        { sketch.elements }
+                        { sketchElementsWithKey }
                     </div>
                     { this.renderVolumeButton() }
                 </div>

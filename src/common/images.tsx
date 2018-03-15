@@ -33,7 +33,7 @@ export class Images extends React.Component<ImagesProps, ImagesState> {
         for (let rowIndex = 0; rowIndex < children.length / 5; rowIndex++) {
             const rowChildren: React.ReactNode[] = children.slice(rowIndex * 5, (rowIndex + 1) * 5) as any;
             rowElements.push(
-                <div className="images-row">
+                <div className="images-row" key={rowIndex}>
                     {
                         rowChildren.map((child, i) => (
                             <div key={i} className="image-wrapper" onClick={() => this.handleThumbnailClick(i + 5 * rowIndex)}>
