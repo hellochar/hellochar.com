@@ -142,23 +142,8 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
     private animateAndRequestAnimFrame = (timestamp: number) => {
         const millisElapsed = timestamp - this.lastTimestamp;
         this.lastTimestamp = timestamp;
-        // if (isElementOnScreen(sketchParent)) {
-        //     $sketchElement.removeClass("disabled");
-        //     $canvas.focus();
-        //     if (HAS_SOUND) {
-        //         audioContextGain.gain.value = 1;
-        //     }
-        // try {
         this.props.sketch.timeElapsed = timestamp;
         this.props.sketch.animate(millisElapsed);
-        // } catch (e) {
-        //     console.error(e);
-        // }
-        // } else {
-        //     $sketchElement.addClass("disabled");
-        //     $canvas.blur();
-        //     audioContextGain.gain.value = 0;
-        // }
         if (this.state.status === SketchStatus.LOADED) {
             requestAnimationFrame(this.animateAndRequestAnimFrame);
         }
@@ -197,7 +182,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         (THREE.AudioContext as any).setContext(audioContext);
 
         this.userVolume = audioContext.createGain();
-        this.userVolume.gain.value = 0.8;
+        this.userVolume.gain.setValueAtTime(0.8, 0);
         this.userVolume.connect(audioContext.destination);
 
         const audioContextGain = audioContext.gain = audioContext.createGain();

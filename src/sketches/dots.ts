@@ -26,7 +26,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     // white noise
     const noise = createWhiteNoise(audioContext);
     const noiseGain = audioContext.createGain();
-    noiseGain.gain.value = 0;
+    noiseGain.gain.setValueAtTime(0, 0);
     noise.connect(noiseGain);
 
     const BASE_FREQUENCY = 164.82;
@@ -40,7 +40,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
         node.start(0);
 
         const gain = audioContext.createGain();
-        gain.gain.value = 0.30;
+        gain.gain.setValueAtTime(0.3, 0);
         node.connect(gain);
 
         return gain;
@@ -52,21 +52,21 @@ function createAudioGroup(audioContext: SketchAudioContext) {
         node.start(0);
 
         const gain = audioContext.createGain();
-        gain.gain.value = 0.30;
+        gain.gain.setValueAtTime(0.30, 0);
         node.connect(gain);
 
         return gain;
     })();
 
     const sourceGain = audioContext.createGain();
-    sourceGain.gain.value = 0.0;
+    sourceGain.gain.setValueAtTime(0.0, 0);
 
     const lfo = audioContext.createOscillator();
     lfo.frequency.value = 8.66;
     lfo.start(0);
 
     const lfoGain = audioContext.createGain();
-    lfoGain.gain.value = 0;
+    lfoGain.gain.setValueAtTime(0, 0);
 
     lfo.connect(lfoGain);
 
@@ -81,7 +81,7 @@ function createAudioGroup(audioContext: SketchAudioContext) {
     filter2.Q.value = 5.18;
 
     const filterGain = audioContext.createGain();
-    filterGain.gain.value = 0.7;
+    filterGain.gain.setValueAtTime(0.7, 0);
 
     source1.connect(sourceGain);
     source2.connect(sourceGain);
@@ -104,11 +104,11 @@ function createAudioGroup(audioContext: SketchAudioContext) {
         setFrequency(freq: number) {
             filter.frequency.value = freq;
             filter2.frequency.value = freq;
-            lfoGain.gain.value = freq * .06;
+            lfoGain.gain.setValueAtTime(freq * .06, 0);
         },
         setVolume(volume: number) {
-            sourceGain.gain.value = volume;
-            noiseGain.gain.value = volume * 0.05;
+            sourceGain.gain.setValueAtTime(volume, 0);
+            noiseGain.gain.setValueAtTime(volume * 0.05, 0);
         },
     };
 }
