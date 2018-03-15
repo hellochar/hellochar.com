@@ -1,5 +1,5 @@
 import { Attractor } from "./attractor";
-import { canvas, NUM_PARTICLES } from "./line";
+import { NUM_PARTICLES } from "./constants";
 
 const GRAVITY_CONSTANT = 280;
 const SIMULATION_SPEED = 2;
@@ -20,10 +20,7 @@ export interface IParticle {
     vertex: THREE.Vertex | null;
 }
 
-export function resetToOriginalPosition(particle: IParticle, i: number) {
-    const gridSize = Math.floor(Math.sqrt(NUM_PARTICLES));
-    // const x = (i % gridSize) / gridSize * canvas.width;
-    // const y = Math.floor(i / gridSize) / gridSize * canvas.height;
+export function resetToOriginalPosition(canvas: HTMLCanvasElement, particle: IParticle, i: number) {
     const x = i / NUM_PARTICLES * canvas.width;
     const y = canvas.height / 2 + ((i % 5) - 2) * 2;
     particle.x = x;
@@ -31,7 +28,7 @@ export function resetToOriginalPosition(particle: IParticle, i: number) {
     particle.dx = particle.dy = 0;
 }
 
-export function stepParticles(particles: IParticle[], nonzeroAttractors: Attractor[]) {
+export function stepParticles(canvas: HTMLCanvasElement, particles: IParticle[], nonzeroAttractors: Attractor[]) {
     const dragConstant = nonzeroAttractors.length > 0 ? BAKED_PULLING_DRAG_CONSTANT : BAKED_INERTIAL_DRAG_CONSTANT;
     const sizeScaledGravityConstant = GRAVITY_CONSTANT * Math.min(Math.pow(2, canvas.width / 836 - 1), 1);
     for (let i = 0; i < NUM_PARTICLES; i++) {
@@ -54,7 +51,7 @@ export function stepParticles(particles: IParticle[], nonzeroAttractors: Attract
         particle.x += particle.dx * timeStep;
         particle.y += particle.dy * timeStep;
         if (particle.x < 0 || particle.x > canvas.width || particle.y < 0 || particle.y > canvas.height) {
-            resetToOriginalPosition(particle, i);
+            resetToOriginalPosition(canvas, particle, i);
         }
 
         const wantedX = i * canvas.width / NUM_PARTICLES;

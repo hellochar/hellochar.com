@@ -1,25 +1,27 @@
 import * as Leap from "leapjs";
 import * as THREE from "three";
 
+import lazy from "../../common/lazy";
 import { map } from "../../math/index";
 import { Attractor, HandMesh } from "./attractor";
-import { attractors, canvas, globalFrame, instructionsEl, mouseX, mouseY, scene, setMousePosition } from "./line";
+import { LineSketch } from "./line";
+// import { attractors, canvas, globalFrame, instructionsEl, mouseX, mouseY, scene, setMousePosition } from "./line";
 
-const boneGeometry = new THREE.SphereGeometry(10, 3, 3);
-const boneMaterial = new THREE.LineBasicMaterial({
+const boneGeometry = lazy(() => new THREE.SphereGeometry(10, 3, 3));
+const boneMaterial = lazy(() => new THREE.LineBasicMaterial({
     // color: 0xefeffb,
     color: 0xadd6b6,
     linewidth: 5,
     transparent: true,
     opacity: 1,
-});
+}));
 
-export function initLeap() {
+export function initLeap(sketch: LineSketch) {
     const controller = Leap.loop((frame: Leap.Frame) => {
         if (frame.hands.length > 0) {
-            instructionsEl.setLastRenderedFrame(globalFrame);
+            sketch.instructionsEl!.setLastRenderedFrame(sketch.globalFrame);
         }
-        attractors.forEach((attractor) => {
+        sketch.attractors.forEach((attractor) => {
             if (attractor.handMesh != null) {
                 attractor.handMesh.visible = false;
             }
@@ -29,10 +31,10 @@ export function initLeap() {
         frame.hands.filter((hand) => hand.valid).forEach((hand, index) => {
             const position = hand.indexFinger.bones[3].center();
 
-            const {x, y} = mapLeapToThreePosition(position);
-            setMousePosition(x, y);
+            const {x, y} = mapLeapToThreePosition(sketch.canvas, position);
+            sketch.setMousePosition(x, y);
 
-            const attractor = attractors[index];
+            const attractor = sketch.attractors[index];
             attractor.x = x;
             attractor.y = y;
             attractor.mesh.position.x = x;
@@ -47,22 +49,22 @@ export function initLeap() {
                 attractor.power = attractor.power * 0.5;
             }
 
-            updateHandMesh(attractor, hand);
+            updateHandMesh(sketch, attractor, hand);
             attractor.handMesh!.visible = true;
         });
     });
     return controller;
 }
 
-function updateHandMesh(attractor: Attractor, hand: Leap.Hand) {
+function updateHandMesh(sketch: LineSketch, attractor: Attractor, hand: Leap.Hand) {
     if (attractor.handMesh == null) {
         attractor.handMesh = new THREE.Object3D() as HandMesh;
-        scene.add(attractor.handMesh);
+        sketch.scene.add(attractor.handMesh);
     }
     const handMesh = attractor.handMesh;
     hand.fingers.forEach((finger) => {
         if (handMesh["finger" + finger.type] == null) {
-            const fingerLine = new THREE.Line(new THREE.Geometry(), boneMaterial);
+            const fingerLine = new THREE.Line(new THREE.Geometry(), boneMaterial());
             handMesh["finger" + finger.type] = fingerLine;
             handMesh.add(fingerLine);
         }
@@ -71,11 +73,11 @@ function updateHandMesh(attractor: Attractor, hand: Leap.Hand) {
             // create sphere for every bone
             const id = finger.type + ',' + bone.type;
             if (handMesh[id] == null) {
-                const boneMesh = new THREE.Mesh(boneGeometry, boneMaterial);
+                const boneMesh = new THREE.Mesh(boneGeometry(), boneMaterial());
                 handMesh[id] = boneMesh;
                 handMesh.add(boneMesh);
             }
-            const position = mapLeapToThreePosition(bone.center());
+            const position = mapLeapToThreePosition(sketch.canvas, bone.center());
             handMesh[id].position.copy(position);
 
             // create a line for every finger
@@ -88,7 +90,7 @@ function updateHandMesh(attractor: Attractor, hand: Leap.Hand) {
     });
 }
 
-function mapLeapToThreePosition(position: number[]) {
+function mapLeapToThreePosition(canvas: HTMLCanvasElement, position: number[]) {
     const range = [0.2, 0.8];
     // position[0] is left/right; left is negative, right is positive. each unit is one millimeter
     const x = map(position[0], -200, 200, canvas.width * range[0],  canvas.width * range[1]);

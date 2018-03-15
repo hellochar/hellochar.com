@@ -1,7 +1,7 @@
-import { canvas, NUM_PARTICLES } from "./line";
+import { NUM_PARTICLES } from "./constants";
 import { IParticle } from "./particle";
 
-export function computeStats(particles: IParticle[]) {
+export function computeStats(canvas: HTMLCanvasElement, particles: IParticle[]) {
     let averageX = 0, averageY = 0, averageVel2 = 0;
     let varianceX2 = 0;
     let varianceY2 = 0;

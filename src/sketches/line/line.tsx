@@ -1,22 +1,22 @@
 import * as classnames from "classnames";
 import { Controller } from "leapjs";
-import { parse } from "query-string";
 import * as React from "react";
 import * as THREE from "three";
 
+import { parse } from "query-string";
 import devlog from "../../common/devlog";
 import { GravityShader } from "../../common/gravityShader";
-import { map } from "../../math/index";
+import { map, triangleWaveApprox } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { makeAttractor } from "./attractor";
 import { createAudioGroup } from "./audio";
+import { NUM_PARTICLES } from "./constants";
 import { Instructions } from "./instructions";
 import { initLeap } from "./leapMotion";
 import { IParticle, resetToOriginalPosition, stepParticles } from "./particle";
 import { createParticlePoints } from "./particlePoints";
 import { computeStats } from "./particleStats";
 
-// tslint:disable-next-line:new-parens
 export class LineSketch extends ISketch {
     public events = {
         touchstart: (event: JQuery.Event) => {
@@ -72,10 +72,6 @@ export class LineSketch extends ISketch {
     };
     public elements = [<Instructions ref={(instructions) => this.instructionsEl = instructions} />];
     public instructionsEl: Instructions | null = null;
-    public NUM_PARTICLES = Number(parse(location.search).p) ||
-        // cheap mobile detection
-        (screen.width > 1024 ? 20000 : 5000);
-
     public attractors = [
         makeAttractor(),
         makeAttractor(),
@@ -84,42 +80,34 @@ export class LineSketch extends ISketch {
         makeAttractor(),
     ];
 
+    // TODO move into core sketch
     public globalFrame = 0;
-
-    public setMousePosition(mx: number, my: number) {
-        this.mouseX = mx;
-        this.mouseY = my;
-    }
 
     public audioGroup: any;
     public particles: IParticle[] = [];
     public returnToStartPower = 0.0;
 
+    // TODO move into core isketch
     public mouseX = 0;
     public mouseY = 0;
 
-    public controller: Controller;
+    public camera = new THREE.OrthographicCamera(0, this.canvas.width, 0, this.canvas.height, 1, 1000);
+    public gravityShaderPass = new THREE.ShaderPass(GravityShader);
+    public scene = new THREE.Scene();
 
-    // threejs stuff
-    public camera: THREE.OrthographicCamera;
-    public composer: THREE.EffectComposer;
-    public gravityShaderPass: THREE.ShaderPass;
     public points: THREE.Points;
-    public scene: THREE.Scene;
+    public controller: Controller;
+    public composer: THREE.EffectComposer;
 
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);
-
-        this.scene = new THREE.Scene();
-
-        this.camera = new THREE.OrthographicCamera(0, this.canvas.width, 0, this.canvas.height, 1, 1000);
         this.camera.position.z = 500;
 
         this.attractors.forEach((attractor) => {
             this.scene.add(attractor.mesh);
         });
 
-        for (let i = 0; i < this.NUM_PARTICLES; i++) {
+        for (let i = 0; i < NUM_PARTICLES; i++) {
             this.particles[i] = {
                 x: 0,
                 y: 0,
@@ -127,14 +115,13 @@ export class LineSketch extends ISketch {
                 dy: 0,
                 vertex: null,
             };
-            resetToOriginalPosition(this.particles[i], i);
+            resetToOriginalPosition(this.canvas, this.particles[i], i);
         }
         this.points = createParticlePoints(this.particles);
         this.scene.add(this.points);
 
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
-        this.gravityShaderPass = new THREE.ShaderPass(GravityShader);
         this.gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(this.canvas.width, this.canvas.height);
         const gamma = parse(location.search).gamma;
         if (gamma) {
@@ -143,7 +130,7 @@ export class LineSketch extends ISketch {
         this.gravityShaderPass.renderToScreen = true;
         this.composer.addPass(this.gravityShaderPass);
 
-        this.controller = initLeap();
+        this.controller = initLeap(this);
         devlog(this.controller);
     }
 
@@ -170,8 +157,9 @@ export class LineSketch extends ISketch {
 
         const nonzeroAttractors = this.attractors.filter((attractor) => attractor.power !== 0);
 
-        stepParticles(this.particles, nonzeroAttractors);
-        const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } = computeStats(this.particles);
+        stepParticles(this.canvas, this.particles, nonzeroAttractors);
+        const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } =
+            computeStats(this.canvas, this.particles);
 
         this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
         if (normalizedEntropy !== 0) {
@@ -194,7 +182,7 @@ export class LineSketch extends ISketch {
         this.audioGroup.setBackgroundVolume(backgroundVolume);
 
         this.gravityShaderPass.uniforms.iGlobalTime.value = this.audioContext.currentTime / 1;
-        this.gravityShaderPass.uniforms.G.value = this.triangleWaveApprox(this.audioContext.currentTime / 5) * (groupedUpness + 0.50) * 15000;
+        this.gravityShaderPass.uniforms.G.value = triangleWaveApprox(this.audioContext.currentTime / 5) * (groupedUpness + 0.50) * 15000;
         this.gravityShaderPass.uniforms.iMouseFactor.value = (1 / 15) / (groupedUpness + 1);
         // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
 
@@ -208,9 +196,19 @@ export class LineSketch extends ISketch {
         }
     }
 
+    public resize(width: number, height: number) {
+        this.camera.right = width;
+        this.camera.bottom = height;
+        this.camera.updateProjectionMatrix();
+
+        this.gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(width, height);
+    }
+
     // 3 orders of fft for triangle wave
-    public triangleWaveApprox(t: number) {
-        return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
+    // TODO move into math
+    public setMousePosition(mx: number, my: number) {
+        this.mouseX = mx;
+        this.mouseY = my;
     }
 
     public enableFirstAttractor(x: number, y: number) {
@@ -232,13 +230,5 @@ export class LineSketch extends ISketch {
     public disableFirstAttractor() {
         const attractor = this.attractors[0];
         attractor.power = 0;
-    }
-
-    public resize(width: number, height: number) {
-        this.camera.right = width;
-        this.camera.bottom = height;
-        this.camera.updateProjectionMatrix();
-
-        this.gravityShaderPass.uniforms.iResolution.value = new THREE.Vector2(width, height);
     }
 }
