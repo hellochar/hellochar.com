@@ -5,7 +5,7 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 // goal - compute particle positions from the vertex shader
 
-const VertexShaderParticles = new (class extends ISketch {
+class VertexShaderParticles extends ISketch {
     public scene = new THREE.Scene();
     private camera: THREE.PerspectiveCamera;
 
@@ -72,6 +72,6 @@ void main() {
         this.material.uniforms.u_time.value = this.timeElapsed / 1000;
         this.renderer.render(this.scene, this.camera);
     }
-})();
+}
 
 export default VertexShaderParticles;

@@ -8,7 +8,7 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 const COMPUTE_TEXTURE_SIDE_LENGTH = 1024;
 
-const TextureForPosition = new (class extends ISketch {
+class TextureForPosition extends ISketch {
     public scene = new THREE.Scene();
     private camera: THREE.PerspectiveCamera;
     public controls: THREE.OrbitControls;
@@ -302,6 +302,6 @@ void main() {
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
-})();
+}
 
 export default TextureForPosition;

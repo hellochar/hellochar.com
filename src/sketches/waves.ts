@@ -236,72 +236,41 @@ function getDarkness(frame: number) {
     }
 }
 
-function mousemove(event: JQuery.Event) {
-    setVelocityFromMouseEvent(event);
-}
-
-function mousedown(event: JQuery.Event) {
-    if (event.which === 1) {
-        isTimeFast = true;
-        setVelocityFromMouseEvent(event);
-    }
-}
-
-function mouseup(event: JQuery.Event) {
-    if (event.which === 1) {
-        isTimeFast = false;
-        setVelocityFromMouseEvent(event);
-    }
-}
-
-function setVelocityFromMouseEvent(event: JQuery.Event) {
-    const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-    const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-    setVelocityFromCanvasCoordinates(mouseX, mouseY);
-}
-
-function touchstart(event: JQuery.Event) {
-    // prevent emulated mouse events from occuring
-    event.preventDefault();
-
-    isTimeFast = true;
-    setVelocityFromTouchEvent(event);
-}
-
-function touchmove(event: JQuery.Event) {
-    setVelocityFromTouchEvent(event);
-}
-
-function touchend(event: JQuery.Event) {
-    isTimeFast = false;
-}
-
-function setVelocityFromTouchEvent(event: JQuery.Event) {
-    const canvasOffset = $(Waves.renderer.domElement).offset()!;
-    const touch = (event.originalEvent as TouchEvent).touches[0];
-    const touchX = touch.pageX - canvasOffset.left;
-    const touchY = touch.pageY - canvasOffset.top;
-
-    setVelocityFromCanvasCoordinates(touchX, touchY);
-}
-
-function setVelocityFromCanvasCoordinates(canvasX: number, canvasY: number) {
-    const dx = map(canvasX, 0, Waves.renderer.domElement.width, -1, 1) * 2.20;
-    const dy = map(canvasY, 0, Waves.renderer.domElement.height, -1, 1) * 2.20;
-    lineStrips.forEach((lineStrip) => {
-        lineStrip.dx = dx;
-        lineStrip.dy = dy;
-    });
-}
-
-const Waves = new (class extends ISketch {
+class Waves extends ISketch {
     public events = {
-        mousemove,
-        mousedown,
-        mouseup,
-        touchstart,
-        touchmove,
-        touchend,
+        mousemove: (event: JQuery.Event) => {
+            this.setVelocityFromMouseEvent(event);
+        },
+
+        mousedown: (event: JQuery.Event) => {
+            if (event.which === 1) {
+                isTimeFast = true;
+                this.setVelocityFromMouseEvent(event);
+            }
+        },
+
+        mouseup: (event: JQuery.Event) => {
+            if (event.which === 1) {
+                isTimeFast = false;
+                this.setVelocityFromMouseEvent(event);
+            }
+        },
+
+        touchstart: (event: JQuery.Event) => {
+            // prevent emulated mouse events from occuring
+            event.preventDefault();
+
+            isTimeFast = true;
+            this.setVelocityFromTouchEvent(event);
+        },
+
+        touchmove: (event: JQuery.Event) => {
+            this.setVelocityFromTouchEvent(event);
+        },
+
+        touchend: (event: JQuery.Event) => {
+            isTimeFast = false;
+        },
     };
 
     public audioGroup: any;
@@ -381,6 +350,29 @@ const Waves = new (class extends ISketch {
         });
     }
 
-})();
+    setVelocityFromMouseEvent(event: JQuery.Event) {
+        const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+        const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+        this.setVelocityFromCanvasCoordinates(mouseX, mouseY);
+    }
+
+    setVelocityFromTouchEvent(event: JQuery.Event) {
+        const canvasOffset = $(this.canvas).offset()!;
+        const touch = (event.originalEvent as TouchEvent).touches[0];
+        const touchX = touch.pageX - canvasOffset.left;
+        const touchY = touch.pageY - canvasOffset.top;
+
+        this.setVelocityFromCanvasCoordinates(touchX, touchY);
+    }
+
+    setVelocityFromCanvasCoordinates(canvasX: number, canvasY: number) {
+        const dx = map(canvasX, 0, this.canvas.width, -1, 1) * 2.20;
+        const dy = map(canvasY, 0, this.canvas.height, -1, 1) * 2.20;
+        lineStrips.forEach((lineStrip) => {
+            lineStrip.dx = dx;
+            lineStrip.dy = dy;
+        });
+    }
+}
 
 export default Waves;
