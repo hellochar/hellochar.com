@@ -91,7 +91,7 @@ export class LineSketch extends ISketch {
     public mouseX = 0;
     public mouseY = 0;
 
-    public camera = new THREE.OrthographicCamera(0, this.canvas.width, 0, this.canvas.height, 1, 1000);
+    public camera = new THREE.OrthographicCamera(0, 0, 0, 0, 1, 1000);
     public gravityShaderPass = new THREE.ShaderPass(GravityShader);
     public scene = new THREE.Scene();
 
@@ -101,6 +101,7 @@ export class LineSketch extends ISketch {
 
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);
+        this.resize(this.canvas.width, this.canvas.height);
         this.camera.position.z = 500;
 
         this.attractors.forEach((attractor) => {

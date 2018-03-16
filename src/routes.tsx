@@ -1,21 +1,20 @@
 import * as React from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 
-import getSketches from "./getSketches";
 import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
 import { ISketch } from "./sketch";
-import * as sketches from "./sketches";
-import * as wipSketches from "./wip";
+import sketches = require("./sketches");
+import wipSketches = require("./wip");
 
-const sketchRoutes = sketches.map((sketch) => {
-    const path = `/${sketch.id}`;
-    return <Route key={path} path={path} component={() => <FullPageSketch sketch={sketch} />} />;
+const sketchRoutes = sketches.map((sketchClass) => {
+    const path = `/${sketchClass.id}`;
+    return <Route key={path} path={path} component={() => <FullPageSketch sketchClass={sketchClass} />} />;
 });
 
-const wipSketchRoutes = wipSketches.map((sketch) => {
-    const path = `/wip/${sketch.id}`;
-    return <Route key={path} path={path} component={() => <FullPageSketch sketch={sketch} />} />;
+const wipSketchRoutes = wipSketches.map((sketchClass) => {
+    const path = `/wip/${sketchClass.id}`;
+    return <Route key={path} path={path} component={() => <FullPageSketch sketchClass={sketchClass} />} />;
 });
 
 const WipListing = () => (

@@ -21,20 +21,16 @@ export type UIEventReciever = {
 };
 
 export abstract class ISketch {
-    public renderer: THREE.WebGLRenderer;
-    public audioContext: SketchAudioContext;
-    public id?: string;
+    static id?: string;
+
     public elements?: JSX.Element[];
     public events?: UIEventReciever;
     /**
      * milliseconds since sketch started running.
      */
-    public timeElapsed: number;
+    public timeElapsed = 0;
 
-    setup(renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext) {
-        this.renderer = renderer;
-        this.audioContext = audioContext;
-    }
+    constructor(public renderer: THREE.WebGLRenderer, public audioContext: SketchAudioContext) {}
 
     /**
      * height / width
@@ -58,6 +54,12 @@ export abstract class ISketch {
     resize?(width: number, height: number): void;
 
     destroy?(): void;
+}
+
+export interface SketchConstructor {
+    new (renderer: THREE.WebGLRenderer, audioContext: SketchAudioContext): ISketch;
+
+    id?: string;
 }
 
 export interface SketchAudioContext extends AudioContext {

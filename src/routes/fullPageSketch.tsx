@@ -4,12 +4,12 @@ import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { Link } from "react-router-dom";
 
-import { ISketch, SketchAudioContext } from "../sketch";
+import { ISketch, SketchAudioContext, SketchConstructor } from "../sketch";
 import { SketchComponent } from "../sketchComponent";
 import { ShrinkingHeader } from "./shrinkingHeader";
 
 export interface ISketchRouteProps {
-    sketch: ISketch;
+    sketchClass: SketchConstructor;
 }
 
 export class FullPageSketch extends React.Component<ISketchRouteProps, {}> {
@@ -24,7 +24,7 @@ export class FullPageSketch extends React.Component<ISketchRouteProps, {}> {
                     darkTheme={this.props.sketch.darkTheme}
                     onlyShowOnHover
                 /> */}
-                <SketchComponent sketch={this.props.sketch} />
+                <SketchComponent sketchClass={this.props.sketchClass} />
             </div>
         );
     }

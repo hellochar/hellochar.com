@@ -1,13 +1,13 @@
-import { ISketch } from "./sketch";
+import { ISketch, SketchConstructor } from "./sketch";
 
 export default function getSketches(context: __WebpackModuleApi.RequireContext) {
-    const sketches: ISketch[] = [];
+    const sketches: SketchConstructor[] = [];
     context.keys().forEach((key) => {
         if (key === "./index") {
             return; // skip
         }
         const sketchModule = context(key);
-        const sketch = sketchModule.default as ISketch;
+        const sketch = sketchModule.default as SketchConstructor;
         if (sketch.id == null) {
             const match = /\.\/(\w+)$/.exec(key)!;
             const id = match[1];
