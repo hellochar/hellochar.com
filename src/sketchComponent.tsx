@@ -164,7 +164,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             }
         }
 
-        const {...containerProps} = this.props;
+        const { sketchClass, ...containerProps } = this.props;
         return (
             <div {...containerProps} id={this.props.sketchClass.id} className="sketch-component" ref={this.handleContainerRef}>
                 {this.renderSketchOrStatus()}

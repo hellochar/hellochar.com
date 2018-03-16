@@ -27,6 +27,10 @@ module.exports = {
           fallback: 'style-loader',
           use: ['css-loader', 'sass-loader']
         })
+      },
+      {
+        test: /\.(vert|frag)$/,
+        use: "webpack-glsl-loader"
       }
     ]
   },
