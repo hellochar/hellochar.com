@@ -18,7 +18,7 @@ const wipSketchRoutes = wipSketches.map((sketchClass) => {
 });
 
 const WipListing = () => (
-    <div>
+    <>
         <h1><a href="/">Home</a></h1>
         <ul>
             {
@@ -29,7 +29,7 @@ const WipListing = () => (
                 ))
             }
         </ul>
-    </div>
+    </>
 );
 
 export const Routes = () => (

@@ -315,7 +315,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
 
     renderCredit() {
         return (
-            <div>
+            <>
                 <h2>Attribution</h2>
                 <p>
                     Tiles: <a href="http://kenney.nl/assets?s=roguelike" target="_blank">Kenney.nl Roguelike Assets</a>
@@ -332,7 +332,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                 <p>
                     Fruit icon: <a href='https://www.freepik.com/free-vector/fruits-set-pixel-icons_1001072.htm'>Designed by Freepik</a>
                 </p>
-            </div>
+            </>
         );
     }
 }
@@ -386,20 +386,20 @@ export class TileHover extends React.Component<{}, HoverState> {
 
     private leafInfo(tile: Tile) {
         return tile instanceof Leaf ? (
-            <div>
+            <>
                 <div>{(1 / (tile.averageSpeed * LEAF_MAX_CHANCE)).toFixed(0)} turns per reaction</div>
                 <div>{(1 / tile.averageEfficiency).toFixed(2)} water per sugar</div>
-            </div>
+            </>
         ) : null;
     }
 
     private airInfo(tile: Tile) {
-        return tile instanceof Air ? <span>sunlight: {(tile.sunlight() * 100).toFixed(0)}%, co2: {(tile.co2() * 100).toFixed(0)}%</span> : null;
+        return tile instanceof Air ? <>sunlight: {(tile.sunlight() * 100).toFixed(0)}%, co2: {(tile.co2() * 100).toFixed(0)}%</> : null;
     }
 
     private energyInfo(tile: Tile) {
         if (hasEnergy(tile)) {
-            return <span>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}% energy</span>;
+            return <>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}% energy</>;
         }
         return null;
     }
@@ -407,8 +407,8 @@ export class TileHover extends React.Component<{}, HoverState> {
     private inventoryInfo(tile: Tile) {
         if (hasInventory(tile)) {
             // return <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span>;
-            const waterInfo = (tile.inventory.water > 0) ? <span>{tile.inventory.water} water</span> : null;
-            const sugarInfo = (tile.inventory.sugar > 0) ? <span>{tile.inventory.sugar.toFixed(2)} sugar</span> : null;
+            const waterInfo = (tile.inventory.water > 0) ? <>{tile.inventory.water} water</> : null;
+            const sugarInfo = (tile.inventory.sugar > 0) ? <>{tile.inventory.sugar.toFixed(2)} sugar</> : null;
             // const children = ([] as React.ReactNode[]).concat(
             //     ...[waterInfo, sugarInfo].map((infoEl) => {
             //         return infoEl == null ? [] : [", ", infoEl];
@@ -421,7 +421,7 @@ export class TileHover extends React.Component<{}, HoverState> {
     private cellInfo(tile: Tile) {
         if (tile instanceof Cell) {
             if (tile.droopY * 200 > 1) {
-                return <span>{(tile.droopY * 200).toFixed(0)}% droop</span>;
+                return <>{(tile.droopY * 200).toFixed(0)}% droop</>;
             } else {
                 return null;
             }

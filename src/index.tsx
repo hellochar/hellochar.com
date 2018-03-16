@@ -27,10 +27,10 @@ document.body.appendChild(root);
 root.className = "root";
 ReactDOM.render(
     <BrowserRouter>
-        <div>
+        <>
             <GATracker />
             <Routes />
-        </div>
+        </>
     </BrowserRouter>,
     root,
 );

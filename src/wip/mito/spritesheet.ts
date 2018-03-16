@@ -46,7 +46,6 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
                 spriteSize,
             );
             texture.needsUpdate = true;
-            debugger;
             devlog("updated spritesheet for", x, y);
         });
         cache[key] = texture;
