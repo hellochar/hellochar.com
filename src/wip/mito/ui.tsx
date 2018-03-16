@@ -1,12 +1,13 @@
 import * as React from "react";
 
 import { Action } from "./action";
-import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, PLAYER_MAX_INVENTORY, world } from "./index";
+import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, PLAYER_MAX_INVENTORY, World } from "./index";
 import Mito from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, Fruit, hasEnergy, Leaf, LEAF_MAX_CHANCE, Root, SOIL_MAX_WATER, Tile, Tissue, TISSUE_INVENTORY_CAPACITY, Transport, WATER_DIFFUSION_RATE, hasTilePairs } from "./tile";
+import { Air, Cell, CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, Fruit, hasEnergy, hasTilePairs, Leaf, LEAF_MAX_CHANCE, Root, SOIL_MAX_WATER, Tile, Tissue, TISSUE_INVENTORY_CAPACITY, Transport, WATER_DIFFUSION_RATE } from "./tile";
 
 interface HUDProps {
+    world: World;
     // onAutoplaceSet: (cellType: Constructor<Cell>) => void;
     onTryActionKey: (key: string) => void;
 }
@@ -46,7 +47,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
     renderBuildButton(key: string, props?: React.HTMLProps<HTMLDivElement>) {
         const cellType = BUILD_HOTKEYS[key];
         // skip building fruit when one already exists
-        if (world.fruit != null && cellType === Fruit) {
+        if (this.props.world.fruit != null && cellType === Fruit) {
             return null;
         }
         let text: string;
@@ -120,6 +121,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
     }
 
     public renderFruitUI() {
+        const { world } = this.props;
         if (world.fruit == null) {
             return <div>No Fruit. {this.renderBuildButton("F", { style: { display: "inline-block" }})}</div>;
         } else {
@@ -165,13 +167,13 @@ export interface GameStackState {
     state: GameState;
 }
 
-export class GameStack extends React.Component<{}, GameStackState> {
+export class GameStack extends React.Component<{ mito: Mito }, GameStackState> {
     state: GameStackState = {
         state: "main",
     };
 
     handlePlay = () => {
-        Mito.gameState = "main";
+        this.props.mito.gameState = "main";
     }
 
     public render() {
@@ -227,7 +229,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     </p>
                     <h3>You</h3>
                     <p>
-                        You can carry max {world.player.inventory.capacity} resources, and you automatically suck in any resources you're standing over.
+                        You can carry max {PLAYER_MAX_INVENTORY} resources, and you automatically suck in any resources you're standing over.
                         You can only walk on Tissue (and Transport).
                         You start at the center of the map, with soil below and air above.
                     </p>

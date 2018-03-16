@@ -2,7 +2,7 @@ import { Vector2 } from "three";
 import * as THREE from "three";
 
 import { map } from "../../math/index";
-import { DIRECTIONS, Entity, height, width, world } from "./index";
+import { DIRECTIONS, Entity, height, width, World } from "./index";
 import Mito from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 import { Noise } from "./perlin";
@@ -27,7 +27,11 @@ export function hasEnergy(e: any): e is HasEnergy {
 export abstract class Tile {
     static displayName = "Tile";
     public darkness = Infinity;
-    public constructor(public pos: Vector2) {}
+    public constructor(public pos: Vector2, public world: World) {
+        if (world == null) {
+            throw new Error("null world!");
+        }
+    }
 
     public lightAmount() {
         return Math.sqrt(Math.min(Math.max(map(1 - this.darkness, 0, 1, 0, 1), 0), 1));
@@ -35,7 +39,7 @@ export abstract class Tile {
 
     // test tiles diffusing water around on same-type tiles
     public step() {
-        const neighbors = world.tileNeighbors(this.pos);
+        const neighbors = this.world.tileNeighbors(this.pos);
         if (this instanceof Cell) {
             this.darkness = 0;
         } else {
@@ -100,20 +104,20 @@ export class Air extends Tile {
     static displayName = "Air";
     public sunlightCached: number = 1;
     public _co2: number;
-    public constructor(public pos: Vector2) {
-        super(pos);
+    public constructor(public pos: Vector2, world: World) {
+        super(pos, world);
         this.darkness = 0;
-        this.computeCo2();
+        this._co2 = this.computeCo2();
     }
 
     private computeCo2() {
         const base = map(this.pos.y, height / 2, 0, 0.5, 1.15);
         const scaleX = map(this.pos.y, height / 2, 0, 4, 9);
         // const offset = noiseCo2.perlin3(94.2321 - this.pos.x / scaleX, 3221 - this.pos.y / 2.5, world.time / 5 + 93.1) * 0.2;
-        const time = world == null ? 0 : world.time;
+        const time = this.world == null ? 0 : this.world.time;
         const offset = noiseCo2.perlin3(94.231 + (this.pos.x - width / 2) / scaleX, 2312 + this.pos.y / 8, time / 1000 + 93.1) * 0.25;
         // don't compute dark/light or water diffusion
-        this._co2 = Math.max(Math.min(base + offset, 1), 0.4);
+        return Math.max(Math.min(base + offset, 1), 0.4);
     }
 
     public lightAmount() {
@@ -121,7 +125,7 @@ export class Air extends Tile {
     }
 
     step() {
-        this.computeCo2();
+        this._co2 = this.computeCo2();
     }
 
     public co2() {
@@ -136,8 +140,8 @@ export class Air extends Tile {
 export class Soil extends Tile implements HasInventory {
     static displayName = "Soil";
     public inventory = new Inventory(SOIL_MAX_WATER);
-    constructor(pos: Vector2, water: number = 0) {
-        super(pos);
+    constructor(pos: Vector2, water: number = 0, world: World) {
+        super(pos, world);
         this.inventory.change(water, 0);
     }
 }
@@ -154,8 +158,8 @@ export const FOUNTAINS_TURNS_PER_WATER = 10;
 export class Fountain extends Soil {
     static displayName = "Fountain";
     private cooldown = 0;
-    constructor(pos: Vector2, water: number = 0, public turnsPerWater = FOUNTAINS_TURNS_PER_WATER) {
-        super(pos, water);
+    constructor(pos: Vector2, water: number = 0, world: World, public turnsPerWater = FOUNTAINS_TURNS_PER_WATER) {
+        super(pos, water, world);
     }
     step() {
         super.step();
@@ -212,7 +216,7 @@ export class Cell extends Tile implements HasEnergy {
     step() {
         super.step();
         this.energy -= 1;
-        const tileNeighbors = world.tileNeighbors(this.pos);
+        const tileNeighbors = this.world.tileNeighbors(this.pos);
         const neighbors = Array.from(tileNeighbors.values());
         const neighborsAndSelf = [ ...neighbors, this ];
         // this.stepMetabolism();
@@ -273,19 +277,19 @@ export class Cell extends Tile implements HasEnergy {
         this.stepDroop(tileNeighbors);
         if (this.droopY > 0.5) {
             // make the player ride the train!
-            if (world.player.pos.equals(this.pos)) {
-                world.player.pos.y += 1;
+            if (this.world.player.pos.equals(this.pos)) {
+                this.world.player.pos.y += 1;
             }
-            world.setTileAt(this.pos, new Air(this.pos.clone()));
+            this.world.setTileAt(this.pos, new Air(this.pos.clone(), this.world));
             this.pos.y += 1;
             this.droopY -= 1;
             // lol whatever lets just test it out
-            world.setTileAt(this.pos, this);
+            this.world.setTileAt(this.pos, this);
         }
 
         if (this.energy <= 0) {
             // die
-            world.setTileAt(this.pos, new DeadCell(this.pos));
+            this.world.setTileAt(this.pos, new DeadCell(this.pos, this.world));
         }
     }
 
@@ -378,21 +382,17 @@ export class Leaf extends Cell {
     public didConvert = false;
     public tilePairs: Vector2[] = []; // implied that the opposite direction is connected
 
-    constructor(pos: Vector2) {
-        super(pos);
-    }
-
     public step() {
         super.step();
         this.didConvert = false;
-        const neighbors = world.tileNeighbors(this.pos);
+        const neighbors = this.world.tileNeighbors(this.pos);
         this.averageEfficiency = 0;
         this.averageSpeed = 0;
         let numAir = 0;
         this.tilePairs = [];
 
         for (const [dir, tile] of neighbors.entries()) {
-            const oppositeTile = world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
+            const oppositeTile = this.world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
             if (tile instanceof Air &&
                 oppositeTile instanceof Tissue) {
                 this.tilePairs.push(dir);
@@ -442,9 +442,9 @@ export class Root extends Cell {
         super.step();
         this.waterTransferAmount = 0;
         this.tilePairs = [];
-        const neighbors = world.tileNeighbors(this.pos);
+        const neighbors = this.world.tileNeighbors(this.pos);
         for (const [dir, tile] of neighbors.entries()) {
-            const oppositeTile = world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
+            const oppositeTile = this.world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
             if (tile instanceof Soil &&
                 oppositeTile instanceof Tissue) {
                 this.tilePairs.push(dir);
@@ -476,7 +476,7 @@ export class Fruit extends Cell {
     // seeds aggressively take the inventory from neighbors
     step() {
         super.step();
-        const neighbors = world.tileNeighbors(this.pos);
+        const neighbors = this.world.tileNeighbors(this.pos);
         for (const [dir, neighbor] of neighbors) {
             if (hasInventory(neighbor)) {
                 // LMAO
@@ -494,7 +494,7 @@ export class Transport extends Tissue {
         // transport hungers at double speed
         this.energy -= 1;
         super.step();
-        const targetTile = world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
+        const targetTile = this.world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
         if (targetTile instanceof Cell && hasInventory(targetTile)) {
             this.inventory.give(targetTile.inventory, 1, 0);
         }

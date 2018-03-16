@@ -1,12 +1,13 @@
 import * as THREE from "three";
 import devlog from "../../common/devlog";
+import lazy from "../../common/lazy";
 
 const spriteSize = 16; // 16x16 sprites
 const spriteSheetWidth = 1024;
 const spriteSheetHeight = 512;
-const SPRITESHEET = new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png', (() => {
-    SPRITESHEET.dispatchEvent({type: "update"});
-}));
+const SPRITESHEET = lazy(() => new THREE.TextureLoader().load( '/assets/images/roguelikeSheet_transparent.png', (() => {
+    SPRITESHEET().dispatchEvent({type: "update"});
+})));
 
 export const fruitTexture = new THREE.TextureLoader().load('/assets/images/fruit.png');
 
@@ -25,8 +26,8 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
         texture.flipY = true;
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        SPRITESHEET.addEventListener("update", () => {
-            const image = SPRITESHEET.image;
+        SPRITESHEET().addEventListener("update", () => {
+            const image = SPRITESHEET().image;
             const context = canvas.getContext("2d")!;
             context.fillStyle = backgroundColor;
             context.fillRect(0, 0, spriteSize, 16);
@@ -45,6 +46,7 @@ export function textureFromSpritesheet(x: number, y: number, backgroundColor = "
                 spriteSize,
             );
             texture.needsUpdate = true;
+            debugger;
             devlog("updated spritesheet for", x, y);
         });
         cache[key] = texture;
