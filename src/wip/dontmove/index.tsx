@@ -8,20 +8,20 @@ import WebcamBackgroundSubtractor from "../webcamBackgroundSubtractor";
 import { NUM_PARTICLES, NUM_WORKERS, VIDEO_HEIGHT, VIDEO_WIDTH } from "./constants";
 import { IForegroundUpdateMessage, IPositionColorUpdateResponse } from "./interfaces";
 
-const POINTS_MATERIAL = new THREE.PointsMaterial({
-    vertexColors: THREE.VertexColors,
-    transparent: true,
-    opacity: 0.25,
-    size: 2,
-});
-
 let now: number = 0;
-const DontMove = new (class extends ISketch {
+class DontMove extends ISketch {
     public scene = new THREE.Scene();
     private camera: THREE.OrthographicCamera;
 
     public composer: THREE.EffectComposer;
     public filter: THREE.ShaderPass;
+
+    private POINTS_MATERIAL = new THREE.PointsMaterial({
+        vertexColors: THREE.VertexColors,
+        transparent: true,
+        opacity: 0.25,
+        size: 2,
+    });
 
     private workers: Worker[] = [];
 
@@ -85,7 +85,7 @@ const DontMove = new (class extends ISketch {
 
         this.particlePoints = new THREE.Points(
             this.particleBufferGeometry,
-            POINTS_MATERIAL,
+            this.POINTS_MATERIAL,
         );
         this.scene.add(this.particlePoints);
     }
@@ -144,6 +144,6 @@ const DontMove = new (class extends ISketch {
         this.filter.uniforms.iMouse.value = new THREE.Vector2(Math.sin(t) / 2, Math.cos(t) / 2);
         this.composer.render();
     }
-})();
+}
 
 export default DontMove;
