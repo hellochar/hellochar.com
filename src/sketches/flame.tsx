@@ -302,52 +302,8 @@ let audioHasNoise = false;
 let audioHasChord = false;
 let oscLowGate = 0;
 let oscHighGate = 0;
-function updateName(name: string = "Han") {
-    const {origin, pathname} = window.location;
-    const newUrl = `${origin}${pathname}?name=${name}`;
-    window.history.replaceState({}, null!, newUrl);
-    // jumpiness = 30;
-    boundingSphere = null;
-    Flame.audioContext.gain.gain.setValueAtTime(0, 0);
-    const hash = stringHash(name);
-    const hashNorm = (hash % 1024) / 1024;
-    baseFrequency = map((hash % 2048) / 2048, 0, 1, 10, 6000);
-    const hash2 = hash * hash + hash * 31 + 9;
-    filter.frequency.setValueAtTime(map((hash2 % 2e12) / 2e12, 0, 1, 120, 400), 0);
-    const hash3 = hash2 * hash2 + hash2 * 31 + 9;
-    filter.Q.setValueAtTime(map((hash3 % 2e12) / 2e12, 0, 1, 5, 8), 0);
-    baseLowFrequency = map((hash3 % 10) / 10, 0, 1, 10, 20);
-    noiseGainScale = map((hash2 * hash3 % 100) / 100, 0, 1, 3, 6);
-    baseThirdBias = (hash2 % 4) / 4;
-    baseFifthBias = (hash3 % 3) / 3;
 
-    // basically boolean randoms; we don't want mod 2 cuz the hashes are related to each other at that small level
-    audioHasNoise = (hash3 % 100) >= 50;
-    oscLowGate = (hash2 * hash3 % 96) < 48 ? 0 : 1;
-    oscHighGate = (hash3 * hash3 % 4000) < 2000 ? 0 : 1;
-    audioHasChord = (hash + hash2 + hash3) % 44 >= 22;
-
-    cY = map(hashNorm, 0, 1, -2.5, 2.5);
-    globalBranches = randomBranches(name);
-
-    geometry = new THREE.Geometry();
-    geometry.vertices = [];
-    geometry.colors = [];
-    superPoint = new SuperPoint(
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Color(0, 0, 0),
-        geometry,
-        globalBranches,
-    );
-
-    scene.remove(pointCloud);
-
-    pointCloud = new THREE.Points(geometry, material);
-    pointCloud.rotateX(-Math.PI / 2);
-    scene.add(pointCloud);
-}
-
-class FlameNameInput extends React.Component<{}, {}> {
+class FlameNameInput extends React.Component<{ onInput: (newName: string) => void }, {}> {
     public render() {
         return (
             <div className="flame-input">
@@ -363,13 +319,13 @@ class FlameNameInput extends React.Component<{}, {}> {
 
     private handleInput = (event: React.FormEvent<HTMLInputElement>) => {
         const value = event.currentTarget.value;
-        const name = (value == null || value === "") ? "Han" : value;
-        updateName(name.trim());
+        const name = (value == null || value === "") ? "Han" : value.trim();
+        this.props.onInput(name);
     }
 }
 
-const Flame = new (class extends ISketch {
-    public elements = [<FlameNameInput key="input" />];
+class Flame extends ISketch {
+    public elements = [<FlameNameInput key="input" onInput={(name) => this.updateName(name)} />];
     public id = "flame";
     public events = {
         dblclick,
@@ -394,7 +350,7 @@ const Flame = new (class extends ISketch {
         controls.enableKeys = false;
         controls.enablePan = false;
 
-        updateName(nameFromSearch);
+        this.updateName(nameFromSearch);
     }
 
     public animate() {
@@ -462,6 +418,51 @@ const Flame = new (class extends ISketch {
         camera.aspect = 1 / this.aspectRatio;
         camera.updateProjectionMatrix();
     }
-})();
+
+    public updateName(name: string = "Han") {
+        this.audioContext.gain.gain.setValueAtTime(0, 0);
+        const { origin, pathname } = window.location;
+        const newUrl = `${origin}${pathname}?name=${name}`;
+        window.history.replaceState({}, null!, newUrl);
+        // jumpiness = 30;
+        boundingSphere = null;
+        const hash = stringHash(name);
+        const hashNorm = (hash % 1024) / 1024;
+        baseFrequency = map((hash % 2048) / 2048, 0, 1, 10, 6000);
+        const hash2 = hash * hash + hash * 31 + 9;
+        filter.frequency.setValueAtTime(map((hash2 % 2e12) / 2e12, 0, 1, 120, 400), 0);
+        const hash3 = hash2 * hash2 + hash2 * 31 + 9;
+        filter.Q.setValueAtTime(map((hash3 % 2e12) / 2e12, 0, 1, 5, 8), 0);
+        baseLowFrequency = map((hash3 % 10) / 10, 0, 1, 10, 20);
+        noiseGainScale = map((hash2 * hash3 % 100) / 100, 0, 1, 3, 6);
+        baseThirdBias = (hash2 % 4) / 4;
+        baseFifthBias = (hash3 % 3) / 3;
+
+        // basically boolean randoms; we don't want mod 2 cuz the hashes are related to each other at that small level
+        audioHasNoise = (hash3 % 100) >= 50;
+        oscLowGate = (hash2 * hash3 % 96) < 48 ? 0 : 1;
+        oscHighGate = (hash3 * hash3 % 4000) < 2000 ? 0 : 1;
+        audioHasChord = (hash + hash2 + hash3) % 44 >= 22;
+
+        cY = map(hashNorm, 0, 1, -2.5, 2.5);
+        globalBranches = randomBranches(name);
+
+        geometry = new THREE.Geometry();
+        geometry.vertices = [];
+        geometry.colors = [];
+        superPoint = new SuperPoint(
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Color(0, 0, 0),
+            geometry,
+            globalBranches,
+        );
+
+        scene.remove(pointCloud);
+
+        pointCloud = new THREE.Points(geometry, material);
+        pointCloud.rotateX(-Math.PI / 2);
+        scene.add(pointCloud);
+    }
+}
 
 export default Flame;

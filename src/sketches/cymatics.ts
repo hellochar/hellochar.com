@@ -28,7 +28,7 @@ class Cell {
     public force = 0;
     public accumulatedHeight = 0;
     public neighbors: Cell[] = [];
-    public positionFunction: (time: number) => number;
+    public positionFunction?: (time: number) => number;
 
     constructor(position: THREE.Vector3) {
         this.position = position;
@@ -175,32 +175,29 @@ let mousePressed = false;
 const mousePosition = new THREE.Vector2(0, 0);
 const lastMousePosition = new THREE.Vector2(0, 0);
 
-function mousedown(event: JQuery.Event) {
-    if (event.which === 1) {
-        const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-        mousePosition.set(mouseX / Cymatics.renderer.domElement.width * 2 - 1, (1 - mouseY / Cymatics.renderer.domElement.height) * 2 - 1);
-        mousePressed = true;
-    }
-}
-
-function mousemove(event: JQuery.Event) {
-        const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-        mousePosition.set(mouseX / Cymatics.renderer.domElement.width * 2 - 1, (1 - mouseY / Cymatics.renderer.domElement.height) * 2 - 1);
-}
-
-function mouseup(event: JQuery.Event) {
-    if (event.which === 1) {
-        mousePressed = false;
-    }
-}
-
-const Cymatics = new (class extends ISketch {
+class Cymatics extends ISketch {
     public events = {
-        mousedown,
-        mousemove,
-        mouseup,
+        mousedown: (event: JQuery.Event) => {
+            if (event.which === 1) {
+                const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+                const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+                mousePosition.set(mouseX / this.canvas.width * 2 - 1, (1 - mouseY / this.canvas.height) * 2 - 1);
+                mousePressed = true;
+            }
+        },
+
+        mousemove: (event: JQuery.Event) => {
+            const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+            const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+            mousePosition.set(mouseX / this.canvas.width * 2 - 1, (1 - mouseY / this.canvas.height) * 2 - 1);
+        },
+
+        mouseup: (event: JQuery.Event) => {
+            if (event.which === 1) {
+                mousePressed = false;
+            }
+        },
+
     };
 
     public id = "cymatics";
@@ -290,6 +287,6 @@ const Cymatics = new (class extends ISketch {
         this.renderer.render(scene, camera);
         lastMousePosition.set(mousePosition.x, mousePosition.y);
     }
-})();
+}
 
 export default Cymatics;

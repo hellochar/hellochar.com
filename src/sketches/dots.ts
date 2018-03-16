@@ -22,7 +22,6 @@ const EXTENT = 10;
 const GRID_SIZE = parse(location.search).gridSize || 7;
 
 function createAudioGroup(audioContext: SketchAudioContext) {
-
     // white noise
     const noise = createWhiteNoise(audioContext);
     const noiseGain = audioContext.createGain();
@@ -144,16 +143,12 @@ let dragConstant = INERTIAL_DRAG_CONSTANT;
 let mouseX: number, mouseY: number;
 const particles: Particle[] = [];
 
-function animate(millisElapsed: number) {
-}
-
 function touchstart(event: JQuery.Event) {
     // prevent emulated mouse events from occuring
     event.preventDefault();
-    const canvasOffset = $(Dots.canvas).offset()!;
     const touch = (event.originalEvent as TouchEvent).touches[0];
-    const touchX = touch.pageX - canvasOffset.left;
-    const touchY = touch.pageY - canvasOffset.top;
+    const touchX = touch.pageX;
+    const touchY = touch.pageY;
     // offset the touchY by its radius so the attractor is above the thumb
     // touchY -= 100;
     createAttractor(touchX, touchY);
@@ -162,10 +157,9 @@ function touchstart(event: JQuery.Event) {
 }
 
 function touchmove(event: JQuery.Event) {
-    const canvasOffset = $(Dots.canvas).offset()!;
     const touch = (event.originalEvent as TouchEvent).touches[0];
-    const touchX = touch.pageX - canvasOffset.left;
-    const touchY = touch.pageY - canvasOffset.top;
+    const touchX = touch.pageX;
+    const touchY = touch.pageY;
     // touchY -= 100;
     moveAttractor(touchX, touchY);
     mouseX = touchX;
@@ -216,7 +210,7 @@ function removeAttractor() {
 function resize(width: number, height: number) {
 }
 
-const Dots = new (class extends ISketch {
+class Dots extends ISketch {
     public events = {
         mousedown,
         mousemove,
@@ -392,6 +386,6 @@ const Dots = new (class extends ISketch {
         this.pointCloud = new THREE.Points(this.geometry, material);
         this.scene.add(this.pointCloud);
     }
-})();
+}
 
 export default Dots;
