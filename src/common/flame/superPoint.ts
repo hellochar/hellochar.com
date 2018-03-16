@@ -5,7 +5,7 @@ import { VARIATIONS } from "./transforms";
 import { UpdateVisitor } from "./updateVisitor";
 
 export class SuperPoint {
-    public children: SuperPoint[];
+    public children?: SuperPoint[];
     public lastPoint: THREE.Vector3 = new THREE.Vector3();
     private static globalSubtreeIterationIndex = 0;
 

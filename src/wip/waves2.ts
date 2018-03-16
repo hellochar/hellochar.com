@@ -76,10 +76,8 @@ class LineStrip {
     public gridOffsetX: number;
     public gridOffsetY: number;
     public object: THREE.Object3D;
-    public width: number;
-    public height: number;
 
-    constructor(width: number, height: number, offsetX: number, offsetY: number, public gridSize: number) {
+    constructor(public width: number, public height: number, offsetX: number, offsetY: number, public gridSize: number) {
         this.inlineAngle = Math.atan(offsetY / offsetX);
         this.dx = 23;
         this.dy = 23;
@@ -257,8 +255,8 @@ class Waves2 extends ISketch {
     public readonly lineStrips: LineStrip[] = [];
 
     // threejs stuff
-    public camera: THREE.OrthographicCamera;
-    public scene: THREE.Scene;
+    public camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
+    public scene = new THREE.Scene();
     public bgSub = new WebcamBackgroundSubtractor(VIDEO_WIDTH, VIDEO_HEIGHT);
 
     init() {
@@ -268,8 +266,6 @@ class Waves2 extends ISketch {
         this.bgSub.init();
         this.bgSub.debug();
 
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
         this.camera.position.z = 500;
 
         // cheap mobile detection

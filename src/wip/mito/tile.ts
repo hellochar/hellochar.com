@@ -488,7 +488,7 @@ export class Fruit extends Cell {
 
 export class Transport extends Tissue {
     static displayName = "Transport";
-    public dir: Vector2;
+    public dir!: Vector2;
 
     step() {
         // transport hungers at double speed

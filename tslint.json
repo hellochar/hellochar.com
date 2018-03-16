@@ -18,7 +18,8 @@
         "interface-over-type-literal": false,
         "forin": false,
         "no-unused-variable": true,
-        "member-access": false
+        "member-access": false,
+        "semicolon": false
     },
     "defaultSeverity": "warning"
 }

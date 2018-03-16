@@ -578,8 +578,6 @@ function lerp2(v: Vector3, t: {x: number, y: number}, l: number) {
 abstract class Renderer<T> {
     constructor(public target: T, public scene: Scene, public mito: Mito) { }
 
-    abstract init(): void;
-
     abstract update(): void;
 
     abstract destroy(): void;
@@ -587,7 +585,8 @@ abstract class Renderer<T> {
 
 class PlayerRenderer extends Renderer<Player> {
     public mesh: Mesh;
-    init() {
+    constructor(target: Player, scene: Scene, mito: Mito) {
+        super(target, scene, mito);
         this.mesh = new Mesh(
             new PlaneBufferGeometry(1, 1),
             // new THREE.CircleBufferGeometry(0.5, 20),
@@ -722,14 +721,14 @@ class TileRenderer extends Renderer<Tile> {
     public object = new Object3D();
     public mesh: Mesh;
     static geometry = new PlaneBufferGeometry(1, 1);
-    private inventoryRenderer: InventoryRenderer;
+    private inventoryRenderer?: InventoryRenderer;
     private originalColor: THREE.Color;
-    // private audio: THREE.PositionalAudio;
-    private audio: THREE.Audio;
+    private audio?: THREE.Audio;
     private lastAudioValueTracker = 0;
     private pairsLines: THREE.Line[] = [];
 
-    init() {
+    constructor(target: Tile, scene: Scene, mito: Mito) {
+        super(target, scene, mito);
         const mat = getMaterial(this.target) as MeshBasicMaterial;
         const geom = TileRenderer.geometry;
         this.mesh = new Mesh(
@@ -754,7 +753,6 @@ class TileRenderer extends Renderer<Tile> {
 
         if (hasInventory(this.target)) {
             this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.scene, this.mito);
-            this.inventoryRenderer.init();
             this.inventoryRenderer.animationOffset = (this.target.pos.x + this.target.pos.y) / 2;
             this.object.add(this.inventoryRenderer.object);
         }
@@ -823,7 +821,7 @@ class TileRenderer extends Renderer<Tile> {
                 this.inventoryRenderer.object.visible = true;
             }
         }
-        if (this.target instanceof Leaf) {
+        if (this.target instanceof Leaf && this.audio != null) {
             const newAudioValueTracker = this.target.didConvert ? 1 : 0;
             if (newAudioValueTracker !== this.lastAudioValueTracker && newAudioValueTracker > 0) {
                 this.audio.setBuffer(blopBuffer);
@@ -841,7 +839,7 @@ class TileRenderer extends Renderer<Tile> {
             // this.audio.play();
         }
 
-        if (this.target instanceof Root) {
+        if (this.target instanceof Root && this.audio != null) {
             const newAudioValueTracker = this.target.waterTransferAmount;
             if (newAudioValueTracker !== this.lastAudioValueTracker) {
                 this.audio.setBuffer(suckWaterBuffer);
@@ -936,7 +934,8 @@ class InventoryRenderer extends Renderer<Inventory> {
     public waters: Mesh[] = [];
     public sugars: Mesh[] = [];
 
-    init() {
+    constructor(target: Inventory, scene: Scene, mito: Mito) {
+        super(target, scene, mito);
         this.object.position.z = 1;
         for (let i = 0; i < this.target.water; i++) {
             this.createWaterMesh();
@@ -1106,7 +1105,7 @@ export type GameState = "main" | "win" | "lose" | "instructions";
 class Mito extends ISketch {
     public readonly world = new World();
     public scene = new Scene();
-    private camera: THREE.OrthographicCamera;
+    private camera = new OrthographicCamera(0, 0, 0, 0, -100, 100);
     public renderers = new Map<Entity, Renderer<Entity>>();
     // when true, automatically create tissue tiles when walking into soil or dirt
     public autoplace: Constructor<Cell> | undefined;
@@ -1126,12 +1125,12 @@ class Mito extends ISketch {
             }}
             world={this.world}
         />,
-        <TileHover ref={(ref) => this.hoverRef = ref! } />,
-        <GameStack ref={(ref) => this.gameStackRef = ref! } mito={this} />,
+        <TileHover ref={(ref) => this.hoverRef = ref } />,
+        <GameStack ref={(ref) => this.gameStackRef = ref } mito={this} />,
     ];
-    public hudRef: HUD;
-    public hoverRef: TileHover;
-    public gameStackRef: GameStack;
+    public hudRef: HUD | null = null;
+    public hoverRef: TileHover | null = null;
+    public gameStackRef: GameStack | null = null;
     public mouse = new THREE.Vector2();
     public hoveredTile?: Tile;
     private raycaster = new THREE.Raycaster();
@@ -1150,9 +1149,11 @@ class Mito extends ISketch {
             }
         },
         click: (event: JQuery.Event) => {
-            this.hoverRef.setState({
-                show: !this.hoverRef.state.show,
-            });
+            if (this.hoverRef != null) {
+                this.hoverRef.setState({
+                    show: !this.hoverRef.state.show,
+                });
+            }
         },
         keypress: (event: JQuery.Event) => {
             const key = event.key!;
@@ -1229,15 +1230,15 @@ class Mito extends ISketch {
                 }
             }
         }
-        this.hudRef.setState({ autoplace: this.autoplace });
+        if (this.hudRef != null) {
+            this.hudRef.setState({ autoplace: this.autoplace });
+        }
     }
 
     public init() {
         const { world } = this;
         hookUpAudio(this.audioContext);
-        // this.camera = new OrthographicCamera(0, width, 0, height, -100, 100);
         const aspect = this.aspectRatio;
-        this.camera = new OrthographicCamera(0, 0, 0, 0, -100, 100);
         this.camera.zoom = 1.5;
         this.camera.add(this.audioListener);
 
@@ -1267,7 +1268,6 @@ class Mito extends ISketch {
         const renderer = this.renderers.get(entity);
         if (renderer == null) {
             const created = createRendererFor(entity, this.scene, this);
-            created.init();
             this.renderers.set(entity, created);
             return created;
         } else {
@@ -1346,18 +1346,24 @@ class Mito extends ISketch {
                 } else {
                     this.hoveredTile = thisHoveredTile;
                 }
-                this.hoverRef.setState({
-                    tile: this.hoveredTile,
-                });
+                if (this.hoverRef != null) {
+                    this.hoverRef.setState({
+                        tile: this.hoveredTile,
+                    });
+                }
             }
         }
-        this.hudRef.setState({
-            sugar: this.world.player.inventory.sugar,
-            water: this.world.player.inventory.water,
-        });
-        this.gameStackRef.setState({
-            state: this.gameState,
-        });
+        if (this.hudRef != null) {
+            this.hudRef.setState({
+                sugar: this.world.player.inventory.sugar,
+                water: this.world.player.inventory.water,
+            });
+        }
+        if (this.gameStackRef != null) {
+            this.gameStackRef.setState({
+                state: this.gameState,
+            });
+        }
     }
 
     public resize(w: number, h: number) {

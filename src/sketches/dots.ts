@@ -220,18 +220,17 @@ class Dots extends ISketch {
         touchend,
     };
 
+    public shader = new THREE.ShaderPass(ExplodeShader);
     public audioGroup: any;
-    public camera: THREE.OrthographicCamera;
-    public composer: THREE.EffectComposer;
-    public shader: THREE.ShaderPass;
-    public geometry: THREE.Geometry;
-    public pointCloud: THREE.Points;
-    public scene: THREE.Scene;
+    public camera!: THREE.OrthographicCamera;
+    public composer!: THREE.EffectComposer;
+    public geometry!: THREE.Geometry;
+    public pointCloud!: THREE.Points;
+    public scene = new THREE.Scene();
 
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);
 
-        this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera(0, this.canvas.width, 0, this.canvas.height, 1, 1000);
         this.camera.position.z = 500;
 
@@ -248,7 +247,6 @@ class Dots extends ISketch {
         this.instantiatePointCloudAndGeometry();
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
-        this.shader = new THREE.ShaderPass(ExplodeShader);
         this.shader.uniforms.iResolution.value = this.resolution;
         this.shader.renderToScreen = true;
         this.composer.addPass(this.shader);

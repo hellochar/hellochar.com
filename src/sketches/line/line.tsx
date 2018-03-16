@@ -95,9 +95,9 @@ export class LineSketch extends ISketch {
     public gravityShaderPass = new THREE.ShaderPass(GravityShader);
     public scene = new THREE.Scene();
 
-    public points: THREE.Points;
-    public controller: Controller;
-    public composer: THREE.EffectComposer;
+    public points!: THREE.Points;
+    public controller!: Controller;
+    public composer!: THREE.EffectComposer;
 
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);

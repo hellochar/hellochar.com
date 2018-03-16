@@ -8,13 +8,13 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 class RenderToTexture extends ISketch {
     public scene = new THREE.Scene();
-    private camera: THREE.PerspectiveCamera;
+    private camera!: THREE.PerspectiveCamera;
 
-    public mesh: THREE.Mesh;
-    public material: THREE.MeshBasicMaterial;
-    public renderTarget: THREE.WebGLRenderTarget;
-    public renderTarget2: THREE.WebGLRenderTarget;
-    public currentTarget: THREE.WebGLRenderTarget;
+    public mesh!: THREE.Mesh;
+    public material!: THREE.MeshBasicMaterial;
+    public renderTarget!: THREE.WebGLRenderTarget;
+    public renderTarget2!: THREE.WebGLRenderTarget;
+    public currentTarget!: THREE.WebGLRenderTarget;
 
     public init() {
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);

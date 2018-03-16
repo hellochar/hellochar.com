@@ -11,10 +11,9 @@ import { IForegroundUpdateMessage, IPositionColorUpdateResponse } from "./interf
 let now: number = 0;
 class DontMove extends ISketch {
     public scene = new THREE.Scene();
-    private camera: THREE.OrthographicCamera;
-
-    public composer: THREE.EffectComposer;
-    public filter: THREE.ShaderPass;
+    private camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
+    public filter = new THREE.ShaderPass(ExplodeShader);
+    public composer!: THREE.EffectComposer;
 
     private POINTS_MATERIAL = new THREE.PointsMaterial({
         vertexColors: THREE.VertexColors,
@@ -34,10 +33,9 @@ class DontMove extends ISketch {
         this.setupParticles();
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
-        const filter = this.filter = new THREE.ShaderPass(ExplodeShader);
-        filter.uniforms.iResolution.value = this.resolution;
-        filter.renderToScreen = true;
-        this.composer.addPass(filter);
+        this.filter.uniforms.iResolution.value = this.resolution;
+        this.filter.renderToScreen = true;
+        this.composer.addPass(this.filter);
     }
 
     private initWorkers() {
@@ -52,7 +50,7 @@ class DontMove extends ISketch {
     }
 
     public particleBufferGeometry = new THREE.BufferGeometry();
-    public particlePoints: THREE.Points;
+    public particlePoints!: THREE.Points;
     public setupParticles() {
         // filler for now
         const positions = new Float32Array(NUM_PARTICLES * 3);
@@ -91,7 +89,6 @@ class DontMove extends ISketch {
     }
 
     public setupCamera() {
-        this.camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
         this.camera.position.z = 500;
         this.camera.lookAt(new THREE.Vector3());
         this.resize(this.renderer.domElement.width, this.renderer.domElement.height);

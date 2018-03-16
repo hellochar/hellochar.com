@@ -10,10 +10,10 @@ const COMPUTE_TEXTURE_SIDE_LENGTH = 1024;
 
 class TextureForPosition extends ISketch {
     public scene = new THREE.Scene();
-    private camera: THREE.PerspectiveCamera;
-    public controls: THREE.OrbitControls;
 
-    pointsMaterial: THREE.ShaderMaterial;
+    public camera!: THREE.PerspectiveCamera;
+    public controls!: THREE.OrbitControls;
+    public pointsMaterial!: THREE.ShaderMaterial;
 
     public init() {
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);

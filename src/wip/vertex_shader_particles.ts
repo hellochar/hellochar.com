@@ -7,10 +7,10 @@ import { ISketch, SketchAudioContext } from "../sketch";
 
 class VertexShaderParticles extends ISketch {
     public scene = new THREE.Scene();
-    private camera: THREE.PerspectiveCamera;
+    private camera!: THREE.PerspectiveCamera;
 
-    public material: THREE.ShaderMaterial;
-    public points: THREE.Points;
+    public material!: THREE.ShaderMaterial;
+    public points!: THREE.Points;
 
     public init() {
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);

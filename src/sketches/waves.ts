@@ -81,10 +81,8 @@ class LineStrip {
     public gridOffsetX: number;
     public gridOffsetY: number;
     public object: THREE.Object3D;
-    public width: number;
-    public height: number;
 
-    constructor(width: number, height: number, offsetX: number, offsetY: number, public gridSize: number) {
+    constructor(public width: number, public height: number, offsetX: number, offsetY: number, public gridSize: number) {
         this.inlineAngle = Math.atan(offsetY / offsetX);
         this.dx = 1;
         this.dy = 1;
@@ -274,15 +272,13 @@ class Waves extends ISketch {
     };
 
     public audioGroup: any;
-    public camera: THREE.OrthographicCamera;
-    public scene: THREE.Scene;
+    public camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
+    public scene = new THREE.Scene();
 
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);
         this.renderer.autoClearColor = false;
 
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
         this.camera.position.z = 500;
 
         // cheap mobile detection
