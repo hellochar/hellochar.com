@@ -32,10 +32,20 @@ const WipListing = () => (
     </>
 );
 
+const SlidesIntroCC = () => {
+    return (
+        <iframe
+        className="slides-intro-cc"
+        src="https://docs.google.com/presentation/d/e/2PACX-1vT1rzydBsfDy4wx_Y4xcGdMzz_y1WzYMfvuHJB1xbdHtxxozoH3XFLikmc8a3wbEUIKTWBmRh3-8pAq/embed?start=false&loop=false"
+        frameBorder="0" allowFullScreen></iframe>
+    );
+}
+
 export const Routes = () => (
     <Switch>
         { sketchRoutes }
         { wipSketchRoutes }
+        <Route path="/slides/introcc" component={SlidesIntroCC} />
         <Route path="/wip" component={WipListing} />
         <Route path="/" component={HomePage} />
     </Switch>
