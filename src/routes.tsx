@@ -35,9 +35,20 @@ const WipListing = () => (
 const SlidesIntroCC = () => {
     return (
         <iframe
-        className="slides-intro-cc"
-        src="https://docs.google.com/presentation/d/e/2PACX-1vT1rzydBsfDy4wx_Y4xcGdMzz_y1WzYMfvuHJB1xbdHtxxozoH3XFLikmc8a3wbEUIKTWBmRh3-8pAq/embed?start=false&loop=false"
-        frameBorder="0" allowFullScreen></iframe>
+            className="slides"
+            src="https://docs.google.com/presentation/d/e/2PACX-1vT1rzydBsfDy4wx_Y4xcGdMzz_y1WzYMfvuHJB1xbdHtxxozoH3XFLikmc8a3wbEUIKTWBmRh3-8pAq/embed?start=false&loop=false"
+            frameBorder="0" allowFullScreen>
+        </iframe>
+    );
+}
+
+const SlidesDiveCC = () => {
+    return (
+        <iframe
+            className="slides"
+            src="https://docs.google.com/presentation/d/e/2PACX-1vS8RZPhfhg8DgBzsSlnCWc8MbGKkedX9qv_JKtuNQItsjSaF7MhFvlHdeP7OpO0cSaaZnv1NhLz53dE/embed?start=false&loop=false"
+            frameBorder="0" allowFullScreen>
+        </iframe>
     );
 }
 
@@ -46,6 +57,7 @@ export const Routes = () => (
         { sketchRoutes }
         { wipSketchRoutes }
         <Route path="/slides/introcc" component={SlidesIntroCC} />
+        <Route path="/slides/divecc" component={SlidesDiveCC} />
         <Route path="/wip" component={WipListing} />
         <Route path="/" component={HomePage} />
     </Switch>
