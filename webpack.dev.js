@@ -12,9 +12,24 @@ module.exports = merge(common, {
     contentBase: path.join(__dirname, "public"),
     disableHostCheck: true,
     host: "localhost",
+    hot: true,
     historyApiFallback: true
   },
+  module: {
+    rules: [
+      {
+        test: /\.scss$/,
+        use: [
+          // MiniCssExtractPlugin.loader,
+          "style-loader",
+          'css-loader',
+          'sass-loader'
+        ]
+      },
+    ],
+  },
   plugins: [
+    new webpack.HotModuleReplacementPlugin(),
     // new BundleAnalyzerPlugin({
     //   analyzerMode: 'static'
     // }),

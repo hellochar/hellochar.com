@@ -1,4 +1,3 @@
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require("path");
 
@@ -25,14 +24,16 @@ module.exports = {
         use: "ts-loader",
         exclude: /node_modules/
       },
-      {
-        test: /\.scss$/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader',
-          'sass-loader'
-        ]
-      },
+      // don't handle scss here; do it in prod/dev since they're done differently
+      // {
+      //   test: /\.scss$/,
+      //   use: [
+      //     // MiniCssExtractPlugin.loader,
+      //     "style-loader",
+      //     'css-loader',
+      //     'sass-loader'
+      //   ]
+      // },
       {
         test: /\.(vert|frag)$/,
         use: "webpack-glsl-loader"
@@ -46,12 +47,6 @@ module.exports = {
     }
   },
   plugins: [
-    new MiniCssExtractPlugin({
-      // Options similar to the same options in webpackOptions.output
-      // both options are optional
-      filename: "[name].css",
-      chunkFilename: "[id].css"
-    }),
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: 'src/index.template.html'
