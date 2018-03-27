@@ -1,7 +1,6 @@
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require("path");
-const webpack = require('webpack');
 
 module.exports = {
   entry: {
@@ -14,6 +13,11 @@ module.exports = {
     filename: "[name].js",
     chunkFilename: '[name].bundle.js',
   },
+  optimization: {
+    splitChunks: {
+      chunks: "all"
+    }
+  },
   module: {
     rules: [
       {
@@ -23,10 +27,11 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        use: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: ['css-loader', 'sass-loader']
-        })
+        use: [
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+          'sass-loader'
+        ]
       },
       {
         test: /\.(vert|frag)$/,
@@ -41,17 +46,15 @@ module.exports = {
     }
   },
   plugins: [
-    new ExtractTextPlugin('style.css'),
+    new MiniCssExtractPlugin({
+      // Options similar to the same options in webpackOptions.output
+      // both options are optional
+      filename: "[name].css",
+      chunkFilename: "[id].css"
+    }),
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: 'src/index.template.html'
-    }),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: 'node-static',
-      minChunks(module, count) {
-        var context = module.context;
-        return context && context.indexOf('node_modules') >= 0;
-      },
     })
   ]
 };
