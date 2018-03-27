@@ -11,9 +11,10 @@ module.exports = merge(common, {
   devServer: {
     contentBase: path.join(__dirname, "public"),
     disableHostCheck: true,
-    host: "localhost",
+    host: "0.0.0.0",
     hot: true,
-    historyApiFallback: true
+    historyApiFallback: true,
+    useLocalIp: true,
   },
   module: {
     rules: [
