@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = {
   entry: {
@@ -37,6 +38,13 @@ module.exports = {
       {
         test: /\.(vert|frag)$/,
         use: "webpack-glsl-loader"
+      },
+      {
+        test: /three-examples/,
+        use: [
+          "imports-loader?THREE=three",
+          "exports-loader?THREE.OrbitControls",
+        ]
       }
     ]
   },
@@ -50,6 +58,9 @@ module.exports = {
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: 'src/index.template.html'
-    })
+    }),
+    new webpack.ProvidePlugin({
+      'THREE': "three",
+    }),
   ]
 };

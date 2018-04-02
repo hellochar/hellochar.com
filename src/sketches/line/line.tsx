@@ -2,6 +2,10 @@ import * as classnames from "classnames";
 import { Controller } from "leapjs";
 import * as React from "react";
 import * as THREE from "three";
+import "three-examples/shaders/CopyShader";
+import "three-examples/postprocessing/EffectComposer";
+import "three-examples/postprocessing/RenderPass";
+import "three-examples/postprocessing/ShaderPass";
 
 import { parse } from "query-string";
 import devlog from "../../common/devlog";

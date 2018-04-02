@@ -1,8 +1,9 @@
-// import * as OrbitControls from "imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls";
+import OrbitControls from "imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three/examples/js/controls/OrbitControls";
 import { parse } from "query-string";
 import { KeyboardEvent, MouseEvent } from "react";
 import * as React from "react";
 import * as THREE from "three";
+// import 'three-examples/controls/OrbitControls';
 
 import { createPinkNoise, createWhiteNoise } from "../audio/noise";
 import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, UpdateVisitor, VARIATIONS, VelocityTrackerVisitor } from "../common/flame";
@@ -342,7 +343,7 @@ class Flame extends ISketch {
         camera.position.z = 3;
         camera.position.y = 1;
         camera.lookAt(new THREE.Vector3());
-        controls = new THREE.OrbitControls(camera, this.renderer.domElement);
+        controls = new OrbitControls(camera, this.renderer.domElement);
         controls.autoRotate = true;
         controls.autoRotateSpeed = 1;
         controls.maxDistance = 10;
