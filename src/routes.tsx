@@ -1,12 +1,13 @@
 import * as React from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 
+import Cards from "./cards";
+import LoadableThing from "./loadableThing";
 import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
 import { ISketch } from "./sketch";
 import sketches from "./sketches";
 import wipSketches from "./wip";
-import LoadableThing from "./loadableThing";
 
 const sketchRoutes = sketches.map((sketchClass) => {
     const path = `/${sketchClass.id}`;
@@ -61,6 +62,7 @@ export const Routes = () => (
         <Route path="/slides/divecc" component={SlidesDiveCC} />
         <Route path="/wip" component={WipListing} />
         <Route path="/thing" component={LoadableThing} />
+        <Route path="/cards" component={Cards} />
         <Route path="/" component={HomePage} />
     </Switch>
 );

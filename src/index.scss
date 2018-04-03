@@ -194,3 +194,112 @@ p ~ p {
         -webkit-padding-start: 20px;
     }
 }
+
+.actions {
+    margin: 0in;
+    border: 0;
+    page-break-after: always;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .card {
+        display: block;
+        margin: 0.1mm;
+        padding: 0;
+        background-color: white;
+        border-radius: 0in;
+        background-clip: padding-box;
+        height: 3.5in;
+        width: 2.5in;
+        position: relative;
+        border: 0.8mm solid rgba(0, 0, 0, 0.5);
+    }
+
+    .card-wrapper {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 100%;
+        height: 100%;
+    }
+
+    .action-name {
+        font-size: 16pt;
+        font-family: Palatino,Palatino Linotype,Palatino LT STD,Book Antiqua,serif;
+        font-weight: 600;
+        padding: 5px;
+    }
+
+    .modifier {
+        width: 25px;
+        height: 25px;
+        text-align: center;
+        border-radius: 100%;
+        font-weight: normal;
+        font-size: 12pt;
+        margin: 2.5px;
+        border: 1px solid #BFCCD6;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        &.interrupt {
+            font-weight: 900;
+        }
+
+        &.gainPoints {
+            background: rgb(64, 200, 64);
+            border: 1px solid rgb(32, 128, 32);
+        }
+
+        &.losePoints {
+            background: rgb(255, 64, 64);
+            border: 1px solid rgb(128, 32, 32);
+        }
+
+        &.lay {
+            position: relative;
+            > div {
+                display: inline-block;
+                width: (2.5pt * 3);
+                height: (3.5pt * 3);
+                background: black;
+                border: 0.5px solid white;
+                position: absolute;
+            }
+
+            .lay1 {
+                transform: translate(-2px, -2px);
+            }
+            .lay2 {
+            }
+            .lay3 {
+                transform: translate(2px, 2px);
+            }
+        }
+    }
+
+    .corner {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        padding: 10px 5px;
+    }
+
+    .corner-reverse {
+        transform: rotate(0deg);
+    }
+
+    .action-description {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-direction: column;
+        justify-content: space-between;
+        font-family: Arial;
+        font-size: 10pt;
+        text-align: justify;
+        padding: 10px;
+    }
+}
