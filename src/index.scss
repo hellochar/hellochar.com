@@ -220,6 +220,41 @@ p ~ p {
         border: 0.8mm solid rgba(0, 0, 0, 0.5);
     }
 
+    .trait .card-name {
+        display: flex;
+        margin: 20px auto;
+        flex-direction: column;
+    }
+
+    .card-name-underline {
+        height: 5px;
+        display: flex;
+
+        .underline {
+            height: 100%;
+            flex: 1;
+            border-top: 1px solid $gray3;
+            position: relative;
+            top: 2.5px;
+        }
+
+        .underline-left {
+            border-top-left-radius: 5px;
+        }
+
+        .underline-right {
+            border-top-right-radius: 5px;
+        }
+
+        .underline-dot {
+            border-radius: 100%;
+            width: 5px;
+            height: 5px;
+            background: $gray3;
+            margin: 0 5px;
+        }
+    }
+
     .card-wrapper {
         display: flex;
         flex: 1;
@@ -236,18 +271,18 @@ p ~ p {
         justify-content: space-evenly;
     }
 
-    .action-name {
+    .card-name {
         font-size: 16pt;
         font-family: Palatino,Palatino Linotype,Palatino LT STD,Book Antiqua,serif;
         font-weight: 600;
         padding: 5px;
     }
 
-    .action-name-positioner {
+    .card-name-positioner {
         position: relative;
     }
 
-    .action-name-vertical {
+    .card-name-vertical {
         // font-size: 8pt;
         // font-weight: normal;
         text-orientation: upright;
@@ -257,7 +292,7 @@ p ~ p {
         left: 0;
     }
 
-    .action-icon-list {
+    .card-icon-list {
         display: flex;
         justify-content: center;
     }
@@ -364,7 +399,7 @@ p ~ p {
         transform: rotate(0deg);
     }
 
-    .action-description {
+    .card-description {
         display: flex;
         align-items: center;
         justify-content: flex-start;

@@ -1,8 +1,10 @@
+import * as classnames from "classnames";
 import * as React from "react";
 
-import ACTIONS from "./actions";
-import { ACTIONS_EXTRACTED, iconExtractors } from "./extract";
-import { Action, Icon, IconGainPoints, IconLosePoints, IconType } from "./interfaces";
+import CARDS from "./cards";
+import { iconExtractors, TRAITS_EXTRACTED } from "./extract";
+import { Card, Icon, IconGainPoints, IconLosePoints, IconType } from "./interfaces";
+import TRAITS from "./traits";
 
 const iconRenderers: { [K in IconType]: React.SFC<{ icon: Icon }> } = {
     interrupt: () => (
@@ -22,9 +24,6 @@ const iconRenderers: { [K in IconType]: React.SFC<{ icon: Icon }> } = {
     ),
     uninterruptable: () => (
         <div className="icon uninterruptable"><i className="fa fa-shield" /></div>
-    ),
-    imply: () => (
-        <div className="icon imply">&#8658;</div>
     ),
     thumbs: () => (
         <div className="icon thumbs">
@@ -84,34 +83,45 @@ const IconRenderer: React.SFC<{icon: Icon, sentence: string}> = ({ icon, sentenc
     return <Renderer icon={icon} />;
 }
 
-const ActionCard: React.SFC<{action: Action}> = ({ action }) => {
-    const iconListsElements = action.iconLists.map((iconList) => {
+const ActionCard: React.SFC<{card: Card}> = ({ card }) => {
+    const iconListsElements = card.iconLists.map((iconList) => {
         // HACKHACK sentence description is fucked
         const listElements = iconList.map((icon) =>
-            <IconRenderer icon={icon} sentence={action.description} />,
+            <IconRenderer icon={icon} sentence={card.description} />,
         );
         return (
-            <div className="action-icon-list">
+            <div className="card-icon-list">
                 {...listElements}
             </div>
         )
     });
+    function renderDecorativeUnderline() {
+        return (
+            <div className="card-name-underline">
+                <div className="underline underline-left"></div>
+                <div className="underline-dot"></div>
+                <div className="underline underline-right"></div>
+            </div>
+        );
+    }
+    const classNames = classnames("card", `card-${card.name.toLowerCase()}`, { "trait": card.isTrait });
     return (
-        <div className={`card card-${action.name.toLowerCase()}`}>
+        <div className={classNames}>
             <div className="card-wrapper">
-                <div className="action-name">
-                    {action.name}
-                    {/* <div className="action-name-positioner">
-                        <div className="action-name-vertical">{action.name.substr(1)}</div>
+                <div className="card-name">
+                    {card.name}
+                    { card.isTrait ? renderDecorativeUnderline() : null }
+                    {/* <div className="card-name-positioner">
+                        <div className="card-name-vertical">{action.name.substr(1)}</div>
                     </div> */}
                 </div>
                 <div className="card-description">
-                    <div className="action-icon-lists">
+                    <div className="card-icon-lists">
                         {...iconListsElements}
                     </div>
-                    <div className="action-description">{action.description}</div>
+                    <div className="card-description">{card.description}</div>
                 </div>
-                {/* <div className="action-name corner corner-reverse">{action.name}</div> */}
+                {/* <div className="card-name corner corner-reverse">{action.name}</div> */}
             </div>
         </div>
     );
@@ -119,16 +129,17 @@ const ActionCard: React.SFC<{action: Action}> = ({ action }) => {
 
 export default class Cards extends React.Component<{}, {}> {
     render() {
-        const actionCards = ACTIONS.map((action) => <ActionCard action={action} />);
+        // const cardCards = ACTIONS.map((action) => <ActionCard action={action} />);
+        const cardCards = TRAITS.map((action) => <ActionCard card={action} />);
         const pages: JSX.Element[][] = [];
-        for (let i = 0; i < actionCards.length; i++) {
-            const card = actionCards[i];
+        for (let i = 0; i < cardCards.length; i++) {
+            const card = cardCards[i];
             const pageIndex = Math.floor(i / 9);
             pages[pageIndex] = pages[pageIndex] || [];
             pages[pageIndex].push(card);
         }
         const pageEls = pages.map((pageChildren) => <div className="page">{...pageChildren}</div>);
-        // const actionCards = ACTIONS_EXTRACTED.map((action) => <ActionCard action={action} />);
+        // const cardCards = ACTIONS_EXTRACTED.map((action) => <ActionCard action={action} />);
         return (
             <>
                 {...pageEls}

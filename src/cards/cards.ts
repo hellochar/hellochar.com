@@ -1,7 +1,7 @@
-import { Action } from "./interfaces";
+import { Card } from "./interfaces";
 
 // tslint:disable
-const ACTIONS: Action[] =
+const CARDS: Card[] =
 [
   {
     "name": "Agree",
@@ -417,5 +417,5 @@ const ACTIONS: Action[] =
 ]
 ;
 
-export default ACTIONS;
+export default CARDS;
 
