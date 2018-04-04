@@ -205,6 +205,7 @@ p ~ p {
     flex-direction: row;
     flex-wrap: wrap;
     align-content: start;
+    -webkit-print-color-adjust: exact;
 
     .card {
         display: block;
@@ -289,7 +290,12 @@ p ~ p {
         }
 
         &.keep {
-            perspective: 50px;
+            perspective: 50px !important;
+
+            img {
+                width: 35px;
+            }
+
             .cardshape {
                 transform: rotateX(60deg);
             }

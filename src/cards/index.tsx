@@ -59,7 +59,8 @@ const iconRenderers: { [K in IconType]: React.SFC<{ icon: Icon }> } = {
     ),
     keep: () => (
         <div className="icon keep">
-            <div className="cardshape"></div>
+            {/* <div className="cardshape"></div> */}
+            <img src="/assets/keep_icon.png" />
         </div>
     ),
     multiCard: ({icon}) => {
