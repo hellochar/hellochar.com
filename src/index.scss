@@ -195,13 +195,16 @@ p ~ p {
     }
 }
 
-.actions {
+.page {
+    width: 8.5in;
+    height: 11in;
     margin: 0in;
     border: 0;
     page-break-after: always;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    align-content: start;
 
     .card {
         display: block;
@@ -225,6 +228,13 @@ p ~ p {
         height: 100%;
     }
 
+    .card-description {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        justify-content: space-evenly;
+    }
+
     .action-name {
         font-size: 16pt;
         font-family: Palatino,Palatino Linotype,Palatino LT STD,Book Antiqua,serif;
@@ -232,14 +242,33 @@ p ~ p {
         padding: 5px;
     }
 
-    .modifier {
-        width: 25px;
-        height: 25px;
+    .action-name-positioner {
+        position: relative;
+    }
+
+    .action-name-vertical {
+        // font-size: 8pt;
+        // font-weight: normal;
+        text-orientation: upright;
+        writing-mode: tb;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .action-icon-list {
+        display: flex;
+        justify-content: center;
+    }
+
+    .icon {
+        width: 50px;
+        height: 50px;
         text-align: center;
         border-radius: 100%;
         font-weight: normal;
-        font-size: 12pt;
-        margin: 2.5px;
+        font-size: 26pt;
+        margin: 5px;
         border: 1px solid #BFCCD6;
         display: inline-flex;
         align-items: center;
@@ -259,24 +288,62 @@ p ~ p {
             border: 1px solid rgb(128, 32, 32);
         }
 
+        &.keep {
+            perspective: 50px;
+            .cardshape {
+                transform: rotateX(60deg);
+            }
+        }
+
+        &.thumbs {
+            font-size: 20pt;
+            flex-direction: column;
+        }
+
+        &.guess .cardshape {
+            font-size: 20px;
+        }
+
+        &.command img {
+            width: 40px;
+        }
+
+        .cardshape {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: (2.5pt * 7);
+            height: (3.5pt * 7);
+            background: white;
+            border: 2px solid black;
+
+            &.text {
+                font-size: 14px;
+                border: none;
+                font-weight: bold;
+            }
+        }
+
         &.lay {
             position: relative;
-            > div {
-                display: inline-block;
-                width: (2.5pt * 3);
-                height: (3.5pt * 3);
-                background: black;
-                border: 0.5px solid white;
+
+            .cards-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                .cardshape {
                 position: absolute;
             }
+            }
 
-            .lay1 {
+            .cardshape:nth-of-type(1) {
                 transform: translate(-2px, -2px);
             }
-            .lay2 {
-            }
-            .lay3 {
+            .cardshape:nth-of-type(2) {
                 transform: translate(2px, 2px);
+            }
+            .cardshape:nth-of-type(3) {
+                transform: translate(6px, 6px);
             }
         }
     }
