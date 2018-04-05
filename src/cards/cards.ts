@@ -175,7 +175,7 @@ const CARDS: Card[] =
   },
   {
     "name": "Discredit",
-    "description": "Interrupt. Keep this card in front of interrupted player. Interrupted player's actions may be interrupted by any card, at which point you discard Discredit.",
+    "description": "Interrupt. Keep this card in front of interrupted player. Interrupted player's cards may be interrupted by any card, at which point you discard Discredit.",
     "iconLists": [
       [
         {

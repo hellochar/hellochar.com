@@ -46,37 +46,37 @@ function extractIconListsFromDescription(description: string) {
     return sentences.map((sentence) => extractIconListFromSentence(sentence));
 }
 
-const ALL_TRAITS_STRING =
-`
-Crush - Pick a target player. Gain 1 point when that player targets you with a card. Lose 1 point when that player targets another player with a card.
-Intellectual - You may play and then discard this card as a Fact. You get no points from Feeling.
-Empath - Pick a target player. Gain 1 point when target gains any points. Lose 1 point when target loses any points.
-Curious - Gain 1 point whenever another player plays a Belief, Fact, Opinion, or Feeling. You must play Questions first whenever they're in your hand.
-Charismatic - The first action of your turn cannot be interrupted.
-Virtuous - Add a counter to Virtuous when you play an action that gives another player a point. When you would lose points, you may instead lose counters on Virtuous. At the start of your turn, you lose 1 point, and the player with the fewest points gains 1 point.
-Rude - You may play any card as an interrupt, but take a 1 point penalty when doing so.
-Polite - When you play an interrupt, the interruptee chooses to allow the card to be played. If they do, you both gain 1 point.
-Liar - You may play any card as a Lie without needing the Lie card. Any player may use normal cards to interrupt you.
-Candid - Play with your hand revealed to all players. You never lose points.
-Stoic - If you would lose or gain a point due to a card or trait of another player, lose or gain 1 less point.
-Dependent - If you would lose or gain a point due to a card or trait of another player, lose or gain 1 more point.
-Anxious - Flip a coin when you play an action. If tails, that card is unresolved and discarded immediately.
-Closeminded - You may not lose or gain points from actions or traits of the player sitting opposite you (both players if there's an odd number of players).
-Angry - when you are interrupted, add a counter to this card. On the third interruption, the Disrespect effect is triggered targeted towards the interrupter, and the counter is reset.
-Narcissistic - Discard all other traits. You may target yourself and only yourself with actions.
-`;
+// const ALL_TRAITS_STRING =
+// `
+// Crush - Pick a target player. Gain 1 point when that player targets you with a card. Lose 1 point when that player targets another player with a card.
+// Intellectual - You may play and then discard this card as a Fact. You get no points from Feeling.
+// Empath - Pick a target player. Gain 1 point when target gains any points. Lose 1 point when target loses any points.
+// Curious - Gain 1 point whenever another player plays a Belief, Fact, Opinion, or Feeling. You must play Questions first whenever they're in your hand.
+// Charismatic - The first action of your turn cannot be interrupted.
+// Virtuous - Add a counter to Virtuous when you play an action that gives another player a point. When you would lose points, you may instead lose counters on Virtuous. At the start of your turn, you lose 1 point, and the player with the fewest points gains 1 point.
+// Rude - You may play any card as an interrupt, but take a 1 point penalty when doing so.
+// Polite - When you play an interrupt, the interruptee chooses to allow the card to be played. If they do, you both gain 1 point.
+// Liar - You may play any card as a Lie without needing the Lie card. Any player may use normal cards to interrupt you.
+// Candid - Play with your hand revealed to all players. You never lose points.
+// Stoic - If you would lose or gain a point due to a card or trait of another player, lose or gain 1 less point.
+// Dependent - If you would lose or gain a point due to a card or trait of another player, lose or gain 1 more point.
+// Anxious - Flip a coin when you play an action. If tails, that card is unresolved and discarded immediately.
+// Closeminded - You may not lose or gain points from actions or traits of the player sitting opposite you (both players if there's an odd number of players).
+// Angry - when you are interrupted, add a counter to this card. On the third interruption, the Disrespect effect is triggered targeted towards the interrupter, and the counter is reset.
+// Narcissistic - Discard all other traits. You may target yourself and only yourself with actions.
+// `;
 
-const TRAITS_STRINGS = ALL_TRAITS_STRING.split("\n").filter((s) => s.trim().length > 0);
+// const TRAITS_STRINGS = ALL_TRAITS_STRING.split("\n").filter((s) => s.trim().length > 0);
 
-export const TRAITS_EXTRACTED = TRAITS_STRINGS.map((traitString) => {
-    const regex = /^(\w+) - (.*)$/;
-    const [_, name, description] = regex.exec(traitString);
-    const iconLists = extractIconListsFromDescription(description);
-    const action: Card = { isTrait: true, name, description, iconLists };
-    return action;
-});
+// export const TRAITS_EXTRACTED = TRAITS_STRINGS.map((traitString) => {
+//     const regex = /^(\w+) - (.*)$/;
+//     const [_, name, description] = regex.exec(traitString);
+//     const iconLists = extractIconListsFromDescription(description);
+//     const action: Card = { isTrait: true, name, description, iconLists };
+//     return action;
+// });
 
-console.log(TRAITS_EXTRACTED);
+// console.log(TRAITS_EXTRACTED);
 
 // const ALL_ACTIONS_STRING =
 // `

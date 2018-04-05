@@ -6,20 +6,20 @@ const TRAITS: Card[] =
   {
     "isTrait": true,
     "name": "Crush",
-    "description": "Pick a target player. Gain 1 point when that player targets you with a card. Lose 1 point when that player targets another player with a card.",
+    "description": "Pick a target player. Gain 1 point when that player targets you with a card. Lose 1 point when that player Compliments a different player.",
     "iconLists": [
       [
         {
           "type": "targetted"
-        }
-      ],
-      [
+        },
         {
           "points": "1",
           "type": "gainPoints"
         }
       ],
       [
+        { type: "card", text: "Compliment" },
+        { type: "pointOther" },
         {
           "points": "1",
           "type": "losePoints"
@@ -34,10 +34,23 @@ const TRAITS: Card[] =
     "iconLists": [
       [
         {
-          "type": "card"
+          "type": "card",
+          "text": "Fact"
         }
       ],
-      []
+      [
+        {
+          "type": "card",
+          "text": "Feeling"
+        },
+        {
+          "type": "disallow",
+          disallowed: {
+              "type": "gainPoints",
+              "points": "1"
+          }
+        }
+      ],
     ]
   },
   {
@@ -48,15 +61,22 @@ const TRAITS: Card[] =
       [
         {
           "type": "targetted"
-        }
-      ],
-      [
+        },
+        {
+          "type": "gainPoints"
+        },
         {
           "points": "1",
           "type": "gainPoints"
         }
       ],
       [
+        {
+          "type": "targetted"
+        },
+        {
+          "type": "losePoints"
+        },
         {
           "points": "1",
           "type": "losePoints"
@@ -67,29 +87,52 @@ const TRAITS: Card[] =
   {
     "isTrait": true,
     "name": "Curious",
-    "description": "Gain 1 point whenever another player plays a Belief, Fact, Opinion, or Feeling. You must play Questions first whenever they're in your hand.",
+    "description": "Gain 1 point whenever another player plays a Belief, Opinion, or Feeling. You must play Questions first whenever they're in your hand.",
     "iconLists": [
       [
         {
+          "type": "card",
+          text: "Belief",
+        },
+        {
+          "type": "card",
+          text: "Opinion",
+        },
+        {
+          "type": "card",
+          text: "Feeling",
+        },
+        {
           "points": "1",
           "type": "gainPoints"
-        }
+        },
       ],
       [
-        {
-          "type": "card"
-        }
+          {
+              type: "card",
+              text: "Question"
+          },
+          { type: "speak" }
       ]
     ]
   },
   {
     "isTrait": true,
     "name": "Charismatic",
-    "description": "The first card you play during your turn cannot be interrupted.",
+    "description": "The first card you play during your turn cannot be interrupted. You may not play Facts.",
     "iconLists": [
       [
         {
           "type": "uninterruptable"
+        },
+      ],
+      [
+        {
+          "type": "disallow",
+        },
+        {
+            type: "card",
+            text: "Fact"
         }
       ]
     ]
@@ -101,14 +144,23 @@ const TRAITS: Card[] =
     "iconLists": [
       [
         {
-          "type": "card"
-        }
-      ],
-      [],
-      [
+          "type": "heart"
+        },
         {
-          "points": "1",
-          "type": "losePoints"
+          "type": "tokens"
+        },
+        {
+            "type": "disallow",
+            disallowed: {
+                "points": "1",
+                "type": "losePoints"
+            },
+        }
+    ],
+    [
+        {
+            "points": "1",
+            "type": "losePoints"
         },
         {
           "points": "1",
@@ -120,14 +172,18 @@ const TRAITS: Card[] =
   {
     "isTrait": true,
     "name": "Rude",
-    "description": "You may play any card as an interrupt, but take a 1 point penalty when doing so.",
+    "description": "You may play any card as an interrupt, but lose 1 point when doing so.",
     "iconLists": [
       [
         {
-          "type": "card"
+          "type": "guess"
         },
         {
           "type": "interrupt"
+        },
+        {
+            "type": "losePoints",
+            points: "1"
         }
       ]
     ]
@@ -135,17 +191,19 @@ const TRAITS: Card[] =
   {
     "isTrait": true,
     "name": "Polite",
-    "description": "When you play an interrupt, the interruptee chooses to allow the card to be played. If they do, you both gain 1 point.",
+    "description": "When you play an interrupt, the interruptee must allow it. If they do, you both gain 1 point.",
     "iconLists": [
       [
         {
-          "type": "card"
+          "type": "interrupt"
         },
         {
-          "type": "interrupt"
-        }
-      ],
-      [
+          "type": "allowed"
+        },
+        {
+          "points": "1",
+          "type": "gainPoints"
+        },
         {
           "points": "1",
           "type": "gainPoints"
@@ -160,10 +218,20 @@ const TRAITS: Card[] =
     "iconLists": [
       [
         {
-          "type": "card"
-        }
+          "type": "guess"
+        },
+        {
+          "type": "card",
+          "text": "Lie"
+        },
       ],
       [
+        {
+          "type": "group"
+        },
+        {
+          "type": "guess"
+        },
         {
           "type": "interrupt"
         }
@@ -177,63 +245,153 @@ const TRAITS: Card[] =
     "iconLists": [
       [
         {
-          "type": "card"
+          "type": "group"
         },
         {
-          "type": "group"
-        }
+          "type": "eye"
+        },
       ],
-      []
+      [
+          {
+              "type": "disallow",
+              disallowed: {
+                  "type": "losePoints",
+                  "points": "1"
+              }
+          },
+          {
+              "type": "disallow",
+              disallowed: {
+                  "type": "losePoints",
+                  "points": "2"
+              }
+          },
+          {
+              "type": "disallow",
+              disallowed: {
+                  "type": "losePoints",
+                  "points": "3"
+              }
+          },
+      ]
     ]
   },
   {
     "isTrait": true,
     "name": "Stoic",
-    "description": "If you would lose or gain a point due to a card or trait of another player, lose or gain 1 less point.",
+    "description": "If you would gain or lose points due to a card or trait of another player, gain or lose 1 less point.",
     "iconLists": [
-      []
+      [
+          {
+              type: "gainPoints",
+          },
+          {
+              type: "arrowDown",
+          }
+      ],
+      [
+          {
+              type: "losePoints",
+          },
+          {
+              type: "arrowUp",
+          }
+      ]
     ]
   },
   {
     "isTrait": true,
     "name": "Sensitive",
-    "description": "If you would lose or gain a point due to a card or trait of another player, lose or gain 1 more point.",
+    "description": "If you would gain or lose points due to a card or trait of another player, gain or lose 1 more point.",
     "iconLists": [
-      []
+      [
+          {
+              type: "gainPoints",
+          },
+          {
+              type: "arrowUp",
+          }
+      ],
+      [
+          {
+              type: "losePoints",
+          },
+          {
+              type: "arrowDown",
+          }
+      ]
     ]
   },
   {
     "isTrait": true,
     "name": "Anxious",
-    "description": "Flip a coin when you play an card. If tails, that card is unresolved and discarded immediately.",
+    "description": "Flip a coin whenever you play a card. If tails, that card is interrupted by yourself. Flip a coin when a card makes you lose points. If heads, you interrupt that card.",
     "iconLists": [
       [
         {
-          "type": "card"
-        }
+          "type": "guess"
+        },
+        {
+          "type": "coinToss"
+        },
+        {
+          "type": "interrupt"
+        },
       ],
       [
         {
-          "type": "check"
-        }
+          "type": "losePoints"
+        },
+        {
+          "type": "coinToss"
+        },
+        {
+          "type": "interrupt"
+        },
       ]
     ]
   },
   {
     "isTrait": true,
     "name": "Closeminded",
-    "description": "You may not lose or gain points from cards or traits of the player sitting opposite you (both players if there's an odd number of players).",
+    "description": "Pick a target player. You do not gain or lose points from cards or traits of that player.",
     "iconLists": [
-      []
+        [
+            {
+                type: "targetted",
+            },
+            {
+                type: "disallow",
+                disallowed: {
+                    type: "gainPoints"
+                }
+            },
+            {
+                type: "disallow",
+                disallowed: {
+                    type: "losePoints"
+                }
+            },
+        ]
     ]
   },
   {
     "isTrait": true,
     "name": "Angry",
-    "description": "when you are interrupted, add a counter to this card. On the third interruption, the Disrespect effect is triggered targeted towards the interrupter, and the counter is reset.",
+    "description": "When you are interrupted, add a counter to this card. On the third interruption, the Insult effect is triggered targeted towards the interrupter, and the counter is reset.",
     "iconLists": [
-      [],
-      []
+        [
+            {
+                type: "interrupt"
+            },
+            {
+                type: "tokens"
+            },
+            {
+                type: "card",
+                text: "Insult"
+            }
+        ]
     ]
   },
   {
@@ -241,8 +399,17 @@ const TRAITS: Card[] =
     "name": "Narcissistic",
     "description": "Discard all other traits. You may target yourself and only yourself with cards.",
     "iconLists": [
-      [],
-      []
+      [
+          {
+            type: "targetted"
+          },
+          {
+            type: "disallow",
+          },
+          {
+            type: "group"
+          },
+      ]
     ]
   }
 ]

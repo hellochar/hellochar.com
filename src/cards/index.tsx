@@ -7,6 +7,12 @@ import { Card, Icon, IconGainPoints, IconLosePoints, IconType } from "./interfac
 import TRAITS from "./traits";
 
 const iconRenderers: { [K in IconType]: React.SFC<{ icon: Icon }> } = {
+    allowed: () => (
+        <div className="icon allowed"><i className="fa fa-thumbs-o-up"></i></div>
+    ),
+    coinToss: () => (
+        <div className="icon coinToss"><img src="/assets/noun_cointoss_cc.svg" /></div>
+    ),
     interrupt: () => (
         <div className="icon interrupt"><i className="fa fa-hand-paper-o"></i></div>
     ),
@@ -38,7 +44,9 @@ const iconRenderers: { [K in IconType]: React.SFC<{ icon: Icon }> } = {
     ),
     card: ({icon}) => (
         <div className="icon card">
-            <div className="cardshape text">{icon.text}</div>
+            <div className="cardshape text">
+                <div className="text-container">{icon.text}</div>
+            </div>
         </div>
     ),
     command: () => (
@@ -51,6 +59,24 @@ const iconRenderers: { [K in IconType]: React.SFC<{ icon: Icon }> } = {
             <i className="fa fa-check"></i>
         </div>
     ),
+    disallow: ({ icon }) => (
+        <div className="icon disallow">
+            { icon.disallowed != null ? <IconRenderer icon={icon.disallowed} /> : null }
+            <div className="no-entry">🚫</div>
+        </div>
+    ),
+    eye: () => (
+        <div className="icon eye"><i className="fa fa-eye"></i></div>
+    ),
+    heart: () => (
+        <div className="icon heart"><div className="heart-container">&#10084;</div></div>
+    ),
+    arrowDown: () => (
+        <div className="icon arrowDown">↴</div>
+    ),
+    arrowUp: () => (
+        <div className="icon arrowUp">↴</div>
+    ),
     return: () => (
         <div className="icon return">
             <i className="fa fa-reply"></i>
@@ -60,6 +86,11 @@ const iconRenderers: { [K in IconType]: React.SFC<{ icon: Icon }> } = {
         <div className="icon keep">
             {/* <div className="cardshape"></div> */}
             <img src="/assets/keep_icon.png" />
+        </div>
+    ),
+    pointOther: () => (
+        <div className="icon pointOther">
+            <img src="/assets/noun_point_other_cc.svg" />
         </div>
     ),
     multiCard: ({icon}) => {
@@ -76,18 +107,25 @@ const iconRenderers: { [K in IconType]: React.SFC<{ icon: Icon }> } = {
             </div>
         );
     },
+    speak: () => (
+        <div className="icon speak">
+            <img src="/assets/noun_speak_cc.svg" />
+        </div>
+    ),
+    tokens: () => (
+        <div className="icon tokens">⛁</div>
+    ),
 }
 
-const IconRenderer: React.SFC<{icon: Icon, sentence: string}> = ({ icon, sentence }) => {
+const IconRenderer: React.SFC<{icon: Icon}> = ({ icon }) => {
     const Renderer = iconRenderers[icon.type];
     return <Renderer icon={icon} />;
 }
 
 const ActionCard: React.SFC<{card: Card}> = ({ card }) => {
     const iconListsElements = card.iconLists.map((iconList) => {
-        // HACKHACK sentence description is fucked
         const listElements = iconList.map((icon) =>
-            <IconRenderer icon={icon} sentence={card.description} />,
+            <IconRenderer icon={icon} />,
         );
         return (
             <div className="card-icon-list">
@@ -119,7 +157,7 @@ const ActionCard: React.SFC<{card: Card}> = ({ card }) => {
                     <div className="card-icon-lists">
                         {...iconListsElements}
                     </div>
-                    <div className="card-description">{card.description}</div>
+                    <div className="card-rules">{card.description}</div>
                 </div>
                 {/* <div className="card-name corner corner-reverse">{action.name}</div> */}
             </div>
@@ -147,6 +185,9 @@ export default class Cards extends React.Component<{}, {}> {
                 <h1>Attribution</h1>
                 Icons by fontawesome.
                 Command icon by Ruslan Dezign from the Noun Project.
+                Crush pointing by Magicon from the Noun Project.
+                speak by Chanut is Industries from the Noun Project.
+                coin by Iain Hector from the Noun Project.
                 </div>
             </>
         );

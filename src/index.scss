@@ -222,11 +222,12 @@ p ~ p {
 
     .trait .card-name {
         display: flex;
-        margin: 20px auto;
+        margin: 15px auto;
         flex-direction: column;
     }
 
     .card-name-underline {
+        margin-top: 3px;
         height: 5px;
         display: flex;
 
@@ -239,11 +240,11 @@ p ~ p {
         }
 
         .underline-left {
-            border-top-left-radius: 5px;
+            border-top-left-radius: 10px;
         }
 
         .underline-right {
-            border-top-right-radius: 5px;
+            border-top-right-radius: 10px;
         }
 
         .underline-dot {
@@ -295,11 +296,13 @@ p ~ p {
     .card-icon-list {
         display: flex;
         justify-content: center;
+        align-items: center;
     }
 
     .icon {
         width: 50px;
         height: 50px;
+        // box-sizing: content-box;
         text-align: center;
         border-radius: 100%;
         font-weight: normal;
@@ -309,6 +312,17 @@ p ~ p {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+
+        // nested icons
+        .icon {
+            margin: 0;
+            border: none !important;
+            transform: scale(0.75, 0.75);
+        }
+
+        &.arrowUp {
+            transform: scaleY(-1);
+        }
 
         &.interrupt {
             font-weight: 900;
@@ -325,15 +339,13 @@ p ~ p {
         }
 
         &.keep {
-            perspective: 50px !important;
-
             img {
                 width: 35px;
             }
-
-            .cardshape {
-                transform: rotateX(60deg);
-            }
+            // perspective: 50px !important;
+            // .cardshape {
+            //     transform: rotateX(60deg);
+            // }
         }
 
         &.thumbs {
@@ -349,6 +361,39 @@ p ~ p {
             width: 40px;
         }
 
+        &.pointOther img {
+            width: 40px;
+        }
+
+        &.speak img {
+            width: 50px;
+        }
+
+        &.cointoss img {
+            width: 50px;
+        }
+
+        &.heart {
+            .heart-container {
+                font-family: 'Segoe UI Symbol';
+                padding-top: 4px;
+            }
+        }
+
+        &.disallow {
+            // otherwise 1px border fucks up the width/height of the inner icon
+            box-sizing: content-box;
+
+            .no-entry {
+                font-family: 'Segoe UI Symbol';
+                position: absolute;
+                // line up the no entry circle with the inner icon's dimensions
+                font-size: 45px;
+                // align the glyph perfectly centered
+                padding-bottom: 4px;
+            }
+        }
+
         .cardshape {
             display: flex;
             justify-content: center;
@@ -359,9 +404,15 @@ p ~ p {
             border: 2px solid black;
 
             &.text {
-                font-size: 14px;
-                border: none;
+                font-size: 10px;
+                // border: none;
                 font-weight: bold;
+            }
+
+            .text-container {
+                background: white;
+                border: 1px solid white;
+                transform: rotate(-70deg);
             }
         }
 
@@ -399,7 +450,7 @@ p ~ p {
         transform: rotate(0deg);
     }
 
-    .card-description {
+    .card-rules {
         display: flex;
         align-items: center;
         justify-content: flex-start;
