@@ -2,6 +2,7 @@ import * as React from "react";
 import * as THREE from "three";
 
 import { ISketch, SketchAudioContext } from "../../sketch";
+import { map } from "../../math";
 
 interface ComponentClass<T extends Component> {
     new (...args: any[]): T;
@@ -10,6 +11,7 @@ interface ComponentClass<T extends Component> {
 
 abstract class Component {
     object?: THREE.Object3D;
+    update?(time: number): void;
 }
 
 class Plant extends Component {
@@ -54,7 +56,16 @@ class Node extends Component {
 }
 
 class Internode extends Component {
-    public constructor(public branch: Branch, public node: Node) { super(); }
+    public object = new THREE.Object3D();
+    public constructor(public branch: Branch, public node: Node) {
+        super();
+        this.object.add(branch.object);
+        if (node.object != null) {
+            node.object.position.set(0, branch.length, 0);
+            this.object.add(node.object);
+        }
+    }
+
     static generate() {
         const branch = Branch.generate();
         const node = Node.generate();
@@ -64,18 +75,25 @@ class Internode extends Component {
 
 class Branch extends Component {
     public object: THREE.Mesh;
-    public constructor() {
+    public constructor(public length: number) {
         super();
-        // TODO fill in
-        const geometry = null as any;
-        const material = null as any;
-        this.object = new THREE.Mesh(
-            geometry,
-            material
+        const material = new THREE.MeshLambertMaterial({
+            color: new THREE.Color("rgb(165, 190, 63)"),
+            side: THREE.DoubleSide,
+        });
+        // const geom = new THREE.PlaneGeometry(1, 0.1);
+        const geom = new THREE.BoxBufferGeometry(0.1, length, 0.1);
+        // geom.rotateX(-Math.PI / 2);
+        geom.translate(0, length / 2, 0);
+        const mesh = new THREE.Mesh(
+            geom,
+            material,
         );
+        mesh.castShadow = true;
+        this.object = mesh;
     }
     static generate() {
-        return new Branch();
+        return new Branch(10);
     }
 }
 
@@ -87,6 +105,11 @@ class Leaves extends Node {
         this.object = new THREE.Object3D();
         this.object.add(whorl.object);
     }
+    update(time: number) {
+        for (const leaf of this.whorl.elements) {
+            leaf.update(time);
+        }
+    }
     static generate() {
         const whorl = Whorl.generate(Leaf);
         return new Leaves(whorl);
@@ -97,43 +120,90 @@ class Leaves extends Node {
 
 class Leaf extends Component {
     public object: THREE.Object3D;
-    constructor() {
+    public lamina: THREE.Mesh;
+    constructor(petioleLength = 0) {
         super();
+        this.object = new THREE.Object3D();
         const material = new THREE.MeshLambertMaterial({
-            color: new THREE.Color("rgb(165, 190, 63)"),
+            // color: new THREE.Color("rgb(165, 190, 63)"),
+            // color: new THREE.Color("rgb(252, 161, 222)"),
+            vertexColors: THREE.FaceColors,
             side: THREE.DoubleSide,
             // wireframe: true,
         });
-        const petiole = (() => {
-            // const geom = new THREE.PlaneGeometry(1, 0.1);
-            const geom = new THREE.BoxBufferGeometry(0.9, 0.01, 0.04);
-            // geom.rotateX(-Math.PI / 2);
-            geom.translate(0.5, 0, 0);
-            const mesh = new THREE.Mesh(
-                geom,
-                material,
-            );
-            mesh.castShadow = true;
-            // mesh.receiveShadow = true;
-            return mesh;
-        })();
-        const lamina = (() => {
-            // how do you handle leaf curving?
-            const geometry = new THREE.Geometry();
+        if (petioleLength > 0) {
+            const petiole = (() => {
+                // const geom = new THREE.PlaneGeometry(1, 0.1);
+                const geom = new THREE.BoxBufferGeometry(petioleLength, 0.01, 0.04);
+                // geom.rotateX(-Math.PI / 2);
+                geom.translate(petioleLength / 2, 0, 0);
+                const mesh = new THREE.Mesh(
+                    geom,
+                    material,
+                );
+                mesh.castShadow = true;
+                // mesh.receiveShadow = true;
+                return mesh;
+            })();
+            this.object.add(petiole);
+        }
+        const lamina = this.lamina = (() => {
+            // const geometry = new THREE.Geometry();
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0);
             for (let i = 0; i < 100; i++) {
-                const theta = i / 100 * Math.PI * 2;
-                const vertex = Leaf.leafPerimeter1(theta);
-                geometry.vertices.push(vertex);
+                const theta = (i + 50) / 100 * Math.PI * 2;
+                // const vertex = Leaf.leafPerimeter1(theta);
+                const vertex = Leaf.leafPerimeter2(theta);
+                shape.lineTo(vertex.x, vertex.z);
+                // geometry.vertices.push(vertex);
             }
-            geometry.verticesNeedUpdate = true;
-            for (let i = 2; i < 100; i++) {
-                const face = new THREE.Face3(0, i - 1, i);
-                geometry.faces.push(face);
-            }
+            // geometry.colorsNeedUpdate = true;
+            // geometry.verticesNeedUpdate = true;
+            // for (let i = 2; i < 100; i++) {
+            //     const face = new THREE.Face3(0, i - 1, i);
+            //     const color = Math.random() < 0.5 ? new THREE.Color(0xffffff) : new THREE.Color("rgb(252, 161, 222)");
+            //     face.color = color;
+            //     geometry.faces.push(face);
+            // }
             // // correct global y offset from the perimeter function
             // const yOffset = geometry.vertices[geometry.vertices.length / 2].y;
             // geometry.translate(0, -yOffset, 0);
 
+            // geometry.computeFaceNormals();
+            // geometry.computeVertexNormals();
+            // geometry.mergeVertices();
+
+            // const geometry = new THREE.ShapeGeometry(shape, 40);
+            const geometry = new THREE.ExtrudeGeometry(shape, {
+                curveSegments: 12,
+                steps: 1,
+                amount: 0.03,
+                bevelThickness: 0.05,
+                bevelSize: 0.3,
+                bevelSegments: 1,
+            });
+            geometry.rotateX(-Math.PI / 2);
+            geometry.translate(0.3 + 0.1, 0, 0); // translate bevelSize
+            for (const vertex of geometry.vertices) {
+                const { x, z } = vertex;
+                const dist2 = x * x + z * z;
+                // const unDroop = dist2 / 1.2 - dist2 * dist2 / 7;
+                const unDroop = dist2 / 1.2 - dist2 * dist2 / 100;
+                const y = unDroop;
+                vertex.x *= 1 - unDroop / 4;
+                vertex.z *= 1 - unDroop / 4;
+                vertex.y += y;
+            }
+            for (const face of geometry.faces) {
+                const vertex = geometry.vertices[face.a];
+                // const color = new THREE.Color(0xffffff).lerp(new THREE.Color("rgb(252, 161, 222)"), vertex.y);
+                const color = new THREE.Color(0xffffff).lerp(new THREE.Color("rgb(29, 68, 132)"), vertex.y);
+                face.color = color;
+            }
+            geometry.verticesNeedUpdate = true;
+            geometry.scale(0.6, 0.6, 0.6);
+            geometry.rotateZ(-Math.PI / 6);
             geometry.computeFaceNormals();
             geometry.computeVertexNormals();
             geometry.mergeVertices();
@@ -142,22 +212,38 @@ class Leaf extends Component {
                 geometry,
                 material,
             );
+            // material.wireframe = true;
             mesh.castShadow = true;
             // mesh.receiveShadow = true;
             return mesh;
         })();
-        lamina.position.x = 1.0;
+        lamina.position.x = petioleLength;
         lamina.position.y = 0.04;
-        this.object = new THREE.Object3D();
-        this.object.add(petiole);
         this.object.add(lamina);
     }
 
+    update(time: number) {
+        const geom = this.lamina.geometry as THREE.Geometry;
+        for (const vertex of geom.vertices) {
+            const oldY = vertex.y;
+            const { x, z } = vertex;
+            const dist2 = x * x + z * z;
+            const unDroop = dist2 / 5 - dist2 * dist2 / 9;
+            const y = unDroop;
+            vertex.y = unDroop;
+            const yDist = y - oldY;
+            vertex.x *= 1 - yDist / 2;
+            vertex.z *= 1 - yDist / 2;
+        }
+        geom.verticesNeedUpdate = true;
+        geom.computeVertexNormals();
+        // geom.computeFaceNormals();
+    }
+
+    // cardate
     static leafPerimeter1 = (theta: number) => {
         const r = (3 + 3 * Math.cos(theta) + 1 / (0.1 + Math.pow(Math.sin(theta / 2), 2))) / 16;
 
-        // leaves curl inwards a bit on the near perimeter
-        const curl = 0;
         // leaves droop far away
         const droop = r * r;
         const y = -droop;
@@ -167,6 +253,17 @@ class Leaf extends Component {
         const modifiedR = r;
         const x = modifiedR * Math.cos(theta);
         const z = modifiedR * Math.sin(theta);
+        return new THREE.Vector3(x, y, z);
+    }
+
+    static leafPerimeter2 = (theta: number) => {
+        // ranges from -0.4 to +0.6, we want to translate in x +0.4
+        const r = (1 + Math.cos(theta) + 4 / (1 + Math.pow(Math.cos(theta - Math.PI / 2), 2))) / 10;
+        const x = r * Math.cos(theta) + 0.4;
+        const z = r * Math.sin(theta);
+        const dist2 = x * x + z * z;
+        const unDroop = Math.pow(x, 5);
+        const y = unDroop;
         return new THREE.Vector3(x, y, z);
     }
 
@@ -199,21 +296,39 @@ class Whorl<T extends Component> extends Component {
         }
     }
 
-    static generate<T extends Component>(type: ComponentClass<T>, num: number = 6, zRot: number = Math.PI / 4) {
+    static generate<T extends Component>(type: ComponentClass<T>, num: number = 2) {
         const elements: T[] = [];
+        const numRotations = 0.3;
+        const startScale = 1;
+        const endScale = 1;
+        const startZRot = Math.PI / 3;
+        const endZRot = Math.PI / 3;
+        const isBilateral = true;
         for (let i = 0; i < num; i++) {
-            const element = type.generate();
-            if (element.object != null) {
-                const angle = i / num * Math.PI * 2;
-                // Whorl's specifically rotate around the Y axis
-                element.object.rotateY(angle);
+            function create(bilateral = false) {
+                const element = type.generate();
+                if (element.object != null) {
+                    let angle = i / num * Math.PI * 2 * numRotations;
+                    if (bilateral) {
+                        angle += Math.PI;
+                    }
+                    // Whorls specifically rotate around the Y axis
+                    element.object.rotateY(angle);
 
-                // Whorls angle elements towards the Y axis
-                element.object.rotateZ(zRot);
+                    const zRot = map(i, 0, num, startZRot, endZRot);
+                    // Whorls angle elements close to the Y axis
+                    element.object.rotateZ(zRot);
 
-                // TODO add other types of whorl placement - scaling, etc.
+                    const scale = map(i, 0, num, startScale, endScale);
+                    element.object.scale.set(scale, scale, scale);
+                }
+                elements.push(element);
+                return element;
             }
-            elements.push(element);
+            create();
+            if (isBilateral) {
+                create(true);
+            }
         }
         return new Whorl(elements);
     }
@@ -247,35 +362,48 @@ class Pistil extends Component {
 
 class Carpel extends Component {}
 
+const SHOW_HELPERS = false;
+
 class Bloom extends ISketch {
     public scene = new THREE.Scene();
     public camera!: THREE.PerspectiveCamera;
     public orbitControls!: THREE.OrbitControls;
+    public composer!: THREE.EffectComposer;
+
+    public leaves!: Leaves;
 
     public init() {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // this.renderer.setClearColor(new THREE.Color("rgb(193, 255, 251)"));
 
-        this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 1, 1000);
+        this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 500);
         this.camera.position.y = 10;
         this.camera.position.z = 10;
+        this.camera.position.multiplyScalar(0.10);
         const groundGeom = new THREE.PlaneGeometry(100, 100, 100, 100);
         groundGeom.rotateX(-Math.PI / 2);
         const ground = new THREE.Mesh(groundGeom, new THREE.MeshLambertMaterial({
-            color: new THREE.Color("rgb(45, 29, 3)"),
+            // color: new THREE.Color("rgb(45, 29, 3)"),
+            color: new THREE.Color("rgb(220, 220, 231)"),
             dithering: true,
         }));
         ground.receiveShadow = true;
         this.scene.add(ground);
-        this.scene.add(new THREE.AxesHelper(10));
+        if (SHOW_HELPERS) {
+            this.scene.add(new THREE.AxesHelper(10));
+        }
         this.orbitControls = new THREE.OrbitControls(this.camera);
+        this.orbitControls.autoRotate = true;
+        this.orbitControls.autoRotateSpeed = 0.6;
 
-        const light = new THREE.HemisphereLight("rgb(173, 216, 230)", "rgb(60, 60, 80)", 0.3);
+        const light = new THREE.HemisphereLight("rgb(173, 216, 230)", "rgb(60, 60, 80)", 0.6);
+        // const light = new THREE.HemisphereLight("rgb(173, 216, 230)", "rgb(210, 250, 255)", 0.3);
         this.scene.add(light);
 
         const spotLight = new THREE.SpotLight(
             "rgb(234, 249, 244)",
-            1.6,
+            1.2,
             200,
             Math.PI / 10,
             1.0,
@@ -294,21 +422,51 @@ class Bloom extends ISketch {
 
         this.scene.add(spotLight);
 
-        const spotLightHelper = new THREE.SpotLightHelper(spotLight);
-        this.scene.add(spotLightHelper);
+        if (SHOW_HELPERS) {
+            const spotLightHelper = new THREE.SpotLightHelper(spotLight);
+            this.scene.add(spotLightHelper);
 
-        const shadowCameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
-        this.scene.add(shadowCameraHelper);
-
+            const shadowCameraHelper = new THREE.CameraHelper(spotLight.shadow.camera);
+            this.scene.add(shadowCameraHelper);
+        }
 
         // const leaf = Leaf.generate();
         // this.scene.add(leaf.object);
-        const leaves = Leaves.generate();
-        this.scene.add(leaves.object);
+        this.leaves = Leaves.generate();
+        this.scene.add(this.leaves.object);
+
+        const particles = (() => {
+            const geom = new THREE.Geometry();
+            for (let i = 0; i < 10000; i++) {
+                const vertex = new THREE.Vector3(Math.random() * 30 - 15, Math.random() * 30, Math.random() * 30 - 15);
+                vertex.multiplyScalar(0.25);
+                geom.vertices.push(vertex);
+            }
+            geom.verticesNeedUpdate = true;
+            const points = new THREE.Points(
+                geom,
+                new THREE.PointsMaterial({
+                    color: "rgb(249, 237, 69)",
+                    transparent: true,
+                    opacity: 0.25,
+                    size: 0.01,
+                    sizeAttenuation: true,
+                }),
+            );
+            // points.castShadow = true;
+            return points;
+        })();
+        this.scene.add(particles);
+
+        this.composer = new THREE.EffectComposer(this.renderer);
+        this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
     }
 
     public animate() {
+        this.leaves.update(this.timeElapsed);
+        this.orbitControls.update();
         this.renderer.render(this.scene, this.camera);
+        // this.composer.render();
     }
 }
 
