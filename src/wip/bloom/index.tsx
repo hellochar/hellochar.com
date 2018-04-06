@@ -178,7 +178,7 @@ class Leaf extends Component {
             const geometry = new THREE.ExtrudeGeometry(shape, {
                 curveSegments: 12,
                 steps: 1,
-                amount: 0.03,
+                amount: 0.001,
                 bevelThickness: 0.005,
                 bevelSize: 0.3,
                 bevelSegments: 1,
@@ -189,15 +189,19 @@ class Leaf extends Component {
                 const { x, z } = vertex;
                 const dist2 = x * x + z * z;
                 // const unDroop = dist2 / 1.2 - dist2 * dist2 / 7;
-                const unDroop = dist2 / 1.2 - dist2 * dist2 / 100;
+                const unDroop = Math.sqrt(dist2) * 1 - dist2 / 2.45;
                 const y = unDroop;
-                vertex.x *= 1 - unDroop / 4;
-                vertex.z *= 1 - unDroop / 4;
+                vertex.x *= 1 - unDroop / 2;
+                vertex.z *= 1 - unDroop / 2;
                 vertex.y += y;
+                vertex.x += Math.random() * 0.01 - 0.005;
+                vertex.y += Math.random() * 0.01 - 0.005;
+                vertex.z += Math.random() * 0.01 - 0.005;
             }
             for (const face of geometry.faces) {
-                const vertex = geometry.vertices[face.a];
-                const color = new THREE.Color(0xffffff).lerp(new THREE.Color("rgb(252, 161, 222)"), vertex.y);
+                const {x, y, z} = geometry.vertices[face.c];
+                const dist = Math.sqrt(x*x + y*y + z*z);
+                const color = new THREE.Color("rgb(135, 27, 32)").lerp(new THREE.Color("rgb(245, 255, 73)"), Math.min(1, dist));
                 face.color = color;
             }
             geometry.verticesNeedUpdate = true;
@@ -222,20 +226,20 @@ class Leaf extends Component {
     }
 
     update(time: number) {
-        const geom = this.lamina.geometry as THREE.Geometry;
-        for (const vertex of geom.vertices) {
-            const oldY = vertex.y;
-            const { x, z } = vertex;
-            const dist2 = x * x + z * z;
-            const unDroop = dist2 / (1.2 + time * 0.0001) - dist2 * dist2 / 100;
-            const y = unDroop;
-            vertex.y = unDroop;
-            const yDist = y - oldY;
-            vertex.x *= 1 - yDist / 2;
-            vertex.z *= 1 - yDist / 2;
-        }
-        geom.verticesNeedUpdate = true;
-        geom.computeVertexNormals();
+        // const geom = this.lamina.geometry as THREE.Geometry;
+        // for (const vertex of geom.vertices) {
+        //     const oldY = vertex.y;
+        //     const { x, z } = vertex;
+        //     const dist2 = x * x + z * z;
+        //     const unDroop = dist2 / (1.2 + time * 0.0001) - dist2 * dist2 / 100;
+        //     const y = unDroop;
+        //     vertex.y = unDroop;
+        //     const yDist = y - oldY;
+        //     vertex.x *= 1 - yDist / 2;
+        //     vertex.z *= 1 - yDist / 2;
+        // }
+        // geom.verticesNeedUpdate = true;
+        // geom.computeVertexNormals();
         // geom.computeFaceNormals();
     }
 
@@ -255,6 +259,7 @@ class Leaf extends Component {
         return new THREE.Vector3(x, y, z);
     }
 
+    // obovate-ish
     static leafPerimeter2 = (theta: number) => {
         // ranges from -0.4 to +0.6, we want to translate in x +0.4
         const r = (1 + Math.cos(theta) + 4 / (1 + Math.pow(Math.cos(theta - Math.PI / 2), 2))) / 10;
@@ -295,13 +300,13 @@ class Whorl<T extends Component> extends Component {
         }
     }
 
-    static generate<T extends Component>(type: ComponentClass<T>, num: number = 46) {
+    static generate<T extends Component>(type: ComponentClass<T>, num: number = 5) {
         const elements: T[] = [];
-        const numRotations = 7;
-        const startScale = 0.5;
-        const endScale = 0.5;
-        const startZRot = Math.PI / 20;
-        const endZRot = Math.PI / 6;
+        const numRotations = 1;
+        const startScale = 0.9;
+        const endScale = 0.9;
+        const startZRot = Math.PI / 12;
+        const endZRot = Math.PI / 12;
         const isBilateral = false;
         for (let i = 0; i < num; i++) {
             function create(bilateral = false) {
