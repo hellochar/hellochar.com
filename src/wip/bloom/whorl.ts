@@ -11,38 +11,58 @@ export class Whorl<T extends Component> extends Component {
         }
     }
 
-    static generate<T extends Component>(type: ComponentClass<T>, num: number = 5) {
-        const elements: T[] = [];
-        const numRotations = 1;
-        const startScale = 0.9;
-        const endScale = 0.9;
-        const startZRot = Math.PI / 12;
-        const endZRot = Math.PI / 12;
-        const isBilateral = false;
-        for (let i = 0; i < num; i++) {
-            function create(bilateral = false) {
-                const element = type.generate();
-                let angle = i / num * Math.PI * 2 * numRotations;
-                if (bilateral) {
-                    angle += Math.PI;
-                }
-                // Whorls specifically rotate around the Y axis
-                element.rotateY(angle);
-
-                const zRot = map(i, 0, num, startZRot, endZRot);
-                // Whorls angle elements close to the Y axis
-                element.rotateZ(zRot);
-
-                const scale = map(i, 0, num, startScale, endScale);
-                element.scale.set(scale, scale, scale);
-                elements.push(element);
-                return element;
-            }
-            create();
-            if (isBilateral) {
-                create(true);
-            }
-        }
+    static generate<T extends Component>(parameters: WhorlParameters<T>) {
+        const elements = whorl(parameters);
         return new Whorl(elements);
     }
+}
+
+interface WhorlParameters<T extends Component> {
+    num: number;
+    startYRot: number;
+    endYRot: number;
+    startZRot: number;
+    endZRot: number;
+    startScale: number;
+    endScale: number;
+    isBilateral: boolean;
+    generate: () => T;
+}
+
+export function whorl<T extends Component>(parameters: WhorlParameters<T>) {
+    const {
+        num,
+        startYRot,
+        endYRot,
+        startZRot,
+        endZRot,
+        startScale,
+        endScale,
+        isBilateral,
+        generate,
+    } = parameters;
+    const elements: T[] = [];
+    for (let i = 0; i < num; i++) {
+        function create(bilat = false) {
+            const element = generate();
+            let yRot = map(i, 0, num, startYRot, endYRot);
+            if (bilat) {
+                yRot += Math.PI;
+            }
+            element.rotateY(yRot);
+
+            const zRot = map(i, 0, num, startZRot, endZRot);
+            // Whorls angle elements close to the Y axis
+            element.rotateZ(zRot);
+
+            const scale = map(i, 0, num, startScale, endScale);
+            element.scale.set(scale, scale, scale);
+            return element;
+        }
+        elements.push(create());
+        if (isBilateral) {
+            elements.push(create(true));
+        }
+    }
+    return elements;
 }

@@ -4,65 +4,10 @@ import * as THREE from "three";
 import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Component, ComponentClass } from "./component";
+import { Flower } from "./flower";
 import { Leaf } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
-
-class Plant extends Component {
-    public constructor(public stem: Stem) { super(); }
-    static generate() {
-        const stem = Stem.generate();
-        return new Plant(stem);
-    }
-}
-
-class Stem extends Component {
-    public constructor(public nodes: Nodes) { super(); }
-    static generate() {
-        const nodes = Nodes.generate();
-        return new Stem(nodes);
-    }
-}
-
-class Nodes extends Component {
-    public constructor(public rootNode: Node) { super(); }
-    static generate() {
-        // TODO fill in
-        return null as any;
-    }
-}
-
-class Node extends Component {
-    public constructor(public internode?: Internode) { super(); }
-    static generate(): Node {
-        const pick = Math.floor(Math.random() * 4) as 0 | 1 | 2 | 3;
-        switch (pick) {
-            case 0:
-                return Leaves.generate();
-            case 1:
-                return Flower.generate();
-            case 2:
-                return new Node(Internode.generate());
-            case 3:
-                return new Node();
-        }
-    }
-}
-
-class Internode extends Component {
-    public constructor(public branch: Branch, public node: Node) {
-        super();
-        this.add(branch);
-        node.position.set(0, branch.branchLength, 0);
-        this.add(node);
-    }
-
-    static generate() {
-        const branch = Branch.generate();
-        const node = Node.generate();
-        return new Internode(branch, node);
-    }
-}
 
 class Branch extends Component {
     public mesh: THREE.Mesh;
@@ -73,7 +18,8 @@ class Branch extends Component {
             side: THREE.DoubleSide,
         });
         // const geom = new THREE.PlaneGeometry(1, 0.1);
-        const geom = new THREE.BoxBufferGeometry(0.1, branchLength, 0.1);
+        // const geom = new THREE.BoxBufferGeometry(0.1, branchLength, 0.1);
+        const geom = new THREE.CylinderBufferGeometry(0.03, 0.03, branchLength);
         // geom.rotateX(-Math.PI / 2);
         geom.translate(0, branchLength / 2, 0);
         this.mesh = new THREE.Mesh(
@@ -84,71 +30,39 @@ class Branch extends Component {
         this.add(this.mesh);
     }
 
+    public addToEnd(...objects: THREE.Object3D[]) {
+        this.add(...objects);
+        for (const obj of objects) {
+            obj.position.set(0, this.branchLength, 0);
+        }
+    }
+
     static generate() {
         return new Branch(10);
     }
 }
 
-// would be nice to emulate both succulents, and flat leaves, broad, thin, curly.
-class Leaves extends Node {
-    public constructor(public whorl: Whorl<Leaf>, internode?: Internode) {
-        super(internode);
+class Leaves extends Component {
+    public constructor(public whorl: Whorl<Leaf>) {
+        super();
         this.add(whorl);
     }
 
-    update(time: number) {
-        for (const leaf of this.whorl.elements) {
-            leaf.update(time);
-        }
-    }
-
     static generate() {
-        const whorl = Whorl.generate(Leaf);
+        const whorl = Whorl.generate({
+            num: 6,
+            startZRot: Math.PI / 6,
+            endZRot: Math.PI / 6,
+            startYRot: 0,
+            endYRot: Math.PI * 2,
+            endScale: 1,
+            startScale: 1,
+            generate: Leaf.generate,
+            isBilateral: false,
+        });
         return new Leaves(whorl);
-        // const internode = (Math.random() < 0.5) ? Internode.generate() : undefined;
-        // return new Leaves(whorl, internode);
     }
 }
-
-class Flower extends Node {
-    public constructor(public perianth: Perianth, public reproductive: Reproductive) { super(); }
-}
-
-class Perianth extends Component {
-    public constructor(public calyx: Calyx, public corolla: Corolla) { super(); }
-}
-
-class Calyx extends Component {
-    public constructor(public sepals: Whorl<Sepal>) { super(); }
-}
-
-class Sepal extends Component {}
-
-class Corolla extends Component {
-    public constructor(public petals: Whorl<Petal>) { super(); }
-}
-
-class Petal extends Component {}
-
-class Reproductive extends Component {
-    public constructor(public androecium: Androecium, public gynoecium: Gynoecium) { super(); }
-}
-
-class Androecium extends Component {
-    public constructor(public stamens: Whorl<Stamen>) { super(); }
-}
-
-class Stamen extends Component {}
-
-class Gynoecium extends Component {
-    public constructor(public pistils: Whorl<Pistil>) { super(); }
-}
-
-class Pistil extends Component {
-    public constructor(public carpels: Carpel[]) { super(); }
-}
-
-class Carpel extends Component {}
 
 class Bloom extends ISketch {
     public scene = scene;
@@ -166,7 +80,7 @@ class Bloom extends ISketch {
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 500);
         this.camera.position.y = 10;
         this.camera.position.z = 10;
-        this.camera.position.multiplyScalar(0.10);
+        this.camera.position.multiplyScalar(0.5);
 
         this.orbitControls = new THREE.OrbitControls(this.camera);
         this.orbitControls.autoRotate = true;
@@ -180,7 +94,13 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        this.component = Leaves.generate();
+        // this.component = Leaves.generate();
+        const branch2 = new Branch(1);
+        branch2.addToEnd(Flower.generate());
+        const branch = new Branch(3);
+        branch.addToEnd(Leaves.generate());
+        branch.addToEnd(branch2);
+        this.component = branch;
 
         /* test - a center branch, with a leaf coming out of it, and another branch, ending in a flower
 
