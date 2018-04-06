@@ -3,11 +3,9 @@ import * as THREE from "three";
 import { Component } from "./component";
 
 export class Leaf extends Component {
-    public object: THREE.Object3D;
     public lamina: THREE.Mesh;
     constructor(petioleLength = 0) {
         super();
-        this.object = new THREE.Object3D();
         const material = new THREE.MeshLambertMaterial({
             // color: new THREE.Color("rgb(165, 190, 63)"),
             // color: new THREE.Color("rgb(252, 161, 222)"),
@@ -29,7 +27,7 @@ export class Leaf extends Component {
                 // mesh.receiveShadow = true;
                 return mesh;
             })();
-            this.object.add(petiole);
+            this.add(petiole);
         }
         const lamina = this.lamina = (() => {
             // const geometry = new THREE.Geometry();
@@ -106,10 +104,10 @@ export class Leaf extends Component {
         })();
         lamina.position.x = petioleLength;
         lamina.position.y = 0.04;
-        this.object.add(lamina);
+        this.add(lamina);
     }
 
-    update(time: number) {
+    updateSelf(time: number) {
         // const geom = this.lamina.geometry as THREE.Geometry;
         // for (const vertex of geom.vertices) {
         //     const oldY = vertex.y;

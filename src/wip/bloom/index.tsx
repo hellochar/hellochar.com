@@ -5,8 +5,8 @@ import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Component, ComponentClass } from "./component";
 import { Leaf } from "./leaf";
-import { Whorl } from "./whorl";
 import scene from "./scene";
+import { Whorl } from "./whorl";
 
 class Plant extends Component {
     public constructor(public stem: Stem) { super(); }
@@ -50,14 +50,11 @@ class Node extends Component {
 }
 
 class Internode extends Component {
-    public object = new THREE.Object3D();
     public constructor(public branch: Branch, public node: Node) {
         super();
-        this.object.add(branch.object);
-        if (node.object != null) {
-            node.object.position.set(0, branch.length, 0);
-            this.object.add(node.object);
-        }
+        this.add(branch);
+        node.position.set(0, branch.branchLength, 0);
+        this.add(node);
     }
 
     static generate() {
@@ -68,24 +65,25 @@ class Internode extends Component {
 }
 
 class Branch extends Component {
-    public object: THREE.Mesh;
-    public constructor(public length: number) {
+    public mesh: THREE.Mesh;
+    public constructor(public branchLength: number) {
         super();
         const material = new THREE.MeshLambertMaterial({
             color: new THREE.Color("rgb(165, 190, 63)"),
             side: THREE.DoubleSide,
         });
         // const geom = new THREE.PlaneGeometry(1, 0.1);
-        const geom = new THREE.BoxBufferGeometry(0.1, length, 0.1);
+        const geom = new THREE.BoxBufferGeometry(0.1, branchLength, 0.1);
         // geom.rotateX(-Math.PI / 2);
-        geom.translate(0, length / 2, 0);
-        const mesh = new THREE.Mesh(
+        geom.translate(0, branchLength / 2, 0);
+        this.mesh = new THREE.Mesh(
             geom,
             material,
         );
-        mesh.castShadow = true;
-        this.object = mesh;
+        this.mesh.castShadow = true;
+        this.add(this.mesh);
     }
+
     static generate() {
         return new Branch(10);
     }
@@ -93,11 +91,9 @@ class Branch extends Component {
 
 // would be nice to emulate both succulents, and flat leaves, broad, thin, curly.
 class Leaves extends Node {
-    public object: THREE.Object3D;
     public constructor(public whorl: Whorl<Leaf>, internode?: Internode) {
         super(internode);
-        this.object = new THREE.Object3D();
-        this.object.add(whorl.object);
+        this.add(whorl);
     }
 
     update(time: number) {
@@ -177,7 +173,7 @@ class Bloom extends ISketch {
         this.orbitControls.autoRotateSpeed = 0.6;
 
         this.initComponent();
-        this.scene.add(this.component.object!);
+        this.scene.add(this.component);
 
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
