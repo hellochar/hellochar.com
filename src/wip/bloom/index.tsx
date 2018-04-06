@@ -179,7 +179,7 @@ class Leaf extends Component {
                 curveSegments: 12,
                 steps: 1,
                 amount: 0.03,
-                bevelThickness: 0.05,
+                bevelThickness: 0.005,
                 bevelSize: 0.3,
                 bevelSegments: 1,
             });
@@ -197,8 +197,7 @@ class Leaf extends Component {
             }
             for (const face of geometry.faces) {
                 const vertex = geometry.vertices[face.a];
-                // const color = new THREE.Color(0xffffff).lerp(new THREE.Color("rgb(252, 161, 222)"), vertex.y);
-                const color = new THREE.Color(0xffffff).lerp(new THREE.Color("rgb(29, 68, 132)"), vertex.y);
+                const color = new THREE.Color(0xffffff).lerp(new THREE.Color("rgb(252, 161, 222)"), vertex.y);
                 face.color = color;
             }
             geometry.verticesNeedUpdate = true;
@@ -228,7 +227,7 @@ class Leaf extends Component {
             const oldY = vertex.y;
             const { x, z } = vertex;
             const dist2 = x * x + z * z;
-            const unDroop = dist2 / 5 - dist2 * dist2 / 9;
+            const unDroop = dist2 / (1.2 + time * 0.0001) - dist2 * dist2 / 100;
             const y = unDroop;
             vertex.y = unDroop;
             const yDist = y - oldY;
@@ -296,14 +295,14 @@ class Whorl<T extends Component> extends Component {
         }
     }
 
-    static generate<T extends Component>(type: ComponentClass<T>, num: number = 2) {
+    static generate<T extends Component>(type: ComponentClass<T>, num: number = 46) {
         const elements: T[] = [];
-        const numRotations = 0.3;
-        const startScale = 1;
-        const endScale = 1;
-        const startZRot = Math.PI / 3;
-        const endZRot = Math.PI / 3;
-        const isBilateral = true;
+        const numRotations = 7;
+        const startScale = 0.5;
+        const endScale = 0.5;
+        const startZRot = Math.PI / 20;
+        const endZRot = Math.PI / 6;
+        const isBilateral = false;
         for (let i = 0; i < num; i++) {
             function create(bilateral = false) {
                 const element = type.generate();
