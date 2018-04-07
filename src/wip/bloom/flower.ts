@@ -56,7 +56,7 @@ class Corolla extends Component {
     }
 
     static generate() {
-        // make 5 big ones
+        // // make 5 big ones
         // const parameters = {
         //     num: 5,
         //     startYRot: 0,
@@ -68,13 +68,27 @@ class Corolla extends Component {
         //     isBilateral: false,
         //     generate: Petal.generate,
         // }
+
+        // // 6 evenly spread
+        // const parameters = {
+        //     num: 6,
+        //     startYRot: 0,
+        //     endYRot: Math.PI * 2,
+        //     startScale: 1,
+        //     endScale: 1,
+        //     startZRot: Math.PI / 4,
+        //     endZRot: Math.PI / 4,
+        //     isBilateral: false,
+        //     generate: Petal.generate,
+        // }
+
         const parameters = {
-            num: 6,
+            num: 63,
             startYRot: 0,
-            endYRot: Math.PI * 2,
-            startScale: 1,
-            endScale: 1,
-            startZRot: Math.PI / 4,
+            endYRot: Math.PI * 8,
+            startScale: 0.8,
+            endScale: 0.5,
+            startZRot: 0,
             endZRot: Math.PI / 4,
             isBilateral: false,
             generate: Petal.generate,
@@ -95,7 +109,7 @@ class Petal extends Leaf {
                 // const unDroop = dist2 / 1.2 - dist2 * dist2 / 7;
 
                 // nice for those deep blues in the screenshot
-                const unDroop = dist2 / 1.2 - dist2 * dist2 / 100;
+                const unDroop = Math.abs(z) / 2;
 
                 // looks good for large yellow broad flowers
                 // const unDroop = Math.sqrt(dist2) * 1 - dist2 / 2.45;
@@ -109,10 +123,13 @@ class Petal extends Leaf {
                 geometry.scale(0.6, 0.6, 0.6);
                 // TODO change rotation
                 geometry.rotateZ(-Math.PI / 6);
+                geometry.scale(1, 1, 0.5);
             },
             noisyEdge: true,
-            innerColor: new THREE.Color(0xffffff),
-            outerColor: new THREE.Color("rgb(29, 68, 132)"),
+            // innerColor: new THREE.Color(0xffffff),
+            // outerColor: new THREE.Color("rgb(29, 68, 132)"),
+            innerColor: new THREE.Color("rgb(255, 235, 107)"),
+            outerColor: new THREE.Color("rgb(255, 131, 22)"),
             perimeter: Leaf.leafPerimeter2,
             petioleLength: 0,
         });
