@@ -124,23 +124,24 @@ export class Leaf extends Component {
             return mesh;
         })();
         lamina.position.x = petioleLength;
-        lamina.position.y = 0.04;
+        // lamina.position.y = 0.04;
         this.add(lamina);
     }
 
     updateSelf(time: number) {
+        time *= 10;
         if (this.parameters.realtimeDroop) {
             const geom = this.lamina.geometry as THREE.Geometry;
             for (const vertex of geom.vertices) {
                 const oldY = vertex.y;
                 const { x, z } = vertex;
                 const dist2 = x * x + z * z;
-                const unDroop = dist2 / (1.2 + time * 0.0001) - dist2 * dist2 / 100;
+                const unDroop = dist2 / (2.7 + time * 0.0001) - dist2 * dist2 / 10;
                 const y = unDroop;
                 vertex.y = unDroop;
                 const yDist = y - oldY;
-                vertex.x *= 1 - yDist / 2;
-                vertex.z *= 1 - yDist / 2;
+                vertex.x *= 1 - yDist / 4;
+                vertex.z *= 1 - yDist / 4;
             }
             geom.verticesNeedUpdate = true;
             geom.computeVertexNormals();

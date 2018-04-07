@@ -9,10 +9,17 @@ export class Flower extends Component {
         super();
         this.add(perianth);
         this.add(reproductive);
+        const bulb = (() => {
+            const geom = new THREE.SphereBufferGeometry(0.05);
+            const material = new THREE.MeshLambertMaterial({
+                color: 0xffffff,
+            });
+            return new THREE.Mesh(geom, material);
+        })();
+        this.add(bulb);
     }
     static generate() {
-        const reproductive = null as any;
-        return new Flower(Perianth.generate(), reproductive);
+        return new Flower(Perianth.generate(), Reproductive.generate());
     }
 }
 
@@ -117,17 +124,112 @@ class Petal extends Leaf {
 }
 
 class Reproductive extends Component {
-    public constructor(public androecium: Androecium, public gynoecium: Gynoecium) { super(); }
+    public constructor(public androecium: Androecium, public gynoecium: Gynoecium) {
+        super();
+        this.add(androecium);
+        this.add(gynoecium);
+    }
+
+    static generate() {
+        const gynoecium = null as any;
+        return new Reproductive(Androecium.generate(), gynoecium);
+    }
 }
 
 class Androecium extends Component {
-    public constructor(public stamens: Whorl<Stamen>) { super(); }
+    public constructor(public stamens: Whorl<Stamen>) {
+        super();
+        this.add(stamens);
+    }
+
+    static generate() {
+        const stamens = Whorl.generate({
+            num: 3,
+            endScale: 1,
+            startScale: 0.5,
+            startYRot: 0,
+            endYRot: Math.PI,
+            startZRot: 0,
+            endZRot: 0,
+            isBilateral: true,
+            generate: Stamen.generate,
+        })
+        return new Androecium(stamens);
+    }
 }
 
-class Stamen extends Component {}
+class Stamen extends Component {
+    filament: THREE.Mesh;
+    anther!: THREE.Mesh;
+
+    constructor() {
+        super();
+        const xDist = 0.2;
+        // filament are usually curvy
+        const curve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(xDist / 5, 0.05, 0),
+            new THREE.Vector3(xDist, 0.5, Math.random() * 0.001),
+            new THREE.Vector3(xDist * 0.98, 1, Math.random() * 0.001),
+        ]);
+        this.filament = (() => {
+            // TODO probably improve this
+            const material = new THREE.MeshLambertMaterial({
+                // color: new THREE.Color("rgb(255, 50, 101)"),
+                color: 0xffffff,
+                side: THREE.DoubleSide,
+            });
+            const geometry = new THREE.TubeBufferGeometry(curve,
+                32,
+                0.01,
+                16,
+                false,
+            );
+            const filament = new THREE.Mesh(
+                geometry,
+                material,
+            );
+            return filament;
+        })();
+        this.add(this.filament);
+        this.anther = (() => {
+            const geometry = new THREE.SphereGeometry(
+                0.08,
+                3,
+                23,
+                0,
+                // Math.PI / 3,
+                Math.PI * 2,
+                0,
+                Math.PI,
+            );
+            geometry.scale(0.8, 1, 0.74);
+            const material = new THREE.MeshLambertMaterial({
+                color: new THREE.Color("rgb(255, 50, 101)"),
+                side: THREE.DoubleSide,
+            });
+            const anther = new THREE.Mesh(
+                geometry,
+                material,
+            );
+            const filamentEnd = curve.getPoint(1);
+            anther.position.copy(filamentEnd);
+            return anther;
+        })();
+        this.add(this.anther);
+    }
+
+    static generate() {
+        return new Stamen();
+    }
+}
 
 class Gynoecium extends Component {
     public constructor(public pistils: Whorl<Pistil>) { super(); }
+
+    static generate() {
+
+    }
 }
 
 class Pistil extends Component {
