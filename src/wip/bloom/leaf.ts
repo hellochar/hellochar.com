@@ -41,7 +41,7 @@ export class Leaf extends Component {
                     mat,
                 );
                 mesh.castShadow = true;
-                // mesh.receiveShadow = true;
+                mesh.receiveShadow = true;
                 return mesh;
             })();
             this.add(petiole);
@@ -120,7 +120,7 @@ export class Leaf extends Component {
                 material,
             );
             mesh.castShadow = true;
-            // mesh.receiveShadow = true;
+            mesh.receiveShadow = true;
             return mesh;
         })();
         lamina.position.x = petioleLength;

@@ -17,13 +17,16 @@ if (SHOW_HELPERS) {
     scene.add(new THREE.AxesHelper(10));
 }
 
-const light = new THREE.HemisphereLight("rgb(173, 216, 230)", "rgb(60, 60, 80)", 0.6);
+const hemisphereLight = new THREE.HemisphereLight("rgb(173, 216, 230)", "rgb(60, 60, 80)", 0.3);
 // const light = new THREE.HemisphereLight("rgb(173, 216, 230)", "rgb(210, 250, 255)", 0.3);
-scene.add(light);
+scene.add(hemisphereLight);
+
+const ambientLight = new THREE.AmbientLight("rgb(173, 216, 230)", 0.4);
+scene.add(ambientLight);
 
 const spotLight = new THREE.SpotLight(
     "rgb(234, 249, 244)",
-    1.2,
+    1.1,
     200,
     Math.PI / 10,
     1.0,
@@ -33,12 +36,15 @@ spotLight.position.set(10, 100, 10);
 
 spotLight.castShadow = true;
 
-spotLight.shadow.mapSize.width = 2048;
-spotLight.shadow.mapSize.height = 2048;
+spotLight.shadow.mapSize.width = 2048 * 2;
+spotLight.shadow.mapSize.height = 2048 * 2;
 
-spotLight.shadow.camera.near = 50;
-spotLight.shadow.camera.far = 150;
-spotLight.shadow.camera.fov = 10;
+spotLight.shadow.bias = -0.001; // try not to make leaves self-shadow
+spotLight.shadow.radius = 1.5; // 1 is normal; 1.5 makes it a bit blurrier
+spotLight.shadow.camera.near = 70;
+spotLight.shadow.camera.far = 110;
+spotLight.shadow.camera.fov = 12;
+spotLight.shadow.camera.updateProjectionMatrix();
 
 scene.add(spotLight);
 
