@@ -55,8 +55,8 @@ class Leaves extends Component {
             endZRot: Math.PI / 6,
             startYRot: 0,
             endYRot: Math.PI * 2,
-            endScale: 1,
-            startScale: 1,
+            endScale: 0.5,
+            startScale: 0.5,
             generate: Leaf.generate,
             isBilateral: false,
         });
