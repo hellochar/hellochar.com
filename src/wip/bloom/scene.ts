@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-const SHOW_HELPERS = false;
+const SHOW_HELPERS = true;
 
 const scene = new THREE.Scene();
 

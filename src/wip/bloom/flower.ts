@@ -91,16 +91,6 @@ class Calyx extends Component {
 
 }
 
-class Sepal extends Component {
-    public constructor() {
-        super();
-    }
-
-    static generate() {
-
-    }
-}
-
 class Corolla extends Component {
     public constructor(public petals: Whorl<Petal>) {
         super();
@@ -145,6 +135,7 @@ class Corolla extends Component {
             isBilateral: false,
             generate: Petal.generate,
         };
+
         const petals = Whorl.generate(parameters);
         return new Corolla(petals);
     }
