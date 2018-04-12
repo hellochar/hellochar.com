@@ -7,7 +7,7 @@ import { ISketch, SketchAudioContext } from "../../sketch";
 import { Component, ComponentClass } from "./component";
 import { Flower } from "./flower";
 import { Leaf } from "./leaf";
-import { genLeafSkeleton, Leaf2 } from "./leafGen";
+import { Leaf2 } from "./leafGen";
 import scene from "./scene";
 import { Whorl } from "./whorl";
 

@@ -13,8 +13,10 @@ export class LeafNode extends THREE.Bone {
 
     private nodeChildren?: LeafNode[];
     public leftNode?: LeafNode;
-    public centerNode?: LeafNode;
+    public forwardNode?: LeafNode;
     public rightNode?: LeafNode;
+
+    public index!: number;
 
     public addChildren(mainAxisDist: number, secondaryAxisDist: number, secondaryAxisAngle: number, scale: number) {
         this.nodeChildren = [];
@@ -30,11 +32,11 @@ export class LeafNode extends THREE.Bone {
         }
 
         // extend the main axis
-        const centerNode = this.centerNode = new LeafNode();
-        centerNode.position.x = mainAxisDist;
-        centerNode.scale.set(scale, scale, scale);
-        this.add(centerNode);
-        this.nodeChildren.push(centerNode);
+        const forwardNode = this.forwardNode = new LeafNode();
+        forwardNode.position.x = mainAxisDist;
+        forwardNode.scale.set(scale, scale, scale);
+        this.add(forwardNode);
+        this.nodeChildren.push(forwardNode);
 
         if (this.rotation.y <= 0) {
             const rightNode = this.rightNode = new LeafNode();
@@ -60,14 +62,18 @@ export class Leaf2 extends THREE.Object3D {
     constructor() {
         super();
         const rootNode = new LeafNode();
-        let mainAxisDist = 0.4;
-        const secondaryAxisDist = 0.1;
-        const secondaryAxisAngle = Math.PI / 6;
-        let scale = 0.8;
+        // let mainAxisDist = 0.4;
+        let mainAxisDist = THREE.Math.randFloat(0.5, 1);
+        let secondaryAxisDist = THREE.Math.randFloat(0.5, 1);
+        const secondaryAxisAngle = THREE.Math.randFloat(0, Math.PI / 4);
+        let scale = THREE.Math.randFloat(0.5, 0.9);
         const allBones = [rootNode];
         let boundary = [rootNode];
         this.nodeLayers = [boundary];
-        const iterations = 4;
+        const iterations = THREE.Math.randInt(2, 5);
+        const scaleMultiplier = THREE.Math.randFloat(0.2, 1);
+        const mainAxisDistMultiplier = Math.sqrt(THREE.Math.randFloat(0.5, 1));
+        const secondaryAxisDistMultiplier = THREE.Math.randFloat(0.5, 1);
         for (let i = 0; i < iterations; i++) {
             const newBoundary: LeafNode[] = [];
             for (const leafNode of boundary) {
@@ -77,8 +83,12 @@ export class Leaf2 extends THREE.Object3D {
             boundary = newBoundary;
             allBones.push(...newBoundary);
             this.nodeLayers.push(newBoundary);
-            // scale *= 0.8;
-            // mainAxisDist *= 0.5;
+            scale *= scaleMultiplier;
+            mainAxisDist *= mainAxisDistMultiplier;
+            secondaryAxisDist *= secondaryAxisDistMultiplier;
+        }
+        for (let i = 0; i < allBones.length; i++) {
+            allBones[i].index = i;
         }
         this.skeleton = new THREE.Skeleton(allBones);
         this.mesh = this.createMesh(this.skeleton);
@@ -88,14 +98,40 @@ export class Leaf2 extends THREE.Object3D {
     private createMesh(skeleton: THREE.Skeleton) {
         const geometry = new THREE.Geometry();
         for (let i = 0; i < skeleton.bones.length; i++) {
-            const leafNode = skeleton.bones[i];
-            geometry.vertices.push(new THREE.Vector3());
-            geometry.skinIndices.push(new THREE.Vector4(i) as any);
-            geometry.skinWeights.push(new THREE.Vector4(1) as any);
+            const leafNode = skeleton.bones[i] as LeafNode;
+            const vertex = leafNode.getWorldPosition();
+            geometry.vertices.push(vertex);
+            geometry.skinIndices.push(new THREE.Vector4(i, 0, 0, 0) as any);
+            geometry.skinWeights.push(new THREE.Vector4(1, 0, 0, 0) as any);
         }
         geometry.verticesNeedUpdate = true;
-        // face algorithm
-        // for each
+        /* face algorithm
+        for each node, create 4 faces:
+        1. forward, left, me
+        2. forward, me, right
+        3. me, left, parent
+        4. me, parent, right
+        */
+        for (const leafNode of skeleton.bones as LeafNode[]) {
+            const { index, parent, forwardNode, leftNode, rightNode } = leafNode;
+            if (forwardNode != null) {
+                if (leftNode != null) {
+                    geometry.faces.push(new THREE.Face3(forwardNode.index, leftNode.index, index));
+                    if (parent instanceof LeafNode) {
+                        geometry.faces.push(new THREE.Face3(index, leftNode.index, parent.index));
+                    }
+                }
+                if (rightNode != null) {
+                    geometry.faces.push(new THREE.Face3(forwardNode.index, index, rightNode.index));
+                    if (parent instanceof LeafNode) {
+                        geometry.faces.push(new THREE.Face3(index, parent.index, rightNode.index));
+                    }
+                }
+            }
+        }
+        // face algoirthm 2:
+        // for each node layer, except the last, connect siblings together
+        geometry.computeFaceNormals();
         const mat = new THREE.MeshBasicMaterial({skinning: true, color: "green", side: THREE.DoubleSide});
         const mesh = new THREE.SkinnedMesh(geometry, mat);
         mesh.add(skeleton.bones[0]);
