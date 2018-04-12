@@ -1,8 +1,11 @@
 import * as THREE from "three";
 
-const SHOW_HELPERS = true;
+const SHOW_HELPERS = false;
 
 const scene = new THREE.Scene();
+// const fog = new THREE.FogExp2(0x000000, 0.1);
+const fog = new THREE.Fog(0x000000, 10, 30);
+scene.fog = fog;
 
 const groundGeom = new THREE.PlaneGeometry(100, 100, 100, 100);
 groundGeom.rotateX(-Math.PI / 2);
@@ -12,7 +15,7 @@ const ground = new THREE.Mesh(groundGeom, new THREE.MeshLambertMaterial({
     dithering: true,
 }));
 ground.receiveShadow = true;
-scene.add(ground);
+// scene.add(ground);
 if (SHOW_HELPERS) {
     scene.add(new THREE.AxesHelper(10));
 }
@@ -26,11 +29,11 @@ scene.add(ambientLight);
 
 const spotLight = new THREE.SpotLight(
     "rgb(234, 249, 244)",
-    1.1,
+    1.4,
     200,
-    Math.PI / 10,
+    Math.PI / 20,
     1.0,
-    1,
+    1.25,
 );
 spotLight.position.set(10, 100, 10);
 
@@ -41,8 +44,8 @@ spotLight.shadow.mapSize.height = 2048 * 2;
 
 spotLight.shadow.bias = -0.001; // try not to make leaves self-shadow
 spotLight.shadow.radius = 1.5; // 1 is normal; 1.5 makes it a bit blurrier
-spotLight.shadow.camera.near = 70;
-spotLight.shadow.camera.far = 110;
+spotLight.shadow.camera.near = 90;
+spotLight.shadow.camera.far = 101;
 spotLight.shadow.camera.fov = 12;
 spotLight.shadow.camera.updateProjectionMatrix();
 

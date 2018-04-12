@@ -1,14 +1,15 @@
 import * as React from "react";
 import * as THREE from "three";
 
+import { LineBasicMaterial } from "three";
 import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Component, ComponentClass } from "./component";
 import { Flower } from "./flower";
 import { Leaf } from "./leaf";
+import { genLeafSkeleton, Leaf2 } from "./leafGen";
 import scene from "./scene";
 import { Whorl } from "./whorl";
-import { LineBasicMaterial } from "three";
 
 class Branch extends Component {
     public mesh: THREE.Mesh;
@@ -102,80 +103,62 @@ class Bloom extends ISketch {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         // this.renderer.setClearColor(new THREE.Color("rgb(193, 255, 251)"));
 
-        this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 500);
+        this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 50);
         this.camera.position.y = 10;
         this.camera.position.z = 10;
-        this.camera.position.multiplyScalar(0.5);
+        this.camera.position.multiplyScalar(0.1);
 
         this.orbitControls = new THREE.OrbitControls(this.camera);
-        this.orbitControls.autoRotate = true;
+        // this.orbitControls.autoRotate = true;
         this.orbitControls.autoRotateSpeed = 0.6;
 
         this.initComponent();
         // this.scene.add(this.component);
 
-        const branchLength = 5;
-        const numSegments = 25;
-        const geometry = new THREE.CylinderGeometry(
-            0.1,
-            0.1,
-            branchLength,
-            8,
-            numSegments,
-            true,
-        );
-        geometry.translate(0, branchLength / 2, 0);
-        for (const vertex of geometry.vertices) {
-            const boneIndex = Math.floor(map(vertex.y, 0, branchLength, 0, numSegments));
-            geometry.skinIndices.push(new THREE.Vector4(boneIndex, 0, 0, 0) as any);
-            geometry.skinWeights.push(new THREE.Vector4(1, 0, 0, 0) as any);
-        }
-        // this creates 48 vertices:
-        // y = 0, x8
-        // y = 1, x8
-        // y = 2, x8
-        // y = 3, x8
-        // y = 4, x8
-        // y = 5, x8
-        // we could control this with 5 bones:
-        // bone 0, at y = 0
-        // bone 1, at y = 1
-        // bone 2, at y = 2
-        // bone 3, at y = 3
-        // bone 4, at y = 4 (note - end of bone 4 controls the y=5 ring)
-        // each of these bones is connected to the previous one (that is, .add()-ed),
-        // so changes to the first bone propogate to all the rest
-        // that's what gives it that magic property.
-        // what is each vertex's final position decided by?
-
-        const bones: THREE.Bone[] = [];
-        for (let y = 0; y <= numSegments; y++) {
-            const bone = new THREE.Bone(null as any);
-            if (y > 0) {
-                const prevBone = bones[y - 1];
-                prevBone.add(bone);
-                bone.position.y = branchLength / numSegments;
-            }
-            bones.push(bone);
-        }
-
-        const mat = new THREE.MeshBasicMaterial({skinning: true, color: "green", side: THREE.DoubleSide});
-        const mesh = new THREE.SkinnedMesh(geometry, mat);
-        mesh.add(bones[0]);
-        this.skeleton = new THREE.Skeleton(bones);
-        mesh.bind(this.skeleton);
-        mesh.rotateZ(-Math.PI / 2);
-        // for (const bone of bones) {
-        //     bone.rotateY(-0.2);
-        // }
-        this.scene.add(mesh);
-        console.log(this.skeleton);
-
-        const helper = new THREE.SkeletonHelper(bones[0]);
+        const leaf = new Leaf2();
+        this.scene.add(leaf);
+        const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
         this.scene.add(helper);
+        // console.log(leaf.skeleton);
+        this.skeleton = leaf.skeleton;
+        leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
 
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
+
+        // this doesn't work too well
+        // const bokehPass = new THREE.BokehPass(this.scene, this.camera, {
+        //     focus: 5,
+        //     aperture: 0.00025,
+        //     maxblur: 0.05,
+        //     // width: this.canvas.width,
+        //     // height: this.canvas.height,
+        // });
+        // bokehPass.renderToScreen = true;
+        // this.composer.addPass(bokehPass);
+
+        // const ssaoPass = new THREE.SSAOPass( this.scene, this.camera, this.canvas.width, this.canvas.height );
+        // // ssaoPass.onlyAO = true;
+        // ssaoPass.radius = 8;
+        // ssaoPass.aoClamp = 0.2;
+        // ssaoPass.lumInfluence = 0.6;
+        // this.composer.addPass(ssaoPass);
+        // this.renderer.setClearColor(new THREE.Color("rgb("))
+
+        const saoPass = new THREE.SAOPass( this.scene, this.camera, false, true );
+        saoPass.params.saoBias = 2.6;
+        saoPass.params.saoIntensity = 0.30;
+        saoPass.params.saoScale = 6;
+        saoPass.params.saoKernelRadius = 4;
+        saoPass.params.saoMinResolution = 0;
+        saoPass.params.saoBlur = true;
+        saoPass.params.saoBlurRadius = 16;
+        saoPass.params.saoBlurStdDev = 4;
+        saoPass.params.saoBlurDepthCutoff = 0.05;
+        saoPass.params.output = THREE.SAOPass.OUTPUT.Default;
+        this.composer.addPass(saoPass);
+
+        this.composer.passes[this.composer.passes.length - 1].renderToScreen = true;
     }
 
     public initComponent() {
@@ -265,41 +248,56 @@ class Bloom extends ISketch {
         // )
     }
 
+    logistic(x: number) {
+        return 1 / (1 + Math.exp(-x));
+    }
+
     public animate() {
         if (this.component.update != null) {
             this.component.update(this.timeElapsed);
         }
-        for (let i = 0; i < this.skeleton.bones.length; i++) {
-            const bone = this.skeleton.bones[i];
-            // bone.rotation.x = 0.02 * i * Math.sin(this.timeElapsed / 200);
-            // bone.rotation.z += 0.001;
-            // const currentRotation = bone.getWorldRotation().toVector3();
-            // const distToUp = currentRotation.angleTo();
-            // bone.rotation.x += (Math.random() - 0.5) * 0.01;
-            // bone.rotation.y += (Math.random() - 0.5) * 0.01;
-            // bone.rotation.z += (Math.random() - 0.5) * 0.01;
-            const q = bone.getWorldQuaternion();
-            console.log(bone.getWorldRotation());
-            // const upQuarternion = new THREE.Quaternion().setFromUnitVectors(currentRotation, new THREE.Vector3(0, 1, 0));
-            const upQuarternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0))
-            const weight = this.skeleton.bones.length - i;
-            const moveAbility = 1 / (weight * weight);
-            q.slerp(upQuarternion, 1 + moveAbility * .1);
-            bone.quaternion.multiply(q);
-            const newRotations = new THREE.Euler().setFromQuaternion(bone.getWorldQuaternion());
-            console.log(newRotations);
-            // debugger;
-            // now q is the world quaternion of what we want;
-            // convert that to local
-            // const newLocalQuaternion = bone.parent.quaternion.m
-            // bone.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
-            // bone.set
-            // bone.quaternion.multiplyQuaternions(bone.parent.quaternion, q);
-            // bone.setRotationFromQuaternion(q);
+
+        const x = this.timeElapsed / 1000 - 6;
+        const s = this.logistic(x);
+        this.skeleton.bones[0].scale.set(s, s, s);
+
+        // ok now, curl it by rotating Z
+        for (const bone of this.skeleton.bones) {
+            bone.rotation.z += 0.001 * Math.sin(this.timeElapsed / 1000);
         }
+
+        // for (let i = 0; i < this.skeleton.bones.length; i++) {
+        //     const bone = this.skeleton.bones[i];
+        //     // bone.rotation.x = 0.02 * i * Math.sin(this.timeElapsed / 200);
+        //     // bone.rotation.z += 0.001;
+        //     // const currentRotation = bone.getWorldRotation().toVector3();
+        //     // const distToUp = currentRotation.angleTo();
+        //     // bone.rotation.x += (Math.random() - 0.5) * 0.01;
+        //     // bone.rotation.y += (Math.random() - 0.5) * 0.01;
+        //     // bone.rotation.z += (Math.random() - 0.5) * 0.01;
+        //     const q = bone.getWorldQuaternion();
+        //     console.log(bone.getWorldRotation());
+        //     // const upQuarternion = new THREE.Quaternion().setFromUnitVectors(currentRotation, new THREE.Vector3(0, 1, 0));
+        //     const upQuarternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0))
+        //     const weight = this.skeleton.bones.length - i;
+        //     const moveAbility = 1 / (weight * weight);
+        //     q.slerp(upQuarternion, 1 + moveAbility * .1);
+        //     bone.quaternion.multiply(q);
+        //     const newRotations = new THREE.Euler().setFromQuaternion(bone.getWorldQuaternion());
+        //     console.log(newRotations);
+        //     // debugger;
+        //     // now q is the world quaternion of what we want;
+        //     // convert that to local
+        //     // const newLocalQuaternion = bone.parent.quaternion.m
+        //     // bone.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
+        //     // bone.set
+        //     // bone.quaternion.multiplyQuaternions(bone.parent.quaternion, q);
+        //     // bone.setRotationFromQuaternion(q);
+        // }
+
         this.orbitControls.update();
-        this.renderer.render(this.scene, this.camera);
-        // this.composer.render();
+        // this.renderer.render(this.scene, this.camera);
+        this.composer.render();
     }
 }
 

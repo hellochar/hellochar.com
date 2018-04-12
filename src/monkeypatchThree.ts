@@ -12,10 +12,18 @@ import "three/examples/js/libs/stats.min";
 // import * as dat from "three/examples/js/libs/dat.gui.min";
 // (window as any).dat = dat;
 
-import "three/examples/js/postprocessing/BokehPass";
-import "three/examples/js/postprocessing/MaskPass";
-import "three/examples/js/postprocessing/RenderPass";
-import "three/examples/js/postprocessing/ShaderPass";
 import "three/examples/js/shaders/BokehShader";
 import "three/examples/js/shaders/CopyShader";
 import "three/examples/js/shaders/DotScreenShader";
+// required by SAOShader
+import "three/examples/js/shaders/DepthLimitedBlurShader";
+import "three/examples/js/shaders/SAOShader";
+import "three/examples/js/shaders/SSAOShader";
+// required by SAOShader
+import "three/examples/js/shaders/UnpackDepthRGBAShader";
+import "three/examples/js/postprocessing/ShaderPass";
+import "three/examples/js/postprocessing/RenderPass";
+import "three/examples/js/postprocessing/BokehPass";
+import "three/examples/js/postprocessing/MaskPass";
+import "three/examples/js/postprocessing/SAOPass";
+import "three/examples/js/postprocessing/SSAOPass";
