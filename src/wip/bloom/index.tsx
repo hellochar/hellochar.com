@@ -257,13 +257,20 @@ class Bloom extends ISketch {
             this.component.update(this.timeElapsed);
         }
 
-        const x = this.timeElapsed / 1000 - 6;
-        const s = this.logistic(x);
-        this.skeleton.bones[0].scale.set(s, s, s);
+        // const x = this.timeElapsed / 1000 - 6;
+        // const s = this.logistic(x);
+        // this.skeleton.bones[0].scale.set(s, s, s);
+        this.skeleton.bones[0].scale.set(1, 1, 1);
 
         // ok now, curl it by rotating Z
         for (const bone of this.skeleton.bones) {
-            bone.rotation.z += 0.001 * Math.sin(this.timeElapsed / 1000);
+            // bone.rotation.z += 0.001 * Math.sin(this.timeElapsed / 1000);
+
+            // const worldPos = bone.getWorldPosition();
+            // const {x, z} = worldPos;
+            // bone.rotation.z += Math.sin((x + z) * 5 + this.timeElapsed / 1000) * 0.001;
+
+            // bone.rotation.z += Math.sin(this.timeElapsed / 3000) * 0.05;
         }
 
         // for (let i = 0; i < this.skeleton.bones.length; i++) {
