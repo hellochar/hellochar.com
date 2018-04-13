@@ -2013,6 +2013,10 @@ del@^3.0.0:
     pify "^3.0.0"
     rimraf "^2.2.8"
 
+delaunator@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/delaunator/-/delaunator-2.0.0.tgz#948dfc2c5fc7bb8abf470f2296ef8335a1773cae"
+
 delayed-stream@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"

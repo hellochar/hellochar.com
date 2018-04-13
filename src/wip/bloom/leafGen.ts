@@ -1,3 +1,4 @@
+import Delaunator from "delaunator";
 import * as THREE from "three";
 
 export class LeafNode extends THREE.Bone {
@@ -191,13 +192,24 @@ export class Leaf2 extends THREE.Object3D {
                 // }
             }
         }
-        for (const leafNode of this.depthLayers[this.depthLayers.length - 1]) {
-            leafNode.position.y = 0.1;
-        }
         // algorithm 3:
         // connect the outer perimeter together
         // the outer perimeter is defined as the nodes in the last layer
         //
+        // for (const leafNode of this.depthLayers[this.depthLayers.length - 1]) {
+        //     leafNode.position.y = 0.1;
+        // }
+
+        // const points = skeleton.bones.map((bone) => {
+        //     const worldPos = bone.getWorldPosition();
+        //     return [worldPos.x, worldPos.z];
+        // });
+
+        const delaunator = Delaunator.from(skeleton.bones, (bone) => bone.getWorldPosition().x, (bone) => bone.getWorldPosition().z);
+        for (let i = 0; i < delaunator.triangles.length; i += 3) {
+            const face = new THREE.Face3(delaunator.triangles[i], delaunator.triangles[i + 1], delaunator.triangles[i + 2]);
+            geometry.faces.push(face);
+        }
 
         geometry.computeFaceNormals();
         const mat = new THREE.MeshBasicMaterial({skinning: true, color: "green", side: THREE.DoubleSide});

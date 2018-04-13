@@ -266,9 +266,9 @@ class Bloom extends ISketch {
         for (const bone of this.skeleton.bones) {
             // bone.rotation.z += 0.001 * Math.sin(this.timeElapsed / 1000);
 
-            // const worldPos = bone.getWorldPosition();
-            // const {x, z} = worldPos;
-            // bone.rotation.z += Math.sin((x + z) * 5 + this.timeElapsed / 1000) * 0.001;
+            const worldPos = bone.getWorldPosition();
+            const {x, z} = worldPos;
+            bone.rotation.z = Math.sin((x + z) * 5 + this.timeElapsed / 300) * 0.01;
 
             // bone.rotation.z += Math.sin(this.timeElapsed / 3000) * 0.05;
         }
