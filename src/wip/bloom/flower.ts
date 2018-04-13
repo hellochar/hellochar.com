@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { Component, ComponentClass } from "./component";
-import { Leaf } from "./leaf";
+import { Leaf } from "./leafOld";
 import { Whorl, whorl } from "./whorl";
 
 export class Flower extends Component {

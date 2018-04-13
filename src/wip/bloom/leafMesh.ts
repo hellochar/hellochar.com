@@ -82,27 +82,33 @@ export class LeafMesh extends THREE.Object3D {
         // let mainAxisDist = 0.3;
         let secondaryAxisDist = THREE.Math.randFloat(0.5, 1);
         // let secondaryAxisDist = 0.15;
-        const secondaryAxisAngle = THREE.Math.randFloat(Math.PI / 12, Math.PI / 3);
+        let secondaryAxisAngle = THREE.Math.randFloat(Math.PI / 12, Math.PI / 3);
         // const secondaryAxisAngle = Math.PI / 2;
         let scale = THREE.Math.randFloat(0.9, 1.0);
-        const allLeafNodes = [rootNode];
-        let boundary = [rootNode];
         const iterations = THREE.Math.randInt(2, 6);
         // const iterations = 6;
-        // const scaleMultiplier = THREE.Math.randFloat(0.2, 1);
+        const scaleMultiplier = THREE.Math.randFloat(0.9, 1);
         // const scaleMultiplier = 0.6;
-        const scaleMultiplier = 1;
+        // const scaleMultiplier = 1;
         // const mainAxisDistMultiplier = 1;
-        // const secondaryAxisDistMultiplier = 1;
         const sideScale = 0.8;
         const mainAxisDistMultiplier = Math.sqrt(THREE.Math.randFloat(0.8, 1));
-        const secondaryAxisDistMultiplier = THREE.Math.randFloat(0.5, 1);
+        const angleScalar = THREE.Math.randFloat(0.9, 1 / 0.9);
         // const maxSideDepth = 1;
         const maxSideDepth = THREE.Math.randInt(0, 3);
         const alwaysSecondary = Math.random() < 0.5 ? true : false;
+        const secondaryAxisDistFns: Array<(x: number) => number> = [
+            (x) => x * (1 - x),
+            (x) => Math.pow(0.2, x),
+            (x) => 1 / (1 + x),
+        ];
+        const fn = secondaryAxisDistFns[THREE.Math.randInt(0, 2)];
+
+        const allLeafNodes = [rootNode];
+        let boundary = [rootNode];
         for (let i = 0; i < iterations; i++) {
             const x = i / iterations;
-            secondaryAxisDist = x * (1 - x);
+            secondaryAxisDist = fn(x);
             const newBoundary: LeafNode[] = [];
             for (const leafNode of boundary) {
                 const children = leafNode.addChildren(mainAxisDist, secondaryAxisDist, secondaryAxisAngle, scale, sideScale, maxSideDepth, alwaysSecondary);
@@ -112,7 +118,7 @@ export class LeafMesh extends THREE.Object3D {
             allLeafNodes.push(...newBoundary);
             scale *= scaleMultiplier;
             mainAxisDist *= mainAxisDistMultiplier;
-            // secondaryAxisDist *= secondaryAxisDistMultiplier;
+            secondaryAxisAngle *= angleScalar;
         }
         this.depthLayers = [];
         this.sideDepthLayers = [];
@@ -194,34 +200,7 @@ export class LeafMesh extends THREE.Object3D {
         };
         // algorithm 3:
         // delauney triangulate
-        const delauneyFaces = () => {
-            const maxDepth = this.depthLayers.length - 1;
-            // const maxSideDepth = this.sideDepthLayers.length - 1;
-
-            const delaunator = Delaunator.from(skeleton.bones, (bone) => bone.getWorldPosition().x, (bone) => bone.getWorldPosition().z);
-            for (let i = 0; i < delaunator.triangles.length; i += 3) {
-                // variation - don't add faces where they're all in maxDepth; this ensures the boundary isn't Entire
-                const indexA = delaunator.triangles[i];
-                const indexB = delaunator.triangles[i + 1];
-                const indexC = delaunator.triangles[i + 2];
-                const nodeA = skeleton.bones[indexA] as LeafNode;
-                const nodeB = skeleton.bones[indexB] as LeafNode;
-                const nodeC = skeleton.bones[indexC] as LeafNode;
-                if (
-                    nodeA.depth !== maxDepth ||
-                    nodeB.depth !== maxDepth ||
-                    nodeC.depth !== maxDepth || true
-                ) {
-                    const face = new THREE.Face3(indexA, indexB, indexC);
-                    geometry.faces.push(face);
-                }
-            }
-        }
-
-        // console.log(this.sideDepthLayers);
-        console.log(this.depthLayers);
-        const delauneyExceptLastDepthFaces = () => {
-            const maxDepth = this.depthLayers.length - 1;
+        const delauneyFaces = (maxDepth: number = this.depthLayers.length - 1) => {
             const maxDepthIndex = this.depthLayers[maxDepth][0].index;
             const allLeafNodes = skeleton.bones.slice(0, maxDepthIndex) as LeafNode[];
             try {
@@ -230,7 +209,6 @@ export class LeafMesh extends THREE.Object3D {
                     (bone) => bone.getWorldPosition().z,
                 );
                 for (let i = 0; i < delaunator.triangles.length; i += 3) {
-                    // variation - don't add faces where they're all in maxDepth; this ensures the boundary isn't Entire
                     const indexA = delaunator.triangles[i];
                     const indexB = delaunator.triangles[i + 1];
                     const indexC = delaunator.triangles[i + 2];
@@ -240,24 +218,43 @@ export class LeafMesh extends THREE.Object3D {
                     const face = new THREE.Face3(indexA, indexB, indexC);
                     geometry.faces.push(face);
                 }
-            } catch {
+            } catch(e) {
+                console.error(e);
                 // do nothing
             }
         };
 
-        delauneyExceptLastDepthFaces();
-        childFaces();
-        cousinFaces();
+        // delauneyExceptLastDepthFaces();
+        /* one of two modes
+         * cousin + child builds fan-shaped or compound leaves
+         * delauney builds simple Entire edges
+        */
+        const mode = (Math.random() < 0.5) ? "compound" : "entire";
+        if (mode === "compound") {
+            childFaces();
+            cousinFaces();
+        } else {
+            // delauneyExceptLastDepthFaces();
+            cousinFaces();
+            childFaces();
+            // delauneyFaces();
+        }
 
-        // delauneyFaces();
-        // childFaces();
-        // cousinFaces();
-
+        geometry.normalize();
+        geometry.scale(0.5, 0.5, 0.5);
+        geometry.rotateX(Math.PI);
+        geometry.translate(0.5, 0, 0);
         geometry.computeFaceNormals();
-        const mat = new THREE.MeshBasicMaterial({skinning: true, color: "green", side: THREE.DoubleSide});
+        geometry.computeFlatVertexNormals();
+        geometry.computeVertexNormals();
+        // const mat = new THREE.MeshBasicMaterial({skinning: true, color: "green", side: THREE.DoubleSide});
+        const mat = new THREE.MeshLambertMaterial({skinning: true, color: "green", side: THREE.DoubleSide });
         const mesh = new THREE.SkinnedMesh(geometry, mat);
         mesh.add(skeleton.bones[0]);
+        mesh.receiveShadow = true;
+        mesh.castShadow = true;
         mesh.bind(skeleton);
+
         return mesh;
     }
 }

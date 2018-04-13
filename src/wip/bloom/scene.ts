@@ -15,7 +15,7 @@ const ground = new THREE.Mesh(groundGeom, new THREE.MeshLambertMaterial({
     dithering: true,
 }));
 ground.receiveShadow = true;
-// scene.add(ground);
+scene.add(ground);
 if (SHOW_HELPERS) {
     scene.add(new THREE.AxesHelper(10));
 }

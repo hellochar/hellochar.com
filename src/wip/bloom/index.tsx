@@ -6,8 +6,8 @@ import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Component, ComponentClass } from "./component";
 import { Flower } from "./flower";
-import { Leaf } from "./leaf";
-import { Leaf2 } from "./leafGen";
+import { Leaf } from "./leafOld";
+import { LeafMesh } from "./leafMesh";
 import scene from "./scene";
 import { Whorl } from "./whorl";
 
@@ -96,7 +96,7 @@ class Bloom extends ISketch {
 
     public component!: Component;
 
-    public skeleton!: THREE.Skeleton;
+    public leafMeshes: LeafMesh[] = [];
 
     public init() {
         this.renderer.shadowMap.enabled = true;
@@ -115,13 +115,21 @@ class Bloom extends ISketch {
         this.initComponent();
         // this.scene.add(this.component);
 
-        const leaf = new Leaf2();
-        this.scene.add(leaf);
-        const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
-        this.scene.add(helper);
+        for (let x = -5; x <= 5; x++) {
+            for (let z = -5; z <= 5; z++) {
+                const leaf = new LeafMesh();
+                leaf.position.x = x;
+                leaf.position.y = 0.2;
+                leaf.position.z = z;
+                this.scene.add(leaf);
+                this.leafMeshes.push(leaf);
+            }
+        }
+        // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
+        // this.scene.add(helper);
         // console.log(leaf.skeleton);
-        this.skeleton = leaf.skeleton;
-        leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
+        // this.skeleton = leaf.skeleton;
+        // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
 
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
@@ -143,20 +151,21 @@ class Bloom extends ISketch {
         // ssaoPass.aoClamp = 0.2;
         // ssaoPass.lumInfluence = 0.6;
         // this.composer.addPass(ssaoPass);
+
         // this.renderer.setClearColor(new THREE.Color("rgb("))
 
-        const saoPass = new THREE.SAOPass( this.scene, this.camera, false, true );
-        saoPass.params.saoBias = 2.6;
-        saoPass.params.saoIntensity = 0.30;
-        saoPass.params.saoScale = 6;
-        saoPass.params.saoKernelRadius = 4;
-        saoPass.params.saoMinResolution = 0;
-        saoPass.params.saoBlur = true;
-        saoPass.params.saoBlurRadius = 16;
-        saoPass.params.saoBlurStdDev = 4;
-        saoPass.params.saoBlurDepthCutoff = 0.05;
-        saoPass.params.output = THREE.SAOPass.OUTPUT.Default;
-        this.composer.addPass(saoPass);
+        // const saoPass = new THREE.SAOPass( this.scene, this.camera, false, true );
+        // saoPass.params.saoBias = 2.6;
+        // saoPass.params.saoIntensity = 0.30;
+        // saoPass.params.saoScale = 6;
+        // saoPass.params.saoKernelRadius = 4;
+        // saoPass.params.saoMinResolution = 0;
+        // saoPass.params.saoBlur = true;
+        // saoPass.params.saoBlurRadius = 16;
+        // saoPass.params.saoBlurStdDev = 4;
+        // saoPass.params.saoBlurDepthCutoff = 0.05;
+        // saoPass.params.output = THREE.SAOPass.OUTPUT.Default;
+        // this.composer.addPass(saoPass);
 
         this.composer.passes[this.composer.passes.length - 1].renderToScreen = true;
     }
@@ -260,17 +269,20 @@ class Bloom extends ISketch {
         // const x = this.timeElapsed / 1000 - 6;
         // const s = this.logistic(x);
         // this.skeleton.bones[0].scale.set(s, s, s);
-        this.skeleton.bones[0].scale.set(1, 1, 1);
+        // this.skeleton.bones[0].scale.set(1, 1, 1);
 
         // ok now, curl it by rotating Z
-        for (const bone of this.skeleton.bones) {
-            // bone.rotation.z += 0.001 * Math.sin(this.timeElapsed / 1000);
+        for (const leafMesh of this.leafMeshes) {
+            // leafMesh.rotation.x += 0.01;
+            for (const bone of leafMesh.skeleton.bones) {
+                bone.rotation.z = 0.01 * Math.sin(this.timeElapsed / 1000);
 
-            const worldPos = bone.getWorldPosition();
-            const {x, z} = worldPos;
-            bone.rotation.z = Math.sin((x + z) * 5 + this.timeElapsed / 300) * 0.01;
+                // const worldPos = bone.getWorldPosition();
+                // const {x, z} = worldPos;
+                // bone.rotation.z = Math.sin(Math.abs(z) * 5 + this.timeElapsed / 300) * 0.01;
 
-            // bone.rotation.z += Math.sin(this.timeElapsed / 3000) * 0.05;
+                // bone.rotation.z += Math.sin(this.timeElapsed / 3000) * 0.05;
+            }
         }
 
         this.orbitControls.update();
