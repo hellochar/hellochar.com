@@ -273,35 +273,6 @@ class Bloom extends ISketch {
             // bone.rotation.z += Math.sin(this.timeElapsed / 3000) * 0.05;
         }
 
-        // for (let i = 0; i < this.skeleton.bones.length; i++) {
-        //     const bone = this.skeleton.bones[i];
-        //     // bone.rotation.x = 0.02 * i * Math.sin(this.timeElapsed / 200);
-        //     // bone.rotation.z += 0.001;
-        //     // const currentRotation = bone.getWorldRotation().toVector3();
-        //     // const distToUp = currentRotation.angleTo();
-        //     // bone.rotation.x += (Math.random() - 0.5) * 0.01;
-        //     // bone.rotation.y += (Math.random() - 0.5) * 0.01;
-        //     // bone.rotation.z += (Math.random() - 0.5) * 0.01;
-        //     const q = bone.getWorldQuaternion();
-        //     console.log(bone.getWorldRotation());
-        //     // const upQuarternion = new THREE.Quaternion().setFromUnitVectors(currentRotation, new THREE.Vector3(0, 1, 0));
-        //     const upQuarternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0))
-        //     const weight = this.skeleton.bones.length - i;
-        //     const moveAbility = 1 / (weight * weight);
-        //     q.slerp(upQuarternion, 1 + moveAbility * .1);
-        //     bone.quaternion.multiply(q);
-        //     const newRotations = new THREE.Euler().setFromQuaternion(bone.getWorldQuaternion());
-        //     console.log(newRotations);
-        //     // debugger;
-        //     // now q is the world quaternion of what we want;
-        //     // convert that to local
-        //     // const newLocalQuaternion = bone.parent.quaternion.m
-        //     // bone.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
-        //     // bone.set
-        //     // bone.quaternion.multiplyQuaternions(bone.parent.quaternion, q);
-        //     // bone.setRotationFromQuaternion(q);
-        // }
-
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
