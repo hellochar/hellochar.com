@@ -4,89 +4,12 @@ import * as THREE from "three";
 import { LineBasicMaterial } from "three";
 import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
+import { Branch } from "./branch";
 import { Component, ComponentClass } from "./component";
-import dna from "./dna";
-import { Leaf } from "./leaf";
 import { Flower } from "./flower";
+import { Leaf } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
-
-class Branch extends Component {
-    public mesh: THREE.Mesh;
-    public constructor(public branchLength: number) {
-        super();
-        const material = new THREE.MeshLambertMaterial({
-            color: new THREE.Color("rgb(165, 190, 63)"),
-            side: THREE.DoubleSide,
-        });
-        const numSegments = 5;
-        // const geom = new THREE.PlaneGeometry(1, 0.1);
-        // const geom = new THREE.BoxBufferGeometry(0.1, branchLength, 0.1);
-        const geometry = new THREE.CylinderGeometry(
-            0.03,
-            0.03,
-            branchLength,
-            8,
-            numSegments,
-        );
-        const segmentHeight = branchLength / numSegments;
-        // for (let i = 0; i < geometry.vertices.length; i++) {
-        //     const vertex = geometry.vertices[i];
-        //     const y = (vertex.y + branchLength / 2);
-
-        //     // This part will need to be changed depending your skeleton and model
-        //     const skinIndex = Math.floor(y / segmentHeight);
-        //     const skinWeight = (y % segmentHeight) / segmentHeight;
-
-        //     // Ease between each bone
-        //     geometry.skinIndices.push(new THREE.Vector4(skinIndex, skinIndex + 1, 0, 0));
-        //     geometry.skinWeights.push(new THREE.Vector4(1 - skinWeight, skinWeight, 0, 0));
-
-        // }
-
-        // geom.rotateX(-Math.PI / 2);
-        geometry.translate(0, branchLength / 2, 0);
-        this.mesh = new THREE.Mesh(
-            geometry,
-            material,
-        );
-        this.mesh.castShadow = true;
-        this.add(this.mesh);
-    }
-
-    public addToEnd(...objects: THREE.Object3D[]) {
-        this.add(...objects);
-        for (const obj of objects) {
-            obj.position.set(0, this.branchLength, 0);
-        }
-    }
-
-    static generate() {
-        return new Branch(10);
-    }
-}
-
-class Leaves extends Component {
-    public constructor(public whorl: Whorl<Leaf>) {
-        super();
-        this.add(whorl);
-    }
-
-    static generate() {
-        const whorl = Whorl.generate({
-            num: 6,
-            startZRot: Math.PI / 6,
-            endZRot: Math.PI / 6,
-            startYRot: 0,
-            endYRot: Math.PI * 2,
-            endScale: 0.5,
-            startScale: 0.5,
-            generate: () => Leaf.generate(dna.leafTemplate),
-            isBilateral: false,
-        });
-        return new Leaves(whorl);
-    }
-}
 
 class Bloom extends ISketch {
     public scene = scene;
@@ -104,7 +27,7 @@ class Bloom extends ISketch {
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 50);
         this.camera.position.y = 10;
         this.camera.position.z = 10;
-        this.camera.position.multiplyScalar(0.1);
+        this.camera.position.multiplyScalar(0.5);
 
         this.orbitControls = new THREE.OrbitControls(this.camera);
         // this.orbitControls.autoRotate = true;
@@ -174,11 +97,14 @@ class Bloom extends ISketch {
 
     public initComponent() {
         // this.component = Leaves.generate();
-        const branch2 = new Branch(1);
-        branch2.addToEnd(Flower.generate());
-        const branch = new Branch(3);
-        branch.addToEnd(Leaves.generate());
-        branch.addToEnd(branch2);
+        // const branch2 = new Branch(1);
+        // branch2.addToEnd(Flower.generate());
+        // const branch = new Branch(3);
+        // branch.addToEnd(Leaves.generate());
+        // branch.addToEnd(branch2);
+        const branch = new Branch(10);
+        const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
+        scene.add(helper);
         this.component = branch;
     }
 

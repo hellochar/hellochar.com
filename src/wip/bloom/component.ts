@@ -6,7 +6,11 @@ export interface ComponentClass<T extends Component> {
 }
 
 export abstract class Component extends Object3D {
+    public timeBorn!: number;
+    public currentTime: number = 0;
+
     update(time: number) {
+        this.currentTime = time;
         if (this.updateSelf) {
             this.updateSelf(time);
         }
@@ -14,6 +18,15 @@ export abstract class Component extends Object3D {
         for (const child of this.children) {
             if (child instanceof Component) {
                 child.update(time);
+            }
+        }
+    }
+
+    add(...objs: Object3D[]) {
+        super.add(...objs);
+        for (const obj of objs) {
+            if (obj instanceof Component) {
+                obj.timeBorn = this.currentTime;
             }
         }
     }

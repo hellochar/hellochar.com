@@ -17,6 +17,10 @@ export class Flower extends Component {
             return new THREE.Mesh(geom, material);
         })();
         this.add(bulb);
+        // for (const child of this.children) {
+        //     // hackhack to test performance
+        //     child.matrixAutoUpdate = false;
+        // }
     }
     static generate() {
         return new Flower(Perianth.generate(), Reproductive.generate());
@@ -111,30 +115,30 @@ class Corolla extends Component {
         //     generate: Petal.generate,
         // };
 
-        // // 6 evenly spread
-        // const parameters = {
-        //     num: 6,
-        //     startYRot: 0,
-        //     endYRot: Math.PI * 2,
-        //     startScale: 1,
-        //     endScale: 1,
-        //     startZRot: Math.PI / 4,
-        //     endZRot: Math.PI / 4,
-        //     isBilateral: false,
-        //     generate: Petal.generate,
-        // };
-
+        // 6 evenly spread
         const parameters = {
-            num: 63,
+            num: 6,
             startYRot: 0,
-            endYRot: Math.PI * 8,
-            startScale: 0.8,
-            endScale: 0.5,
-            startZRot: 0,
+            endYRot: Math.PI * 2,
+            startScale: 1,
+            endScale: 1,
+            startZRot: Math.PI / 4,
             endZRot: Math.PI / 4,
             isBilateral: false,
             generate: Petal.generate,
         };
+
+        // const parameters = {
+        //     num: 63,
+        //     startYRot: 0,
+        //     endYRot: Math.PI * 8,
+        //     startScale: 0.8,
+        //     endScale: 0.5,
+        //     startZRot: 0,
+        //     endZRot: Math.PI / 4,
+        //     isBilateral: false,
+        //     generate: Petal.generate,
+        // };
 
         const petals = Whorl.generate(parameters);
         return new Corolla(petals);
@@ -169,10 +173,10 @@ class Petal extends LeafOld {
                 geometry.scale(1, 1, 0.5);
             },
             noisyEdge: true,
-            // innerColor: new THREE.Color(0xffffff),
-            // outerColor: new THREE.Color("rgb(29, 68, 132)"),
-            innerColor: new THREE.Color("rgb(255, 235, 107)"),
-            outerColor: new THREE.Color("rgb(255, 131, 22)"),
+            innerColor: new THREE.Color(0xffffff),
+            outerColor: new THREE.Color("rgb(29, 68, 132)"),
+            // innerColor: new THREE.Color("rgb(255, 235, 107)"),
+            // outerColor: new THREE.Color("rgb(255, 131, 22)"),
             perimeter: LeafOld.leafPerimeter2,
             petioleLength: 0,
         });

@@ -45,7 +45,8 @@ export function generateRandomGrowthParameters(): LeafGrowthParameters {
         (x) => 1 / (1 + x),
     ];
     const fn = secondaryAxisDistFns[THREE.Math.randInt(0, secondaryAxisDistFns.length - 1)];
-    const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 1.0);
+    // const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 1.0);
+    const petioleLength = 0.9;
     return {
         petioleLength,
         mainAxisDist,
