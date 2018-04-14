@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { Component } from "./component";
+import { Component } from "../component";
 
 export interface LeafParameters {
     petioleLength: number;
@@ -14,7 +14,7 @@ export interface LeafParameters {
 }
 
 // would be nice to emulate both succulents, and flat leaves, broad, thin, curly.
-export class Leaf extends Component {
+export class LeafOld extends Component {
     public lamina: THREE.Mesh;
     constructor(public parameters: LeafParameters) {
         super();
@@ -175,9 +175,9 @@ export class Leaf extends Component {
 
     static generate() {
         // nice green thing
-        return new Leaf({
+        return new LeafOld({
             petioleLength: 0.5,
-            perimeter: Leaf.leafPerimeter1,
+            perimeter: LeafOld.leafPerimeter1,
             realtimeDroop: false,
             shapeVertices: (vertex) => {
                 const {x, y, z} = vertex;

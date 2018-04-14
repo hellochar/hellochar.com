@@ -6,9 +6,9 @@ import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Component, ComponentClass } from "./component";
 import { Flower } from "./flower";
-import { Leaf } from "./leafOld";
-import { LeafMesh } from "./leafMesh";
+import { LeafOld } from "./leaf/leafOld";
 import scene from "./scene";
+import { SkinnedLeaf } from "./leaf/skinnedLeaf";
 import { Whorl } from "./whorl";
 
 class Branch extends Component {
@@ -67,7 +67,7 @@ class Branch extends Component {
 }
 
 class Leaves extends Component {
-    public constructor(public whorl: Whorl<Leaf>) {
+    public constructor(public whorl: Whorl<LeafOld>) {
         super();
         this.add(whorl);
     }
@@ -81,7 +81,7 @@ class Leaves extends Component {
             endYRot: Math.PI * 2,
             endScale: 0.5,
             startScale: 0.5,
-            generate: Leaf.generate,
+            generate: LeafOld.generate,
             isBilateral: false,
         });
         return new Leaves(whorl);
@@ -96,7 +96,7 @@ class Bloom extends ISketch {
 
     public component!: Component;
 
-    public leafMeshes: LeafMesh[] = [];
+    public leafMeshes: SkinnedLeaf[] = [];
 
     public init() {
         this.renderer.shadowMap.enabled = true;
@@ -117,7 +117,7 @@ class Bloom extends ISketch {
 
         for (let x = -5; x <= 5; x++) {
             for (let z = -5; z <= 5; z++) {
-                const leaf = new LeafMesh();
+                const leaf = new SkinnedLeaf();
                 // leaf.scale.set(0.9, 0.9, 0.9);
                 leaf.position.x = x;
                 leaf.position.y = 0.2;

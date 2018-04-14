@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { Component, ComponentClass } from "./component";
-import { Leaf } from "./leafOld";
+import { LeafOld } from "./leaf/leafOld";
 import { Whorl, whorl } from "./whorl";
 
 export class Flower extends Component {
@@ -142,7 +142,7 @@ class Corolla extends Component {
 }
 
 // hack extend Leaf for now
-class Petal extends Leaf {
+class Petal extends LeafOld {
     constructor() {
         super({
             realtimeDroop: true,
@@ -173,7 +173,7 @@ class Petal extends Leaf {
             // outerColor: new THREE.Color("rgb(29, 68, 132)"),
             innerColor: new THREE.Color("rgb(255, 235, 107)"),
             outerColor: new THREE.Color("rgb(255, 131, 22)"),
-            perimeter: Leaf.leafPerimeter2,
+            perimeter: LeafOld.leafPerimeter2,
             petioleLength: 0,
         });
     }

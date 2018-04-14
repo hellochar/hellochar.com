@@ -75,7 +75,7 @@ export class LeafNode extends THREE.Bone {
     }
 }
 
-export class LeafMesh extends THREE.Object3D {
+export class SkinnedLeaf extends THREE.Object3D {
     public skeleton: THREE.Skeleton;
     public mesh: THREE.SkinnedMesh;
 
