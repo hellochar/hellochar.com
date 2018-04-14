@@ -1,5 +1,6 @@
 import Delaunator from "delaunator";
 import * as THREE from "three";
+import { generateTexture } from "./textureGen";
 
 export class LeafNode extends THREE.Bone {
     // position - position relative to parent.
@@ -319,7 +320,11 @@ export class LeafMesh extends THREE.Object3D {
         geometry.computeBoundingBox();
         const boundingBox = geometry.boundingBox;
         const xScale = 1 / (boundingBox.max.x - boundingBox.min.x);
-        const mat = new THREE.MeshLambertMaterial({skinning: true, color: "green", side: THREE.DoubleSide });
+
+        const texture = generateTexture(geometry, this.depthLayers, skeleton.bones as LeafNode[]);
+        document.body.appendChild(texture.image);
+        const mat = new THREE.MeshLambertMaterial({skinning: true, side: THREE.DoubleSide, map: texture });
+        // const mat = new THREE.MeshPhongMaterial({ skinning: true, side: THREE.DoubleSide, map: texture });
         const mesh = new THREE.SkinnedMesh(geometry, mat);
         mesh.add(skeleton.bones[0]);
         mesh.bind(skeleton);
