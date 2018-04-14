@@ -5,10 +5,10 @@ import { LineBasicMaterial } from "three";
 import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Component, ComponentClass } from "./component";
+import dna from "./dna";
+import { Leaf } from "./leaf";
 import { Flower } from "./flower";
-import { LeafOld } from "./leaf/leafOld";
 import scene from "./scene";
-import { SkinnedLeaf } from "./leaf/skinnedLeaf";
 import { Whorl } from "./whorl";
 
 class Branch extends Component {
@@ -67,7 +67,7 @@ class Branch extends Component {
 }
 
 class Leaves extends Component {
-    public constructor(public whorl: Whorl<LeafOld>) {
+    public constructor(public whorl: Whorl<Leaf>) {
         super();
         this.add(whorl);
     }
@@ -81,7 +81,7 @@ class Leaves extends Component {
             endYRot: Math.PI * 2,
             endScale: 0.5,
             startScale: 0.5,
-            generate: LeafOld.generate,
+            generate: () => Leaf.generate(dna.leafTemplate),
             isBilateral: false,
         });
         return new Leaves(whorl);
@@ -95,8 +95,6 @@ class Bloom extends ISketch {
     public composer!: THREE.EffectComposer;
 
     public component!: Component;
-
-    public leafMeshes: SkinnedLeaf[] = [];
 
     public init() {
         this.renderer.shadowMap.enabled = true;
@@ -113,25 +111,28 @@ class Bloom extends ISketch {
         this.orbitControls.autoRotateSpeed = 0.6;
 
         this.initComponent();
-        // this.scene.add(this.component);
+        this.scene.add(this.component);
 
-        for (let x = -5; x <= 5; x++) {
-            for (let z = -5; z <= 5; z++) {
-                const leaf = new SkinnedLeaf();
-                // leaf.scale.set(0.9, 0.9, 0.9);
-                leaf.position.x = x;
-                leaf.position.y = 0.2;
-                leaf.position.z = z;
-                this.scene.add(leaf);
-                this.leafMeshes.push(leaf);
-                leaf.scale.set(0.01, 0.01, 0.01);
-                // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
-                // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
-                // this.scene.add(helper);
-            }
-        }
-        // console.log(leaf.skeleton);
+        // for (let x = -5; x <= 5; x++) {
+        //     for (let z = -5; z <= 5; z++) {
+        //         const leaf = new SkinnedLeaf();
+        //         // leaf.scale.set(0.9, 0.9, 0.9);
+        //         leaf.position.x = x;
+        //         leaf.position.y = 0.2;
+        //         leaf.position.z = z;
+        //         this.scene.add(leaf);
+        //         this.leafMeshes.push(leaf);
+        //         leaf.scale.set(0.01, 0.01, 0.01);
+        //         // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
+        //         // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
+        //         // this.scene.add(helper);
+        //     }
+        // }
+        // // console.log(leaf.skeleton);
+        this.initPostprocessing();
+    }
 
+    public initPostprocessing() {
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
 
@@ -179,115 +180,10 @@ class Bloom extends ISketch {
         branch.addToEnd(Leaves.generate());
         branch.addToEnd(branch2);
         this.component = branch;
-
-        /* test - a center branch, with a leaf coming out of it, and another branch, ending in a flower
-
-        () (3)
-        |
-        |  _
-        | /
-        |/ (2)
-        |
-        | (1)
-
-        ways to represent this:
-        Node {
-            internode: {
-                branch: Branch { length 10 }
-                node: Junction {
-                    0: Node {
-                        internode: {
-                            branch: Branch { length 10 },
-                            node: Flower
-                        }
-                    },
-                    1: Leaf
-                }
-            }
-        }
-
-        What are the cons here?
-            * Nodes are mostly just proxies for Internodes.
-            * We need a Junction type
-        pros here?
-            * it does allow expressing a "flower at the end of a branch"
-
-        what if nodes were just straight up arrays of objects?
-            does a "flower at the end" have to be an array of length one?
-
-        what if this was html?
-        <flower>
-            <branch>
-                <leaf /> // terminal node
-                <branch>
-                <branch>
-            <branch>
-        </flower>
-
-        what if we took a page from THREEjs and made everything extend Object3D?
-            * which has a children array
-
-        yo, what if we just extended Object3D for our objects?
-
-        () (3)
-        |
-        |  _
-        | /
-        |/ (2)
-        |
-        | (1)
-
-        Branch {
-            branchLength: 10,
-            children: {
-                0: leaf,
-                1: Branch {
-                    branchLength: 10,
-                    children: {
-                        0: Flower
-                    }
-                }
-            }
-        }
-        */
-
-        // this.component = new Node(
-        //     new Internode(
-        //         Branch.generate(),
-        //     )
-        // )
-    }
-
-    logistic(x: number) {
-        return 1 / (1 + Math.exp(-x));
     }
 
     public animate() {
-        if (this.component.update != null) {
-            this.component.update(this.timeElapsed);
-        }
-        const leafMeshPos = new THREE.Vector3();
-        const boneWorldPos = new THREE.Vector3();
-
-        const x = this.timeElapsed / 1000 - 6;
-        const s = this.logistic(x);
-        for (const leafMesh of this.leafMeshes) {
-            leafMesh.scale.set(s, s, s);
-            // leafMesh.rotation.x += 0.01;
-            for (const bone of leafMesh.skeleton.bones) {
-                // curl the leaves
-                // leafMesh.getWorldPosition(leafMeshPos);
-                // bone.getWorldPosition(boneWorldPos);
-                // const bonePos = boneWorldPos.sub(leafMeshPos);
-                const {x, z} = bone.position;
-                // bone.rotation.z = 0.02 * Math.sin(this.timeElapsed / 1000) - Math.abs(z) * 1 + Math.abs(x) * 0.18;
-                bone.rotation.z += 0.01;
-
-                // bone.rotation.z = Math.sin(Math.abs(z) * 5 + this.timeElapsed / 300) * 0.01;
-
-                // bone.rotation.z += Math.sin(this.timeElapsed / 3000) * 0.05;
-            }
-        }
+        this.component.update(this.timeElapsed);
 
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);

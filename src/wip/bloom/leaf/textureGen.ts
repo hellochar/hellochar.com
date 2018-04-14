@@ -1,12 +1,14 @@
 import * as THREE from "three";
-import { SkinnedLeaf, LeafNode } from "./skinnedLeaf";
+
+import { LeafNode, LeafSkeleton } from "./leafSkeleton";
+import { SkinnedLeaf } from "./skinnedLeaf";
 
 /* construct a texture from a mesh
 
 1. normalize all bone points such that the total skeleton is box length 1
 
  */
-export function generateTexture(geom: THREE.Geometry, depthLayers: SkinnedLeaf["depthLayers"], allNodes: LeafNode[]) {
+export function generateTexture(geom: THREE.Geometry, depthLayers: LeafSkeleton["depthLayers"], allNodes: LeafNode[]) {
     const canvas = document.createElement("canvas");
     canvas.width = 1024;
     canvas.height = 1024;
