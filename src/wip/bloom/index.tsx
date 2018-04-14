@@ -118,18 +118,19 @@ class Bloom extends ISketch {
         for (let x = -5; x <= 5; x++) {
             for (let z = -5; z <= 5; z++) {
                 const leaf = new LeafMesh();
+                // leaf.scale.set(0.9, 0.9, 0.9);
                 leaf.position.x = x;
                 leaf.position.y = 0.2;
                 leaf.position.z = z;
                 this.scene.add(leaf);
                 this.leafMeshes.push(leaf);
+                leaf.scale.set(0.01, 0.01, 0.01);
+                // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
+                // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
+                // this.scene.add(helper);
             }
         }
-        // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
-        // this.scene.add(helper);
         // console.log(leaf.skeleton);
-        // this.skeleton = leaf.skeleton;
-        // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
 
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
@@ -265,20 +266,22 @@ class Bloom extends ISketch {
         if (this.component.update != null) {
             this.component.update(this.timeElapsed);
         }
+        const leafMeshPos = new THREE.Vector3();
+        const boneWorldPos = new THREE.Vector3();
 
-        // const x = this.timeElapsed / 1000 - 6;
-        // const s = this.logistic(x);
-        // this.skeleton.bones[0].scale.set(s, s, s);
-        // this.skeleton.bones[0].scale.set(1, 1, 1);
-
-        // ok now, curl it by rotating Z
+        const x = this.timeElapsed / 1000 - 6;
+        const s = this.logistic(x);
         for (const leafMesh of this.leafMeshes) {
+            leafMesh.scale.set(s, s, s);
             // leafMesh.rotation.x += 0.01;
             for (const bone of leafMesh.skeleton.bones) {
-                bone.rotation.z = 0.01 * Math.sin(this.timeElapsed / 1000);
+                // curl the leaves
+                // leafMesh.getWorldPosition(leafMeshPos);
+                // bone.getWorldPosition(boneWorldPos);
+                // const bonePos = boneWorldPos.sub(leafMeshPos);
+                const {x, z} = bone.position;
+                bone.rotation.z = 0.02 * Math.sin(this.timeElapsed / 1000) - Math.abs(z) * 1 + Math.abs(x) * 0.18;
 
-                // const worldPos = bone.getWorldPosition();
-                // const {x, z} = worldPos;
                 // bone.rotation.z = Math.sin(Math.abs(z) * 5 + this.timeElapsed / 300) * 0.01;
 
                 // bone.rotation.z += Math.sin(this.timeElapsed / 3000) * 0.05;
