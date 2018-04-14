@@ -323,8 +323,23 @@ export class LeafMesh extends THREE.Object3D {
 
         const texture = generateTexture(geometry, this.depthLayers, skeleton.bones as LeafNode[]);
         document.body.appendChild(texture.image);
-        const mat = new THREE.MeshLambertMaterial({skinning: true, side: THREE.DoubleSide, map: texture });
-        // const mat = new THREE.MeshPhongMaterial({ skinning: true, side: THREE.DoubleSide, map: texture });
+        // const mat = new THREE.MeshLambertMaterial({
+        //     skinning: true,
+        //     side: THREE.DoubleSide,
+        //     map: texture,
+        //     // bumpMap:
+        //  });
+        const mat = new THREE.MeshPhongMaterial({
+            skinning: true,
+            side: THREE.DoubleSide,
+            map: texture,
+            specularMap: texture,
+            specular: 0x111111,
+            shininess: 4,
+            bumpMap: texture,
+            bumpScale: 1,
+            color: "white",
+        });
         const mesh = new THREE.SkinnedMesh(geometry, mat);
         mesh.add(skeleton.bones[0]);
         mesh.bind(skeleton);

@@ -280,7 +280,8 @@ class Bloom extends ISketch {
                 // bone.getWorldPosition(boneWorldPos);
                 // const bonePos = boneWorldPos.sub(leafMeshPos);
                 const {x, z} = bone.position;
-                bone.rotation.z = 0.02 * Math.sin(this.timeElapsed / 1000) - Math.abs(z) * 1 + Math.abs(x) * 0.18;
+                // bone.rotation.z = 0.02 * Math.sin(this.timeElapsed / 1000) - Math.abs(z) * 1 + Math.abs(x) * 0.18;
+                bone.rotation.z += 0.01;
 
                 // bone.rotation.z = Math.sin(Math.abs(z) * 5 + this.timeElapsed / 300) * 0.01;
 
