@@ -37,14 +37,14 @@ export abstract class Component extends Object3D {
     //         }
     //     }
 
-    add(...objs: Object3D[]) {
-        super.add(...objs);
-        for (const obj of objs) {
-            if (obj instanceof Component) {
-                obj.timeBorn = this.currentTime;
-            }
-        }
-    }
+    // add(...objs: Object3D[]) {
+    //     super.add(...objs);
+    //     for (const obj of objs) {
+    //         if (obj instanceof Component) {
+    //             obj.timeBorn = this.currentTime;
+    //         }
+    //     }
+    // }
 
     updateSelf?(time: number): void;
 }

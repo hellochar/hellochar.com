@@ -39,7 +39,7 @@ export class Leaf extends Component {
     }
 
     updateSelf(t: number) {
-        const logisticX = t / 1000 - 6;
+        const logisticX = (t - this.timeBorn) / 1000 - 6;
         const s = this.logistic(logisticX);
         this.scale.set(s, s, s);
         // leafMesh.rotation.x += 0.01;

@@ -112,6 +112,9 @@ class Bloom extends ISketch {
         // this.component.update(this.timeElapsed);
         this.component.traverse((obj) => {
             if (obj instanceof Component) {
+                if (obj.timeBorn == null) {
+                    obj.timeBorn = this.timeElapsed;
+                }
                 if (obj.updateSelf) {
                     obj.updateSelf(this.timeElapsed);
                 }
