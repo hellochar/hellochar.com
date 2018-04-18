@@ -9,18 +9,33 @@ export abstract class Component extends Object3D {
     public timeBorn!: number;
     public currentTime: number = 0;
 
-    update(time: number) {
-        this.currentTime = time;
-        if (this.updateSelf) {
-            this.updateSelf(time);
-        }
-        // update children
-        for (const child of this.children) {
-            if (child instanceof Component) {
-                child.update(time);
-            }
-        }
+    constructor() {
+        super();
+        // this.addEventListener("added", this.handleOnAdded);
     }
+
+    // private handleOnAdded = () => {
+    //     // walk up the tree until you hit a Component
+    //     let nearestComponentAncestor = this.parent;
+    //     while (!(nearestComponentAncestor instanceof Component) && nearestComponentAncestor != null) {
+    //         nearestComponentAncestor = nearestComponentAncestor.parent;
+    //     }
+    //     if (nearestComponentAncestor != null) {
+
+    //     }
+    // };
+
+    // update(time: number) {
+    //     this.currentTime = time;
+    //     if (this.updateSelf) {
+    //         this.updateSelf(time);
+    //     }
+    //     // update children
+    //     for (const child of this.children) {
+    //         if (child instanceof Component) {
+    //             child.update(time);
+    //         }
+    //     }
 
     add(...objs: Object3D[]) {
         super.add(...objs);

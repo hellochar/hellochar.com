@@ -102,14 +102,21 @@ class Bloom extends ISketch {
         // const branch = new Branch(3);
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
-        const branch = new Branch(6);
-        const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
-        scene.add(helper);
+        const branch = new Branch(8);
+        // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
+        // scene.add(helper);
         this.component = branch;
     }
 
     public animate() {
-        this.component.update(this.timeElapsed);
+        // this.component.update(this.timeElapsed);
+        this.component.traverse((obj) => {
+            if (obj instanceof Component) {
+                if (obj.updateSelf) {
+                    obj.updateSelf(this.timeElapsed);
+                }
+            }
+        });
 
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);

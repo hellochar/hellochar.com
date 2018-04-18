@@ -10,7 +10,6 @@ export class Branch extends Component {
 
     public constructor(public finalBranchLength: number) {
         super();
-        this.add(new THREE.AxesHelper(1));
         const numSegments = 10 * finalBranchLength;
         // const geom = new THREE.PlaneGeometry(1, 0.1);
         // const geom = new THREE.BoxBufferGeometry(0.1, branchLength, 0.1);
@@ -30,9 +29,9 @@ export class Branch extends Component {
             geometry.skinWeights.push(new THREE.Vector4(1, 0, 0, 0) as any);
         }
 
-        // test bone children
-        const testGeom = new THREE.SphereBufferGeometry(0.03);
-        const testMat = new THREE.MeshPhongMaterial();
+        // // test bone children
+        // const testGeom = new THREE.SphereBufferGeometry(0.03);
+        // const testMat = new THREE.MeshPhongMaterial();
 
         const bones: THREE.Bone[] = [];
 
@@ -44,10 +43,12 @@ export class Branch extends Component {
                 bone.position.y = finalBranchLength / numSegments;
             }
             bones.push(bone);
-            const mesh = new THREE.Mesh(testGeom, testMat);
-            mesh.position.x = 0.1;
+
             // bone.rotation.x = (Math.random() * Math.PI * 2);
-            bone.add(mesh);
+
+            // const mesh = new THREE.Mesh(testGeom, testMat);
+            // mesh.position.x = 0.1;
+            // bone.add(mesh);
         }
 
         const material = new THREE.MeshLambertMaterial({ skinning: true, color: "green", side: THREE.DoubleSide });
@@ -67,7 +68,9 @@ export class Branch extends Component {
             // bone.rotation.z = 0.2;
         }
         // this.rotateZ(-Math.PI / 2);
-        this.skeleton.bones[0].rotation.z = -Math.PI / 2;
+        this.skeleton.bones[0].rotateY(Math.PI * 2 * Math.random());
+        this.skeleton.bones[0].rotateZ(-Math.PI / 2);
+        // this.skeleton.bones[0].add(new THREE.AxesHelper(1));
     }
 
     public addToEnd(...objects: THREE.Object3D[]) {
@@ -79,16 +82,8 @@ export class Branch extends Component {
 
     private flower?: Flower;
 
-    private addFlower() {
-        const flower = this.flower = Flower.generate();
-        const lastBone = this.skeleton.bones[this.skeleton.bones.length - 1];
-        const pos = lastBone.getWorldPosition().sub(this.getWorldPosition());
-        flower.position.copy(pos);
-
-        const childScale = lastBone.getWorldScale();
-        flower.scale.copy(childScale);
-        flower.scale.multiplyScalar(0.8);
-        this.add(flower);
+    private createFlower() {
+        return Flower.generate();
     }
 
     private createBranch(newBranchLength: number) {
@@ -106,32 +101,35 @@ export class Branch extends Component {
         // 1) add to me, set position and rotation manually
         // 2) maybe add to Bone as a child?
         // this.add(child);
-        // currentBone.add(child);
+        bone.add(child);
 
-        const childPosition = bone.getWorldPosition().sub(this.getWorldPosition());
-        child.position.copy(childPosition);
+        // const childPosition = bone.getWorldPosition().sub(this.getWorldPosition());
+        // child.position.copy(childPosition);
 
-        const childScale = bone.getWorldScale();
-        // child.skeleton.bones[0].scale.copy(childScale);
-        child.scale.copy(childScale);
-        child.scale.multiplyScalar(0.5);
-        this.add(child);
+        // const childScale = bone.getWorldScale();
+        // // child.skeleton.bones[0].scale.copy(childScale);
+        // child.scale.copy(childScale);
+        // child.scale.multiplyScalar(0.5);
+        // this.add(child);
     }
 
     updateSelf(t: number) {
         const { bones } = this.skeleton;
         // this should grow 1 segment per second
-        const growthFactor = 36 / 1000;
+        const growthFactor = 106 / 1000;
+        const curveUpwardsAmount = 1.01;
+        const boneShrinkFactor = 0.98;
+        const bonesPerGrowth = 10;
 
         // grow branches
-        let endIndex = bones.findIndex((b) => b.scale.x < 0.95);
+        let endIndex = bones.findIndex((b) => b.scale.x < boneShrinkFactor);
         if (endIndex === -1) {
             endIndex = bones.length - 1;
         }
         const currentBone = bones[endIndex];
-        if (currentBone != null) {
+        if (endIndex !== bones.length - 1) {
             const scale = currentBone.scale.x;
-            const newScale = Math.min(1, scale + growthFactor);
+            const newScale = Math.min(boneShrinkFactor, scale + growthFactor);
             currentBone.scale.set(newScale, newScale, newScale);
             // currentBone.rotation.z += 0.1 * Math.sin(t / 700);
 
@@ -140,31 +138,36 @@ export class Branch extends Component {
             // const upQuarternion = new THREE.Quaternion().setFromUnitVectors(currentRotation, new THREE.Vector3(0, 1, 0));
             const upQuarternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0))
             // this slerp factor largely determines the shape of the branch - how curvy it is
-            q.slerp(upQuarternion, 1.02);
+            q.slerp(upQuarternion, curveUpwardsAmount);
             currentBone.quaternion.multiply(q);
         } else if (this.flower == null) {
             // // wow we've grown all the way! maybe grow a bud at the end or something
-            // this.addFlower();
+            const flower = this.flower = this.createFlower();
+            this.addChildAtPoint(this.flower, currentBone);
+            this.flower.scale.set(15, 15, 15);
+            console.log(flower.getWorldScale());
         }
 
         // add another leaf whorl
-        if (endIndex % 20 === 19 && currentBone.scale.x >= 0.95) {
+        if (endIndex % bonesPerGrowth === (bonesPerGrowth - 1) && currentBone.scale.x >= boneShrinkFactor) {
             const currentLength = THREE.Math.mapLinear(endIndex, 0, bones.length, 0, this.finalBranchLength);
             const newBranchLength = this.finalBranchLength - currentLength;
             if (newBranchLength > 1) {
                 let child: Component;
-                if (Math.random() < 1.5) {
+                if (Math.random() < 0.5) {
                     child = this.createBranch(newBranchLength);
                 } else {
                     child = Leaves.generate();
+                    child.scale.multiplyScalar(0.7);
                 }
                 this.addChildAtPoint(child, currentBone);
+                child.scale.multiplyScalar(0.8);
             }
         }
 
         for (let i = 0; i < endIndex; i++) {
             const bone = bones[i];
-            bone.rotation.y += 0.001;
+            // bone.rotation.y += 0.001;
             function wobble() {
                 const wobbleAmount = THREE.Math.clamp(
                     THREE.Math.mapLinear(i, endIndex - 10, endIndex, 0, 1),
@@ -196,8 +199,8 @@ export class Branch extends Component {
                 q.slerp(upQuarternion, 1 + moveAbility);
                 bone.quaternion.multiply(q);
             }
-            const weight = endIndex - i;
-            reachTowardsUp(0.02 / (weight * weight));
+            // const weight = endIndex - i;
+            // reachTowardsUp(0.02 / (weight * weight));
         }
     }
 
