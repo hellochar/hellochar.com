@@ -10,6 +10,7 @@ import { Flower } from "./flower";
 import { Leaf } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
+import { randomizeDna } from "./dna";
 
 class Bloom extends ISketch {
     public scene = scene;
@@ -32,6 +33,8 @@ class Bloom extends ISketch {
         this.orbitControls = new THREE.OrbitControls(this.camera);
         // this.orbitControls.autoRotate = true;
         this.orbitControls.autoRotateSpeed = 0.6;
+
+        randomizeDna();
 
         this.initComponent();
         this.scene.add(this.component);

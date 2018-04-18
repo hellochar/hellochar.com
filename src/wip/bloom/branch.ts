@@ -148,7 +148,7 @@ export class Branch extends Component {
             console.log(flower.getWorldScale());
         }
 
-        // add another leaf whorl
+        // grow another thing here
         if (endIndex % bonesPerGrowth === (bonesPerGrowth - 1) && currentBone.scale.x >= boneShrinkFactor) {
             const currentLength = THREE.Math.mapLinear(endIndex, 0, bones.length, 0, this.finalBranchLength);
             const newBranchLength = this.finalBranchLength - currentLength;

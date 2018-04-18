@@ -1,7 +1,9 @@
-import { Leaf } from ".";
+import * as THREE from "three";
+
 import { Component } from "../component";
 import dna from "../dna";
-import { Whorl } from "../whorl";
+import { Whorl, WhorlParameters } from "../whorl";
+import { Leaf } from "./leaf";
 
 export default class Leaves extends Component {
     public constructor(public whorl: Whorl<Leaf>) {
@@ -10,17 +12,7 @@ export default class Leaves extends Component {
     }
 
     static generate() {
-        const whorl = Whorl.generate({
-            num: 6,
-            startZRot: Math.PI / 6,
-            endZRot: Math.PI / 6,
-            startYRot: 0,
-            endYRot: Math.PI * 2,
-            endScale: 0.5,
-            startScale: 0.5,
-            generate: () => Leaf.generate(dna.leafTemplate),
-            isBilateral: false,
-        });
+        const whorl = Whorl.generate(dna.leafWhorlTemplate);
         return new Leaves(whorl);
     }
 }

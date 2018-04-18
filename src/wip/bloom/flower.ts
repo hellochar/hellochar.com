@@ -3,24 +3,22 @@ import * as THREE from "three";
 import { Component, ComponentClass } from "./component";
 import { LeafOld } from "./leaf/leafOld";
 import { Whorl, whorl } from "./whorl";
+import { dna } from "./dna";
 
 export class Flower extends Component {
+    static bulbMesh = (() => {
+        const geom = new THREE.SphereBufferGeometry(0.05);
+        const material = new THREE.MeshLambertMaterial({
+            color: 0xffffff,
+        });
+        return new THREE.Mesh(geom, material);
+    })();
     public constructor(public perianth: Perianth, public reproductive: Reproductive) {
         super();
         this.add(perianth);
         this.add(reproductive);
-        const bulb = (() => {
-            const geom = new THREE.SphereBufferGeometry(0.05);
-            const material = new THREE.MeshLambertMaterial({
-                color: 0xffffff,
-            });
-            return new THREE.Mesh(geom, material);
-        })();
+        const bulb = Flower.bulbMesh.clone();
         this.add(bulb);
-        // for (const child of this.children) {
-        //     // hackhack to test performance
-        //     child.matrixAutoUpdate = false;
-        // }
     }
     static generate() {
         return new Flower(Perianth.generate(), Reproductive.generate());
@@ -73,7 +71,7 @@ class Calyx extends Component {
         // geom.scale(0.25, 0.25, 0.25);
         geom.verticesNeedUpdate = true;
         const mat = new THREE.MeshLambertMaterial({
-            color: new THREE.Color("rgb(165, 190, 63)"),
+            color: new THREE.Color("darkgreen"),
         });
         const mesh = new THREE.Mesh(geom, mat);
         this.add(mesh);
@@ -102,51 +100,13 @@ class Corolla extends Component {
     }
 
     static generate() {
-        // // make 5 big ones
-        // const parameters = {
-        //     num: 5,
-        //     startYRot: 0,
-        //     endYRot: Math.PI * 2,
-        //     startScale: 0.9,
-        //     endScale: 0.9,
-        //     startZRot: Math.PI / 12,
-        //     endZRot: Math.PI / 12,
-        //     isBilateral: false,
-        //     generate: Petal.generate,
-        // };
-
-        // 6 evenly spread
-        const parameters = {
-            num: 6,
-            startYRot: 0,
-            endYRot: Math.PI * 2,
-            startScale: 1,
-            endScale: 1,
-            startZRot: Math.PI / 4,
-            endZRot: Math.PI / 4,
-            isBilateral: false,
-            generate: Petal.generate,
-        };
-
-        // const parameters = {
-        //     num: 63,
-        //     startYRot: 0,
-        //     endYRot: Math.PI * 8,
-        //     startScale: 0.8,
-        //     endScale: 0.5,
-        //     startZRot: 0,
-        //     endZRot: Math.PI / 4,
-        //     isBilateral: false,
-        //     generate: Petal.generate,
-        // };
-
-        const petals = Whorl.generate(parameters);
+        const petals = Whorl.generate(dna.petalWhorlTemplate);
         return new Corolla(petals);
     }
 }
 
 // hack extend Leaf for now
-class Petal extends LeafOld {
+export class Petal extends LeafOld {
     constructor() {
         super({
             realtimeDroop: true,
@@ -173,8 +133,8 @@ class Petal extends LeafOld {
                 geometry.scale(1, 1, 0.5);
             },
             noisyEdge: true,
-            innerColor: new THREE.Color(0xffffff),
-            outerColor: new THREE.Color("rgb(29, 68, 132)"),
+            innerColor: dna.colors.petalInnerColor,
+            outerColor: dna.colors.petalOuterColor,
             // innerColor: new THREE.Color("rgb(255, 235, 107)"),
             // outerColor: new THREE.Color("rgb(255, 131, 22)"),
             perimeter: LeafOld.leafPerimeter2,

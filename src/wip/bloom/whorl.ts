@@ -17,7 +17,7 @@ export class Whorl<T extends Component> extends Component {
     }
 }
 
-interface WhorlParameters<T extends Component> {
+export interface WhorlParameters<T extends Component> {
     num: number;
     startYRot: number;
     endYRot: number;
