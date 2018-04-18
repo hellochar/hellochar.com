@@ -122,6 +122,11 @@ class Bloom extends ISketch {
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
     }
+
+    public resize(width: number, height: number) {
+        this.camera.aspect = 1 / this.aspectRatio;
+        this.camera.updateProjectionMatrix();
+    }
 }
 
 export default Bloom;
