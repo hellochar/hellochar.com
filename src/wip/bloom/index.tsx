@@ -28,7 +28,7 @@ class Bloom extends ISketch {
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 50);
         this.camera.position.y = 10;
         this.camera.position.z = 10;
-        this.camera.position.multiplyScalar(0.5);
+        this.camera.position.multiplyScalar(0.1);
 
         this.orbitControls = new THREE.OrbitControls(this.camera);
         // this.orbitControls.autoRotate = true;
@@ -105,10 +105,12 @@ class Bloom extends ISketch {
         // const branch = new Branch(3);
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
-        const branch = new Branch(8);
-        // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
-        // scene.add(helper);
-        this.component = branch;
+        // const branch = new Branch(8);
+        // // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
+        // // scene.add(helper);
+        // this.component = branch;
+        const flower = Flower.generate();
+        this.component = flower;
     }
 
     public animate() {

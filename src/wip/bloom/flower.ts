@@ -1,24 +1,15 @@
 import * as THREE from "three";
 
 import { Component, ComponentClass } from "./component";
-import { LeafOld } from "./leaf/leafOld";
-import { Whorl, whorl } from "./whorl";
 import { dna } from "./dna";
+import { LeafOld } from "./leaf/leafOld";
+import { Whorl } from "./whorl";
 
 export class Flower extends Component {
-    static bulbMesh = (() => {
-        const geom = new THREE.SphereBufferGeometry(0.05);
-        const material = new THREE.MeshLambertMaterial({
-            color: 0xffffff,
-        });
-        return new THREE.Mesh(geom, material);
-    })();
     public constructor(public perianth: Perianth, public reproductive: Reproductive) {
         super();
         this.add(perianth);
         this.add(reproductive);
-        const bulb = Flower.bulbMesh.clone();
-        this.add(bulb);
     }
     static generate() {
         return new Flower(Perianth.generate(), Reproductive.generate());
@@ -155,7 +146,7 @@ class Reproductive extends Component {
     }
 
     static generate() {
-        const gynoecium = null as any;
+        const gynoecium = Gynoecium.generate();
         return new Reproductive(Androecium.generate(), gynoecium);
     }
 }
@@ -249,15 +240,111 @@ class Stamen extends Component {
 }
 
 class Gynoecium extends Component {
-    public constructor(public pistils: Whorl<Pistil>) { super(); }
+    public constructor(public carpels: Whorl<Carpel>) {
+        super();
+        this.add(carpels);
+    }
 
     static generate() {
-
+        // const whorl = Whorl.generate({
+        //     num: 1,
+        //     startScale: 1,
+        //     endScale: 1,
+        //     startYRot: 0,
+        //     endYRot: 0,
+        //     startZRot: Math.PI / 2,
+        //     endZRot: Math.PI / 2,
+        //     generate: Carpel.generate,
+        //     isBilateral: false,
+        // });
+        const whorl = new Whorl([Carpel.generate()]);
+        return new Gynoecium(whorl);
     }
 }
 
-class Pistil extends Component {
-    public constructor(public carpels: Carpel[]) { super(); }
-}
+class Carpel extends Component {
+    static ovaryMeshTemplate = (() => {
+        const geom = new THREE.SphereBufferGeometry(0.05);
+        const material = new THREE.MeshLambertMaterial({
+            color: "darkgreen",
+        });
+        const mesh = new THREE.Mesh(geom, material);
+        mesh.receiveShadow = true;
+        mesh.castShadow = true;
+        return mesh;
+    })();
 
-class Carpel extends Component {}
+    static styleMeshTemplate = (() => {
+        const styleHeight = 0.5;
+        const geom = new THREE.CylinderGeometry(1, 1, styleHeight, 20, 20);
+        geom.translate(0, styleHeight / 2, 0);
+        console.log(geom);
+        for (const vertex of geom.vertices) {
+            const y = THREE.Math.mapLinear(vertex.y, 0, styleHeight, 0, 1);
+            const r =
+                0.005
+                + 0.04 * 2 / (1 + Math.exp(20 * y * y))
+                + 0.005 * 2 / (1 + Math.exp(20 * (1 - y)));
+            vertex.x *= r;
+            vertex.z *= r;
+        }
+        geom.verticesNeedUpdate = true;
+        const material = new THREE.MeshLambertMaterial({
+            // TODO better random color
+            color: "white",
+        });
+        const mesh = new THREE.Mesh(geom, material);
+        mesh.receiveShadow = true;
+        mesh.castShadow = true;
+        return mesh;
+    })();
+
+    static stigmaMeshTemplate = (() => {
+        // take a sphere and then depress it
+        const geom = new THREE.SphereGeometry(0.02, 80, 20);
+        geom.scale(1, 0.3, 1);
+        for (const vertex of geom.vertices) {
+            // normalize it into the unit sphere
+            const x = THREE.Math.mapLinear(vertex.x, 0, 0.02, 0, 1);
+            const z = THREE.Math.mapLinear(vertex.z, 0, 0.02, 0, 1);
+            const dist2FromYAxis = x * x + z * z;
+            const yTranslate =
+                -0.005 * 2 / (1 + Math.exp(15 * dist2FromYAxis))
+                - 0.005 * 2 / (1 + Math.exp(5 * (1 - dist2FromYAxis)))
+            const yAngle = Math.atan2(z, x);
+            // const rScale = (1 + 1.0 * Math.pow(Math.cos(yAngle / 2 * 3), 2)) / 2;
+            const rScale = 1;
+            vertex.x *= rScale;
+            vertex.z *= rScale;
+            vertex.y += yTranslate;
+        }
+        geom.verticesNeedUpdate = true;
+        geom.computeFaceNormals();
+        geom.computeVertexNormals();
+        const material = new THREE.MeshLambertMaterial({
+            color: "white",
+        });
+        const mesh = new THREE.Mesh(geom, material);
+        mesh.receiveShadow = true;
+        mesh.castShadow = true;
+        return mesh;
+    })();
+
+    public ovary: (typeof Carpel)["ovaryMeshTemplate"];
+    public style: (typeof Carpel)["styleMeshTemplate"];
+    public stigma: (typeof Carpel)["stigmaMeshTemplate"];
+
+    constructor() {
+        super();
+        this.ovary = Carpel.ovaryMeshTemplate.clone();
+        this.add(this.ovary);
+        this.style = Carpel.styleMeshTemplate.clone();
+        this.ovary.add(this.style);
+        this.stigma = Carpel.stigmaMeshTemplate.clone();
+        this.style.add(this.stigma);
+        this.stigma.position.y = 0.5 + 0.005;
+    }
+    static generate() {
+        return new Carpel();
+    }
+}

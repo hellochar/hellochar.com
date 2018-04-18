@@ -4,6 +4,10 @@ import { Component } from "../component";
 import { LeafTemplate } from "./leafTemplate";
 import { SkinnedLeaf } from "./skinnedLeaf";
 
+// what do I want to say?
+// leaf feeds the petiole
+// petiole feeds the lamina
+
 export class Leaf extends Component {
     public lamina: SkinnedLeaf;
     constructor(template: LeafTemplate) {

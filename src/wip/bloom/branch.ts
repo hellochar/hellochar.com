@@ -17,7 +17,7 @@ export class Branch extends Component {
             0.03,
             0.03,
             finalBranchLength,
-            8,
+            3,
             numSegments,
             true,
         );
@@ -68,8 +68,6 @@ export class Branch extends Component {
             // bone.rotation.z = 0.2;
         }
         // this.rotateZ(-Math.PI / 2);
-        this.skeleton.bones[0].rotateY(Math.PI * 2 * Math.random());
-        this.skeleton.bones[0].rotateZ(-Math.PI / 2);
         // this.skeleton.bones[0].add(new THREE.AxesHelper(1));
     }
 
@@ -89,10 +87,7 @@ export class Branch extends Component {
     private createBranch(newBranchLength: number) {
         const branch = new Branch(newBranchLength);
         const randYDir = Math.random() * Math.PI * 2;
-        // branch.skeleton.bones[0].rotation.y = randYDir;
-        // branch.skeleton.bones[0].rotation.z = -Math.PI / 3;
-        // currentBone.rotation.z += Math.PI / 12;
-        // child.rotateZ(-Math.PI / 2);
+        branch.skeleton.bones[0].rotateZ(-Math.PI / 2);
         return branch;
     }
 
@@ -101,6 +96,7 @@ export class Branch extends Component {
         // 1) add to me, set position and rotation manually
         // 2) maybe add to Bone as a child?
         // this.add(child);
+        child.rotateY(Math.PI * 2 * Math.random());
         bone.add(child);
 
         // const childPosition = bone.getWorldPosition().sub(this.getWorldPosition());
