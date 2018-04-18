@@ -10,7 +10,7 @@ import { Flower } from "./flower";
 import { Leaf } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
-import { randomizeDna } from "./dna";
+import dna, { randomizeDna } from "./dna";
 
 class Bloom extends ISketch {
     public scene = scene;
@@ -41,17 +41,16 @@ class Bloom extends ISketch {
 
         // for (let x = -5; x <= 5; x++) {
         //     for (let z = -5; z <= 5; z++) {
-        //         const leaf = new SkinnedLeaf();
-        //         // leaf.scale.set(0.9, 0.9, 0.9);
-        //         leaf.position.x = x;
-        //         leaf.position.y = 0.2;
-        //         leaf.position.z = z;
-        //         this.scene.add(leaf);
-        //         this.leafMeshes.push(leaf);
-        //         leaf.scale.set(0.01, 0.01, 0.01);
-        //         // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
-        //         // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
-        //         // this.scene.add(helper);
+                // const leaf = new Leaf(dna.leafTemplate);
+                // leaf.position.x = 0;
+                // leaf.position.y = 0.2;
+                // leaf.position.z = 0;
+                // this.scene.add(leaf);
+                // this.leafMeshes.push(leaf);
+                // leaf.scale.set(0.01, 0.01, 0.01);
+                // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
+                // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
+                // this.scene.add(helper);
         //     }
         // }
         // // console.log(leaf.skeleton);
@@ -105,12 +104,14 @@ class Bloom extends ISketch {
         // const branch = new Branch(3);
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
-        // const branch = new Branch(8);
-        // // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
-        // // scene.add(helper);
-        // this.component = branch;
-        const flower = Flower.generate();
-        this.component = flower;
+
+        const branch = new Branch(8);
+        // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
+        // scene.add(helper);
+        this.component = branch;
+
+        // const flower = Flower.generate();
+        // this.component = flower;
     }
 
     public animate() {

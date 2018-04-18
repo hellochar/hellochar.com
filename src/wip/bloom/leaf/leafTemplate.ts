@@ -2,7 +2,7 @@ import Delaunator from "delaunator";
 import * as THREE from "three";
 
 import { LeafGrowthParameters, LeafNode, LeafSkeleton } from "./leafSkeleton";
-import { generateTexture } from "./textureGen";
+import { LeafTextureGenerator } from "./textureGen";
 
 export class LeafTemplate {
     constructor(
@@ -176,7 +176,9 @@ export class LeafTemplate {
 
         geometry.computeBoundingBox();
 
-        const texture = generateTexture(geometry, skeleton.depthLayers, skeleton.bones);
+        const generator = new LeafTextureGenerator(geometry, skeleton.depthLayers, skeleton.bones);
+        generator.generateAndDrawMaps();
+        // const texture = generateTextures(geometry, skeleton.depthLayers, skeleton.bones);
         // document.body.appendChild(texture.image);
         // const mat = new THREE.MeshLambertMaterial({
         //     skinning: true,
@@ -187,13 +189,17 @@ export class LeafTemplate {
         const material = new THREE.MeshPhongMaterial({
             skinning: true,
             side: THREE.DoubleSide,
-            map: texture,
-            specularMap: texture,
-            specular: 0x111111,
-            shininess: 4,
-            bumpMap: texture,
-            bumpScale: 1,
-            color: "white",
+            map: generator.colorMap,
+            // specularMap: texture,
+            // specular: 0x111111,
+            specular: 0x222222,
+            // specular: 0x444444,
+            // specular: 0xffffff,
+            // shininess: 20000,
+            shininess: 0.2,
+            // shininess: 0.1,
+            bumpMap: generator.bumpMap,
+            bumpScale: 0.04,
         });
 
         return new LeafTemplate(parameters, geometry, material);
