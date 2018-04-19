@@ -55,8 +55,8 @@ class LeafCell {
 }
 
 export class LeafTextureGenerator {
-    public width = 1024;
-    public height = 1024;
+    public width = 128;
+    public height = 128;
     private boundingBox: THREE.Box3;
     private scale: number;
     private cells!: LeafCell[];
@@ -239,7 +239,7 @@ export class LeafTextureGenerator {
 
         this.colorMap = new THREE.CanvasTexture(colorCanvas);
         this.bumpMap = new THREE.CanvasTexture(bumpCanvas);
-        document.body.appendChild(colorCanvas);
-        document.body.appendChild(bumpCanvas);
+        // document.body.appendChild(colorCanvas);
+        // document.body.appendChild(bumpCanvas);
     }
 }

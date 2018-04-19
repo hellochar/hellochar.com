@@ -34,7 +34,7 @@ class Bloom extends ISketch {
     public orbitControls!: THREE.OrbitControls;
     public composer!: THREE.EffectComposer;
 
-    public component!: Component;
+    public component!: THREE.Object3D;
 
     public init() {
         this.renderer.shadowMap.enabled = true;
@@ -53,24 +53,8 @@ class Bloom extends ISketch {
         randomizeDna();
 
         this.initComponent();
-        // this.scene.add(this.component);
+        this.scene.add(this.component);
 
-        // for (let x = -5; x <= 5; x++) {
-        //     for (let z = -5; z <= 5; z++) {
-                // randomizeDna();
-                // const leaf = new Leaf(dna.leafTemplate);
-        const leaf = new Leaf(simpleLeafTemplate);
-        leaf.position.x = 0;
-        leaf.position.y = 0.2;
-        leaf.position.z = 0;
-        this.scene.add(leaf);
-                // this.leafMeshes.push(leaf);
-                // leaf.scale.set(0.01, 0.01, 0.01);
-                // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
-                // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
-                // this.scene.add(helper);
-        //     }
-        // }
         // // console.log(leaf.skeleton);
         this.initPostprocessing();
     }
@@ -123,10 +107,32 @@ class Bloom extends ISketch {
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
 
-        const branch = new Branch(8);
-        // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
-        // scene.add(helper);
-        this.component = branch;
+        // const branch = new Branch(8);
+        // // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
+        // // scene.add(helper);
+        // this.component = branch;
+
+        // const leaf = new Leaf(simpleLeafTemplate);
+        // leaf.position.x = 0;
+        // leaf.position.y = 0.2;
+        // leaf.position.z = 0;
+        // this.component = leaf;
+
+        this.component = new THREE.Object3D();
+        for (let x = -5; x <= 5; x++) {
+            for (let z = -5; z <= 5; z++) {
+                randomizeDna();
+                const leaf = new Leaf(dna.leafTemplate);
+                leaf.position.x = x;
+                leaf.position.y = 0.2;
+                leaf.position.z = z;
+                this.component.add(leaf);
+                // leaf.scale.set(0.01, 0.01, 0.01);
+                // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
+                // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
+                // this.scene.add(helper);
+            }
+        }
 
         // const flower = Flower.generate();
         // this.component = flower;

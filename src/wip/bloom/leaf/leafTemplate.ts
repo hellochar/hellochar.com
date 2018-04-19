@@ -1,3 +1,4 @@
+import alphaComplex = require("alpha-complex");
 import Delaunator from "delaunator";
 import * as THREE from "three";
 
@@ -119,6 +120,15 @@ export class LeafTemplate {
                     cAngle > epsilonAngle
                 );
             },
+            noLongTriangles: (a, b, c) => {
+                const longDist = 1;
+                const aWorld = a.getWorldPosition();
+                const bWorld = b.getWorldPosition();
+                const cWorld = c.getWorldPosition();
+                return aWorld.distanceTo(bWorld) < longDist
+                    && aWorld.distanceTo(cWorld) < longDist
+                    && bWorld.distanceTo(cWorld) < longDist;
+            },
         };
 
         const delauneyFaces = (...filters: Filter[]) => {
@@ -128,6 +138,9 @@ export class LeafTemplate {
                     (bone) => bone.getWorldPosition().x,
                     (bone) => bone.getWorldPosition().z,
                 );
+                // for (let i = 0; i < delaunator.halfedges.length; i++) {
+                //     const halfEdgeIndex = delaunator.halfedges[i];
+                // }
                 for (let i = 0; i < delaunator.triangles.length; i += 3) {
                     const indexA = delaunator.triangles[i];
                     const indexB = delaunator.triangles[i + 1];
@@ -147,24 +160,51 @@ export class LeafTemplate {
             }
         };
 
+        const alphaHullFaces = () => {
+            const alpha = 2;
+            const points = skeleton.bones.map((node) => {
+                const {x, z} = node.getWorldPosition();
+                return [x, z];
+            });
+            // this works pretty well, but
+            // it makes no connectedness guarantee. some options:
+            // * detect, reject (and do this whole thing over) unconnected leaves
+            // * in vertex generation, ensure points are no more than e.g. 0.1 units apart
+            //   and then set an appropriate alpha here
+            const cells = alphaComplex(alpha, points);
+            for (let i = 0; i < cells.length; i++) {
+                const [indexA, indexB, indexC] = cells[i];
+                const a = skeleton.bones[indexA] as LeafNode;
+                const b = skeleton.bones[indexB] as LeafNode;
+                const c = skeleton.bones[indexC] as LeafNode;
+                // const passesFilter = filters.every((filter) => filter(a, b, c));
+                // if (passesFilter) {
+                const face = new THREE.Face3(indexA, indexB, indexC);
+                geometry.faces.push(face);
+                // }
+            }
+        };
+
         // delauneyExceptLastDepthFaces();
         /* one of two modes
          * cousin + child builds fan-shaped or compound leaves
          * delauney builds simple Entire edges
         */
-        const mode = (Math.random() < 0.33) ? "compound" : Math.random() < 0.5 ? "entire" : "complexEdge";
+        // const mode = (Math.random() < 0.33) ? "compound" : Math.random() < 0.5 ? "entire" : "complexEdge";
+        const mode = "entire" as any;
         // const mode = "entire";
-        if (mode === "compound") {
-            childFaces();
-            cousinFaces();
-        } else if (mode === "entire") {
-            // delauneyExceptLastDepthFaces();
-            // cousinFaces();
-            // childFaces();
-            delauneyFaces();
-        } else if (mode === "complexEdge") {
-            delauneyFaces(triangleFilters.noEdgeLayerAndSiblings, triangleFilters.noThinTriangles);
-        }
+        // if (mode === "compound") {
+        //     childFaces();
+        //     cousinFaces();
+        // } else if (mode === "entire") {
+        //     // delauneyExceptLastDepthFaces();
+        //     // cousinFaces();
+        //     // childFaces();
+        //     delauneyFaces(triangleFilters.noLongTriangles);
+        // } else if (mode === "complexEdge") {
+        //     delauneyFaces(triangleFilters.noEdgeLayerAndSiblings, triangleFilters.noThinTriangles);
+        // }
+        alphaHullFaces();
 
         geometry.computeFaceNormals();
         geometry.computeFlatVertexNormals();
@@ -175,13 +215,11 @@ export class LeafTemplate {
         const generator = new LeafTextureGenerator(geometry, skeleton.depthLayers, skeleton.bones);
         generator.updateGeometryFaceVertexUvs();
         generator.generateAndDrawMaps();
-        // const subdivider = new THREE.BufferSubdivisionModifier(1);
-        // const smoothedGeometry = subdivider.modify(geometry);
+
         const material = new THREE.MeshPhongMaterial({
             skinning: true,
             side: THREE.DoubleSide,
             map: generator.colorMap,
-            // specularMap: texture,
             // specular: 0x111111,
             // specular: 0x222222,
             specular: 0x444444,
@@ -191,6 +229,7 @@ export class LeafTemplate {
             // shininess: 0.1,
             bumpMap: generator.bumpMap,
             bumpScale: 0.04,
+            // wireframe: true,
         });
 
         return new LeafTemplate(parameters, geometry, material);
