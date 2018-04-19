@@ -78,6 +78,14 @@ export class LeafNode extends THREE.Bone {
     public forwardNode?: LeafNode;
     public rightNode?: LeafNode;
 
+    /**
+     * The line from parent to this LeafNode in Leaf space. Assumes no further movement is made after this is set.
+     */
+    public line?: THREE.Line3;
+
+    /**
+     * This leaf node's index within some greater bone array; to be used and determined by the user.
+     */
     public index!: number;
 
     public addChildren(
@@ -103,34 +111,32 @@ export class LeafNode extends THREE.Bone {
         if (this.sideDepth > maxSideDepth) {
             return this.nodeChildren;
         }
+
+        const addChild = (node: LeafNode, x: number, yRotation: number, nodeScale: number) => {
+            node.position.x = x;
+            node.position.applyEuler(new THREE.Euler(0, yRotation, 0));
+            node.rotation.y = yRotation;
+            node.scale.set(nodeScale, nodeScale, nodeScale);
+            this.add(node);
+            node.line = new THREE.Line3(this.getWorldPosition(), node.getWorldPosition());
+            this.nodeChildren!.push(node);
+        }
+
         const sideScale = scale * secondaryScale;
         // maybe don't put a secondary vein going in towards the leaf
         //  >= 0;
         if (totalRotation >= 0 || alwaysSecondary) {
             const leftNode = this.leftNode = new LeafNode(this.depth + 1, this.sideDepth + 1);
-            leftNode.position.x = secondaryAxisDist;
-            leftNode.position.applyEuler(new THREE.Euler(0, secondaryAxisAngle, 0));
-            leftNode.rotation.y = secondaryAxisAngle;
-            leftNode.scale.set(sideScale, sideScale, sideScale);
-            this.add(leftNode);
-            this.nodeChildren.push(leftNode);
+            addChild(leftNode, secondaryAxisDist, secondaryAxisAngle, sideScale);
         }
 
         // extend the main axis
         const forwardNode = this.forwardNode = new LeafNode(this.depth + 1, this.sideDepth);
-        forwardNode.position.x = mainAxisDist;
-        forwardNode.scale.set(scale, scale, scale);
-        this.add(forwardNode);
-        this.nodeChildren.push(forwardNode);
+        addChild(forwardNode, mainAxisDist, 0, scale);
 
         if (totalRotation <= 0 || alwaysSecondary) {
             const rightNode = this.rightNode = new LeafNode(this.depth + 1, this.sideDepth + 1);
-            rightNode.position.x = secondaryAxisDist;
-            rightNode.position.applyEuler(new THREE.Euler(0, -secondaryAxisAngle, 0));
-            rightNode.rotation.y = -secondaryAxisAngle;
-            rightNode.scale.set(sideScale, sideScale, sideScale);
-            this.add(rightNode);
-            this.nodeChildren.push(rightNode);
+            addChild(rightNode, -secondaryAxisDist, secondaryAxisAngle, sideScale);
         }
         return this.nodeChildren;
     }

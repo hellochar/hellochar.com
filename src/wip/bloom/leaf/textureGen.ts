@@ -78,12 +78,11 @@ export class LeafTextureGenerator {
     }
 
     public generateAndDrawMaps() {
-        this.updateGeometryFaceVertexUvs();
         this.initAndComputeCells();
         this.fillMaps();
     }
 
-    private updateGeometryFaceVertexUvs() {
+    public updateGeometryFaceVertexUvs() {
         // fill the face uvs
         const { geometry, allNodes } = this;
         const layer0 = geometry.faceVertexUvs[0];

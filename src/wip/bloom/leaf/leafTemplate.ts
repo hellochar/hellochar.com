@@ -177,7 +177,10 @@ export class LeafTemplate {
         geometry.computeBoundingBox();
 
         const generator = new LeafTextureGenerator(geometry, skeleton.depthLayers, skeleton.bones);
+        generator.updateGeometryFaceVertexUvs();
         generator.generateAndDrawMaps();
+        // const subdivider = new THREE.BufferSubdivisionModifier(1);
+        // const smoothedGeometry = subdivider.modify(geometry);
         // const texture = generateTextures(geometry, skeleton.depthLayers, skeleton.bones);
         // document.body.appendChild(texture.image);
         // const mat = new THREE.MeshLambertMaterial({

@@ -27,3 +27,5 @@ import "three/examples/js/postprocessing/BokehPass";
 import "three/examples/js/postprocessing/MaskPass";
 import "three/examples/js/postprocessing/SAOPass";
 import "three/examples/js/postprocessing/SSAOPass";
+
+import "three/examples/js/modifiers/BufferSubdivisionModifier";

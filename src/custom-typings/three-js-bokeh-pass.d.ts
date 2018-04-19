@@ -70,4 +70,16 @@ declare module 'THREE' {
             saoBlurDepthCutoff: number;
         }
     }
+
+    class BufferSubdivisionModifier {
+        subdivisions: number;
+        constructor(subdivisions: number);
+
+        modify(geometry: THREE.Geometry): THREE.Geometry;
+        modify(geometry: THREE.BufferGeometry): THREE.BufferGeometry;
+        /**
+         * Perform one iteration of Subdivision
+         */
+        smooth(geometry: THREE.Geometry | THREE.BufferGeometry): void;
+    }
 }
