@@ -6,17 +6,17 @@ import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Branch } from "./branch";
 import { Component, ComponentClass } from "./component";
+import dna, { randomizeDna } from "./dna";
 import { Flower } from "./flower";
 import { Leaf, LeafTemplate } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
-import dna, { randomizeDna } from "./dna";
 
 const simpleLeafTemplate: LeafTemplate = LeafTemplate.fromGrowthParameters({
     alwaysSecondary: false,
     angleScalar: 1,
-    fn: (x) => x,
-    iterations: 1,
+    fn: (x) => 1,
+    iterations: 2,
     mainAxisDist: 1,
     mainAxisDistMultiplier: 1,
     maxSideDepth: 1,
@@ -59,11 +59,11 @@ class Bloom extends ISketch {
         //     for (let z = -5; z <= 5; z++) {
                 // randomizeDna();
                 // const leaf = new Leaf(dna.leafTemplate);
-                const leaf = new Leaf(simpleLeafTemplate);
-                leaf.position.x = 0;
-                leaf.position.y = 0.2;
-                leaf.position.z = 0;
-                this.scene.add(leaf);
+        const leaf = new Leaf(simpleLeafTemplate);
+        leaf.position.x = 0;
+        leaf.position.y = 0.2;
+        leaf.position.z = 0;
+        this.scene.add(leaf);
                 // this.leafMeshes.push(leaf);
                 // leaf.scale.set(0.01, 0.01, 0.01);
                 // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);

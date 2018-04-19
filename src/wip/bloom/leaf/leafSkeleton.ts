@@ -118,8 +118,8 @@ export class LeafNode extends THREE.Bone {
             node.rotation.y = yRotation;
             node.scale.set(nodeScale, nodeScale, nodeScale);
             this.add(node);
-            node.line = new THREE.Line3(this.getWorldPosition(), node.getWorldPosition());
             this.nodeChildren!.push(node);
+            node.line = new THREE.Line3(this.getWorldPosition(), node.getWorldPosition());
         }
 
         const sideScale = scale * secondaryScale;
@@ -136,7 +136,7 @@ export class LeafNode extends THREE.Bone {
 
         if (totalRotation <= 0 || alwaysSecondary) {
             const rightNode = this.rightNode = new LeafNode(this.depth + 1, this.sideDepth + 1);
-            addChild(rightNode, -secondaryAxisDist, secondaryAxisAngle, sideScale);
+            addChild(rightNode, secondaryAxisDist, -secondaryAxisAngle, sideScale);
         }
         return this.nodeChildren;
     }

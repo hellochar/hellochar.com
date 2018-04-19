@@ -166,10 +166,6 @@ export class LeafTemplate {
             delauneyFaces(triangleFilters.noEdgeLayerAndSiblings, triangleFilters.noThinTriangles);
         }
 
-        // geometry.normalize();
-        // geometry.scale(0.5, 0.5, 0.5);
-        // geometry.rotateX(Math.PI);
-        // geometry.translate(0.5, 0, 0);
         geometry.computeFaceNormals();
         geometry.computeFlatVertexNormals();
         geometry.computeVertexNormals();
@@ -181,25 +177,17 @@ export class LeafTemplate {
         generator.generateAndDrawMaps();
         // const subdivider = new THREE.BufferSubdivisionModifier(1);
         // const smoothedGeometry = subdivider.modify(geometry);
-        // const texture = generateTextures(geometry, skeleton.depthLayers, skeleton.bones);
-        // document.body.appendChild(texture.image);
-        // const mat = new THREE.MeshLambertMaterial({
-        //     skinning: true,
-        //     side: THREE.DoubleSide,
-        //     map: texture,
-        //     // bumpMap:
-        //  });
         const material = new THREE.MeshPhongMaterial({
             skinning: true,
             side: THREE.DoubleSide,
             map: generator.colorMap,
             // specularMap: texture,
             // specular: 0x111111,
-            specular: 0x222222,
-            // specular: 0x444444,
+            // specular: 0x222222,
+            specular: 0x444444,
             // specular: 0xffffff,
             // shininess: 20000,
-            shininess: 0.2,
+            shininess: 8,
             // shininess: 0.1,
             bumpMap: generator.bumpMap,
             bumpScale: 0.04,

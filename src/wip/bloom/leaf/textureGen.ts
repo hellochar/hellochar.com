@@ -158,7 +158,7 @@ export class LeafTextureGenerator {
             }
         }
 
-        bump.lineWidth = 0.3;
+        bump.lineWidth = 0.6;
         bump.beginPath();
         bump.strokeStyle = "rgb(241, 241, 241)";
         const triangulation = Delaunator.from(this.cells, (c) => c.position.x, (c) => c.position.y);
@@ -170,8 +170,8 @@ export class LeafTextureGenerator {
                 bump.moveTo(vertex1.position.x, vertex1.position.y);
                 bump.lineTo(vertex2.position.x, vertex2.position.y);
                 // for symmetry, draw another line reflected across y=512
-                bump.moveTo(vertex1.position.x, 1024 - vertex1.position.y);
-                bump.lineTo(vertex2.position.x, 1024 - vertex2.position.y);
+                bump.moveTo(vertex1.position.x, this.height - vertex1.position.y);
+                bump.lineTo(vertex2.position.x, this.height - vertex2.position.y);
             }
 
             // bump.arc(cell.position.x, cell.position.y, 25, 0, Math.PI * 2);
