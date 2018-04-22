@@ -8,10 +8,11 @@ import { Branch } from "./branch";
 import { Component, ComponentClass } from "./component";
 import dna, { randomizeDna } from "./dna";
 import { Flower } from "./flower";
-import { Leaf, LeafTemplate } from "./leaf";
+import { Leaf, LeafTemplate, generateRandomGrowthParameters } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
 import { VeinedLeaf } from "./vein/veinedLeaf";
+import { generateVeinGrowthParameters } from "./vein/vein";
 
 const simpleLeafTemplate: LeafTemplate = LeafTemplate.fromGrowthParameters({
     alwaysSecondary: false,
@@ -65,12 +66,10 @@ class Bloom extends ISketch {
         document.body.appendChild(canvas);
         const context = canvas.getContext("2d")!;
 
-        const veinedLeaf = new VeinedLeaf(100, 300, 5);
-        for (let i = 0; i < 100; i++) {
-            veinedLeaf.expandBoundary();
-        }
-        console.log(veinedLeaf);
-        veinedLeaf.draw(context);
+        console.log(dna.veinedLeaf);
+        context.translate(100, 300);
+        context.scale(5, 5);
+        dna.veinedLeaf.draw(context);
     }
 
     public initPostprocessing() {
