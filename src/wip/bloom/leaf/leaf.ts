@@ -12,7 +12,7 @@ export class Leaf extends Component {
     public lamina: SkinnedLeaf;
     constructor(template: LeafTemplate) {
         super();
-        const { petioleLength } = template.growthParameters;
+        const petioleLength = 0.5;
         if (petioleLength > 0) {
             const petiole = (() => {
                 // const geom = new THREE.PlaneGeometry(1, 0.1);
@@ -43,22 +43,16 @@ export class Leaf extends Component {
     }
 
     updateSelf(t: number) {
-        const logisticX = (t - this.timeBorn) / 1000 - 6;
-        const s = this.logistic(logisticX);
+        // const logisticX = (t - this.timeBorn) / 1000 - 6;
+        // const s = this.logistic(logisticX);
+        const s = 1;
         this.scale.set(s, s, s);
         // leafMesh.rotation.x += 0.01;
         for (const bone of this.lamina.skeleton.bones) {
             // curl the leaves
-            // leafMesh.getWorldPosition(leafMeshPos);
-            // bone.getWorldPosition(boneWorldPos);
-            // const bonePos = boneWorldPos.sub(leafMeshPos);
             const { x, z } = bone.position;
-            bone.rotation.z = 0.05 * Math.sin(t / 1000) - Math.abs(z) * 1 + Math.abs(x) * 0.38;
-            // bone.rotation.z += 0.01;
-
-            // bone.rotation.z = Math.sin(Math.abs(z) * 5 + this.timeElapsed / 300) * 0.01;
-
-            // bone.rotation.z += Math.sin(this.timeElapsed / 3000) * 0.05;
+            const len = Math.sqrt(x * x + z * z);
+            bone.rotation.z = (0.05 * Math.sin(t / 1000) - Math.abs(z * z) * 50 + Math.abs(x) * 1.38) * len * 5;
         }
     }
 

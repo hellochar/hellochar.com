@@ -1,7 +1,9 @@
 import { Math as THREEMath, Vector2 } from "three";
 import { ReasonStopped, Vein } from "./vein";
+import { Box2 } from "three";
 
-const {abs, min, max, exp, pow, PI, floor} = Math;
+const { abs, min, max, exp, pow, PI, floor } = Math;
+const { randFloat: random, randInt, mapLinear: map } = THREEMath;
 
 export interface IVeinGrowthParameters {
     /**
@@ -168,7 +170,7 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         SIDE_ANGLE: random(PI / 6, PI / 2), // PI / 3;
         SIDE_ANGLE_RANDOM: random(0, 1) * random(0, 1) * PI / 6, // random(0, PI / 4); //PI / 6;
         DEPTH_STEPS_BEFORE_BRANCHING: 1 + randInt(0, 3), // 2
-        SECONDARY_BRANCH_PERIOD:  1 + floor(random(0, 1) * random(0, 1) * random(0, 1) * 6),
+        SECONDARY_BRANCH_PERIOD: 1 + floor(random(0, 1) * random(0, 1) * random(0, 1) * 6),
         TURN_TOWARDS_X_FACTOR: random(0, 1) * random(0, 1) * 0.1, // 0.2
         AVOID_NEIGHBOR_FORCE: random(0, 1) * random(0, 1) * 0.1, // 1
         randWiggle: 0.0,
@@ -183,77 +185,77 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
 }
 
 export class VeinedLeaf {
-  public world: Vein[] = [];
+    public world: Vein[] = [];
 
-  root: Vein;
-  // outer boundary from last growth step
-  boundary: Vein[] = [];
-  // nodes without any children
-  terminalNodes: Vein[] = [];
+    root: Vein;
+    // outer boundary from last growth step
+    boundary: Vein[] = [];
+    // nodes without any children
+    terminalNodes: Vein[] = [];
 
-  finished = false;
+    finished = false;
 
-  constructor(public growthParameters: IVeinGrowthParameters) {
-    this.root = new Vein(new Vector2(this.growthParameters.EXPAND_DIST, 0), this);
-    this.root.distanceToRoot = 0;
-    this.root.costToRoot = 0;
-    this.boundary.push(this.root);
-  }
-
-  expandBoundary() {
-    if (this.finished) {
-      return;
+    constructor(public growthParameters: IVeinGrowthParameters) {
+        this.root = new Vein(new Vector2(this.growthParameters.EXPAND_DIST, 0), this);
+        this.root.distanceToRoot = 0;
+        this.root.costToRoot = 0;
+        this.boundary.push(this.root);
     }
 
-    // reset weights
-    for (const s of this.world) {
-      s.weight = -1;
-    }
-    this.root.computeWeight();
+    expandBoundary() {
+        if (this.finished) {
+            return;
+        }
 
-    const newBoundary: Vein[] = [];
-    for (const s of this.boundary) {
-      s.branchOut();
-      newBoundary.push(...s.children);
-    }
-    if (newBoundary.length === 0) {
-      this.finished = true;
-    }
-    // world.addAll(newBoundary);
+        // reset weights
+        for (const s of this.world) {
+            s.weight = -1;
+        }
+        this.root.computeWeight();
 
-    for (const s of this.boundary) {
-      if (s.children.length === 0) {
-        this.terminalNodes.push(s);
-      }
+        const newBoundary: Vein[] = [];
+        for (const s of this.boundary) {
+            s.branchOut();
+            newBoundary.push(...s.children);
+        }
+        if (newBoundary.length === 0) {
+            this.finished = true;
+        }
+        // world.addAll(newBoundary);
+
+        for (const s of this.boundary) {
+            if (s.children.length === 0) {
+                this.terminalNodes.push(s);
+            }
+        }
+        this.boundary = newBoundary;
+
+        // for (Small s : world) {
+        //  if (s.children.size() == 0) {
+        //    terminalNodes.add(s);
+        //  }
+        // }
+
+        // reset weights
+        for (const s of this.world) {
+            s.weight = -1;
+        }
+        this.root.computeWeight();
+        // Collections.sort(world, new Comparator() {
+        //  public int compare(Object obj1, Object obj2) {
+        //    Small s1 = (Small)obj1;
+        //    Small s2 = (Small)obj2;
+        //    return Integer.compare(s1.weight, s2.weight);
+        //  }
+        // }
+        // );
     }
-    this.boundary = newBoundary;
 
-    // for (Small s : world) {
-    //  if (s.children.size() == 0) {
-    //    terminalNodes.add(s);
-    //  }
-    // }
-
-    // reset weights
-    for (const s of this.world) {
-      s.weight = -1;
+    draw(context: CanvasRenderingContext2D) {
+        context.save();
+        this.drawWorld(context);
+        context.restore();
     }
-    this.root.computeWeight();
-    // Collections.sort(world, new Comparator() {
-    //  public int compare(Object obj1, Object obj2) {
-    //    Small s1 = (Small)obj1;
-    //    Small s2 = (Small)obj2;
-    //    return Integer.compare(s1.weight, s2.weight);
-    //  }
-    // }
-    // );
-  }
-
-  draw(context: CanvasRenderingContext2D) {
-    context.save();
-    this.drawWorld(context);
-    context.restore();
-  }
 
     drawWorld(context: CanvasRenderingContext2D) {
         // computes whole subtree
@@ -283,42 +285,68 @@ export class VeinedLeaf {
         // drawBoundary();
     }
 
-  // degenerate:
-  // doesn't grow at all
-  // terminal nodes < 10
-  // alternatively, to get rid of grass:
-  //   terminal nodes who are terminal because it was too expensive.size < 10
-  isDegenerate() {
-    return this.terminalNodes.length < 10;
-  }
+    // degenerate:
+    //   terminal nodes who are terminal because it was too expensive.size < 10
+    isDegenerate() {
+        return this.terminalNodes.filter((t) => t.reason === ReasonStopped.Expensive).length < 10;
+    }
 
-//   void drawBoundary() {
-//     stroke(64, 255, 64);
-//     strokeWeight(0.5);
-//     noFill();
-//     beginShape();
-//     // vertex(root.position.x, root.position.y);
-//     Collections.sort(terminalNodes, new Comparator() {
-//       public int compare(Object obj1, Object obj2) {
-//         Small s1 = (Small)obj1;
-//         Small s2 = (Small)obj2;
-//         return Float.compare(atan2(s1.position.y, s1.position.x), atan2(s2.position.y, s2.position.x));
-//       }
-//     }
-//     );
-//     for (Small s : terminalNodes) {
-//       if (s.reason == ReasonStopped.Expensive) {
-//         vertex(s.position.x, s.position.y);
-//       }
-//     }
-//     endShape();
-//   }
+    getBoundingBox() {
+        const boundingBox = new Box2();
+        for (const vein of this.world) {
+            boundingBox.expandByPoint(vein.position);
+        }
+        return boundingBox;
+    }
+
+    //   void drawBoundary() {
+    //     stroke(64, 255, 64);
+    //     strokeWeight(0.5);
+    //     noFill();
+    //     beginShape();
+    //     // vertex(root.position.x, root.position.y);
+    //     Collections.sort(terminalNodes, new Comparator() {
+    //       public int compare(Object obj1, Object obj2) {
+    //         Small s1 = (Small)obj1;
+    //         Small s2 = (Small)obj2;
+    //         return Float.compare(atan2(s1.position.y, s1.position.x), atan2(s2.position.y, s2.position.x));
+    //       }
+    //     }
+    //     );
+    //     for (Small s : terminalNodes) {
+    //       if (s.reason == ReasonStopped.Expensive) {
+    //         vertex(s.position.x, s.position.y);
+    //       }
+    //     }
+    //     endShape();
+    //   }
 }
 
 export function generateRandomVeinedLeaf() {
     let veinedLeaf: VeinedLeaf;
     do {
-        veinedLeaf = new VeinedLeaf(generateVeinGrowthParameters());
+        // veinedLeaf = new VeinedLeaf(generateVeinGrowthParameters());
+        veinedLeaf = new VeinedLeaf({
+  "TOO_CLOSE_DIST": 1,
+  "EXPAND_SCALAR": 1.2412184636066348,
+  "EXPAND_DIST": 1.2412184636066348,
+  "MAX_PATH_COST": 400,
+  "SIDEWAYS_COST_RATIO": 0.1100911124087456,
+  "SIDE_ANGLE": 0.8710343371250968,
+  "SIDE_ANGLE_RANDOM": 0.055582410403165826,
+  "DEPTH_STEPS_BEFORE_BRANCHING": 3,
+  "SECONDARY_BRANCH_PERIOD": 1,
+  "TURN_TOWARDS_X_FACTOR": 0.00048394628521100896,
+  "AVOID_NEIGHBOR_FORCE": 0.00616386452663065,
+  "randWiggle": 0,
+  "BASE_DISINCENTIVE": 367.5968676458393,
+  "COST_DISTANCE_TO_ROOT_DIVISOR": 500,
+  "COST_NEGATIVE_X_GROWTH": 0.26959565582038186,
+  "GROW_FORWARD_FACTOR": 2.1190955635899456,
+  "SECONDARY_BRANCH_SCALAR": 0.9799578808329089,
+  "COST_TO_TURN": 0,
+  "growForwardBranch": true
+});
         for (let i = 0; i < 100; i++) {
             veinedLeaf.expandBoundary();
         }

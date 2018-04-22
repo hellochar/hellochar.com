@@ -3,6 +3,7 @@ import * as THREE from "three";
 
 import { LeafNode, LeafSkeleton } from "./leafSkeleton";
 import { SkinnedLeaf } from "./skinnedLeaf";
+import { VeinedLeaf } from "../vein/veinedLeaf";
 
 /* construct a texture from a mesh
 
@@ -55,30 +56,32 @@ class LeafCell {
 }
 
 export class LeafTextureGenerator {
-    public width = 128;
-    public height = 128;
+    public width = 2048;
+    public height = 2048;
     private boundingBox: THREE.Box3;
-    private scale: number;
-    private cells!: LeafCell[];
+    // private cells!: LeafCell[];
     public pixelBounds = new THREE.Box2(new THREE.Vector2(), new THREE.Vector2(this.width, this.height));
 
     public colorMap!: THREE.Texture;
     public bumpMap!: THREE.Texture;
 
+    get detailScalar() {
+        return this.width / 512;
+    }
+
+    /**
+     * Assumes geometry vertices are unit-square scaled.
+     */
     constructor(
         public geometry: THREE.Geometry,
-        public depthLayers: LeafSkeleton["depthLayers"],
+        public leaf: VeinedLeaf,
         public allNodes: LeafNode[]) {
-        geometry.computeBoundingBox();
-        this.boundingBox = geometry.boundingBox;
-        this.scale = 1 / Math.max(
-            this.boundingBox.max.x - this.boundingBox.min.x,
-            this.boundingBox.max.z - this.boundingBox.min.z,
-        );
+            geometry.computeBoundingBox();
+            this.boundingBox = geometry.boundingBox;
     }
 
     public generateAndDrawMaps() {
-        this.initAndComputeCells();
+        // this.initAndComputeCells();
         this.fillMaps();
     }
 
@@ -98,25 +101,25 @@ export class LeafTextureGenerator {
         geometry.uvsNeedUpdate = true;
     }
 
-    private initAndComputeCells() {
-        this.cells = new Array(150).fill(null).map(() => new LeafCell(this));
-        for (let iter = 0; iter < 10; iter++) {
-            // move points away from each other
-            for (const point of this.cells) {
-                point.computeNextPosition(this.cells);
-            }
-            for (const point of this.cells) {
-                point.updatePosition();
-            }
-        }
-    }
+    // private initAndComputeCells() {
+    //     this.cells = new Array(150).fill(null).map(() => new LeafCell(this));
+    //     for (let iter = 0; iter < 10; iter++) {
+    //         // move points away from each other
+    //         for (const point of this.cells) {
+    //             point.computeNextPosition(this.cells);
+    //         }
+    //         for (const point of this.cells) {
+    //             point.updatePosition();
+    //         }
+    //     }
+    // }
 
     /**
      * Returns pixel coordinates (in [0, width/height]) for the leafNode's position.
      */
     public pixelPosition(node: LeafNode) {
         const { x, y } = this.uvPosition(node);
-        return new THREE.Vector2(this.width * x, this.height * y);
+        return new THREE.Vector2(this.width * x, this.height * (1 - y));
     }
 
     private tempP = new THREE.Vector3();
@@ -126,8 +129,8 @@ export class LeafTextureGenerator {
     public uvPosition(node: LeafNode) {
         node.getWorldPosition(this.tempP);
         const { x: nodeX, z: nodeZ } = this.tempP;
-        const u = (nodeX + this.boundingBox.min.x) * this.scale;
-        const v = (nodeZ * this.scale + 0.5);
+        const u = (nodeX - this.boundingBox.min.x);
+        const v = (nodeZ + 0.5);
         // if (u < 0 || u > 1 || v < 0 || v > 1) throw new Error("uv out of bounds: " + u + ", " + v);
         return new THREE.Vector2(u, v);
     }
@@ -158,74 +161,40 @@ export class LeafTextureGenerator {
             }
         }
 
-        bump.lineWidth = 0.6;
-        bump.beginPath();
-        bump.strokeStyle = "rgb(241, 241, 241)";
-        const triangulation = Delaunator.from(this.cells, (c) => c.position.x, (c) => c.position.y);
-        for (let i = 0; i < triangulation.halfedges.length; i++) {
-            const vertex1 = this.cells[triangulation.triangles[i]];
-            const halfEdgeIndex = triangulation.halfedges[i];
-            if (halfEdgeIndex !== -1) {
-                const vertex2 = this.cells[triangulation.triangles[halfEdgeIndex]];
-                bump.moveTo(vertex1.position.x, vertex1.position.y);
-                bump.lineTo(vertex2.position.x, vertex2.position.y);
-                // for symmetry, draw another line reflected across y=512
-                bump.moveTo(vertex1.position.x, this.height - vertex1.position.y);
-                bump.lineTo(vertex2.position.x, this.height - vertex2.position.y);
-            }
-
-            // bump.arc(cell.position.x, cell.position.y, 25, 0, Math.PI * 2);
-        }
-        bump.stroke();
-
-        const outlineBones = () => {
-            color.beginPath();
-            bump.beginPath();
-            for (const layer of this.depthLayers) {
-                for (const node of layer) {
-                    const { leftNode, forwardNode, rightNode } = node;
-                    const { x, y } = this.pixelPosition(node);
-                    if (leftNode) {
-                        const { x: px, y: py } = this.pixelPosition(leftNode);
+        const VEIN_THICKNESS = 4.0;
+        const outlineBones = (t: number) => {
+            color.strokeStyle = `rgba(0, 100, 0, ${t * 5 / detailIterations})`;
+            bump.strokeStyle = `rgba(235, 235, 235, ${t / detailIterations})`;
+            for (const leafNode of this.allNodes) {
+                const { x, y } = this.pixelPosition(leafNode);
+                for (const child of leafNode.children) {
+                    if (child instanceof LeafNode) {
+                        // const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar;
+                        const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar / (1 + child.vein.numTurns);
+                        // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 3) * (1 - t) * this.detailScalar;
+                        // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 2) * (1 - t) * this.detailScalar;
+                        // const width = VEIN_THICKNESS * 2 * this.detailScalar * (1 - t);
+                        color.lineWidth = width;
+                        bump.lineWidth = width * 1.25;
+                        color.beginPath();
+                        bump.beginPath();
+                        const { x: px, y: py } = this.pixelPosition(child);
                         color.moveTo(x, y);
                         color.lineTo(px, py);
 
                         bump.moveTo(x, y);
                         bump.lineTo(px, py);
-                    }
-
-                    if (forwardNode) {
-                        const { x: px, y: py } = this.pixelPosition(forwardNode);
-                        color.moveTo(x, y);
-                        color.lineTo(px, py);
-
-                        bump.moveTo(x, y);
-                        bump.lineTo(px, py);
-                    }
-
-                    if (rightNode) {
-                        const { x: px, y: py } = this.pixelPosition(rightNode);
-                        color.moveTo(x, y);
-                        color.lineTo(px, py);
-
-                        bump.moveTo(x, y);
-                        bump.lineTo(px, py);
+                        color.stroke();
+                        bump.stroke();
                     }
                 }
             }
-            color.stroke();
-            bump.stroke();
         };
-        const detailIterations = 5;
-        for (let i = 0; i <= detailIterations; i++) {
+
+        const detailIterations = 4;
+        for (let i = 1; i < detailIterations + 1; i++) {
             const t = i / detailIterations;
-
-            color.lineWidth = 4 * (1 - t);
-            color.strokeStyle = `rgba(0, 100, 0, ${t})`;
-
-            bump.lineWidth = 8 * (1 - t);
-            bump.strokeStyle = `rgba(235, 235, 235, ${t})`;
-            outlineBones();
+            outlineBones(t);
         }
 
         // for (const cell of this.cells) {
@@ -239,7 +208,7 @@ export class LeafTextureGenerator {
 
         this.colorMap = new THREE.CanvasTexture(colorCanvas);
         this.bumpMap = new THREE.CanvasTexture(bumpCanvas);
-        // document.body.appendChild(colorCanvas);
-        // document.body.appendChild(bumpCanvas);
+        document.body.appendChild(colorCanvas);
+        document.body.appendChild(bumpCanvas);
     }
 }

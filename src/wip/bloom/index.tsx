@@ -8,27 +8,9 @@ import { Branch } from "./branch";
 import { Component, ComponentClass } from "./component";
 import dna, { randomizeDna } from "./dna";
 import { Flower } from "./flower";
-import { Leaf, LeafTemplate, generateRandomGrowthParameters } from "./leaf";
+import { Leaf, LeafTemplate } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
-import { VeinedLeaf } from "./vein/veinedLeaf";
-import { generateVeinGrowthParameters } from "./vein/vein";
-
-const simpleLeafTemplate: LeafTemplate = LeafTemplate.fromGrowthParameters({
-    alwaysSecondary: false,
-    angleScalar: 1,
-    fn: (x) => 1,
-    iterations: 2,
-    mainAxisDist: 1,
-    mainAxisDistMultiplier: 1,
-    maxSideDepth: 1,
-    petioleLength: 0,
-    scale: 1,
-    scaleMultiplier: 1,
-    secondaryAxisAngle: Math.PI / 3,
-    secondaryAxisDistBase: 1,
-    sideScale: 1,
-});
 
 class Bloom extends ISketch {
     public scene = scene;
@@ -54,22 +36,22 @@ class Bloom extends ISketch {
 
         randomizeDna();
 
-        // this.initComponent();
-        // this.scene.add(this.component);
+        this.initComponent();
+        this.scene.add(this.component);
 
         // // console.log(leaf.skeleton);
         this.initPostprocessing();
 
-        const canvas = document.createElement("canvas");
-        canvas.width = 800;
-        canvas.height = 600;
-        document.body.appendChild(canvas);
-        const context = canvas.getContext("2d")!;
+        // const canvas = document.createElement("canvas");
+        // canvas.width = 800;
+        // canvas.height = 600;
+        // document.body.appendChild(canvas);
+        // const context = canvas.getContext("2d")!;
 
-        console.log(dna.veinedLeaf);
-        context.translate(100, 300);
-        context.scale(5, 5);
-        dna.veinedLeaf.draw(context);
+        // console.log(dna.veinedLeaf);
+        // context.translate(100, 300);
+        // context.scale(5, 5);
+        // dna.veinedLeaf.draw(context);
     }
 
     public initPostprocessing() {
@@ -125,45 +107,45 @@ class Bloom extends ISketch {
         // // scene.add(helper);
         // this.component = branch;
 
-        // const leaf = new Leaf(simpleLeafTemplate);
-        // leaf.position.x = 0;
-        // leaf.position.y = 0.2;
-        // leaf.position.z = 0;
-        // this.component = leaf;
+        const leaf = new Leaf(dna.leafTemplate);
+        leaf.position.x = 0;
+        leaf.position.y = 0.2;
+        leaf.position.z = 0;
+        this.component = leaf;
+        // const skeletonHelper = new THREE.SkeletonHelper(leaf.lamina.skeleton.bones[0]);
+        // scene.add(skeletonHelper);
 
-        this.component = new THREE.Object3D();
-        for (let x = -5; x <= 5; x++) {
-            for (let z = -5; z <= 5; z++) {
-                randomizeDna();
-                const leaf = new Leaf(dna.leafTemplate);
-                leaf.position.x = x;
-                leaf.position.y = 0.2;
-                leaf.position.z = z;
-                this.component.add(leaf);
-                // leaf.scale.set(0.01, 0.01, 0.01);
-                // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
-                // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
-                // this.scene.add(helper);
-            }
-        }
+        // this.component = new THREE.Object3D();
+        // for (let x = -5; x <= 5; x++) {
+        //     for (let z = -5; z <= 5; z++) {
+        //         randomizeDna();
+        //         const leaf = new Leaf(dna.leafTemplate);
+        //         leaf.position.x = x;
+        //         leaf.position.y = 0.2;
+        //         leaf.position.z = z;
+        //         this.component.add(leaf);
+        //         // leaf.scale.set(0.01, 0.01, 0.01);
+        //         // leaf.skeleton.bones[0].scale.set(0.01, 0.01, 0.01);
+        //         // const helper = new THREE.SkeletonHelper(leaf.skeleton.bones[0]);
+        //         // this.scene.add(helper);
+        //     }
+        // }
 
         // const flower = Flower.generate();
         // this.component = flower;
     }
 
     public animate() {
-        // this.component.update(this.timeElapsed);
-
-        // this.component.traverse((obj) => {
-        //     if (obj instanceof Component) {
-        //         if (obj.timeBorn == null) {
-        //             obj.timeBorn = this.timeElapsed;
-        //         }
-        //         if (obj.updateSelf) {
-        //             obj.updateSelf(this.timeElapsed);
-        //         }
-        //     }
-        // });
+        this.component.traverse((obj) => {
+            if (obj instanceof Component) {
+                if (obj.timeBorn == null) {
+                    obj.timeBorn = this.timeElapsed;
+                }
+                if (obj.updateSelf) {
+                    obj.updateSelf(this.timeElapsed);
+                }
+            }
+        });
 
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);

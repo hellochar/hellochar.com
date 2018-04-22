@@ -1,10 +1,9 @@
 import * as THREE from "three";
 
 import { Petal } from "./flower";
-import { generateRandomGrowthParameters, Leaf, LeafGrowthParameters, LeafTemplate } from "./leaf";
+import { Leaf, LeafTemplate } from "./leaf";
+import { generateRandomVeinedLeaf, VeinedLeaf } from "./vein/veinedLeaf";
 import { WhorlParameters } from "./whorl";
-import { VeinedLeaf, generateRandomVeinedLeaf } from "./vein/veinedLeaf";
-import { generateVeinGrowthParameters } from "./vein/vein";
 
 export function generateRandomLeafWhorlParameters(): WhorlParameters<Leaf> {
     const zRot = THREE.Math.randFloat(Math.PI / 20, Math.PI / 3);
@@ -79,7 +78,7 @@ export function generateRandomPetalWhorlParameters(): WhorlParameters<Petal> {
     // }
 }
 
-let parameters: LeafGrowthParameters;
+let veinedLeaf: VeinedLeaf;
 let leafTemplate: LeafTemplate;
 let leafWhorlTemplate: WhorlParameters<Leaf>;
 let petalWhorlTemplate: WhorlParameters<Petal>;
@@ -87,11 +86,8 @@ let colors: {
     petalInnerColor: THREE.Color;
     petalOuterColor: THREE.Color;
 };
-let veinedLeaf: VeinedLeaf;
 
 export function randomizeDna() {
-    parameters = generateRandomGrowthParameters();
-    leafTemplate = LeafTemplate.fromGrowthParameters(parameters);
     leafWhorlTemplate = generateRandomLeafWhorlParameters();
     petalWhorlTemplate = generateRandomPetalWhorlParameters();
     colors = {
@@ -100,10 +96,10 @@ export function randomizeDna() {
         petalOuterColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
     }
     veinedLeaf = generateRandomVeinedLeaf();
+    leafTemplate = LeafTemplate.fromVeinedLeaf(veinedLeaf);
 }
 
 export const dna = {
-    get parameters() { return parameters; },
     get leafTemplate() { return leafTemplate; },
     get leafWhorlTemplate() { return leafWhorlTemplate; },
     get petalWhorlTemplate() { return petalWhorlTemplate; },

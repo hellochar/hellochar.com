@@ -278,7 +278,6 @@ class Carpel extends Component {
         const styleHeight = 0.5;
         const geom = new THREE.CylinderGeometry(1, 1, styleHeight, 20, 20);
         geom.translate(0, styleHeight / 2, 0);
-        console.log(geom);
         for (const vertex of geom.vertices) {
             const y = THREE.Math.mapLinear(vertex.y, 0, styleHeight, 0, 1);
             const r =

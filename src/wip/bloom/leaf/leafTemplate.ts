@@ -2,19 +2,20 @@ import alphaComplex = require("alpha-complex");
 import Delaunator from "delaunator";
 import * as THREE from "three";
 
-import { LeafGrowthParameters, LeafNode, LeafSkeleton } from "./leafSkeleton";
+import { LeafNode, LeafSkeleton } from "./leafSkeleton";
 import { LeafTextureGenerator } from "./textureGen";
+import { VeinedLeaf } from "../vein/veinedLeaf";
 
 export class LeafTemplate {
     constructor(
-        public growthParameters: LeafGrowthParameters,
+        public veinedLeaf: VeinedLeaf,
         public geometry: THREE.Geometry,
         public material: THREE.MeshBasicMaterial,
     ) {}
 
-    static fromGrowthParameters(parameters: LeafGrowthParameters) {
+    static fromVeinedLeaf(leaf: VeinedLeaf) {
         // just create a skeleton; we won't bind it
-        const skeleton = LeafSkeleton.grow(parameters);
+        const skeleton = LeafSkeleton.createFromVeinedLeaf(leaf);
 
         const geometry = new THREE.Geometry();
         for (let i = 0; i < skeleton.bones.length; i++) {
@@ -32,136 +33,137 @@ export class LeafTemplate {
         3. me, left, parent
         4. me, parent, right
          */
-        const childFaces = () => {
-            for (const leafNode of skeleton.bones) {
-                const { index, parent, forwardNode, leftNode, rightNode } = leafNode;
-                if (forwardNode != null) {
-                    if (leftNode != null) {
-                        geometry.faces.push(new THREE.Face3(forwardNode.index, leftNode.index, index));
-                        if (parent instanceof LeafNode) {
-                            geometry.faces.push(new THREE.Face3(index, leftNode.index, parent.index));
-                        }
-                    }
-                    if (rightNode != null) {
-                        geometry.faces.push(new THREE.Face3(forwardNode.index, index, rightNode.index));
-                        if (parent instanceof LeafNode) {
-                            geometry.faces.push(new THREE.Face3(index, parent.index, rightNode.index));
-                        }
-                    }
-                }
-            }
-        };
+        // const childFaces = () => {
+        //     for (const leafNode of skeleton.bones) {
+        //         const { index, parent, forwardNode, leftNode, rightNode } = leafNode;
+        //         if (forwardNode != null) {
+        //             if (leftNode != null) {
+        //                 geometry.faces.push(new THREE.Face3(forwardNode.index, leftNode.index, index));
+        //                 if (parent instanceof LeafNode) {
+        //                     geometry.faces.push(new THREE.Face3(index, leftNode.index, parent.index));
+        //                 }
+        //             }
+        //             if (rightNode != null) {
+        //                 geometry.faces.push(new THREE.Face3(forwardNode.index, index, rightNode.index));
+        //                 if (parent instanceof LeafNode) {
+        //                     geometry.faces.push(new THREE.Face3(index, parent.index, rightNode.index));
+        //                 }
+        //             }
+        //         }
+        //     }
+        // };
         // face algorithm 2:
         // connect siblings in quads
         // for (const layer of this.sideDepthLayers) {
-        const cousinFaces = () => {
-            for (const layer of skeleton.depthLayers) {
-                for (let i = 0; i < layer.length; i++) {
-                    const me = layer[i];
-                    const { leftNode, forwardNode, rightNode } = me;
-                    if (forwardNode != null) {
-                        const { leftNode: leftCousin, rightNode: rightCousin } = forwardNode;
-                        if (leftNode != null) {
-                            geometry.faces.push(new THREE.Face3(me.index, forwardNode.index, leftNode.index));
-                            if (leftCousin != null) {
-                                geometry.faces.push(new THREE.Face3(leftCousin.index, leftNode.index, forwardNode.index));
-                            }
-                        }
-                        if (rightNode != null) {
-                            geometry.faces.push(new THREE.Face3(forwardNode.index, me.index, rightNode.index));
-                            if (rightCousin != null) {
-                                geometry.faces.push(new THREE.Face3(rightCousin.index, forwardNode.index, rightNode.index));
-                            }
-                        }
-                    }
-                }
-            }
-        };
+        // const cousinFaces = () => {
+        //     for (const layer of skeleton.depthLayers) {
+        //         for (let i = 0; i < layer.length; i++) {
+        //             const me = layer[i];
+        //             const { leftNode, forwardNode, rightNode } = me;
+        //             if (forwardNode != null) {
+        //                 const { leftNode: leftCousin, rightNode: rightCousin } = forwardNode;
+        //                 if (leftNode != null) {
+        //                     geometry.faces.push(new THREE.Face3(me.index, forwardNode.index, leftNode.index));
+        //                     if (leftCousin != null) {
+        //                         geometry.faces.push(new THREE.Face3(leftCousin.index, leftNode.index, forwardNode.index));
+        //                     }
+        //                 }
+        //                 if (rightNode != null) {
+        //                     geometry.faces.push(new THREE.Face3(forwardNode.index, me.index, rightNode.index));
+        //                     if (rightCousin != null) {
+        //                         geometry.faces.push(new THREE.Face3(rightCousin.index, forwardNode.index, rightNode.index));
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // };
         // algorithm 3:
         // delauney triangulate
 
         // return true to include/keep
-        type Filter = (a: LeafNode, b: LeafNode, c: LeafNode) => boolean;
-        const triangleFilters: { [name: string]: Filter } = {
-            // filter out faces that are all in the edge layer
-            // this produces fascinating edge patterns and a few holes
-            // TODO doesn't capture the end bones
-            noEdgeLayer: (a, b, c) => !(
-                skeleton.edgeLayer.indexOf(a) !== -1 &&
-                skeleton.edgeLayer.indexOf(b) !== -1 &&
-                skeleton.edgeLayer.indexOf(c) !== -1
-            ),
-            // filter out faces that are in the edge layer and all 3 don't share a parent.
-            noEdgeLayerAndSiblings: (a, b, c) => {
-                const aParent = a.parent;
-                const bParent = b.parent;
-                const cParent = c.parent;
-                return !(
-                    skeleton.edgeLayer.indexOf(a) !== -1 &&
-                    skeleton.edgeLayer.indexOf(b) !== -1 &&
-                    skeleton.edgeLayer.indexOf(c) !== -1 &&
-                    aParent !== bParent &&
-                    bParent !== cParent &&
-                    aParent !== cParent
-                );
-            },
-            // filter out very thin faces, usually those are indicative of outer edge craziness
-            noThinTriangles: (a, b, c) => {
-                const aWorld = a.getWorldPosition();
-                const bWorld = b.getWorldPosition();
-                const cWorld = c.getWorldPosition();
-                const aAngle = bWorld.clone().sub(aWorld).angleTo(cWorld.clone().sub(aWorld));
-                const bAngle = aWorld.clone().sub(bWorld).angleTo(cWorld.clone().sub(bWorld));
-                const cAngle = bWorld.clone().sub(cWorld).angleTo(aWorld.clone().sub(cWorld));
-                const epsilonAngle = Math.PI / 180 * 2;
-                return triangleFilters.noEdgeLayer(a, b, c) && (
-                    aAngle > epsilonAngle &&
-                    bAngle > epsilonAngle &&
-                    cAngle > epsilonAngle
-                );
-            },
-            noLongTriangles: (a, b, c) => {
-                const longDist = 1;
-                const aWorld = a.getWorldPosition();
-                const bWorld = b.getWorldPosition();
-                const cWorld = c.getWorldPosition();
-                return aWorld.distanceTo(bWorld) < longDist
-                    && aWorld.distanceTo(cWorld) < longDist
-                    && bWorld.distanceTo(cWorld) < longDist;
-            },
-        };
+        // type Filter = (a: LeafNode, b: LeafNode, c: LeafNode) => boolean;
+        // const triangleFilters: { [name: string]: Filter } = {
+        //     // filter out faces that are all in the edge layer
+        //     // this produces fascinating edge patterns and a few holes
+        //     // TODO doesn't capture the end bones
+        //     noEdgeLayer: (a, b, c) => !(
+        //         skeleton.edgeLayer.indexOf(a) !== -1 &&
+        //         skeleton.edgeLayer.indexOf(b) !== -1 &&
+        //         skeleton.edgeLayer.indexOf(c) !== -1
+        //     ),
+        //     // filter out faces that are in the edge layer and all 3 don't share a parent.
+        //     noEdgeLayerAndSiblings: (a, b, c) => {
+        //         const aParent = a.parent;
+        //         const bParent = b.parent;
+        //         const cParent = c.parent;
+        //         return !(
+        //             skeleton.edgeLayer.indexOf(a) !== -1 &&
+        //             skeleton.edgeLayer.indexOf(b) !== -1 &&
+        //             skeleton.edgeLayer.indexOf(c) !== -1 &&
+        //             aParent !== bParent &&
+        //             bParent !== cParent &&
+        //             aParent !== cParent
+        //         );
+        //     },
+        //     // filter out very thin faces, usually those are indicative of outer edge craziness
+        //     noThinTriangles: (a, b, c) => {
+        //         const aWorld = a.getWorldPosition();
+        //         const bWorld = b.getWorldPosition();
+        //         const cWorld = c.getWorldPosition();
+        //         const aAngle = bWorld.clone().sub(aWorld).angleTo(cWorld.clone().sub(aWorld));
+        //         const bAngle = aWorld.clone().sub(bWorld).angleTo(cWorld.clone().sub(bWorld));
+        //         const cAngle = bWorld.clone().sub(cWorld).angleTo(aWorld.clone().sub(cWorld));
+        //         const epsilonAngle = Math.PI / 180 * 2;
+        //         return triangleFilters.noEdgeLayer(a, b, c) && (
+        //             aAngle > epsilonAngle &&
+        //             bAngle > epsilonAngle &&
+        //             cAngle > epsilonAngle
+        //         );
+        //     },
+        //     noLongTriangles: (a, b, c) => {
+        //         const longDist = 1;
+        //         const aWorld = a.getWorldPosition();
+        //         const bWorld = b.getWorldPosition();
+        //         const cWorld = c.getWorldPosition();
+        //         return aWorld.distanceTo(bWorld) < longDist
+        //             && aWorld.distanceTo(cWorld) < longDist
+        //             && bWorld.distanceTo(cWorld) < longDist;
+        //     },
+        // };
 
-        const delauneyFaces = (...filters: Filter[]) => {
-            const allLeafNodes = skeleton.bones;
-            try {
-                const delaunator = Delaunator.from(allLeafNodes,
-                    (bone) => bone.getWorldPosition().x,
-                    (bone) => bone.getWorldPosition().z,
-                );
-                // for (let i = 0; i < delaunator.halfedges.length; i++) {
-                //     const halfEdgeIndex = delaunator.halfedges[i];
-                // }
-                for (let i = 0; i < delaunator.triangles.length; i += 3) {
-                    const indexA = delaunator.triangles[i];
-                    const indexB = delaunator.triangles[i + 1];
-                    const indexC = delaunator.triangles[i + 2];
-                    const a = skeleton.bones[indexA] as LeafNode;
-                    const b = skeleton.bones[indexB] as LeafNode;
-                    const c = skeleton.bones[indexC] as LeafNode;
-                    const passesFilter = filters.every((filter) => filter(a, b, c));
-                    if (passesFilter) {
-                        const face = new THREE.Face3(indexA, indexB, indexC);
-                        geometry.faces.push(face);
-                    }
-                }
-            } catch (e) {
-                console.error(e);
-                // do nothing
-            }
-        };
+        // const delauneyFaces = (...filters: Filter[]) => {
+        //     const allLeafNodes = skeleton.bones;
+        //     try {
+        //         const delaunator = Delaunator.from(allLeafNodes,
+        //             (bone) => bone.getWorldPosition().x,
+        //             (bone) => bone.getWorldPosition().z,
+        //         );
+        //         // for (let i = 0; i < delaunator.halfedges.length; i++) {
+        //         //     const halfEdgeIndex = delaunator.halfedges[i];
+        //         // }
+        //         for (let i = 0; i < delaunator.triangles.length; i += 3) {
+        //             const indexA = delaunator.triangles[i];
+        //             const indexB = delaunator.triangles[i + 1];
+        //             const indexC = delaunator.triangles[i + 2];
+        //             const a = skeleton.bones[indexA] as LeafNode;
+        //             const b = skeleton.bones[indexB] as LeafNode;
+        //             const c = skeleton.bones[indexC] as LeafNode;
+        //             const passesFilter = filters.every((filter) => filter(a, b, c));
+        //             if (passesFilter) {
+        //                 const face = new THREE.Face3(indexA, indexB, indexC);
+        //                 geometry.faces.push(face);
+        //             }
+        //         }
+        //     } catch (e) {
+        //         console.error(e);
+        //         // do nothing
+        //     }
+        // };
 
         const alphaHullFaces = () => {
-            const alpha = 2;
+            // const alpha = 10;
+            const alpha = 1 / skeleton.downScalar / (leaf.growthParameters.DEPTH_STEPS_BEFORE_BRANCHING * 2);
             const points = skeleton.bones.map((node) => {
                 const {x, z} = node.getWorldPosition();
                 return [x, z];
@@ -191,7 +193,7 @@ export class LeafTemplate {
          * delauney builds simple Entire edges
         */
         // const mode = (Math.random() < 0.33) ? "compound" : Math.random() < 0.5 ? "entire" : "complexEdge";
-        const mode = "entire" as any;
+        // const mode = "entire" as any;
         // const mode = "entire";
         // if (mode === "compound") {
         //     childFaces();
@@ -210,9 +212,7 @@ export class LeafTemplate {
         geometry.computeFlatVertexNormals();
         geometry.computeVertexNormals();
 
-        geometry.computeBoundingBox();
-
-        const generator = new LeafTextureGenerator(geometry, skeleton.depthLayers, skeleton.bones);
+        const generator = new LeafTextureGenerator(geometry, leaf, skeleton.bones);
         generator.updateGeometryFaceVertexUvs();
         generator.generateAndDrawMaps();
 
@@ -229,9 +229,11 @@ export class LeafTemplate {
             // shininess: 0.1,
             bumpMap: generator.bumpMap,
             bumpScale: 0.04,
+            // displacementMap: generator.bumpMap,
+            // displacementScale: 0.1,
             // wireframe: true,
         });
 
-        return new LeafTemplate(parameters, geometry, material);
+        return new LeafTemplate(leaf, geometry, material);
     }
 }
