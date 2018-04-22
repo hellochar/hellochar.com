@@ -43,9 +43,9 @@ export class Leaf extends Component {
     }
 
     updateSelf(t: number) {
-        // const logisticX = (t - this.timeBorn) / 1000 - 6;
-        // const s = this.logistic(logisticX);
-        const s = 1;
+        const logisticX = (t - this.timeBorn) / 1000 - 6;
+        const s = this.logistic(logisticX);
+        // const s = 1;
         this.scale.set(s, s, s);
         for (const bone of this.lamina.skeleton.bones) {
             // bone.rotation.z = THREE.Math.randFloat(-1, 1) * 0.01;
