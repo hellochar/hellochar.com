@@ -11,6 +11,7 @@ import { Flower } from "./flower";
 import { Leaf, LeafTemplate } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
+import { VeinedLeaf } from "./vein/veinedLeaf";
 
 const simpleLeafTemplate: LeafTemplate = LeafTemplate.fromGrowthParameters({
     alwaysSecondary: false,
@@ -52,11 +53,24 @@ class Bloom extends ISketch {
 
         randomizeDna();
 
-        this.initComponent();
-        this.scene.add(this.component);
+        // this.initComponent();
+        // this.scene.add(this.component);
 
         // // console.log(leaf.skeleton);
         this.initPostprocessing();
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 800;
+        canvas.height = 600;
+        document.body.appendChild(canvas);
+        const context = canvas.getContext("2d")!;
+
+        const veinedLeaf = new VeinedLeaf(100, 300, 5);
+        for (let i = 0; i < 100; i++) {
+            veinedLeaf.expandBoundary();
+        }
+        console.log(veinedLeaf);
+        veinedLeaf.draw(context);
     }
 
     public initPostprocessing() {
@@ -140,16 +154,17 @@ class Bloom extends ISketch {
 
     public animate() {
         // this.component.update(this.timeElapsed);
-        this.component.traverse((obj) => {
-            if (obj instanceof Component) {
-                if (obj.timeBorn == null) {
-                    obj.timeBorn = this.timeElapsed;
-                }
-                if (obj.updateSelf) {
-                    obj.updateSelf(this.timeElapsed);
-                }
-            }
-        });
+
+        // this.component.traverse((obj) => {
+        //     if (obj instanceof Component) {
+        //         if (obj.timeBorn == null) {
+        //             obj.timeBorn = this.timeElapsed;
+        //         }
+        //         if (obj.updateSelf) {
+        //             obj.updateSelf(this.timeElapsed);
+        //         }
+        //     }
+        // });
 
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
