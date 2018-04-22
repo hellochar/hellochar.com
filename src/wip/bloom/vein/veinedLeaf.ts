@@ -347,7 +347,8 @@ export function generateRandomVeinedLeaf() {
   "COST_TO_TURN": 0,
   "growForwardBranch": true
 });
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 1000; i++) {
+            // this really shouldn't hit 1000, expandBoundary will result in 0 soon
             veinedLeaf.expandBoundary();
         }
     } while (veinedLeaf.isDegenerate());

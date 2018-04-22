@@ -11,7 +11,18 @@ export class LeafNode extends THREE.Bone {
     static createFromVein(vein: Vein) {
         const node = new LeafNode(vein);
         const offset = vein.offset();
-        node.position.set(offset.x, 0, offset.y);
+        const mag = offset.length();
+        node.position.set(mag, 0, 0);
+
+        if (vein.parent != null) {
+            const rotation = Math.atan2(offset.y, offset.x);
+
+            const pOffset = vein.parent.offset();
+            const parentRotation = Math.atan2(pOffset.y, pOffset.x);
+
+            node.rotateY(rotation - parentRotation);
+        }
+        // node.position.set(offset.x, 0, offset.y);
         for (const childVein of vein.children) {
             const childNode = LeafNode.createFromVein(childVein);
             node.add(childNode);

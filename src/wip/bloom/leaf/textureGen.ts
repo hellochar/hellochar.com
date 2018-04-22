@@ -170,7 +170,10 @@ export class LeafTextureGenerator {
                 for (const child of leafNode.children) {
                     if (child instanceof LeafNode) {
                         // const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar;
-                        const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar / (1 + child.vein.numTurns);
+                        const width = Math.max(
+                            0.2,
+                            VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar / (1 + child.vein.numTurns)
+                        );
                         // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 3) * (1 - t) * this.detailScalar;
                         // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 2) * (1 - t) * this.detailScalar;
                         // const width = VEIN_THICKNESS * 2 * this.detailScalar * (1 - t);

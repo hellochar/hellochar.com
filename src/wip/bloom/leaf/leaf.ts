@@ -47,12 +47,19 @@ export class Leaf extends Component {
         // const s = this.logistic(logisticX);
         const s = 1;
         this.scale.set(s, s, s);
+        for (const bone of this.lamina.skeleton.bones) {
+            // bone.rotation.z = THREE.Math.randFloat(-1, 1) * 0.01;
+            // bone.rotation.x = THREE.Math.randFloat(-1, 1) * 0.01;
+        }
+
         // leafMesh.rotation.x += 0.01;
         for (const bone of this.lamina.skeleton.bones) {
-            // curl the leaves
-            const { x, z } = bone.position;
+        //     // curl the leaves
+            let { x, y: z } = bone.vein.position;
+            x *= this.lamina.skeleton.downScalar;
+            z *= this.lamina.skeleton.downScalar;
             const len = Math.sqrt(x * x + z * z);
-            bone.rotation.z = (0.05 * Math.sin(t / 1000) - Math.abs(z * z) * 50 + Math.abs(x) * 1.38) * len * 5;
+            bone.rotation.z = (0.003 * Math.sin(t / 2000) - Math.abs(z) * 0.5 + Math.abs(x) * 0.01) * len;
         }
     }
 

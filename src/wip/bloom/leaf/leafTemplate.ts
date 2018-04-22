@@ -209,7 +209,6 @@ export class LeafTemplate {
         alphaHullFaces();
 
         geometry.computeFaceNormals();
-        geometry.computeFlatVertexNormals();
         geometry.computeVertexNormals();
 
         const generator = new LeafTextureGenerator(geometry, leaf, skeleton.bones);
@@ -221,16 +220,16 @@ export class LeafTemplate {
             side: THREE.DoubleSide,
             map: generator.colorMap,
             // specular: 0x111111,
-            // specular: 0x222222,
-            specular: 0x444444,
+            specular: 0x222222,
+            // specular: 0x444444,
             // specular: 0xffffff,
             // shininess: 20000,
-            shininess: 8,
+            shininess: 40,
             // shininess: 0.1,
+
             bumpMap: generator.bumpMap,
             bumpScale: 0.04,
-            // displacementMap: generator.bumpMap,
-            // displacementScale: 0.1,
+
             // wireframe: true,
         });
 
