@@ -3,7 +3,7 @@ import Delaunator from "delaunator";
 import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
-import { VeinBone, LeafSkeleton } from "./leafSkeleton";
+import { VeinBone, VeinedLeafSkeleton } from "./leafSkeleton";
 import { LeafTextureGenerator } from "./textureGen";
 
 export class LeafTemplate {
@@ -15,7 +15,7 @@ export class LeafTemplate {
 
     static fromVeinedLeaf(leaf: VeinedLeaf) {
         // just create a skeleton; we won't bind it
-        const skeleton = LeafSkeleton.createFromVeinedLeaf(leaf);
+        const skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(leaf);
 
         const geometry = new THREE.Geometry();
         for (let i = 0; i < skeleton.bones.length; i++) {

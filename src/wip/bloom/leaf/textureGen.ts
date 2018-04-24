@@ -2,7 +2,7 @@ import Delaunator from "delaunator";
 import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
-import { VeinBone, LeafSkeleton } from "./leafSkeleton";
+import { VeinBone, VeinedLeafSkeleton } from "./leafSkeleton";
 import { SkinnedLeaf } from "./skinnedLeaf";
 
 export class LeafTextureGenerator {

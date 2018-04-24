@@ -1,14 +1,14 @@
 import * as THREE from "three";
 
-import { LeafSkeleton } from "./leafSkeleton";
+import { VeinedLeafSkeleton } from "./leafSkeleton";
 import { LeafTemplate } from "./leafTemplate";
 
 export class SkinnedLeaf extends THREE.SkinnedMesh {
 
-    public skeleton: LeafSkeleton;
+    public skeleton: VeinedLeafSkeleton;
     constructor(template: LeafTemplate) {
         super(template.geometry, template.material);
-        this.skeleton = LeafSkeleton.createFromVeinedLeaf(template.veinedLeaf);
+        this.skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(template.veinedLeaf);
         this.add(this.skeleton.rootNode);
         this.bind(this.skeleton);
 

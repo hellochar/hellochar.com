@@ -31,7 +31,7 @@ export class VeinBone extends THREE.Bone {
     }
 }
 
-export class LeafSkeleton extends THREE.Skeleton {
+export class VeinedLeafSkeleton extends THREE.Skeleton {
     bones!: VeinBone[];
     rootNode: VeinBone;
     constructor(bones: VeinBone[], public downScalar: number) {
@@ -61,6 +61,6 @@ export class LeafSkeleton extends THREE.Skeleton {
             }
         });
 
-        return new LeafSkeleton(bones, scale);
+        return new VeinedLeafSkeleton(bones, scale);
     }
 }
