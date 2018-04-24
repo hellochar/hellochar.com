@@ -6,6 +6,10 @@ import { VeinBone, VeinedLeafSkeleton } from "../vein/leafSkeleton";
 import { VeinedLeaf } from "../vein/veinedLeaf";
 import { LeafTextureGenerator } from "./textureGen";
 
+/**
+ * A LeafTemplate holds a VeinedLeaf and a geometry and material on top of that veining structure.
+ * We use this to share the geometry and material across multiple leaf instances.
+ */
 export class LeafTemplate {
     constructor(
         public veinedLeaf: VeinedLeaf,
