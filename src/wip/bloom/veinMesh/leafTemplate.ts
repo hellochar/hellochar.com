@@ -3,8 +3,8 @@ import Delaunator from "delaunator";
 import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
-import { VeinBone, VeinedLeafSkeleton } from "./leafSkeleton";
 import { TextureGenerator } from "./textureGenerator";
+import { VeinBone, VeinedLeafSkeleton } from "./veinedLeafSkeleton";
 
 /**
  * A LeafTemplate holds a VeinedLeaf and a geometry and material on top of that veining structure.
@@ -101,5 +101,19 @@ export class LeafTemplate {
         public geometry: THREE.Geometry,
         public material: THREE.MeshBasicMaterial,
     ) {}
+
+    public instantiateLeaf() {
+        const leaf = new THREE.SkinnedMesh(this.geometry, this.material);
+        // create a separate skeleton for each leaf
+        const skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(this.veinedLeaf);
+        leaf.add(skeleton.rootNode);
+        leaf.bind(skeleton);
+
+        // hackhack - our faces are on the wrong side i think and shadows aren't showing through
+        leaf.rotation.x = Math.PI;
+        leaf.receiveShadow = true;
+        leaf.castShadow = true;
+        return leaf;
+    }
 
 }

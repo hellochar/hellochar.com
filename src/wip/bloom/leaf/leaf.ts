@@ -2,14 +2,14 @@ import * as THREE from "three";
 
 import { Component } from "../component";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
-import { SkinnedLeaf } from "../veinMesh/skinnedLeaf";
+import { VeinBone, VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
 
 // what do I want to say?
 // leaf feeds the petiole
 // petiole feeds the lamina
 
 export class Leaf extends Component {
-    public lamina: SkinnedLeaf;
+    public lamina: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
         const petioleLength = 0.5;
@@ -33,7 +33,7 @@ export class Leaf extends Component {
             })();
             this.add(petiole);
         }
-        this.lamina = new SkinnedLeaf(template);
+        this.lamina = template.instantiateLeaf();
         this.lamina.position.x = petioleLength;
         this.add(this.lamina);
     }
@@ -53,11 +53,14 @@ export class Leaf extends Component {
         }
 
         // leafMesh.rotation.x += 0.01;
-        for (const bone of this.lamina.skeleton.bones) {
-        //     // curl the leaves
+        for (const boneUncast of this.lamina.skeleton.bones) {
+            // HACKHACK make this based off physics instead
+            const bone = boneUncast as VeinBone;
+            const skeleton = this.lamina.skeleton as VeinedLeafSkeleton;
+            // curl the leaves
             let { x, y: z } = bone.vein.position;
-            x *= this.lamina.skeleton.downScalar;
-            z *= this.lamina.skeleton.downScalar;
+            x *= skeleton.downScalar;
+            z *= skeleton.downScalar;
             const len = Math.sqrt(x * x + z * z);
             bone.rotation.z = (0.003 * Math.sin(t / 2000) - Math.abs(z) * 0.5 + Math.abs(x) * 0.01) * len;
         }
