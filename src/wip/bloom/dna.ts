@@ -4,6 +4,7 @@ import { Petal } from "./flower";
 import { Leaf } from "./leaf";
 import { generateRandomVeinedLeaf, VeinedLeaf } from "./vein/veinedLeaf";
 import { LeafTemplate } from "./veinMesh/leafTemplate";
+import { TextureGeneratorParameters } from "./veinMesh/textureGenerator";
 import { WhorlParameters } from "./whorl";
 
 export function generateRandomLeafWhorlParameters(): WhorlParameters<Leaf> {
@@ -36,7 +37,7 @@ export function generateRandomPetalWhorlParameters(): WhorlParameters<Petal> {
         startZRot: Math.PI / 20,
         endZRot: THREE.Math.randFloat(Math.PI / 12, Math.PI / 4),
         isBilateral: Math.random() < 0.5,
-        generate: Petal.generate,
+        generate: () => Petal.generate(dna.petalTemplate),
     };
     // if (Math.random() < 1 / 3) {
     //     // make 5 big ones
@@ -79,33 +80,43 @@ export function generateRandomPetalWhorlParameters(): WhorlParameters<Petal> {
     // }
 }
 
-let veinedLeaf: VeinedLeaf;
 let leafTemplate: LeafTemplate;
+let petalTemplate: LeafTemplate;
 let leafWhorlTemplate: WhorlParameters<Leaf>;
 let petalWhorlTemplate: WhorlParameters<Petal>;
-let colors: {
-    petalInnerColor: THREE.Color;
-    petalOuterColor: THREE.Color;
-};
 
 export function randomizeDna() {
     leafWhorlTemplate = generateRandomLeafWhorlParameters();
     petalWhorlTemplate = generateRandomPetalWhorlParameters();
-    colors = {
-        // no green leaves (greens are hues between 60 -> 180)
-        petalInnerColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
-        petalOuterColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
-    }
-    veinedLeaf = generateRandomVeinedLeaf();
-    leafTemplate = LeafTemplate.fromVeinedLeaf(veinedLeaf);
+    const veinedLeaf = generateRandomVeinedLeaf();
+    const leafTextureParameters: TextureGeneratorParameters = {
+        innerColor: new THREE.Color("green"),
+        outerColor: new THREE.Color("green"),
+        veinColor: new THREE.Color("darkgreen"),
+        veinAlpha: 1,
+        bumpNoiseHeight: 1,
+    };
+    leafTemplate = LeafTemplate.fromVeinedLeaf(veinedLeaf, leafTextureParameters);
+
+    const veinedPetal = generateRandomVeinedLeaf();
+    const petalTextureParameters: TextureGeneratorParameters = {
+        innerColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
+        outerColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
+        veinColor: new THREE.Color(),
+        veinAlpha: 0,
+        bumpNoiseHeight: 0.1,
+        baseMaterialParams: {
+            shininess: 0,
+        },
+    };
+    petalTemplate = LeafTemplate.fromVeinedLeaf(veinedPetal, petalTextureParameters);
 }
 
 export const dna = {
     get leafTemplate() { return leafTemplate; },
+    get petalTemplate() { return petalTemplate; },
     get leafWhorlTemplate() { return leafWhorlTemplate; },
     get petalWhorlTemplate() { return petalWhorlTemplate; },
-    get colors() { return colors; },
-    get veinedLeaf() { return veinedLeaf; },
 }
 
 export default dna;

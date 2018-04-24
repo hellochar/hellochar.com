@@ -3,7 +3,7 @@ import Delaunator from "delaunator";
 import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
-import { TextureGenerator } from "./textureGenerator";
+import { TextureGenerator, TextureGeneratorParameters } from "./textureGenerator";
 import { VeinBone, VeinedLeafSkeleton } from "./veinedLeafSkeleton";
 
 /**
@@ -11,7 +11,7 @@ import { VeinBone, VeinedLeafSkeleton } from "./veinedLeafSkeleton";
  * We use this to share the geometry and material across multiple leaf instances.
  */
 export class LeafTemplate {
-    public static fromVeinedLeaf(leaf: VeinedLeaf) {
+    public static fromVeinedLeaf(leaf: VeinedLeaf, textureGeneratorParams: TextureGeneratorParameters) {
         // just create a skeleton; we won't bind it
         const skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(leaf);
 
@@ -32,12 +32,11 @@ export class LeafTemplate {
 
         const generator = new TextureGenerator(geometry, leaf, skeleton.bones);
         generator.updateGeometryFaceVertexUvs();
-        generator.generateAndDrawMaps();
+        generator.generateAndDrawMaps(textureGeneratorParams);
 
-        const material = new THREE.MeshPhongMaterial({
+        const materialParams: THREE.MeshPhongMaterialParameters = {
             skinning: true,
             side: THREE.DoubleSide,
-            map: generator.colorMap,
             // specular: 0x111111,
             specular: 0x222222,
             // specular: 0x444444,
@@ -46,11 +45,15 @@ export class LeafTemplate {
             shininess: 40,
             // shininess: 0.1,
 
-            bumpMap: generator.bumpMap,
             bumpScale: 0.04,
 
             // wireframe: true,
-        });
+            map: generator.colorMap,
+            bumpMap: generator.bumpMap,
+
+            ...textureGeneratorParams.baseMaterialParams,
+        };
+        const material = new THREE.MeshPhongMaterial(materialParams);
 
         return new LeafTemplate(leaf, geometry, material);
     }
@@ -117,5 +120,4 @@ export class LeafTemplate {
         leaf.castShadow = true;
         return leaf;
     }
-
 }

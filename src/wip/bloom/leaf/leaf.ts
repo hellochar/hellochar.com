@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { logistic } from "../../../math";
 import { Component } from "../component";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { VeinBone, VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
@@ -38,13 +39,9 @@ export class Leaf extends Component {
         this.add(this.lamina);
     }
 
-    logistic(x: number) {
-        return 1 / (1 + Math.exp(-x));
-    }
-
     updateSelf(t: number) {
         const logisticX = (t - this.timeBorn) / 1000 - 6;
-        const s = this.logistic(logisticX);
+        const s = logistic(logisticX);
         // const s = 1;
         this.scale.set(s, s, s);
         for (const bone of this.lamina.skeleton.bones) {
@@ -66,7 +63,7 @@ export class Leaf extends Component {
 
             // TODO make the position integrate to a log(1+x) look properly
             const t2 = Math.abs(z) * 40 - 6;
-            const pos = this.logistic(t2) * ( 1 - this.logistic(t2)) * 0.01;
+            const pos = logistic(t2) * ( 1 - logistic(t2)) * 0.01;
             bone.position.y = -pos;
             // bone.rotation.y = 0.1 / (1 + Math.abs(z) * 10);
         }

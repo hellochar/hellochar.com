@@ -13,3 +13,12 @@ export function sampleArray<T>(a: T[]) {
 export function triangleWaveApprox(t: number) {
     return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
 }
+
+export function logistic(x: number) {
+    if (x < -6) {
+        return 0;
+    } else if (x > 6) {
+        return 1;
+    }
+    return 1 / (1 + Math.exp(-x));
+}

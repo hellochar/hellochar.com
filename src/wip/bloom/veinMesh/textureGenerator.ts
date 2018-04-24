@@ -4,6 +4,16 @@ import * as THREE from "three";
 import { VeinedLeaf } from "../vein/veinedLeaf";
 import { VeinBone, VeinedLeafSkeleton } from "./veinedLeafSkeleton";
 
+export interface TextureGeneratorParameters {
+    innerColor: THREE.Color;
+    outerColor: THREE.Color;
+    veinColor: THREE.Color;
+    veinAlpha: number;
+
+    bumpNoiseHeight: number;
+    baseMaterialParams?: THREE.MeshPhongMaterialParameters;
+}
+
 /**
  * Procedurally draws a textures for a VeinedLeaf to use in THREE.js materials.
  */
@@ -26,25 +36,25 @@ export class TextureGenerator {
     constructor(
         public geometry: THREE.Geometry,
         public leaf: VeinedLeaf,
-        public allNodes: VeinBone[]) {
+        public allVeins: VeinBone[]) {
             geometry.computeBoundingBox();
             this.boundingBox = geometry.boundingBox;
     }
 
-    public generateAndDrawMaps() {
-        this.fillMaps();
+    public generateAndDrawMaps(parameters: TextureGeneratorParameters) {
+        this.fillMaps(parameters);
     }
 
     public updateGeometryFaceVertexUvs() {
         // fill the face uvs
-        const { geometry, allNodes } = this;
+        const { geometry, allVeins } = this;
         const layer0 = geometry.faceVertexUvs[0];
         for (const face of geometry.faces) {
             const { a, b, c } = face;
             const faceUv = [
-                this.uvPosition(allNodes[a]),
-                this.uvPosition(allNodes[b]),
-                this.uvPosition(allNodes[c]),
+                this.uvPosition(allVeins[a]),
+                this.uvPosition(allVeins[b]),
+                this.uvPosition(allVeins[c]),
             ]
             layer0.push(faceUv);
         }
@@ -72,7 +82,7 @@ export class TextureGenerator {
         return new THREE.Vector2(u, v);
     }
 
-    private fillMaps() {
+    private fillMaps(parameters: TextureGeneratorParameters) {
         const colorCanvas = document.createElement("canvas");
         colorCanvas.width = this.width;
         colorCanvas.height = this.height;
@@ -83,26 +93,32 @@ export class TextureGenerator {
         const color = colorCanvas.getContext("2d")!;
         const bump = bumpCanvas.getContext("2d")!;
 
-        color.fillStyle = "green";
+        const gradient = color.createLinearGradient(0, 0, this.width, 0);
+        gradient.addColorStop(0, parameters.innerColor.getStyle());
+        gradient.addColorStop(1, parameters.outerColor.getStyle());
+        color.fillStyle = gradient;
         color.fillRect(0, 0, colorCanvas.width, colorCanvas.height);
 
         bump.fillStyle = "black";
         bump.fillRect(0, 0, bumpCanvas.width, bumpCanvas.height);
 
-        // has potential; very slow
-        for (let x = 0; x < this.width; x++) {
-            for (let y = 0; y < this.height; y++) {
-                const b = THREE.Math.randInt(254, 255);
-                bump.fillStyle = `rgb(${b}, ${b}, ${b})`;
-                bump.fillRect(x, y, 1, 1);
+        // very slow
+        if (parameters.bumpNoiseHeight > 0) {
+            for (let x = 0; x < this.width; x++) {
+                for (let y = 0; y < this.height; y++) {
+                    const b = THREE.Math.randInt(255 - parameters.bumpNoiseHeight, 255);
+                    bump.fillStyle = `rgb(${b}, ${b}, ${b})`;
+                    bump.fillRect(x, y, 1, 1);
+                }
             }
         }
 
         const VEIN_THICKNESS = 4.0;
-        const outlineBones = (t: number) => {
-            color.strokeStyle = `rgba(0, 100, 0, ${t * 5 / detailIterations})`;
+        const outlineVeins = (t: number) => {
+            const { r, g, b } = parameters.veinColor;
+            color.strokeStyle = `rgba(${r}, ${g}, ${b}, ${t * 5 / detailIterations * parameters.veinAlpha})`;
             bump.strokeStyle = `rgba(235, 235, 235, ${t / detailIterations})`;
-            for (const leafNode of this.allNodes) {
+            for (const leafNode of this.allVeins) {
                 const { x, y } = this.pixelPosition(leafNode);
                 for (const child of leafNode.children) {
                     if (child instanceof VeinBone) {
@@ -134,7 +150,7 @@ export class TextureGenerator {
         const detailIterations = 4;
         for (let i = 1; i < detailIterations + 1; i++) {
             const t = i / detailIterations;
-            outlineBones(t);
+            outlineVeins(t);
         }
 
         this.colorMap = new THREE.CanvasTexture(colorCanvas);
