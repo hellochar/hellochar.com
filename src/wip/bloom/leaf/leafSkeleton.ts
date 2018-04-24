@@ -2,14 +2,14 @@ import * as THREE from "three";
 import { Vein } from "../vein/vein";
 import { VeinedLeaf } from "../vein/veinedLeaf";
 
-export class LeafNode extends THREE.Bone {
+export class VeinBone extends THREE.Bone {
     index!: number;
     constructor(public vein: Vein) {
         super(null as any);
     }
 
     static createFromVein(vein: Vein) {
-        const node = new LeafNode(vein);
+        const node = new VeinBone(vein);
         const offset = vein.offset();
         const mag = offset.length();
         node.position.set(mag, 0, 0);
@@ -24,7 +24,7 @@ export class LeafNode extends THREE.Bone {
         }
         // node.position.set(offset.x, 0, offset.y);
         for (const childVein of vein.children) {
-            const childNode = LeafNode.createFromVein(childVein);
+            const childNode = VeinBone.createFromVein(childVein);
             node.add(childNode);
         }
         return node;
@@ -32,9 +32,9 @@ export class LeafNode extends THREE.Bone {
 }
 
 export class LeafSkeleton extends THREE.Skeleton {
-    bones!: LeafNode[];
-    rootNode: LeafNode;
-    constructor(bones: LeafNode[], public downScalar: number) {
+    bones!: VeinBone[];
+    rootNode: VeinBone;
+    constructor(bones: VeinBone[], public downScalar: number) {
         super(bones);
         this.rootNode = bones[0];
     }
@@ -51,10 +51,10 @@ export class LeafSkeleton extends THREE.Skeleton {
 
         // veined leaf into skeleton
         // for now, just convert every leaf vein into a bone.
-        const rootLeafNode = LeafNode.createFromVein(leaf.root);
-        const bones: LeafNode[] = [];
+        const rootLeafNode = VeinBone.createFromVein(leaf.root);
+        const bones: VeinBone[] = [];
         rootLeafNode.traverse((obj) => {
-            if (obj instanceof LeafNode) {
+            if (obj instanceof VeinBone) {
                 obj.position.multiplyScalar(scale);
                 obj.index = bones.length;
                 bones.push(obj);

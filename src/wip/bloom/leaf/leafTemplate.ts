@@ -3,7 +3,7 @@ import Delaunator from "delaunator";
 import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
-import { LeafNode, LeafSkeleton } from "./leafSkeleton";
+import { VeinBone, LeafSkeleton } from "./leafSkeleton";
 import { LeafTextureGenerator } from "./textureGen";
 
 export class LeafTemplate {
@@ -176,9 +176,9 @@ export class LeafTemplate {
             const cells = alphaComplex(alpha, points);
             for (let i = 0; i < cells.length; i++) {
                 const [indexA, indexB, indexC] = cells[i];
-                const a = skeleton.bones[indexA] as LeafNode;
-                const b = skeleton.bones[indexB] as LeafNode;
-                const c = skeleton.bones[indexC] as LeafNode;
+                const a = skeleton.bones[indexA] as VeinBone;
+                const b = skeleton.bones[indexB] as VeinBone;
+                const c = skeleton.bones[indexC] as VeinBone;
                 // const passesFilter = filters.every((filter) => filter(a, b, c));
                 // if (passesFilter) {
                 const face = new THREE.Face3(indexA, indexB, indexC);
