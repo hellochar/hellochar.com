@@ -28,6 +28,8 @@ export class LeafTemplate {
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
 
+        geometry.sortFacesByMaterialIndex();
+
         const generator = new TextureGenerator(geometry, leaf, skeleton.bones);
         generator.updateGeometryFaceVertexUvs();
         generator.generateAndDrawMaps();
