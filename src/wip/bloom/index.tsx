@@ -8,7 +8,7 @@ import { Branch } from "./branch";
 import { Component, ComponentClass } from "./component";
 import dna, { randomizeDna } from "./dna";
 import { Flower } from "./flower";
-import { Leaf, LeafTemplate } from "./leaf";
+import { Leaf } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
 

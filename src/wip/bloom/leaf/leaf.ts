@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
 import { Component } from "../component";
-import { LeafTemplate } from "./leafTemplate";
-import { SkinnedLeaf } from "./skinnedLeaf";
+import { LeafTemplate } from "../veinMesh/leafTemplate";
+import { SkinnedLeaf } from "../veinMesh/skinnedLeaf";
 
 // what do I want to say?
 // leaf feeds the petiole

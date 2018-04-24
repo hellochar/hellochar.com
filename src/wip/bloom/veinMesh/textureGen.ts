@@ -1,10 +1,12 @@
 import Delaunator from "delaunator";
 import * as THREE from "three";
 
-import { VeinBone, VeinedLeafSkeleton } from "../vein/leafSkeleton";
 import { VeinedLeaf } from "../vein/veinedLeaf";
-import { SkinnedLeaf } from "./skinnedLeaf";
+import { VeinBone, VeinedLeafSkeleton } from "./leafSkeleton";
 
+/**
+ * Procedurally draws a textures for a VeinedLeaf to use in THREE.js materials.
+ */
 export class LeafTextureGenerator {
     public width = 2048;
     public height = 2048;

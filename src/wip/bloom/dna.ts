@@ -1,8 +1,9 @@
 import * as THREE from "three";
 
 import { Petal } from "./flower";
-import { Leaf, LeafTemplate } from "./leaf";
+import { Leaf } from "./leaf";
 import { generateRandomVeinedLeaf, VeinedLeaf } from "./vein/veinedLeaf";
+import { LeafTemplate } from "./veinMesh/leafTemplate";
 import { WhorlParameters } from "./whorl";
 
 export function generateRandomLeafWhorlParameters(): WhorlParameters<Leaf> {
