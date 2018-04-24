@@ -1,6 +1,6 @@
-import { Math as THREEMath, Vector2 } from "three";
+import { Box2, Math as THREEMath, Vector2 } from "three";
+
 import { ReasonStopped, Vein } from "./vein";
-import { Box2 } from "three";
 
 const { abs, min, max, exp, pow, PI, floor } = Math;
 const { randFloat: random, randInt, mapLinear: map } = THREEMath;
@@ -165,7 +165,7 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         TOO_CLOSE_DIST: 1,
         EXPAND_SCALAR: random(0.75, 1.25), // 0.75; //1
         get EXPAND_DIST() { return this.TOO_CLOSE_DIST * this.EXPAND_SCALAR },
-        MAX_PATH_COST: 400,
+        MAX_PATH_COST: 100,
         SIDEWAYS_COST_RATIO: random(-1, 1) * random(0, 1) * 0.5, // 0.5;
         SIDE_ANGLE: random(PI / 6, PI / 2), // PI / 3;
         SIDE_ANGLE_RANDOM: random(0, 1) * random(0, 1) * PI / 6, // random(0, PI / 4); //PI / 6;
@@ -325,28 +325,28 @@ export class VeinedLeaf {
 export function generateRandomVeinedLeaf() {
     let veinedLeaf: VeinedLeaf;
     do {
-        // veinedLeaf = new VeinedLeaf(generateVeinGrowthParameters());
-        veinedLeaf = new VeinedLeaf({
-  "TOO_CLOSE_DIST": 1,
-  "EXPAND_SCALAR": 1.2412184636066348,
-  "EXPAND_DIST": 1.2412184636066348,
-  "MAX_PATH_COST": 400,
-  "SIDEWAYS_COST_RATIO": 0.1100911124087456,
-  "SIDE_ANGLE": 0.8710343371250968,
-  "SIDE_ANGLE_RANDOM": 0.055582410403165826,
-  "DEPTH_STEPS_BEFORE_BRANCHING": 3,
-  "SECONDARY_BRANCH_PERIOD": 1,
-  "TURN_TOWARDS_X_FACTOR": 0.00048394628521100896,
-  "AVOID_NEIGHBOR_FORCE": 0.00616386452663065,
-  "randWiggle": 0,
-  "BASE_DISINCENTIVE": 367.5968676458393,
-  "COST_DISTANCE_TO_ROOT_DIVISOR": 500,
-  "COST_NEGATIVE_X_GROWTH": 0.26959565582038186,
-  "GROW_FORWARD_FACTOR": 2.1190955635899456,
-  "SECONDARY_BRANCH_SCALAR": 0.9799578808329089,
-  "COST_TO_TURN": 0,
-  "growForwardBranch": true
-});
+        veinedLeaf = new VeinedLeaf(generateVeinGrowthParameters());
+//         veinedLeaf = new VeinedLeaf({
+//   "TOO_CLOSE_DIST": 1,
+//   "EXPAND_SCALAR": 1.2412184636066348,
+//   "EXPAND_DIST": 1.2412184636066348,
+//   "MAX_PATH_COST": 400,
+//   "SIDEWAYS_COST_RATIO": 0.1100911124087456,
+//   "SIDE_ANGLE": 0.8710343371250968,
+//   "SIDE_ANGLE_RANDOM": 0.055582410403165826,
+//   "DEPTH_STEPS_BEFORE_BRANCHING": 3,
+//   "SECONDARY_BRANCH_PERIOD": 1,
+//   "TURN_TOWARDS_X_FACTOR": 0.00048394628521100896,
+//   "AVOID_NEIGHBOR_FORCE": 0.00616386452663065,
+//   "randWiggle": 0,
+//   "BASE_DISINCENTIVE": 367.5968676458393,
+//   "COST_DISTANCE_TO_ROOT_DIVISOR": 500,
+//   "COST_NEGATIVE_X_GROWTH": 0.26959565582038186,
+//   "GROW_FORWARD_FACTOR": 2.1190955635899456,
+//   "SECONDARY_BRANCH_SCALAR": 0.9799578808329089,
+//   "COST_TO_TURN": 0,
+//   "growForwardBranch": true
+// });
         for (let i = 0; i < 1000; i++) {
             // this really shouldn't hit 1000, expandBoundary will result in 0 soon
             veinedLeaf.expandBoundary();

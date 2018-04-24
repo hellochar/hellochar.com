@@ -1,9 +1,9 @@
 import Delaunator from "delaunator";
 import * as THREE from "three";
 
+import { VeinedLeaf } from "../vein/veinedLeaf";
 import { LeafNode, LeafSkeleton } from "./leafSkeleton";
 import { SkinnedLeaf } from "./skinnedLeaf";
-import { VeinedLeaf } from "../vein/veinedLeaf";
 
 /* construct a texture from a mesh
 
@@ -172,7 +172,7 @@ export class LeafTextureGenerator {
                         // const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar;
                         const width = Math.max(
                             0.2,
-                            VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar / (1 + child.vein.numTurns)
+                            VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar / (1 + child.vein.numTurns),
                         );
                         // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 3) * (1 - t) * this.detailScalar;
                         // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 2) * (1 - t) * this.detailScalar;

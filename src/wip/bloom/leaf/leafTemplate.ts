@@ -2,9 +2,9 @@ import alphaComplex = require("alpha-complex");
 import Delaunator from "delaunator";
 import * as THREE from "three";
 
+import { VeinedLeaf } from "../vein/veinedLeaf";
 import { LeafNode, LeafSkeleton } from "./leafSkeleton";
 import { LeafTextureGenerator } from "./textureGen";
-import { VeinedLeaf } from "../vein/veinedLeaf";
 
 export class LeafTemplate {
     constructor(
