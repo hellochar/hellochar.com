@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
 import { VeinBone, VeinedLeafSkeleton } from "./leafSkeleton";
-import { LeafTextureGenerator } from "./textureGen";
+import { TextureGenerator } from "./textureGenerator";
 
 /**
  * A LeafTemplate holds a VeinedLeaf and a geometry and material on top of that veining structure.
@@ -28,7 +28,7 @@ export class LeafTemplate {
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
 
-        const generator = new LeafTextureGenerator(geometry, leaf, skeleton.bones);
+        const generator = new TextureGenerator(geometry, leaf, skeleton.bones);
         generator.updateGeometryFaceVertexUvs();
         generator.generateAndDrawMaps();
 

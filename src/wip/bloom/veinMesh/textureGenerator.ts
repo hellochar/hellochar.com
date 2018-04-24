@@ -7,7 +7,7 @@ import { VeinBone, VeinedLeafSkeleton } from "./leafSkeleton";
 /**
  * Procedurally draws a textures for a VeinedLeaf to use in THREE.js materials.
  */
-export class LeafTextureGenerator {
+export class TextureGenerator {
     public width = 2048;
     public height = 2048;
     private boundingBox: THREE.Box3;
