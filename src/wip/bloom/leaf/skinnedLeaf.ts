@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { VeinedLeafSkeleton } from "./leafSkeleton";
+import { VeinedLeafSkeleton } from "../vein/leafSkeleton";
 import { LeafTemplate } from "./leafTemplate";
 
 export class SkinnedLeaf extends THREE.SkinnedMesh {

@@ -32,14 +32,7 @@ export class VeinBone extends THREE.Bone {
 }
 
 export class VeinedLeafSkeleton extends THREE.Skeleton {
-    bones!: VeinBone[];
-    rootNode: VeinBone;
-    constructor(bones: VeinBone[], public downScalar: number) {
-        super(bones);
-        this.rootNode = bones[0];
-    }
-
-    static createFromVeinedLeaf(leaf: VeinedLeaf) {
+    public static createFromVeinedLeaf(leaf: VeinedLeaf) {
         const boundingBox = leaf.getBoundingBox();
 
         // unit square scale the leaf - make all veins fit perfectly in a unit box, maintaining aspect ratio.
@@ -62,5 +55,14 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
         });
 
         return new VeinedLeafSkeleton(bones, scale);
+    }
+
+    bones!: VeinBone[];
+
+    rootNode: VeinBone;
+
+    private constructor(bones: VeinBone[], public downScalar: number) {
+        super(bones);
+        this.rootNode = bones[0];
     }
 }
