@@ -13,6 +13,8 @@ import "three/examples/js/libs/stats.min";
 // (window as any).dat = dat;
 
 import "three/examples/js/shaders/BokehShader";
+// import "three/examples/js/shaders/BokehShader2";
+
 import "three/examples/js/shaders/CopyShader";
 import "three/examples/js/shaders/DotScreenShader";
 // required by SAOShader

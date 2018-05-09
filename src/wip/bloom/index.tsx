@@ -26,12 +26,11 @@ class Bloom extends ISketch {
         // this.renderer.setClearColor(new THREE.Color("rgb(193, 255, 251)"));
 
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 50);
-        this.camera.position.y = 10;
-        this.camera.position.z = 10;
-        this.camera.position.multiplyScalar(0.1);
+        this.camera.position.y = 1;
+        this.camera.position.z = 1;
 
         this.orbitControls = new THREE.OrbitControls(this.camera);
-        // this.orbitControls.autoRotate = true;
+        this.orbitControls.autoRotate = true;
         this.orbitControls.autoRotateSpeed = 0.6;
 
         randomizeDna();
@@ -60,13 +59,12 @@ class Bloom extends ISketch {
 
         // this doesn't work too well
         // const bokehPass = new THREE.BokehPass(this.scene, this.camera, {
-        //     focus: 5,
+        //     focus: 1,
         //     aperture: 0.00025,
         //     maxblur: 0.05,
         //     // width: this.canvas.width,
         //     // height: this.canvas.height,
         // });
-        // bokehPass.renderToScreen = true;
         // this.composer.addPass(bokehPass);
 
         // const ssaoPass = new THREE.SSAOPass( this.scene, this.camera, this.canvas.width, this.canvas.height );
@@ -102,7 +100,7 @@ class Bloom extends ISketch {
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
 
-        const branch = new Branch(4);
+        const branch = new Branch(1);
         // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
         // scene.add(helper);
         this.component = branch;
@@ -135,7 +133,7 @@ class Bloom extends ISketch {
         // this.component = flower;
     }
 
-    public animate() {
+    public animate(ms: number) {
         this.component.traverse((obj) => {
             if (obj instanceof Component) {
                 if (obj.timeBorn == null) {
@@ -147,6 +145,9 @@ class Bloom extends ISketch {
             }
         });
 
+        // const yPos = THREE.Math.smoothstep(this.timeElapsed / 30000, 0, 1) * 3.0;
+        // this.camera.position.y = yPos + 1;
+        // this.orbitControls.target.set(0, yPos, 0);
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();

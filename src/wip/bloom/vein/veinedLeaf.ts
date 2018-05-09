@@ -184,6 +184,31 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
     };
 }
 
+export function generatePetalGrowthParameters(): IVeinGrowthParameters {
+    return {
+        TOO_CLOSE_DIST: 1,
+        EXPAND_SCALAR: 1.25,
+        get EXPAND_DIST() { return this.TOO_CLOSE_DIST * this.EXPAND_SCALAR },
+        MAX_PATH_COST: 150,
+        SIDEWAYS_COST_RATIO: random(-0.2, 0), // 0.5;
+        SIDE_ANGLE: random(PI / 7, PI / 5), // PI / 3;
+        SIDE_ANGLE_RANDOM: random(0, 1) * PI / 4, // random(0, PI / 4); //PI / 6;
+        DEPTH_STEPS_BEFORE_BRANCHING: 2, // 2
+        SECONDARY_BRANCH_PERIOD: 1,
+        TURN_TOWARDS_X_FACTOR: random(0, 1) * 0.2, // 0.2
+        AVOID_NEIGHBOR_FORCE: random(0, 1) * 0.5, // 1
+        randWiggle: 0.1,
+        BASE_DISINCENTIVE: 100,
+        COST_DISTANCE_TO_ROOT_DIVISOR: 5e2,
+        COST_NEGATIVE_X_GROWTH: 1,
+        GROW_FORWARD_FACTOR: 30,
+        SECONDARY_BRANCH_SCALAR: 0.85,
+        COST_TO_TURN: -20,
+        growForwardBranch: true,
+    };
+}
+
+
 export class VeinedLeaf {
     public world: Vein[] = [];
 
@@ -322,10 +347,10 @@ export class VeinedLeaf {
     //   }
 }
 
-export function generateRandomVeinedLeaf() {
+export function generateRandomVeinedLeaf(parameterGen: () => IVeinGrowthParameters) {
     let veinedLeaf: VeinedLeaf;
     do {
-        veinedLeaf = new VeinedLeaf(generateVeinGrowthParameters());
+        veinedLeaf = new VeinedLeaf(parameterGen());
 //         veinedLeaf = new VeinedLeaf({
 //   "TOO_CLOSE_DIST": 1,
 //   "EXPAND_SCALAR": 1.2412184636066348,

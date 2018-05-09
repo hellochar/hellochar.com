@@ -112,7 +112,7 @@ export class Branch extends Component {
     updateSelf(t: number) {
         const { bones } = this.skeleton;
         // this should grow 1 segment per second
-        const growthFactor = 106 / 1000;
+        const growthFactor = 46 / 1000;
         const curveUpwardsAmount = 1.01;
         const boneShrinkFactor = 0.98;
         const bonesPerGrowth = 10;
@@ -137,11 +137,9 @@ export class Branch extends Component {
             q.slerp(upQuarternion, curveUpwardsAmount);
             currentBone.quaternion.multiply(q);
         } else if (this.flower == null) {
-            // // wow we've grown all the way! maybe grow a bud at the end or something
+            // we've grown all the way! grow a flower at the end.
             const flower = this.flower = this.createFlower();
             this.addChildAtPoint(this.flower, currentBone);
-            this.flower.scale.set(15, 15, 15);
-            console.log(flower.getWorldScale());
         }
 
         // grow another thing here
