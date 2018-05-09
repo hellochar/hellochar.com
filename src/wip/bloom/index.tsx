@@ -144,6 +144,7 @@ class Bloom extends ISketch {
                 }
             }
         });
+        this.printObjectTree();
 
         // const yPos = THREE.Math.smoothstep(this.timeElapsed / 30000, 0, 1) * 3.0;
         // this.camera.position.y = yPos + 1;
@@ -151,6 +152,15 @@ class Bloom extends ISketch {
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
+    }
+
+    private printObjectTree() {
+        const counts = new Map<string, number>();
+        scene.traverse((obj) => {
+            const name = obj.constructor.name;
+            counts.set(name, (counts.get(name) || 0) + 1);
+        });
+        console.log(counts);
     }
 
     public resize(width: number, height: number) {
