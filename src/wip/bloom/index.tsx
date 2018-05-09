@@ -11,6 +11,7 @@ import { Flower } from "./flower";
 import { Leaf } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
+import Petal from "./flower/petal";
 
 class Bloom extends ISketch {
     public scene = scene;
@@ -100,10 +101,16 @@ class Bloom extends ISketch {
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
 
-        const branch = new Branch(1);
-        // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
-        // scene.add(helper);
-        this.component = branch;
+        // const branch = new Branch(1);
+        // // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
+        // // scene.add(helper);
+        // this.component = branch;
+
+        const petal = Petal.generate(dna.petalTemplate);
+        petal.position.y = 0.3;
+        this.component = petal;
+        const skeletonHelper = new THREE.SkeletonHelper(petal.mesh.skeleton.bones[0]);
+        scene.add(skeletonHelper);
 
         // const leaf = new Leaf(dna.leafTemplate);
         // leaf.position.x = 0;

@@ -20,8 +20,8 @@ export default class Petal extends Component {
 
     updateSelf(t: number) {
         const timeAlive = (t - this.timeBorn);
-        const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, 0, -Math.PI / 2);
-        this.mesh.rotation.z = rotZ;
+        // const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, 0, -Math.PI / 2);
+        // this.mesh.rotation.z = rotZ;
 
         const rotationMult = 1 - 1 / (1 + timeAlive / 10000); // 0 to 1
 

@@ -208,7 +208,6 @@ export function generatePetalGrowthParameters(): IVeinGrowthParameters {
     };
 }
 
-
 export class VeinedLeaf {
     public world: Vein[] = [];
 
