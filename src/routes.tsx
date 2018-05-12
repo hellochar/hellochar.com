@@ -52,12 +52,23 @@ const SlidesDiveCC = () => {
     );
 }
 
+const SlidesProgrammerCC = () => {
+    return (
+        <iframe
+            className="slides"
+            src="https://docs.google.com/presentation/d/e/2PACX-1vRwS01XFUlFf4lsFtoaVpFV2RzHOYKU8qT4O2M_uxmEWROsRYOadeMECjTrC1-V4nCYSpb4byLyy0Tw/embed?start=false&loop=false"
+            frameBorder="0" allowFullScreen>
+        </iframe>
+    );
+}
+
 export const Routes = () => (
     <Switch>
         { sketchRoutes }
         { wipSketchRoutes }
         <Route path="/slides/introcc" component={SlidesIntroCC} />
         <Route path="/slides/divecc" component={SlidesDiveCC} />
+        <Route path="/slides/ccse" component={SlidesProgrammerCC} />
         <Route path="/wip" component={WipListing} />
         <Route path="/" component={HomePage} />
     </Switch>
