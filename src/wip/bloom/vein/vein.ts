@@ -30,6 +30,13 @@ export class Vein {
     numTurns: number = 0;
     isTerminal: boolean = false;
 
+    /**
+     * this vein's normalized position in the leaf once the leaf is finished.
+     * x is in [0, 1]
+     * y is in [-0.5, 0.5]
+     */
+    public normalizedPosition: Vector2 = new Vector2();
+
     constructor(public position: Vector2, public leaf: VeinedLeaf) {
         this.children = [];
         leaf.world.push(this);

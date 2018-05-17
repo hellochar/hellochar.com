@@ -5,43 +5,59 @@ import { Component } from "../component";
 import { dna } from "../dna";
 import { LeafOld } from "../leaf/leafOld";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
-import { VeinBone, VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
+import { VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
 
 export default class Petal extends Component {
     public mesh: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
-        // // can't really do this yet
-        // noisyEdge: true,
-
         this.mesh = template.instantiateLeaf();
         this.add(this.mesh);
     }
 
     updateSelf(t: number) {
         const timeAlive = (t - this.timeBorn);
-        // const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, 0, -Math.PI / 2);
-        // this.mesh.rotation.z = rotZ;
+        const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, -Math.PI / 2, -Math.PI / 6);
+        this.mesh.rotation.z = rotZ;
 
-        const rotationMult = 1 - 1 / (1 + timeAlive / 10000); // 0 to 1
+        const rotationMult = THREE.Math.mapLinear(
+            THREE.Math.smoothstep(timeAlive, 0, 12000), 0, 1,
+            -1,
+            1.1);
 
-        for (const boneUncast of this.mesh.skeleton.bones) {
-            // HACKHACK make this based off physics instead
-            const bone = boneUncast as VeinBone;
-            const skeleton = this.mesh.skeleton as VeinedLeafSkeleton;
-            // curl the leaves
-            let { x, y: z } = bone.vein.position;
-            x *= skeleton.downScalar;
-            z *= skeleton.downScalar;
-            const len = Math.sqrt(x * x + z * z);
-            bone.rotation.z = (0.3 * len - bone.rotation.z) * rotationMult * 0.01 + Math.abs(z) * rotationMult * 0.1;
+        // const [base, forward, ortho, forwardCurl, sideCurl] = this.mesh.skeleton.bones;
+        const [base, ...bones] = this.mesh.skeleton.bones;
+        // rotation does some weird shit
+        // forward.rotation.z += 0.01;
 
-            // // TODO make the position integrate to a log(1+x) look properly
-            // const t2 = Math.abs(z) * 40 - 6;
-            // const pos = logistic(t2) * ( 1 - logistic(t2)) * 0.01;
-            // bone.position.y = -pos;
-            // // bone.rotation.y = 0.1 / (1 + Math.abs(z) * 10);
+        // base.rotation.z += 0.01;
+
+        // total rotation = NUM_BONES * rotationPerBone
+        // rotationPerBone = rotation / NUM_BONES
+        const NUM_BONES = 2;
+        const wantedRotation = Math.PI / 2;
+        for (const bone of bones) {
+            bone.rotation.z = rotationMult * wantedRotation / NUM_BONES;
         }
+
+        // forward.rotation.z = Math.sin(timeAlive / 1000) * Math.PI;
+
+        // forward.position.x = 1;
+        // forward.position.y = Math.sin(timeAlive / 4000) * 1;
+        // // forward.position.z = Math.sin(timeAlive / 2000) * 0.2;
+        // forward.position.normalize();
+
+        // ortho.position.z = 1;
+        // ortho.position.y = Math.sin(timeAlive / 5000) * 1;
+        // ortho.position.normalize();
+
+        // forwardCurl.position.x = 1;
+        // forwardCurl.position.y = Math.sin(timeAlive / 1000) * 1;
+        // forwardCurl.position.setLength(0.1);
+
+        // forwardCurl.rotation.z += 0.1;
+
+        // forwardCurl.position.setFromSpherical(new THREE.Spherical(0.1, 0, timeAlive / 1000));
     }
 
     static generate(template: LeafTemplate) {

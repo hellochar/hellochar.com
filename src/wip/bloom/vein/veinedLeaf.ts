@@ -189,7 +189,7 @@ export function generatePetalGrowthParameters(): IVeinGrowthParameters {
         TOO_CLOSE_DIST: 1,
         EXPAND_SCALAR: 1.25,
         get EXPAND_DIST() { return this.TOO_CLOSE_DIST * this.EXPAND_SCALAR },
-        MAX_PATH_COST: 150,
+        MAX_PATH_COST: 200,
         SIDEWAYS_COST_RATIO: random(-0.2, 0), // 0.5;
         SIDE_ANGLE: random(PI / 7, PI / 5), // PI / 3;
         SIDE_ANGLE_RANDOM: random(0, 1) * PI / 4, // random(0, PI / 4); //PI / 6;
@@ -197,13 +197,13 @@ export function generatePetalGrowthParameters(): IVeinGrowthParameters {
         SECONDARY_BRANCH_PERIOD: 1,
         TURN_TOWARDS_X_FACTOR: random(0, 1) * 0.2, // 0.2
         AVOID_NEIGHBOR_FORCE: random(0, 1) * 0.5, // 1
-        randWiggle: 0.1,
-        BASE_DISINCENTIVE: 100,
+        randWiggle: 0.0,
+        BASE_DISINCENTIVE: 10,
         COST_DISTANCE_TO_ROOT_DIVISOR: 5e2,
         COST_NEGATIVE_X_GROWTH: 1,
         GROW_FORWARD_FACTOR: 30,
         SECONDARY_BRANCH_SCALAR: 0.85,
-        COST_TO_TURN: -20,
+        COST_TO_TURN: -0.5,
         growForwardBranch: true,
     };
 }
@@ -219,11 +219,33 @@ export class VeinedLeaf {
 
     finished = false;
 
+    public normalizationDownScalar?: number;
+
     constructor(public growthParameters: IVeinGrowthParameters) {
         this.root = new Vein(new Vector2(this.growthParameters.EXPAND_DIST, 0), this);
         this.root.distanceToRoot = 0;
         this.root.costToRoot = 0;
         this.boundary.push(this.root);
+    }
+
+    /**
+     * Unit square scale this leaf - make all veins fit perfectly in a unit box [0, 1]x[0, 1], maintaining aspect ratio.
+     */
+    public computeNormalizedPositions() {
+        // e.g. [-10, 100];
+        const boundingBox = this.getBoundingBox();
+        const translateX = -boundingBox.min.x;
+
+        // 1 / (100 - -10) = 1 / 110 = 0.0091
+        this.normalizationDownScalar = 1 / Math.max(
+            boundingBox.max.x - boundingBox.min.x,
+            boundingBox.max.y - boundingBox.min.y,
+        );
+        for (const vein of this.world) {
+            vein.normalizedPosition.copy(vein.position);
+            vein.normalizedPosition.x += translateX;
+            vein.normalizedPosition.multiplyScalar(this.normalizationDownScalar);
+        }
     }
 
     expandBoundary() {
@@ -376,5 +398,6 @@ export function generateRandomVeinedLeaf(parameterGen: () => IVeinGrowthParamete
             veinedLeaf.expandBoundary();
         }
     } while (veinedLeaf.isDegenerate());
+    veinedLeaf.computeNormalizedPositions();
     return veinedLeaf;
 }

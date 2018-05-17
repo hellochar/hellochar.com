@@ -112,7 +112,7 @@ export class Branch extends Component {
     updateSelf(t: number) {
         const { bones } = this.skeleton;
         // this should grow 1 segment per second
-        const growthFactor = 46 / 1000;
+        const growthFactor = 246 / 1000;
         const curveUpwardsAmount = 1.01;
         const boneShrinkFactor = 0.98;
         const bonesPerGrowth = 10;
@@ -148,7 +148,8 @@ export class Branch extends Component {
             const newBranchLength = this.finalBranchLength - currentLength;
             if (newBranchLength > 1) {
                 let child: Component;
-                if (Math.random() < 0.5) {
+                const height = currentBone.getWorldPosition().y;
+                if (height < 5) {
                     child = this.createBranch(newBranchLength);
                 } else {
                     child = Leaves.generate();

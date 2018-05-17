@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
 import { TextureGenerator, TextureGeneratorParameters } from "./textureGenerator";
-import { VeinBone, VeinedLeafSkeleton } from "./veinedLeafSkeleton";
+import { VeinedLeafSkeleton } from "./veinedLeafSkeleton";
 
 /**
  * A LeafTemplate holds a VeinedLeaf and a geometry and material on top of that veining structure.
@@ -16,21 +16,21 @@ export class LeafTemplate {
         const skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(leaf);
 
         const geometry = new THREE.Geometry();
-        LeafTemplate.addVerticesAtVeinPositions(geometry, skeleton);
+        LeafTemplate.addVerticesAndSkinningAtVeinPositions(leaf, geometry);
 
         // alpha too high makes the boundary totally convex and isn't interesting
         // alpha too low puts holes in the leaf where the veins haven't explored into
         // the depth_steps significantly controls the leaf inner whitespace so we factor it
         // while choosing alpha
-        const alpha = 1 / skeleton.downScalar / (leaf.growthParameters.DEPTH_STEPS_BEFORE_BRANCHING * 2);
-        LeafTemplate.addAlphaHullFaces(alpha, geometry, skeleton);
+        const alpha = leaf.growthParameters.EXPAND_DIST / (leaf.growthParameters.DEPTH_STEPS_BEFORE_BRANCHING * 2);
+        LeafTemplate.addAlphaHullFaces(alpha, leaf, geometry);
 
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
 
         geometry.sortFacesByMaterialIndex();
 
-        const generator = new TextureGenerator(geometry, leaf, skeleton.bones);
+        const generator = new TextureGenerator(geometry, leaf);
         generator.updateGeometryFaceVertexUvs();
         generator.generateAndDrawMaps(textureGeneratorParams);
 
@@ -62,13 +62,37 @@ export class LeafTemplate {
      * Adds one vertex to the geometry for each vein in the VeinedLeafSkeleton.
      * Also attaches skinIndices/skinWeights corresponding to that bone.
      */
-    private static addVerticesAtVeinPositions(geometry: THREE.Geometry, skeleton: VeinedLeafSkeleton) {
-        for (let i = 0; i < skeleton.bones.length; i++) {
-            const bone = skeleton.bones[i];
-            const vertex = bone.getWorldPosition();
-            geometry.vertices.push(vertex);
-            geometry.skinIndices.push(new THREE.Vector4(i, 0, 0, 0) as any);
-            geometry.skinWeights.push(new THREE.Vector4(1, 0, 0, 0) as any);
+    private static addVerticesAndSkinningAtVeinPositions(leaf: VeinedLeaf, geometry: THREE.Geometry) {
+        for (let i = 0; i < leaf.world.length; i++) {
+            const { x, y: z } = leaf.world[i].normalizedPosition;
+            geometry.vertices.push(new THREE.Vector3(x, 0, z));
+            // 1 = forward
+            // 2 = orthogonal
+            // 3 = forward curl
+            // 4 = ortho curl
+            const NUM_BONES = 2;
+            const startIndex = Math.floor(x * NUM_BONES);
+            const endIndex = startIndex + 1;
+            const prevIndex = startIndex - 1;
+            const weightToNextOne = x - startIndex / NUM_BONES;
+            const prevIndexWeight = prevIndex >= 0 ? 0.0 : 0;
+            geometry.skinIndices.push(new THREE.Vector4(startIndex, endIndex, -1, -1) as any);
+            // geometry.skinWeights.push(new THREE.Vector4(x, Math.abs(z), 0, 0) as any);
+            // geometry.skinWeights.push(new THREE.Vector4(Math.pow(x, 4), 0, 0, 0) as any);
+            // const forwardWeight = 0; // Math.pow(x, 4);
+            // const sideWeight = 0; // Math.pow(Math.abs(z), 4);
+            // const forwardCurlWeight = 0; // Math.pow(x, 8);
+            // const sideCurlWeight = 0; // Math.pow(Math.abs(z), 4);
+            geometry.skinWeights.push(new THREE.Vector4(
+                1 - weightToNextOne,
+                weightToNextOne,
+                prevIndexWeight,
+                0,
+                // forwardWeight,
+                // sideWeight,
+                // forwardCurlWeight,
+                // sideCurlWeight,
+            ) as any);
         }
         geometry.verticesNeedUpdate = true;
     }
@@ -76,28 +100,16 @@ export class LeafTemplate {
     /**
      * Computes the alpha hull on the geometry and adds each triangle as a Face3 to the geometry.
      */
-    private static addAlphaHullFaces(alpha: number, geometry: THREE.Geometry, skeleton: VeinedLeafSkeleton) {
-        // const alpha = 10;
-        const points = skeleton.bones.map((node) => {
-            const {x, z} = node.getWorldPosition();
-            return [x, z];
+    private static addAlphaHullFaces(alpha: number, leaf: VeinedLeaf, geometry: THREE.Geometry) {
+        const points = leaf.world.map((vein) => {
+            const { x, y } = vein.position;
+            return [x, y];
         });
-        // this works pretty well, but
-        // it makes no connectedness guarantee. some options:
-        // * detect, reject (and do this whole thing over) unconnected leaves
-        // * in vertex generation, ensure points are no more than e.g. 0.1 units apart
-        //   and then set an appropriate alpha here
         const cells = alphaComplex(alpha, points);
         for (let i = 0; i < cells.length; i++) {
             const [indexA, indexB, indexC] = cells[i];
-            const a = skeleton.bones[indexA] as VeinBone;
-            const b = skeleton.bones[indexB] as VeinBone;
-            const c = skeleton.bones[indexC] as VeinBone;
-            // const passesFilter = filters.every((filter) => filter(a, b, c));
-            // if (passesFilter) {
             const face = new THREE.Face3(indexA, indexB, indexC);
             geometry.faces.push(face);
-            // }
         }
     }
 
@@ -108,10 +120,11 @@ export class LeafTemplate {
     ) {}
 
     public instantiateLeaf() {
-        const leaf = new THREE.SkinnedMesh(this.geometry, this.material);
+        // const leaf = new THREE.SkinnedMesh(this.geometry, this.material);
+        const leaf = new SkinnedMeshHack(this.geometry, this.material);
         // create a separate skeleton for each leaf
         const skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(this.veinedLeaf);
-        leaf.add(skeleton.rootNode);
+        leaf.add(skeleton.bones[0]);
         leaf.bind(skeleton);
 
         // hackhack - our faces are on the wrong side i think and shadows aren't showing through
@@ -119,5 +132,18 @@ export class LeafTemplate {
         leaf.receiveShadow = true;
         leaf.castShadow = true;
         return leaf;
+    }
+}
+
+/**
+ * Custom subclass of SkinnedMesh that prevents normalizing skin weights.
+ * We intentionally use un-normalized skin weights so that a single bone can control the curl
+ * of the entire leaf.
+ * THREE.SkinnedMesh's constructor always calls normalizeSkinWeights(), which we don't want to do,
+ * so we hack around it by overriding the method.
+ */
+class SkinnedMeshHack extends THREE.SkinnedMesh {
+    normalizeSkinWeights() {
+        // do nothing! lol
     }
 }

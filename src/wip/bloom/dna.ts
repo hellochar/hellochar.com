@@ -35,8 +35,8 @@ export function generateRandomPetalWhorlParameters(): WhorlParameters<Petal> {
         endYRot: Math.PI * 2,
         startScale: 1,
         endScale: 1,
-        startZRot: Math.PI / 2,
-        endZRot: Math.PI / 2,
+        startZRot: 0,
+        endZRot: 0,
         // endZRot: THREE.Math.randFloat(Math.PI / 12, Math.PI / 4),
         isBilateral: false,
         generate: () => Petal.generate(dna.petalTemplate),
@@ -90,6 +90,7 @@ let petalWhorlTemplate: WhorlParameters<Petal>;
 export function randomizeDna() {
     leafWhorlTemplate = generateRandomLeafWhorlParameters();
     petalWhorlTemplate = generateRandomPetalWhorlParameters();
+
     const veinedLeaf = generateRandomVeinedLeaf(generateVeinGrowthParameters);
     const leafTextureParameters: TextureGeneratorParameters = {
         innerColor: new THREE.Color("green"),

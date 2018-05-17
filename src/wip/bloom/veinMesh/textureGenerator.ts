@@ -2,7 +2,7 @@ import Delaunator from "delaunator";
 import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
-import { VeinBone, VeinedLeafSkeleton } from "./veinedLeafSkeleton";
+import { Vein } from "../vein/vein";
 
 export interface TextureGeneratorParameters {
     innerColor: THREE.Color;
@@ -18,8 +18,8 @@ export interface TextureGeneratorParameters {
  * Procedurally draws a textures for a VeinedLeaf to use in THREE.js materials.
  */
 export class TextureGenerator {
-    public width = 512;
-    public height = 512;
+    public width = 2048;
+    public height = 2048;
     private boundingBox: THREE.Box3;
     public pixelBounds = new THREE.Box2(new THREE.Vector2(), new THREE.Vector2(this.width, this.height));
 
@@ -33,12 +33,9 @@ export class TextureGenerator {
     /**
      * Assumes geometry vertices are unit-square scaled.
      */
-    constructor(
-        public geometry: THREE.Geometry,
-        public leaf: VeinedLeaf,
-        public allVeins: VeinBone[]) {
-            geometry.computeBoundingBox();
-            this.boundingBox = geometry.boundingBox;
+    constructor(public geometry: THREE.Geometry, public leaf: VeinedLeaf) {
+        geometry.computeBoundingBox();
+        this.boundingBox = geometry.boundingBox;
     }
 
     public generateAndDrawMaps(parameters: TextureGeneratorParameters) {
@@ -47,14 +44,14 @@ export class TextureGenerator {
 
     public updateGeometryFaceVertexUvs() {
         // fill the face uvs
-        const { geometry, allVeins } = this;
+        const { geometry, leaf } = this;
         const layer0 = geometry.faceVertexUvs[0];
         for (const face of geometry.faces) {
             const { a, b, c } = face;
             const faceUv = [
-                this.uvPosition(allVeins[a]),
-                this.uvPosition(allVeins[b]),
-                this.uvPosition(allVeins[c]),
+                this.uvPosition(leaf.world[a]),
+                this.uvPosition(leaf.world[b]),
+                this.uvPosition(leaf.world[c]),
             ]
             layer0.push(faceUv);
         }
@@ -64,8 +61,8 @@ export class TextureGenerator {
     /**
      * Returns pixel coordinates (in [0, width/height]) for the leafNode's position.
      */
-    public pixelPosition(node: VeinBone) {
-        const { x, y } = this.uvPosition(node);
+    public pixelPosition(vein: Vein) {
+        const { x, y } = this.uvPosition(vein);
         return new THREE.Vector2(this.width * x, this.height * (1 - y));
     }
 
@@ -73,10 +70,9 @@ export class TextureGenerator {
     /**
      * Returns uv coordinates (in [0, 1]) for the leafNode's position.
      */
-    public uvPosition(node: VeinBone) {
-        node.getWorldPosition(this.tempP);
-        const { x: nodeX, z: nodeZ } = this.tempP;
-        const u = (nodeX - this.boundingBox.min.x);
+    public uvPosition(vein: Vein) {
+        const { x: nodeX, y: nodeZ } = vein.normalizedPosition;
+        const u = nodeX;
         const v = (nodeZ + 0.5);
         // if (u < 0 || u > 1 || v < 0 || v > 1) throw new Error("uv out of bounds: " + u + ", " + v);
         return new THREE.Vector2(u, v);
@@ -118,31 +114,29 @@ export class TextureGenerator {
             const { r, g, b } = parameters.veinColor;
             color.strokeStyle = `rgba(${r}, ${g}, ${b}, ${t * 5 / detailIterations * parameters.veinAlpha})`;
             bump.strokeStyle = `rgba(235, 235, 235, ${t / detailIterations})`;
-            for (const leafNode of this.allVeins) {
+            for (const leafNode of this.leaf.world) {
                 const { x, y } = this.pixelPosition(leafNode);
                 for (const child of leafNode.children) {
-                    if (child instanceof VeinBone) {
-                        // const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar;
-                        const width = Math.max(
-                            0.2,
-                            VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar / (1 + child.vein.numTurns),
-                        );
-                        // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 3) * (1 - t) * this.detailScalar;
-                        // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 2) * (1 - t) * this.detailScalar;
-                        // const width = VEIN_THICKNESS * 2 * this.detailScalar * (1 - t);
-                        color.lineWidth = width;
-                        bump.lineWidth = width * 1.25;
-                        color.beginPath();
-                        bump.beginPath();
-                        const { x: px, y: py } = this.pixelPosition(child);
-                        color.moveTo(x, y);
-                        color.lineTo(px, py);
+                    // const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar;
+                    const width = Math.max(
+                        0.2,
+                        VEIN_THICKNESS * Math.log(1 + child.weight) * (1 - t) * this.detailScalar / (1 + child.numTurns),
+                    );
+                    // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 3) * (1 - t) * this.detailScalar;
+                    // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 2) * (1 - t) * this.detailScalar;
+                    // const width = VEIN_THICKNESS * 2 * this.detailScalar * (1 - t);
+                    color.lineWidth = width;
+                    bump.lineWidth = width * 1.25;
+                    color.beginPath();
+                    bump.beginPath();
+                    const { x: px, y: py } = this.pixelPosition(child);
+                    color.moveTo(x, y);
+                    color.lineTo(px, py);
 
-                        bump.moveTo(x, y);
-                        bump.lineTo(px, py);
-                        color.stroke();
-                        bump.stroke();
-                    }
+                    bump.moveTo(x, y);
+                    bump.lineTo(px, py);
+                    color.stroke();
+                    bump.stroke();
                 }
             }
         };
