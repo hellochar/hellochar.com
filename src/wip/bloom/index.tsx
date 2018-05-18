@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as io from "socket.io-client";
 import * as THREE from "three";
 
 import { LineBasicMaterial } from "three";
@@ -12,6 +13,20 @@ import { Leaf } from "./leaf";
 import scene from "./scene";
 import { Whorl } from "./whorl";
 import Petal from "./flower/petal";
+
+interface OpenPoseKeypoints {
+    version: string;
+    people: Array<{
+        pose_keypoints_2d: number[],
+        face_keypoints_2d: number[],
+        hand_left_keypoints_2d: number[],
+        hand_right_keypoints_2d: number[],
+        pose_keypoints_3d: number[],
+        face_keypoints_3d: number[],
+        hand_left_keypoints_3d: number[],
+        hand_right_keypoints_3d: number[],
+    }>;
+}
 
 class Bloom extends ISketch {
     public scene = scene;
@@ -42,6 +57,8 @@ class Bloom extends ISketch {
         // // console.log(leaf.skeleton);
         this.initPostprocessing();
 
+        this.initWebsockets();
+
         // const canvas = document.createElement("canvas");
         // canvas.width = 800;
         // canvas.height = 600;
@@ -52,6 +69,14 @@ class Bloom extends ISketch {
         // context.translate(100, 300);
         // context.scale(5, 5);
         // dna.veinedLeaf.draw(context);
+    }
+
+    socket!: SocketIOClient.Socket;
+    public initWebsockets() {
+        this.socket = io();
+        this.socket.on('update', (json: OpenPoseKeypoints) => {
+            console.log(json.people.length);
+        });
     }
 
     public initPostprocessing() {
@@ -101,7 +126,7 @@ class Bloom extends ISketch {
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
 
-        const branch = new Branch(14);
+        const branch = new Branch(8);
         // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
         // scene.add(helper);
         this.component = branch;
