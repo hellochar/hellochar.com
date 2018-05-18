@@ -5,6 +5,12 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+var openPoseRunner = require('./openpose_runner');
+
+openPoseRunner.start((json) => {
+  console.log("got json: ", json);
+});
+
 var app = express();
 
 // uncomment after placing your favicon in /public
