@@ -9,7 +9,25 @@ exports.start = (callback) => {
   const OUTPUT_FOLDER_NAME = "frames";
 
   // const command = `${path.join('bin', 'OpenPoseDemo.exe')} --camera_resolution 640x480 --net_resolution -1x240 --model_pose MPI_4_layers --write_json ${OUTPUT_FOLDER_NAME} --display 0`;
-  const command = `${path.join('bin', 'OpenPoseDemo.exe')} --camera_resolution 640x480 --net_resolution -1x240 --model_pose MPI_4_layers --write_json ${OUTPUT_FOLDER_NAME}`;
+  const execName = path.join('bin', 'OpenPoseDemo.exe');
+  const execParams = [
+    // use smallest possible resolution
+    "--camera_resolution 640x480",
+    // accuracy vs speed tradeoff; manually tested 240 gives about 30ps with acceptable quality
+    "--net_resolution -1x240",
+    // different options for detecting specific limbs; we use the fastest and simplest one since we don't need limbs
+    "--model_pose MPI_4_layers",
+    // output the json
+    `--write_json ${OUTPUT_FOLDER_NAME}`,
+    // in trial and error, camera 1 was the genius wide angle
+    "--camera 1",
+    // flip the wide angle camera since we're displaying ourselves back on the screen
+    "--frame_flip",
+
+    // debug
+    "--display 0",
+  ];
+  const command = `${execName} ${execParams.join(" ")}`;
   const cwd = path.resolve("/", "Users", "hello", "Downloads", "openpose-1.3.0-win64-gpu-binaries", "openpose-1.3.0-win64-gpu-binaries");
 
   const openPoseProcess = exec(command, {

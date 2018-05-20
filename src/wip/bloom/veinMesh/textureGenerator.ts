@@ -18,8 +18,8 @@ export interface TextureGeneratorParameters {
  * Procedurally draws a textures for a VeinedLeaf to use in THREE.js materials.
  */
 export class TextureGenerator {
-    public width = 2048;
-    public height = 2048;
+    public width = 512;
+    public height = 512;
     private boundingBox: THREE.Box3;
     public pixelBounds = new THREE.Box2(new THREE.Vector2(), new THREE.Vector2(this.width, this.height));
 

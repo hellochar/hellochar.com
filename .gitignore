@@ -10,3 +10,5 @@ public/*.worker.js
 public/style.css
 public/report.html
 public/index.html
+public/main.css
+public/vendors~main.bundle.js

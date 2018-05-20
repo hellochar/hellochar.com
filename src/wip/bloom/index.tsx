@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as io from "socket.io-client";
 import * as THREE from "three";
 
 import { LineBasicMaterial } from "three";
@@ -9,24 +8,11 @@ import { Branch } from "./branch";
 import { Component, ComponentClass } from "./component";
 import dna, { randomizeDna } from "./dna";
 import { Flower } from "./flower";
+import Petal from "./flower/petal";
 import { Leaf } from "./leaf";
+import { OpenPoseManager } from "./openPoseManager";
 import scene from "./scene";
 import { Whorl } from "./whorl";
-import Petal from "./flower/petal";
-
-interface OpenPoseKeypoints {
-    version: string;
-    people: Array<{
-        pose_keypoints_2d: number[],
-        face_keypoints_2d: number[],
-        hand_left_keypoints_2d: number[],
-        hand_right_keypoints_2d: number[],
-        pose_keypoints_3d: number[],
-        face_keypoints_3d: number[],
-        hand_left_keypoints_3d: number[],
-        hand_right_keypoints_3d: number[],
-    }>;
-}
 
 class Bloom extends ISketch {
     public scene = scene;
@@ -35,6 +21,10 @@ class Bloom extends ISketch {
     public composer!: THREE.EffectComposer;
 
     public component!: THREE.Object3D;
+
+    public person: THREE.Mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 0.1, 0.1));
+
+    public openPoseManager!: OpenPoseManager;
 
     public init() {
         this.renderer.shadowMap.enabled = true;
@@ -49,6 +39,8 @@ class Bloom extends ISketch {
         this.orbitControls.autoRotate = true;
         this.orbitControls.autoRotateSpeed = 0.6;
 
+        this.openPoseManager = new OpenPoseManager();
+
         randomizeDna();
 
         this.initComponent();
@@ -57,26 +49,7 @@ class Bloom extends ISketch {
         // // console.log(leaf.skeleton);
         this.initPostprocessing();
 
-        this.initWebsockets();
-
-        // const canvas = document.createElement("canvas");
-        // canvas.width = 800;
-        // canvas.height = 600;
-        // document.body.appendChild(canvas);
-        // const context = canvas.getContext("2d")!;
-
-        // console.log(dna.veinedLeaf);
-        // context.translate(100, 300);
-        // context.scale(5, 5);
-        // dna.veinedLeaf.draw(context);
-    }
-
-    socket!: SocketIOClient.Socket;
-    public initWebsockets() {
-        this.socket = io();
-        this.socket.on('update', (json: OpenPoseKeypoints) => {
-            console.log(json.people.length);
-        });
+        scene.add(this.person);
     }
 
     public initPostprocessing() {
@@ -126,7 +99,7 @@ class Bloom extends ISketch {
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
 
-        const branch = new Branch(8);
+        const branch = new Branch(6);
         // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
         // scene.add(helper);
         this.component = branch;
@@ -176,7 +149,16 @@ class Bloom extends ISketch {
                 }
             }
         });
-        this.printObjectTree();
+        // this.printObjectTree();
+
+        const people = this.openPoseManager.getPeople();
+        for (const person of people) {
+            const [headX, headY] = person.pose_keypoints_2d;
+            const worldX = THREE.Math.mapLinear(headX, 0, 640, -1, 1);
+            const worldY = THREE.Math.mapLinear(headY, 0, 640, 0, 2);
+            this.person.position.x = worldX;
+            this.person.position.y = worldY;
+        }
 
         // const yPos = THREE.Math.smoothstep(this.timeElapsed / 30000, 0, 1) * 3.0;
         // this.camera.position.y = yPos + 1;
