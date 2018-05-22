@@ -29,14 +29,15 @@ export function generateRandomPetalWhorlParameters(): WhorlParameters<Petal> {
     // const num = THREE.Math.randInt(5, 12 + (Math.random() < 0.1 ? THREE.Math.randInt(20, 40) : 0));
     const num = THREE.Math.randInt(5, 12);
     const maxRotations = Math.floor(num / 8);
+    const zRot = Math.PI / 2 * 0.9;
     return {
         num,
         startYRot: 0,
         endYRot: Math.PI * 2,
         startScale: 1,
         endScale: 1,
-        startZRot: 0,
-        endZRot: 0,
+        startZRot: zRot,
+        endZRot: zRot,
         // endZRot: THREE.Math.randFloat(Math.PI / 12, Math.PI / 4),
         isBilateral: false,
         generate: () => Petal.generate(dna.petalTemplate),

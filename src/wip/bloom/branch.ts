@@ -147,18 +147,16 @@ export class Branch extends Component {
             const currentLength = THREE.Math.mapLinear(endIndex, 0, bones.length, 0, this.finalBranchLength);
             const newBranchLength = this.finalBranchLength - currentLength;
             if (newBranchLength > 1) {
-                let child: Component;
                 const height = currentBone.getWorldPosition().y;
                 const growthPercentage = currentLength / this.finalBranchLength;
                 if (Math.random() > growthPercentage) {
-                // if (height < 5) {
-                    child = this.createBranch(newBranchLength);
-                } else {
-                    child = Leaves.generate();
-                    child.scale.multiplyScalar(0.7);
+                    const branch = this.createBranch(newBranchLength);
+                    this.addChildAtPoint(branch, currentBone);
+                    branch.scale.multiplyScalar(0.8);
                 }
-                this.addChildAtPoint(child, currentBone);
-                child.scale.multiplyScalar(0.8);
+                const leaves = Leaves.generate();
+                this.addChildAtPoint(leaves, currentBone);
+                leaves.scale.multiplyScalar(0.7);
             }
         }
 
@@ -178,7 +176,7 @@ export class Branch extends Component {
             }
             // wobble();
 
-            // bone.rotation.x = 0.02 * i * Math.sin(this.timeElapsed / 200);
+            bone.rotation.x = 0.002 * Math.sin((t - this.timeBorn) / 200);
             // bone.rotation.z += 0.001;
 
             function randomizeRotation() {

@@ -4,6 +4,7 @@ import { logistic } from "../../../math";
 import { Component } from "../component";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
+import { simulateVeinBoneGravity } from "../physics";
 
 // what do I want to say?
 // leaf feeds the petiole
@@ -13,16 +14,16 @@ export class Leaf extends Component {
     public lamina: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
-        const petioleLength = 0.5;
+        const petioleLength = THREE.Math.randFloat(0.1, 0.5);
         if (petioleLength > 0) {
             const petiole = (() => {
-                // const geom = new THREE.PlaneGeometry(1, 0.1);
                 const mat = new THREE.MeshLambertMaterial({
                     color: "green",
                     side: THREE.DoubleSide,
                 });
-                const geom = new THREE.BoxBufferGeometry(petioleLength, 0.01, 0.04);
-                // geom.rotateX(-Math.PI / 2);
+                const geom = new THREE.CylinderBufferGeometry(0.005, 0.003, petioleLength);
+                // const geom = new THREE.BoxBufferGeometry(petioleLength, 0.01, 0.04);
+                geom.rotateZ(Math.PI / 2);
                 geom.translate(petioleLength / 2, 0, 0);
                 const petioleMesh = new THREE.Mesh(
                     geom,
@@ -35,7 +36,8 @@ export class Leaf extends Component {
             this.add(petiole);
         }
         this.lamina = template.instantiateLeaf();
-        this.lamina.position.x = petioleLength;
+        this.lamina.position.x = petioleLength * 0.98;
+        this.lamina.position.y = 0.0015
         this.add(this.lamina);
     }
 
@@ -44,9 +46,16 @@ export class Leaf extends Component {
         const s = logistic(logisticX);
         // const s = 1;
         this.scale.set(s, s, s);
-        for (const bone of this.lamina.skeleton.bones) {
-            // bone.rotation.z = THREE.Math.randFloat(-1, 1) * 0.01;
-            // bone.rotation.x = THREE.Math.randFloat(-1, 1) * 0.01;
+
+        const [...bones] = this.lamina.skeleton.bones;
+        for (const bone of bones) {
+            simulateVeinBoneGravity(bone, 0.006);
+            // bone.rotation.x = 0.2;
+            // bone.rotation.y = 0.2;
+
+            // const NUM_BONES = 5;
+            // const wantedRotation = Math.PI / 2;
+            // bone.rotation.z = rotationMult * wantedRotation / NUM_BONES;
         }
 
         // // leafMesh.rotation.x += 0.01;

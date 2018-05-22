@@ -76,14 +76,13 @@ export class LeafTemplate {
         for (let i = 0; i < leaf.world.length; i++) {
             const { x, y: z } = leaf.world[i].normalizedPosition;
             geometry.vertices.push(new THREE.Vector3(x, 0, z));
-            // 1 = forward
-            // 2 = orthogonal
-            // 3 = forward curl
-            // 4 = ortho curl
+            // bone array goes like this:
+            // [baseBone, forwardBones x5, sideBone]
             const NUM_BONES = 5;
             const prevIndex = Math.floor(x * NUM_BONES);
             const nextIndex = prevIndex + 1;
             const secondIndex = prevIndex + 2;
+            const orthoIndex = NUM_BONES + 1;
             // this is still not perfect - there are discontinuities.
             // quadratic bezier: (1-t)[(1-t)P0 +tP1] + t[(1-t)P1 + tP2]
             // P0 is prevBone
@@ -95,8 +94,15 @@ export class LeafTemplate {
 
             const prevBoneWeight = (1 - t) * (1 - t);
             const nextBoneWeight = 2 * t * (1 - t);
-            const secondBoneWeight = t * t;
-            geometry.skinIndices.push(new THREE.Vector4(prevIndex, nextIndex, secondIndex, -1) as any);
+            let secondBoneWeight = t * t;
+            // we're at the last segment of the forward bones; don't overstep.
+            if (secondIndex >= orthoIndex) {
+                secondBoneWeight = 0;
+            }
+
+            const orthoWeight = Math.abs(z) * 10.;
+
+            geometry.skinIndices.push(new THREE.Vector4(prevIndex, nextIndex, secondIndex, orthoIndex) as any);
             // geometry.skinWeights.push(new THREE.Vector4(x, Math.abs(z), 0, 0) as any);
             // geometry.skinWeights.push(new THREE.Vector4(Math.pow(x, 4), 0, 0, 0) as any);
             // const forwardWeight = 0; // Math.pow(x, 4);
@@ -107,7 +113,7 @@ export class LeafTemplate {
                 prevBoneWeight,
                 nextBoneWeight,
                 secondBoneWeight,
-                0,
+                orthoWeight,
                 // forwardWeight,
                 // sideWeight,
                 // forwardCurlWeight,

@@ -7,7 +7,6 @@ export interface ComponentClass<T extends Component> {
 
 export abstract class Component extends Object3D {
     public timeBorn!: number;
-    public currentTime: number = 0;
 
     constructor() {
         super();

@@ -22,10 +22,10 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
         }
         // const forwardBone = new THREE.Bone(null as any);
         // forwardBone.position.x = 1 / 3;
-        // const sideBone = new THREE.Bone(null as any);
-        // sideBone.position.z = 1;
-        // baseBone.add(forwardBone);
-        // baseBone.add(sideBone);
+        const sideBone = new THREE.Bone(null as any);
+        sideBone.position.z = 1;
+        sideBone.rotation.y = Math.PI / 2;
+        baseBone.add(sideBone);
 
         // const forwardCurlBone = new THREE.Bone(null as any);
         // forwardCurlBone.position.x = 0.1;
