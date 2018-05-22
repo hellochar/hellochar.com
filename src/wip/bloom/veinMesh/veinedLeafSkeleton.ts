@@ -12,7 +12,7 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
         const baseBone = new THREE.Bone(null as any);
         const bones: THREE.Bone[] = [baseBone];
         let bone = baseBone;
-        const NUM_BONES = 3;
+        const NUM_BONES = 5;
         for (let i = 0; i < NUM_BONES; i++) {
             const newBone = new THREE.Bone(null as any);
             newBone.position.x = 1 / NUM_BONES;

@@ -87,7 +87,7 @@ let petalTemplate: LeafTemplate;
 let leafWhorlTemplate: WhorlParameters<Leaf>;
 let petalWhorlTemplate: WhorlParameters<Petal>;
 
-export function randomizeDna() {
+export function randomizeDna(envMap: THREE.CubeTexture) {
     leafWhorlTemplate = generateRandomLeafWhorlParameters();
     petalWhorlTemplate = generateRandomPetalWhorlParameters();
 
@@ -98,8 +98,12 @@ export function randomizeDna() {
         veinColor: new THREE.Color("darkgreen"),
         veinAlpha: 1,
         bumpNoiseHeight: 1,
+        baseMaterialParams: {
+            roughness: 0.4,
+            metalness: 0,
+        }
     };
-    leafTemplate = LeafTemplate.fromVeinedLeaf(veinedLeaf, leafTextureParameters);
+    leafTemplate = LeafTemplate.fromVeinedLeaf(veinedLeaf, leafTextureParameters, envMap);
 
     const veinedPetal = generateRandomVeinedLeaf(generatePetalGrowthParameters);
     const petalTextureParameters: TextureGeneratorParameters = {
@@ -109,10 +113,12 @@ export function randomizeDna() {
         veinAlpha: 0,
         bumpNoiseHeight: 0.1,
         baseMaterialParams: {
-            shininess: 0,
+            roughness: 1,
+            metalness: 0,
+            // shininess: 0,
         },
     };
-    petalTemplate = LeafTemplate.fromVeinedLeaf(veinedPetal, petalTextureParameters);
+    petalTemplate = LeafTemplate.fromVeinedLeaf(veinedPetal, petalTextureParameters, envMap);
 }
 
 export const dna = {

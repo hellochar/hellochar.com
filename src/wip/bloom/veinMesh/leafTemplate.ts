@@ -11,7 +11,7 @@ import { VeinedLeafSkeleton } from "./veinedLeafSkeleton";
  * We use this to share the geometry and material across multiple leaf instances.
  */
 export class LeafTemplate {
-    public static fromVeinedLeaf(leaf: VeinedLeaf, textureGeneratorParams: TextureGeneratorParameters) {
+    public static fromVeinedLeaf(leaf: VeinedLeaf, textureGeneratorParams: TextureGeneratorParameters, envMap: THREE.CubeTexture) {
         // just create a skeleton; we won't bind it
         const skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(leaf);
 
@@ -34,26 +34,36 @@ export class LeafTemplate {
         generator.updateGeometryFaceVertexUvs();
         generator.generateAndDrawMaps(textureGeneratorParams);
 
-        const materialParams: THREE.MeshPhongMaterialParameters = {
+        // const materialParams: THREE.MeshPhongMaterialParameters = {
+        //     skinning: true,
+        //     side: THREE.DoubleSide,
+        //     // specular: 0x111111,
+        //     specular: 0x222222,
+        //     // specular: 0x444444,
+        //     // specular: 0xffffff,
+        //     // shininess: 20000,
+        //     shininess: 40,
+        //     // shininess: 0.1,
+
+        //     bumpScale: 0.04,
+
+        //     // wireframe: true,
+        //     map: generator.colorMap,
+        //     bumpMap: generator.bumpMap,
+
+        //     ...textureGeneratorParams.baseMaterialParams,
+        // };
+        // const material = new THREE.MeshPhongMaterial(materialParams);
+        const materialParams: THREE.MeshStandardMaterialParameters = {
             skinning: true,
             side: THREE.DoubleSide,
-            // specular: 0x111111,
-            specular: 0x222222,
-            // specular: 0x444444,
-            // specular: 0xffffff,
-            // shininess: 20000,
-            shininess: 40,
-            // shininess: 0.1,
-
             bumpScale: 0.04,
-
-            // wireframe: true,
             map: generator.colorMap,
             bumpMap: generator.bumpMap,
-
+            envMap,
             ...textureGeneratorParams.baseMaterialParams,
         };
-        const material = new THREE.MeshPhongMaterial(materialParams);
+        const material = new THREE.MeshStandardMaterial(materialParams);
 
         return new LeafTemplate(leaf, geometry, material);
     }
@@ -70,7 +80,7 @@ export class LeafTemplate {
             // 2 = orthogonal
             // 3 = forward curl
             // 4 = ortho curl
-            const NUM_BONES = 2;
+            const NUM_BONES = 5;
             const startIndex = Math.floor(x * NUM_BONES);
             const endIndex = startIndex + 1;
             const prevIndex = startIndex - 1;
@@ -116,12 +126,13 @@ export class LeafTemplate {
     constructor(
         public veinedLeaf: VeinedLeaf,
         public geometry: THREE.Geometry,
-        public material: THREE.MeshBasicMaterial,
+        public material: THREE.Material,
     ) {}
 
     public instantiateLeaf() {
         // const leaf = new THREE.SkinnedMesh(this.geometry, this.material);
-        const leaf = new SkinnedMeshHack(this.geometry, this.material);
+        // HACK the typings; the typings are too restrictive and don't allow generic THREE.Material
+        const leaf = new SkinnedMeshHack(this.geometry, this.material as THREE.MeshBasicMaterial);
         // create a separate skeleton for each leaf
         const skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(this.veinedLeaf);
         leaf.add(skeleton.bones[0]);

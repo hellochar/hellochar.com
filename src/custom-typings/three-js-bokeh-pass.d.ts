@@ -82,4 +82,8 @@ declare module 'THREE' {
          */
         smooth(geometry: THREE.Geometry | THREE.BufferGeometry): void;
     }
+
+    class Sky extends THREE.Mesh {
+        material: THREE.ShaderMaterial;
+    }
 }

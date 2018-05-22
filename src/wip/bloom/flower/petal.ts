@@ -34,7 +34,7 @@ export default class Petal extends Component {
 
         // total rotation = NUM_BONES * rotationPerBone
         // rotationPerBone = rotation / NUM_BONES
-        const NUM_BONES = 2;
+        const NUM_BONES = 5;
         const wantedRotation = Math.PI / 2;
         for (const bone of bones) {
             bone.rotation.z = rotationMult * wantedRotation / NUM_BONES;

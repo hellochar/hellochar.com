@@ -43,6 +43,9 @@ class Bloom extends ISketch {
 
         randomizeDna();
 
+        // do this before adding the flowers or anything
+        // this.initCubeTexture();
+
         this.initComponent();
         this.scene.add(this.component);
 
@@ -50,6 +53,16 @@ class Bloom extends ISketch {
         this.initPostprocessing();
 
         scene.add(this.person);
+    }
+
+    public envMap!: THREE.CubeTexture;
+    public initCubeTexture() {
+        const cubeCamera = new THREE.CubeCamera(1, 100, 1024);
+        cubeCamera.position.set(0, 1, 0);
+        scene.add(cubeCamera);
+        cubeCamera.update(this.renderer, scene);
+
+        this.envMap = cubeCamera.renderTarget.texture as THREE.CubeTexture;
     }
 
     public initPostprocessing() {

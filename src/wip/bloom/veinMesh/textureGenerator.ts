@@ -11,7 +11,7 @@ export interface TextureGeneratorParameters {
     veinAlpha: number;
 
     bumpNoiseHeight: number;
-    baseMaterialParams?: THREE.MeshPhongMaterialParameters;
+    baseMaterialParams?: THREE.MeshStandardMaterialParameters;
 }
 
 /**

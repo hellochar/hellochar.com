@@ -149,7 +149,9 @@ export class Branch extends Component {
             if (newBranchLength > 1) {
                 let child: Component;
                 const height = currentBone.getWorldPosition().y;
-                if (height < 5) {
+                const growthPercentage = currentLength / this.finalBranchLength;
+                if (Math.random() > growthPercentage) {
+                // if (height < 5) {
                     child = this.createBranch(newBranchLength);
                 } else {
                     child = Leaves.generate();
