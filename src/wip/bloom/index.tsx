@@ -10,11 +10,23 @@ import dna, { randomizeDna } from "./dna";
 import { Flower } from "./flower";
 import Petal from "./flower/petal";
 import { Leaf } from "./leaf";
+import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
 import scene from "./scene";
 import { Whorl } from "./whorl";
 
 class Bloom extends ISketch {
+    public events = {
+        mousemove: (e: JQuery.Event) => {
+            mouse.x = THREE.Math.mapLinear(e.offsetX!, 0, this.canvas.width, -1, 1);
+            mouse.y = THREE.Math.mapLinear(e.offsetY!, 0, this.canvas.height, 1, -1);
+        },
+        mousedrag: (e: JQuery.Event) => {
+            mouse.x = THREE.Math.mapLinear(e.offsetX!, 0, this.canvas.width, -1, 1);
+            mouse.y = THREE.Math.mapLinear(e.offsetY!, 0, this.canvas.height, 1, -1);
+        },
+    };
+
     public scene = scene;
     public camera!: THREE.PerspectiveCamera;
     public orbitControls!: THREE.OrbitControls;
@@ -41,10 +53,10 @@ class Bloom extends ISketch {
 
         this.openPoseManager = new OpenPoseManager();
 
-        randomizeDna();
-
         // do this before adding the flowers or anything
-        // this.initCubeTexture();
+        this.initCubeTexture();
+
+        randomizeDna(this.envMap);
 
         this.initComponent();
         this.scene.add(this.component);
@@ -112,16 +124,16 @@ class Bloom extends ISketch {
         // branch.addToEnd(Leaves.generate());
         // branch.addToEnd(branch2);
 
-        const branch = new Branch(6);
-        // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
-        // scene.add(helper);
-        this.component = branch;
+        // const branch = new Branch(6);
+        // // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
+        // // scene.add(helper);
+        // this.component = branch;
 
-        // const petal = Petal.generate(dna.petalTemplate);
-        // petal.position.y = 0.3;
-        // this.component = petal;
-        // const skeletonHelper = new THREE.SkeletonHelper(petal.mesh.skeleton.bones[0]);
-        // scene.add(skeletonHelper);
+        const petal = Petal.generate(dna.petalTemplate);
+        petal.position.y = 0.3;
+        this.component = petal;
+        const skeletonHelper = new THREE.SkeletonHelper(petal.mesh.skeleton.bones[0]);
+        scene.add(skeletonHelper);
 
         // const leaf = new Leaf(dna.leafTemplate);
         // leaf.position.x = 0;

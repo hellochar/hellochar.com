@@ -81,12 +81,22 @@ export class LeafTemplate {
             // 3 = forward curl
             // 4 = ortho curl
             const NUM_BONES = 5;
-            const startIndex = Math.floor(x * NUM_BONES);
-            const endIndex = startIndex + 1;
-            const prevIndex = startIndex - 1;
-            const weightToNextOne = x - startIndex / NUM_BONES;
-            const prevIndexWeight = prevIndex >= 0 ? 0.0 : 0;
-            geometry.skinIndices.push(new THREE.Vector4(startIndex, endIndex, -1, -1) as any);
+            const prevIndex = Math.floor(x * NUM_BONES);
+            const nextIndex = prevIndex + 1;
+            const secondIndex = prevIndex + 2;
+            // this is still not perfect - there are discontinuities.
+            // quadratic bezier: (1-t)[(1-t)P0 +tP1] + t[(1-t)P1 + tP2]
+            // P0 is prevBone
+            // P1 is nextBone
+            // P2 is secondBone
+            // expanded out we get
+            // (1-t)^2P0 + 2t(1-t)P1 + t^2(P2)
+            const t = x - prevIndex / NUM_BONES; // ranges from 0 to 1; this is "t"
+
+            const prevBoneWeight = (1 - t) * (1 - t);
+            const nextBoneWeight = 2 * t * (1 - t);
+            const secondBoneWeight = t * t;
+            geometry.skinIndices.push(new THREE.Vector4(prevIndex, nextIndex, secondIndex, -1) as any);
             // geometry.skinWeights.push(new THREE.Vector4(x, Math.abs(z), 0, 0) as any);
             // geometry.skinWeights.push(new THREE.Vector4(Math.pow(x, 4), 0, 0, 0) as any);
             // const forwardWeight = 0; // Math.pow(x, 4);
@@ -94,9 +104,9 @@ export class LeafTemplate {
             // const forwardCurlWeight = 0; // Math.pow(x, 8);
             // const sideCurlWeight = 0; // Math.pow(Math.abs(z), 4);
             geometry.skinWeights.push(new THREE.Vector4(
-                1 - weightToNextOne,
-                weightToNextOne,
-                prevIndexWeight,
+                prevBoneWeight,
+                nextBoneWeight,
+                secondBoneWeight,
                 0,
                 // forwardWeight,
                 // sideWeight,
@@ -130,7 +140,7 @@ export class LeafTemplate {
     ) {}
 
     public instantiateLeaf() {
-        // const leaf = new THREE.SkinnedMesh(this.geometry, this.material);
+        // const leaf = new THREE.SkinnedMesh(this.geometry, this.material as THREE.MeshBasicMaterial);
         // HACK the typings; the typings are too restrictive and don't allow generic THREE.Material
         const leaf = new SkinnedMeshHack(this.geometry, this.material as THREE.MeshBasicMaterial);
         // create a separate skeleton for each leaf

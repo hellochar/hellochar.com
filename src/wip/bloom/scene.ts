@@ -59,7 +59,7 @@ scene.add(ambientLight);
 
 const spotLight = new THREE.SpotLight(
     "rgb(234, 249, 244)",
-    1.4,
+    1.3,
     200,
     Math.PI / 30,
     1.0,
