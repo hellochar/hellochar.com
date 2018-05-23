@@ -2,13 +2,9 @@ import * as THREE from "three";
 
 import { logistic } from "../../../math";
 import { Component } from "../component";
+import { simulateVeinBoneGravity } from "../physics";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
-import { simulateVeinBoneGravity } from "../physics";
-
-// what do I want to say?
-// leaf feeds the petiole
-// petiole feeds the lamina
 
 export class Leaf extends Component {
     public lamina: THREE.SkinnedMesh;
@@ -44,21 +40,12 @@ export class Leaf extends Component {
     updateSelf(t: number) {
         const logisticX = (t - this.timeBorn) / 1000 - 6;
         const s = logistic(logisticX);
-        // const s = 1;
         this.scale.set(s, s, s);
 
         const [...bones] = this.lamina.skeleton.bones;
         for (const bone of bones) {
             simulateVeinBoneGravity(bone, 0.006);
-            // bone.rotation.x = 0.2;
-            // bone.rotation.y = 0.2;
-
-            // const NUM_BONES = 5;
-            // const wantedRotation = Math.PI / 2;
-            // bone.rotation.z = rotationMult * wantedRotation / NUM_BONES;
         }
-
-        // // leafMesh.rotation.x += 0.01;
 
         // for (const boneUncast of this.lamina.skeleton.bones) {
         //     // HACKHACK make this based off physics instead

@@ -39,7 +39,7 @@ export class BranchMeshManager {
         const bones: BranchBone[] = [];
 
         for (let y = 0; y <= numSegments; y++) {
-            const bone = new BranchBone(bones.length);
+            const bone = new BranchBone(bones.length, branch);
             if (y > 0) {
                 const prevBone = bones[y - 1];
                 prevBone.add(bone);

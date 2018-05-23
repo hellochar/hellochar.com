@@ -117,9 +117,9 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        const branch = new Branch(6);
-        const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
-        scene.add(helper);
+        const branch = new Branch(12);
+        // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
+        // scene.add(helper);
         this.component = branch;
 
         // const flower = Flower.generate();
@@ -172,7 +172,7 @@ class Bloom extends ISketch {
                 }
             }
         });
-        // this.printObjectTree();
+        this.printObjectTree();
 
         const people = this.openPoseManager.getPeople();
         for (const person of people) {

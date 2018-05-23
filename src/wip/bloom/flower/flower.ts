@@ -13,10 +13,9 @@ export default class Flower extends Component {
     updateSelf(t: number) {
         const timeAlive = t - this.timeBorn;
         const logisticX = timeAlive / 2000 - 6;
-        // HACKHACK scale by 15
-        const s = logistic(logisticX) * 8;
+        const s = logistic(logisticX) * 5;
         // const s = 1;
-        this.scale.set(s, s, s);
+        this.scale.setScalar(s);
     }
 
     static generate() {

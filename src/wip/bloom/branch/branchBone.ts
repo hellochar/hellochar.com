@@ -25,7 +25,11 @@ const QUATERNION_UP = new THREE.Quaternion();
 export class BranchBone extends THREE.Bone {
     private growthPercentage = 0;
     // [1, 1.1] - largely determines the shape of the branch - how curvy it is.
-    private curveUpwardAmountBase = .01;
+    // we should rethink this. this is very sensitive to initial feed rate
+    // and length of branch (number of simulation steps taken).
+    // we should scale it based on time, or just give every segment a "target"
+    // they go towards (I like this the best).
+    private curveUpwardAmountBase = .0001;
 
     public get isAlive() {
         return this.growthPercentage > 0;
@@ -43,13 +47,13 @@ export class BranchBone extends THREE.Bone {
     /**
      * Manually call pose after you've calculated the inverses of all these branches.
      */
-    constructor(public index: number) {
+    constructor(public index: number, public branch: Branch) {
         super(null as any);
         // be careful - we can't shrink ourselves down until we've calculated the inverses in the skeleton.
         // this.updateView();
     }
 
-    simulate() {
+    simulate(t: number) {
         if (!this.isAlive) {
             return;
         }
@@ -57,6 +61,9 @@ export class BranchBone extends THREE.Bone {
             const components = dna.branchingPattern.getComponentsFor(this);
             this.components = components;
             if (components != null) {
+                for (const c of components) {
+                    c.scale.multiplyScalar(0.8);
+                }
                 this.add(...components);
             }
         }
@@ -70,9 +77,18 @@ export class BranchBone extends THREE.Bone {
             q.slerp(QUATERNION_UP, 1.0 + curveAmount);
             this.quaternion.multiply(q);
         }
+
+        // Model rocking back and forth while growing.
+        // don't do this once we hit ~80% nutrient.
+
+        let rotateScalar = THREE.Math.mapLinear(this.growthPercentage, 0, 0.8, 1, 0);
+        rotateScalar = Math.sqrt(rotateScalar);
+        if (rotateScalar > 0) {
+            this.rotation.x = 0.1 * Math.sin(t / 9000) * rotateScalar;
+        }
     }
 
-    feed(nutrients: number) {
+    feed(t: number, nutrients: number) {
         // basic model - feed n directly to me until I'm at growth 100%, then feed completely to my children.
         // TODO eat half the nutrients in a smoothstep manner
         const percentOfNutrientsWanted = THREE.Math.mapLinear(this.growthPercentage, 0, 1, 0.2, 0.01);
@@ -82,13 +98,13 @@ export class BranchBone extends THREE.Bone {
         const leftOver = ((this.growthPercentage + nutrientsForMe) - newGrowthPercentage) + nutrientsLeft;
         this.growthPercentage = newGrowthPercentage;
 
-        this.simulate();
+        this.simulate(t);
 
         if (leftOver > 0) {
             for (const child of this.children) {
                 // we're physically inaccurate here when there's more than one child, but that's fine.
                 if (child instanceof BranchBone) {
-                    child.feed(leftOver);
+                    child.feed(t, leftOver);
                 }
             }
         }
@@ -96,7 +112,10 @@ export class BranchBone extends THREE.Bone {
     }
 
     updateView() {
-        const scalar = THREE.Math.mapLinear(this.growthPercentage, 0, 1, 0.01, 0.98);
+        // 0.95 makes a huge deal as to the final shape, since
+        // the apex flower will be scaled by 0.95^(number of bones)
+        // with branch 6 we get 0.95^61 = 0.04
+        const scalar = THREE.Math.mapLinear(this.growthPercentage, 0, 1, 0.01, 0.96);
         this.scale.setScalar(scalar);
         // if (!this.isAlive) {
         //     this.visible = false;

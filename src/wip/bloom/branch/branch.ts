@@ -17,12 +17,6 @@ export class Branch extends Component {
         // this.growthManager = new BranchGrowthManager(this, this.meshManager.skeleton);
     }
 
-    private flower?: Flower;
-
-    private createFlower() {
-        return Flower.generate();
-    }
-
     private createBranch(newBranchLength: number) {
         const branch = new Branch(newBranchLength);
         const randYDir = Math.random() * Math.PI * 2;
@@ -50,11 +44,11 @@ export class Branch extends Component {
     }
 
     updateSelf(t: number) {
+        const timeAlive = t - this.timeBorn;
         const { bones } = this.meshManager.skeleton;
         const growthFactor = 16 / 1000;
-        bones[0].feed(growthFactor);
+        bones[0].feed(t, growthFactor);
 
-        const boneShrinkFactor = 0.98;
         const bonesPerGrowth = 10;
 
         // grow branches
