@@ -131,7 +131,7 @@ let branchingPattern: BranchingPattern = {
                     // const randYDir = Math.random() * Math.PI * 2;
                     // TODO should we rotate bones[0]? or should we rotate the Branch itself?
                     // branch.meshManager.skeleton.bones[0].rotateZ(-Math.PI / 2);
-                    branch.rotateZ(-Math.PI / 2);
+                    branch.rotateZ(-Math.PI / 4);
                     return [branch, ...leaves];
                 }
                 return leaves;

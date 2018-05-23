@@ -1,6 +1,8 @@
 import * as THREE from "three";
+
 import { Vein } from "../vein/vein";
 import { VeinedLeaf } from "../vein/veinedLeaf";
+import { LEAF_NUM_BONES } from "./leafTemplate";
 
 export class VeinedLeafSkeleton extends THREE.Skeleton {
     public static createFromVeinedLeaf(leaf: VeinedLeaf) {
@@ -12,10 +14,9 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
         const baseBone = new THREE.Bone(null as any);
         const bones: THREE.Bone[] = [baseBone];
         let bone = baseBone;
-        const NUM_BONES = 5;
-        for (let i = 0; i < NUM_BONES; i++) {
+        for (let i = 0; i < LEAF_NUM_BONES; i++) {
             const newBone = new THREE.Bone(null as any);
-            newBone.position.x = 1 / NUM_BONES;
+            newBone.position.x = 1 / LEAF_NUM_BONES;
             bone.add(newBone);
             bone = newBone;
             bones.push(bone);

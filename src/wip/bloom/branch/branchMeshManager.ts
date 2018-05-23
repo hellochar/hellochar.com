@@ -3,13 +3,16 @@ import * as THREE from "three";
 import { Branch } from "./branch";
 import { BranchBone, BranchSkeleton } from "./branchBone";
 
+/**
+ * Has a big effect on perf. More bones = more objects to matrixWorldUpdate, but also smoother curves.
+ */
 export const BONES_PER_UNIT_LENGTH = 10;
+
+const BRANCH_MATERIAL = new THREE.MeshLambertMaterial({ skinning: true, color: "green", side: THREE.DoubleSide });
 
 export class BranchMeshManager {
     public mesh: THREE.SkinnedMesh;
     public skeleton: BranchSkeleton;
-
-    static material = new THREE.MeshLambertMaterial({ skinning: true, color: "green", side: THREE.DoubleSide });
 
     constructor(public branch: Branch) {
         const { finalBranchLength } = branch;
@@ -50,10 +53,9 @@ export class BranchMeshManager {
             bones.push(bone);
         }
 
-        const material = BranchMeshManager.material;
         this.mesh = new THREE.SkinnedMesh(
             geometry,
-            material,
+            BRANCH_MATERIAL,
         );
         this.mesh.castShadow = true;
 

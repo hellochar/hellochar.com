@@ -13,7 +13,7 @@ export default class Flower extends Component {
     updateSelf(t: number) {
         const timeAlive = t - this.timeBorn;
         const logisticX = timeAlive / 2000 - 6;
-        const s = logistic(logisticX) * 5;
+        const s = logistic(logisticX) * 3;
         // const s = 1;
         this.scale.setScalar(s);
     }

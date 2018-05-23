@@ -14,25 +14,43 @@ const scene = new THREE.Scene();
 const sky = (() => {
     const sky = new THREE.Sky();
     sky.scale.setScalar(25);
-    // const uniforms = sky.material.uniforms;
-    // uniforms.turbidity.value = 1;
+    const uniforms = sky.material.uniforms;
+    // turbidity affects how brightly the sun/moon shines. You want turbidity ~8 for nighttime.
+    uniforms.turbidity.value = 1;
+    // rayleigh is the big thing that affects "daytime" or "nighttime". rayleigh 0 = full night, rayleigh 1 = full day
     // uniforms.rayleigh.value = 0.3;
-    // uniforms.mieCoefficient.value = 0.008;
-    // uniforms.mieDirectionalG.value = 0.87;
-    // uniforms.luminance.value = 1.01;
-    // // uniforms.inclination.value = .12;
-    // // uniforms.azimuth.value = 0.25;
-    const theta = Math.PI * (0.12 - 0.5);
-    const phi = 2 * Math.PI * (0.25 - 0.5);
+    uniforms.rayleigh.value = 0.0;
+    // how bright the sun's light halo is
+    // 0.1 = all light on the sun
+    // 0 = no halo; sunlight is distributed to the "ground"
+    uniforms.mieCoefficient.value = 0.008;
+    // how focused the sun halo is.
+    // 0 = halo is dispersed across whole top hemisphere
+    // 0.95 = halo is pretty focused
+    uniforms.mieDirectionalG.value = 0.87;
 
-    const distance = 4000;
-    sky.material.uniforms.sunPosition.value.set(
-        distance * Math.cos(phi),
-        distance * Math.sin(phi) * Math.sin(theta),
-        distance * Math.sin(phi) * Math.cos(theta),
-    );
+    // how bright the whole scene is;
+    // 0.1 = extremely brightened (like we pow things by 0.1)
+    // 1 = normal
+    uniforms.luminance.value = 1.01;
     return sky;
 })();
+/**
+ * Inclination angle of the sun/moon in the sky. 0 = right at the horizon, Math.PI/2 = at the top
+ */
+// const theta = Math.PI / 12;
+const theta = Math.PI / 2 * 0.95;
+/**
+ * xz angle.
+ */
+const phi = Math.PI / 2;
+
+const distance = 110;
+sky.material.uniforms.sunPosition.value.set(
+    distance * Math.cos(phi),
+    distance * Math.sin(phi) * Math.sin(theta),
+    distance * Math.sin(phi) * Math.cos(theta),
+);
 scene.add(sky);
 
 const groundGeom = new THREE.CircleBufferGeometry(8, 120);
@@ -64,7 +82,8 @@ const spotLight = new THREE.SpotLight(
     1.0,
     1.25,
 );
-spotLight.position.set(10, 100, 10);
+spotLight.position.copy(sky.material.uniforms.sunPosition.value);
+// spotLight.position.set(10, 100, 10);
 
 spotLight.castShadow = true;
 

@@ -6,6 +6,8 @@ import { VeinedLeaf } from "../vein/veinedLeaf";
 import { TextureGenerator, TextureGeneratorParameters } from "./textureGenerator";
 import { VeinedLeafSkeleton } from "./veinedLeafSkeleton";
 
+export const LEAF_NUM_BONES = 5;
+
 /**
  * A LeafTemplate holds a VeinedLeaf and a geometry and material on top of that veining structure.
  * We use this to share the geometry and material across multiple leaf instances.
@@ -78,11 +80,10 @@ export class LeafTemplate {
             geometry.vertices.push(new THREE.Vector3(x, 0, z));
             // bone array goes like this:
             // [baseBone, forwardBones x5, sideBone]
-            const NUM_BONES = 5;
-            const prevIndex = Math.floor(x * NUM_BONES);
+            const prevIndex = Math.floor(x * LEAF_NUM_BONES);
             const nextIndex = prevIndex + 1;
             const secondIndex = prevIndex + 2;
-            const orthoIndex = NUM_BONES + 1;
+            const orthoIndex = LEAF_NUM_BONES + 1;
             // this is still not perfect - there are discontinuities.
             // quadratic bezier: (1-t)[(1-t)P0 +tP1] + t[(1-t)P1 + tP2]
             // P0 is prevBone
@@ -90,7 +91,7 @@ export class LeafTemplate {
             // P2 is secondBone
             // expanded out we get
             // (1-t)^2P0 + 2t(1-t)P1 + t^2(P2)
-            const t = x - prevIndex / NUM_BONES; // ranges from 0 to 1; this is "t"
+            const t = x - prevIndex / LEAF_NUM_BONES; // ranges from 0 to 1; this is "t"
 
             const prevBoneWeight = (1 - t) * (1 - t);
             const nextBoneWeight = 2 * t * (1 - t);

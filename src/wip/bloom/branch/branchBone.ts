@@ -1,8 +1,14 @@
 import * as THREE from "three";
 
 import { Component } from "../component";
-import { Branch } from "./branch";
 import dna from "../dna";
+import { Branch } from "./branch";
+
+// Makes a huge deal as to the final shape, since
+// the apex flower will be scaled by MAX_GROWTH_SCALE^(number of bones)
+// with branch length 6 and 10 bones/length we get 0.95^61 = 0.04
+// this affects how much we have to globally scale the flowers!
+const MAX_GROWTH_SCALE = 0.96;
 
 const q = new THREE.Quaternion();
 const dummyPosition = new THREE.Vector3();
@@ -95,6 +101,7 @@ export class BranchBone extends THREE.Bone {
         rotateScalar = Math.sqrt(rotateScalar);
         if (rotateScalar > 0) {
             this.rotation.x = 0.1 * Math.sin(t / 9000) * rotateScalar;
+            // this.rotation.y = 0.5 * Math.sin(t / 200);
         }
     }
 
@@ -122,17 +129,8 @@ export class BranchBone extends THREE.Bone {
     }
 
     updateView() {
-        // 0.95 makes a huge deal as to the final shape, since
-        // the apex flower will be scaled by 0.95^(number of bones)
-        // with branch 6 we get 0.95^61 = 0.04
-        const scalar = THREE.Math.mapLinear(this.growthPercentage, 0, 1, 0.01, 0.96);
+        const scalar = THREE.Math.mapLinear(this.growthPercentage, 0, 1, 0.01, MAX_GROWTH_SCALE);
         this.scale.setScalar(scalar);
-        // if (!this.isAlive) {
-        //     this.visible = false;
-        // } else {
-        //     this.visible = true;
-        //     this.scale.setScalar(this.growthPercentage);
-        // }
     }
 }
 

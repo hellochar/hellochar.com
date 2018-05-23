@@ -183,10 +183,11 @@ class Bloom extends ISketch {
         this.updateComponentAndComputeBoundingBox();
         this.updateCamera();
         this.updatePeoplePositions();
+
         if (this.r1 != null) {
             this.r1.textContent = `Maturity: ${this.component.computeMaturityAmount().toFixed(3)}\nEstimated time: ${this.component.getEstimatedSecondsToMaturity()}\nCurrent time: ${((this.timeElapsed - this.component.timeBorn) / 1000).toFixed(3)}`;
         }
-        this.updateObjectCounts();
+        this.debugObjectCounts();
 
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
@@ -245,20 +246,27 @@ class Bloom extends ISketch {
 
         this.orbitControls.target.set(0, targetY, 0);
         this.camera.position.y = targetY + 1;
-
-        console.log(targetY);
     }
 
-    private updateObjectCounts() {
+    private debugObjectCounts() {
         const counts = new Map<string, number>();
+        let numActive = 0;
+        let total = 0;
         scene.traverse((obj) => {
             const name = obj.constructor.name;
             counts.set(name, (counts.get(name) || 0) + 1);
+            if (obj.matrixAutoUpdate) {
+                numActive++;
+            }
+            total++;
         });
         if (this.r2 != null) {
             const entries = Array.from(counts.entries());
             entries.sort(([_, countA], [__, countB]) => countB - countA);
-            this.r2.textContent = entries.map( ([name, count]) => `${name}: ${count}` ).join("\n");
+            this.r2.textContent = [
+                `Total: ${total} (${numActive})`,
+                ...entries.map( ([name, count]) => `${name}: ${count}` )
+            ].join("\n");
         }
     }
 
