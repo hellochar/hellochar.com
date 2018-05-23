@@ -86,4 +86,9 @@ declare module 'THREE' {
     class Sky extends THREE.Mesh {
         material: THREE.ShaderMaterial;
     }
+
+    class Box3Helper extends THREE.LineSegments {
+        public box: THREE.Box3;
+        constructor(box: THREE.Box3, hex?: number);
+    }
 }
