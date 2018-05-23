@@ -9,6 +9,7 @@ import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateVeinGr
 import { LeafTemplate } from "./veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "./veinMesh/textureGenerator";
 import { WhorlParameters } from "./whorl";
+import Leaves from "./leaf/leaves";
 
 export interface BranchingPattern {
     getComponentsFor(branch: BranchBone): Component[] | null;
@@ -117,6 +118,7 @@ let branchingPattern: BranchingPattern = {
             }
             const xAngle = bone.index / BONES_PER_GROWTH * Math.PI * 2 / growthsPerRotation;
             const leaves = [genLeaf(xAngle), genLeaf(xAngle + Math.PI)];
+            // const leaves = [Leaves.generate()];
 
             const totalBones = bone.branch.meshManager.skeleton.bones.length;
             const percentDist = bone.index / totalBones;

@@ -5,6 +5,8 @@ import { Branch } from "./branch";
 import dna from "../dna";
 
 const q = new THREE.Quaternion();
+const dummyPosition = new THREE.Vector3();
+const dummyScale = new THREE.Vector3();
 /**
  * Straight up is the identity for branch bones since their initial pose is straight up
  */
@@ -73,14 +75,18 @@ export class BranchBone extends THREE.Bone {
         // ~80% nutrient. (ballpark)
         const curveAmount = THREE.Math.mapLinear(this.growthPercentage, 0, 0.8, this.curveUpwardAmountBase, 0);
         if (curveAmount > 0) {
-            this.getWorldQuaternion(q);
+            // this is the same as getWorldQuaternion() but without eating the
+            // computeMatrixWorld (which will be computed each frame by .render() anyways) perf hit (which is ~30% of total traverse)
+            // essentially we lag one frame behind, but that's no problem since we're
+            // growing slowly anyways
+            this.matrixWorld.decompose(dummyPosition, q, dummyScale);
+
             q.slerp(QUATERNION_UP, 1.0 + curveAmount);
             this.quaternion.multiply(q);
         }
 
         // Model rocking back and forth while growing.
         // don't do this once we hit ~80% nutrient.
-
         let rotateScalar = THREE.Math.mapLinear(this.growthPercentage, 0, 0.8, 1, 0);
         rotateScalar = Math.sqrt(rotateScalar);
         if (rotateScalar > 0) {

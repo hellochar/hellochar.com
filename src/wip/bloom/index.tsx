@@ -65,6 +65,9 @@ class Bloom extends ISketch {
         this.initPostprocessing();
 
         scene.add(this.person);
+
+        // const bhelper = new THREE.Box3Helper(this.componentBoundingBox);
+        // scene.add(bhelper);
     }
 
     public envMap!: THREE.CubeTexture;
@@ -159,10 +162,45 @@ class Bloom extends ISketch {
 
         // const flower = Flower.generate();
         // this.component = flower;
+
     }
 
+    private componentBoundingBox: THREE.Box3 = new THREE.Box3();
+
     public animate(ms: number) {
+        this.updateComponentAndComputeBoundingBox();
+        this.updateCamera();
+        this.updatePeoplePositions();
+        // this.printObjectTree();
+
+        // this.renderer.render(this.scene, this.camera);
+        this.composer.render();
+    }
+
+    private updatePeoplePositions() {
+        const people = this.openPoseManager.getPeople();
+        for (const person of people) {
+            const [headX, headY] = person.pose_keypoints_2d;
+            const worldX = THREE.Math.mapLinear(headX, 0, 640, -1, 1);
+            const worldY = THREE.Math.mapLinear(headY, 0, 640, 0, 2);
+            this.person.position.x = worldX;
+            this.person.position.y = worldY;
+        }
+    }
+
+    private updateComponentAndComputeBoundingBox() {
+        this.componentBoundingBox.min.set(-0.5, 0, -0.5);
+        this.componentBoundingBox.max.set(0.5, 0.5, 0.5);
+        const pos = new THREE.Vector3();
         this.component.traverse((obj) => {
+            // this is a cheaper way of doing obj.getWorldPosition() - the difference is that it
+            // lags by like 1 frame
+            pos.setFromMatrixPosition(obj.matrixWorld);
+
+            // the obj.rotation.y is nan sometimes, idk why
+            if (!Number.isNaN(pos.x)) {
+                this.componentBoundingBox.expandByPoint(pos);
+            }
             if (obj instanceof Component) {
                 if (obj.timeBorn == null) {
                     obj.timeBorn = this.timeElapsed;
@@ -172,23 +210,23 @@ class Bloom extends ISketch {
                 }
             }
         });
-        this.printObjectTree();
+    }
 
-        const people = this.openPoseManager.getPeople();
-        for (const person of people) {
-            const [headX, headY] = person.pose_keypoints_2d;
-            const worldX = THREE.Math.mapLinear(headX, 0, 640, -1, 1);
-            const worldY = THREE.Math.mapLinear(headY, 0, 640, 0, 2);
-            this.person.position.x = worldX;
-            this.person.position.y = worldY;
-        }
+    private updateCamera() {
+        const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
 
-        // const yPos = THREE.Math.smoothstep(this.timeElapsed / 30000, 0, 1) * 3.0;
-        // this.camera.position.y = yPos + 1;
-        // this.orbitControls.target.set(0, yPos, 0);
+        const targetDist = minXZDist * 0.8;
+        const targetY = this.componentBoundingBox.max.y - 0.6;
+
+        const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
+        xz.setLength(targetDist);
+        // this.camera.position.x = xz.x;
+        // this.camera.position.z = xz.y;
+
+        // this.orbitControls.target.set(0, targetY, 0);
+        // this.camera.position.y = targetY + 1;
+
         this.orbitControls.update();
-        // this.renderer.render(this.scene, this.camera);
-        this.composer.render();
     }
 
     private printObjectTree() {
