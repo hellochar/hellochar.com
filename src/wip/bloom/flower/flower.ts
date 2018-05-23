@@ -14,7 +14,7 @@ export default class Flower extends Component {
         const timeAlive = t - this.timeBorn;
         const logisticX = timeAlive / 2000 - 6;
         // HACKHACK scale by 15
-        const s = logistic(logisticX) * 15;
+        const s = logistic(logisticX) * 8;
         // const s = 1;
         this.scale.set(s, s, s);
     }

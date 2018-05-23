@@ -40,7 +40,6 @@ const groundGeom = new THREE.CircleBufferGeometry(8, 120);
 groundGeom.rotateX(-Math.PI / 2);
 const ground = new THREE.Mesh(groundGeom, new THREE.MeshLambertMaterial({
     // color: new THREE.Color("rgb(45, 29, 3)"),
-    side: THREE.DoubleSide,
     color: new THREE.Color("rgb(220, 220, 231)"),
     dithering: true,
 }));

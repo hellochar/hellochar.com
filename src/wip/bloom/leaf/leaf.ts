@@ -14,7 +14,7 @@ export class Leaf extends Component {
     public lamina: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
-        const petioleLength = THREE.Math.randFloat(0.1, 0.5);
+        const petioleLength = THREE.Math.randFloat(0.4, 0.5);
         if (petioleLength > 0) {
             const petiole = (() => {
                 const mat = new THREE.MeshLambertMaterial({

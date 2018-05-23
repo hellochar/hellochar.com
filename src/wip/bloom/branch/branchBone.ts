@@ -1,0 +1,116 @@
+import * as THREE from "three";
+
+import { Component } from "../component";
+import { Branch } from "./branch";
+import dna from "../dna";
+
+const q = new THREE.Quaternion();
+/**
+ * Straight up is the identity for branch bones since their initial pose is straight up
+ */
+const QUATERNION_UP = new THREE.Quaternion();
+
+/**
+ * A BranchBone is basically a THREE.Bone but with extra methods that provide an API surface
+ * for dealing with it in model space. It has the following methods:
+ *
+ * Each branch has a "growth percentage" in [0, 1] that determines how "done" this branch is.
+ *
+ * a) feed(n) - give this branch some amount of nutrients. There's some mapping from nutrients
+ *    to growth percentage. The branch can choose to consume the nutrients, or feed it to its children in
+ *    any distribution.
+ *
+ * The BranchBone will update its THREE position/rotation/scale accordingly.
+ */
+export class BranchBone extends THREE.Bone {
+    private growthPercentage = 0;
+    // [1, 1.1] - largely determines the shape of the branch - how curvy it is.
+    private curveUpwardAmountBase = .01;
+
+    public get isAlive() {
+        return this.growthPercentage > 0;
+    }
+
+    /**
+     * The thing growing out of this component, if it exists.
+     *
+     * undefined = hasn't reached growth event yet (initial state).
+     * null = reached growth state, and we're not growing anything.
+     * non-null = the component we're growing.
+     */
+    private components: Component[] | null | undefined;
+
+    /**
+     * Manually call pose after you've calculated the inverses of all these branches.
+     */
+    constructor(public index: number) {
+        super(null as any);
+        // be careful - we can't shrink ourselves down until we've calculated the inverses in the skeleton.
+        // this.updateView();
+    }
+
+    simulate() {
+        if (!this.isAlive) {
+            return;
+        }
+        if (this.growthPercentage > 0.1 && this.components === undefined) {
+            const components = dna.branchingPattern.getComponentsFor(this);
+            this.components = components;
+            if (components != null) {
+                this.add(...components);
+            }
+        }
+
+        // Model that curving upwards behavior that branches do.
+        // we don't want to always do this - we don't want to do this once we hit
+        // ~80% nutrient. (ballpark)
+        const curveAmount = THREE.Math.mapLinear(this.growthPercentage, 0, 0.8, this.curveUpwardAmountBase, 0);
+        if (curveAmount > 0) {
+            this.getWorldQuaternion(q);
+            q.slerp(QUATERNION_UP, 1.0 + curveAmount);
+            this.quaternion.multiply(q);
+        }
+    }
+
+    feed(nutrients: number) {
+        // basic model - feed n directly to me until I'm at growth 100%, then feed completely to my children.
+        // TODO eat half the nutrients in a smoothstep manner
+        const percentOfNutrientsWanted = THREE.Math.mapLinear(this.growthPercentage, 0, 1, 0.2, 0.01);
+        const nutrientsForMe = nutrients * percentOfNutrientsWanted;
+        const nutrientsLeft = nutrients - nutrientsForMe;
+        const newGrowthPercentage = Math.min(1, this.growthPercentage + nutrientsForMe);
+        const leftOver = ((this.growthPercentage + nutrientsForMe) - newGrowthPercentage) + nutrientsLeft;
+        this.growthPercentage = newGrowthPercentage;
+
+        this.simulate();
+
+        if (leftOver > 0) {
+            for (const child of this.children) {
+                // we're physically inaccurate here when there's more than one child, but that's fine.
+                if (child instanceof BranchBone) {
+                    child.feed(leftOver);
+                }
+            }
+        }
+        this.updateView();
+    }
+
+    updateView() {
+        const scalar = THREE.Math.mapLinear(this.growthPercentage, 0, 1, 0.01, 0.98);
+        this.scale.setScalar(scalar);
+        // if (!this.isAlive) {
+        //     this.visible = false;
+        // } else {
+        //     this.visible = true;
+        //     this.scale.setScalar(this.growthPercentage);
+        // }
+    }
+}
+
+export class BranchSkeleton extends THREE.Skeleton {
+    bones!: BranchBone[];
+
+    constructor(bones: BranchBone[]) {
+        super(bones);
+    }
+}

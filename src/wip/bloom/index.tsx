@@ -118,8 +118,8 @@ class Bloom extends ISketch {
 
     public initComponent() {
         const branch = new Branch(6);
-        // const helper = new THREE.SkeletonHelper(branch.skeleton.bones[0]);
-        // scene.add(helper);
+        const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
+        scene.add(helper);
         this.component = branch;
 
         // const flower = Flower.generate();

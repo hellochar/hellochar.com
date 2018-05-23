@@ -1,11 +1,17 @@
 import * as THREE from "three";
 
-import { Petal } from "./flower";
+import { Petal, Flower } from "./flower";
 import { Leaf } from "./leaf";
 import { generateRandomVeinedLeaf, VeinedLeaf, generateVeinGrowthParameters, generatePetalGrowthParameters } from "./vein/veinedLeaf";
 import { LeafTemplate } from "./veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "./veinMesh/textureGenerator";
 import { WhorlParameters } from "./whorl";
+import { BranchBone } from "./branch/branchBone";
+import { Component } from "./component";
+
+export interface BranchingPattern {
+    getComponentsFor(branch: BranchBone): Component[] | null;
+}
 
 export function generateRandomLeafWhorlParameters(): WhorlParameters<Leaf> {
     const zRot = THREE.Math.randFloat(Math.PI / 20, Math.PI / 3);
@@ -87,6 +93,33 @@ let leafTemplate: LeafTemplate;
 let petalTemplate: LeafTemplate;
 let leafWhorlTemplate: WhorlParameters<Leaf>;
 let petalWhorlTemplate: WhorlParameters<Petal>;
+let branchingPattern: BranchingPattern = {
+    getComponentsFor: (branch) => {
+        // we're at the end, grow a flower
+        if (branch.children.length === 0) {
+            const flower = Flower.generate();
+            flower.position.y = branch.position.y;
+            return [flower];
+            // return Flower.generate();
+        }
+
+        const BONES_PER_GROWTH = 4;
+        const growthsPerRotation = 4;
+
+        if (branch.index % BONES_PER_GROWTH === BONES_PER_GROWTH - 1) {
+            // create a leaf
+            function genLeaf(yAngle: number) {
+                const leaf = Leaf.generate(leafTemplate);
+                leaf.rotateY(yAngle);
+                leaf.rotateZ(Math.PI / 4);
+                return leaf;
+            }
+            const xAngle = branch.index / BONES_PER_GROWTH * Math.PI * 2 / growthsPerRotation;
+            return [genLeaf(xAngle), genLeaf(xAngle + Math.PI)];
+        }
+        return null;
+    },
+};
 
 export function randomizeDna(envMap: THREE.CubeTexture) {
     leafWhorlTemplate = generateRandomLeafWhorlParameters();
@@ -127,6 +160,8 @@ export const dna = {
     get petalTemplate() { return petalTemplate; },
     get leafWhorlTemplate() { return leafWhorlTemplate; },
     get petalWhorlTemplate() { return petalWhorlTemplate; },
+
+    get branchingPattern() { return branchingPattern; }
 }
 
 export default dna;
