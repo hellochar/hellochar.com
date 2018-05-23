@@ -3,6 +3,8 @@ import * as THREE from "three";
 import { Branch } from "./branch";
 import { BranchBone, BranchSkeleton } from "./branchBone";
 
+export const BONES_PER_UNIT_LENGTH = 10;
+
 export class BranchMeshManager {
     public mesh: THREE.SkinnedMesh;
     public skeleton: BranchSkeleton;
@@ -12,7 +14,7 @@ export class BranchMeshManager {
     constructor(public branch: Branch) {
         const { finalBranchLength } = branch;
         // initialize the geometry, material, skeleton, and skinnedmesh
-        const numSegments = 10 * branch.finalBranchLength;
+        const numSegments = BONES_PER_UNIT_LENGTH * branch.finalBranchLength;
         /*
          * The cylinder's upwards is pointed at +y. The cylinder ranges in y from [0, finalBranchLength].
          */

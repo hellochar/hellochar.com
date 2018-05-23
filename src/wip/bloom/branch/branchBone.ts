@@ -37,6 +37,10 @@ export class BranchBone extends THREE.Bone {
         return this.growthPercentage > 0;
     }
 
+    public getGrowthPercentage() {
+        return this.growthPercentage;
+    }
+
     /**
      * The thing growing out of this component, if it exists.
      *

@@ -32,7 +32,10 @@ class Bloom extends ISketch {
     public orbitControls!: THREE.OrbitControls;
     public composer!: THREE.EffectComposer;
 
-    public component!: THREE.Object3D;
+    // public component!: THREE.Object3D;
+    public component!: Branch;
+
+    private componentBoundingBox: THREE.Box3 = new THREE.Box3();
 
     public person: THREE.Mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 0.1, 0.1));
 
@@ -68,6 +71,7 @@ class Bloom extends ISketch {
 
         // const bhelper = new THREE.Box3Helper(this.componentBoundingBox);
         // scene.add(bhelper);
+
     }
 
     public envMap!: THREE.CubeTexture;
@@ -165,14 +169,26 @@ class Bloom extends ISketch {
 
     }
 
-    private componentBoundingBox: THREE.Box3 = new THREE.Box3();
+    private r1: HTMLDivElement | null = null;
+    private r2: HTMLPreElement | null = null;
+
+    public elements = [
+        <div style={{ textAlign: "left" }}>
+            <div ref={(r) => this.r1 = r} />
+            <pre ref={(r) => this.r2 = r} />
+        </div>,
+    ];
 
     public animate(ms: number) {
         this.updateComponentAndComputeBoundingBox();
         this.updateCamera();
         this.updatePeoplePositions();
-        // this.printObjectTree();
+        if (this.r1 != null) {
+            this.r1.textContent = `Maturity: ${this.component.computeMaturityAmount().toFixed(3)}\nEstimated time: ${this.component.getEstimatedSecondsToMaturity()}\nCurrent time: ${((this.timeElapsed - this.component.timeBorn) / 1000).toFixed(3)}`;
+        }
+        this.updateObjectCounts();
 
+        this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
     }
@@ -193,20 +209,24 @@ class Bloom extends ISketch {
         this.componentBoundingBox.max.set(0.5, 0.5, 0.5);
         const pos = new THREE.Vector3();
         this.component.traverse((obj) => {
-            // this is a cheaper way of doing obj.getWorldPosition() - the difference is that it
-            // lags by like 1 frame
-            pos.setFromMatrixPosition(obj.matrixWorld);
-
-            // the obj.rotation.y is nan sometimes, idk why
-            if (!Number.isNaN(pos.x)) {
-                this.componentBoundingBox.expandByPoint(pos);
-            }
             if (obj instanceof Component) {
-                if (obj.timeBorn == null) {
+                const newBorn = obj.timeBorn == null;
+                if (newBorn) {
                     obj.timeBorn = this.timeElapsed;
                 }
                 if (obj.updateSelf) {
                     obj.updateSelf(this.timeElapsed);
+                }
+                if (!newBorn) {
+                    // this is a cheaper way of doing obj.getWorldPosition() - the difference is that it
+                    // lags by like 1 frame. This is why we only use non-newborns, so that they have
+                    // one frame to initialize their scales and positions
+                    pos.setFromMatrixPosition(obj.matrixWorld);
+
+                    // the obj.rotation.y is nan sometimes, idk why
+                    if (!Number.isNaN(pos.x)) {
+                        this.componentBoundingBox.expandByPoint(pos);
+                    }
                 }
             }
         });
@@ -220,22 +240,26 @@ class Bloom extends ISketch {
 
         const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
         xz.setLength(targetDist);
-        // this.camera.position.x = xz.x;
-        // this.camera.position.z = xz.y;
+        this.camera.position.x = xz.x;
+        this.camera.position.z = xz.y;
 
-        // this.orbitControls.target.set(0, targetY, 0);
-        // this.camera.position.y = targetY + 1;
+        this.orbitControls.target.set(0, targetY, 0);
+        this.camera.position.y = targetY + 1;
 
-        this.orbitControls.update();
+        console.log(targetY);
     }
 
-    private printObjectTree() {
+    private updateObjectCounts() {
         const counts = new Map<string, number>();
         scene.traverse((obj) => {
             const name = obj.constructor.name;
             counts.set(name, (counts.get(name) || 0) + 1);
         });
-        console.log(counts);
+        if (this.r2 != null) {
+            const entries = Array.from(counts.entries());
+            entries.sort(([_, countA], [__, countB]) => countB - countA);
+            this.r2.textContent = entries.map( ([name, count]) => `${name}: ${count}` ).join("\n");
+        }
     }
 
     public resize(width: number, height: number) {

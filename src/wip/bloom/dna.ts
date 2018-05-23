@@ -125,7 +125,6 @@ let branchingPattern: BranchingPattern = {
             // console.log(percentDist);
             if (Math.random() > percentDist) {
                 const newBranchLength = (1 - percentDist) * 0.8 * bone.branch.finalBranchLength;
-                console.log(newBranchLength);
                 if (newBranchLength >= 1) {
                     const branch = new Branch(newBranchLength);
                     branch.rotateY(Math.PI * 2 * Math.random());

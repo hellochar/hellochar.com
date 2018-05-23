@@ -33,7 +33,7 @@ export class Leaf extends Component {
         }
         this.lamina = template.instantiateLeaf();
         this.lamina.position.x = petioleLength * 0.98;
-        this.lamina.position.y = 0.0015
+        this.lamina.position.y = 0.0015;
         this.add(this.lamina);
     }
 
