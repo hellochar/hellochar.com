@@ -1,29 +1,60 @@
 import * as THREE from "three";
 
 import { Branch } from "../branch";
-import { Flower, Petal } from "../flower";
+import { Flower, Petal, Stamen } from "../flower";
 import { Leaf } from "../leaf";
 import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateVeinGrowthParameters } from "../vein/veinedLeaf";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
-import { BranchingPattern, DNA } from "./dna";
+import { BranchingPattern, BranchTemplate, DNA, GrowthParameters } from "./dna";
 
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
+    const branchTemplate = randomBranchTemplate(envMap);
     const leafTemplate = randomLeafTemplate(envMap);
     const petalTemplate = randomPetalTemplate(envMap);
 
     const leafWhorlTemplate = randomWhorlParametersLeaf(leafTemplate);
     const petalWhorlTemplate = randomWhorlParametersPetal(petalTemplate);
+    const stamenWhorl = randomWhorlStamen();
 
     const branchingPattern = randomBranchingPattern(leafTemplate);
 
+    const growth = randomGrowthParameters();
+
     return {
         branchingPattern,
+        branchTemplate,
+        growth,
         leafTemplate,
         leafWhorlTemplate,
         petalTemplate,
         petalWhorlTemplate,
+        stamenWhorl,
+    };
+}
+
+export function randomBranchTemplate(envMap: THREE.CubeTexture): BranchTemplate {
+    // const hue = THREE.Math.randInt(130, 160);
+    // const saturationPercent = Math.sqrt(THREE.Math.randFloat(0.25, 1)) * 100;
+    // const luminancePercent = THREE.Math.randInt(50, 100);
+    // const color = new THREE.Color(`hsl(${hue}, ${saturationPercent.toFixed(0)}%, ${luminancePercent}%)`);
+    // console.log(hue, saturationPercent, luminancePercent, color);
+
+    const color = "green";
+    // TODO maybe use envmap for this? probably don't need to though honestly
+    const material = new THREE.MeshLambertMaterial({ skinning: true, color, side: THREE.DoubleSide });
+
+    const fullMaturityThickness = THREE.Math.mapLinear(
+        Math.random() + Math.random() + Math.random() + Math.random(),
+        0,
+        4,
+        0.01,
+        0.05,
+    );
+    return {
+        fullMaturityThickness,
+        material,
     };
 }
 
@@ -136,6 +167,21 @@ export function randomWhorlParametersPetal(petalTemplate: LeafTemplate): WhorlPa
     // }
 }
 
+export function randomWhorlStamen() {
+    const num = THREE.Math.randInt(3, 8) + (Math.random() < 0.1 ? THREE.Math.randInt(20, 40) : 0);
+    return {
+        num,
+        endScale: 0.2,
+        startScale: 0.5,
+        startYRot: 0,
+        endYRot: Math.PI,
+        startZRot: 0,
+        endZRot: 0,
+        isBilateral: true,
+        generate: Stamen.generate,
+    };
+}
+
 export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPattern {
     return {
         getComponentsFor: (bone) => {
@@ -183,5 +229,19 @@ export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPat
             }
             return null;
         },
+    };
+}
+
+export function randomGrowthParameters(): GrowthParameters {
+    const boneCurveUpwardsFactor = 0.0001;
+    const budDevelopmentThreshold = 0.1;
+    const childScalar = 0.8;
+    const feedSelfMax = 0.2;
+
+    return {
+        boneCurveUpwardsFactor,
+        budDevelopmentThreshold,
+        childScalar,
+        feedSelfMax,
     };
 }

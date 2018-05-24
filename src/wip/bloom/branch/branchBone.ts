@@ -32,12 +32,7 @@ const QUATERNION_UP = new THREE.Quaternion();
  */
 export class BranchBone extends THREE.Bone {
     private growthPercentage = 0;
-    // [1, 1.1] - largely determines the shape of the branch - how curvy it is.
-    // we should rethink this. this is very sensitive to initial feed rate
-    // and length of branch (number of simulation steps taken).
-    // we should scale it based on time, or just give every segment a "target"
-    // they go towards (I like this the best).
-    private curveUpwardAmountBase = .0001;
+    private curveUpwardAmountBase = dna.growth.boneCurveUpwardsFactor;
 
     public get isAlive() {
         return this.growthPercentage > 0;
@@ -69,12 +64,12 @@ export class BranchBone extends THREE.Bone {
         if (!this.isAlive) {
             return;
         }
-        if (this.growthPercentage > 0.1 && this.components === undefined) {
+        if (this.growthPercentage > dna.growth.budDevelopmentThreshold && this.components === undefined) {
             const components = dna.branchingPattern.getComponentsFor(this);
             this.components = components;
             if (components != null) {
                 for (const c of components) {
-                    c.scale.multiplyScalar(0.8);
+                    c.scale.multiplyScalar(dna.growth.childScalar);
                 }
                 this.add(...components);
             }
@@ -82,8 +77,8 @@ export class BranchBone extends THREE.Bone {
 
         // Model that curving upwards behavior that branches do.
         // we don't want to always do this - we don't want to do this once we hit
-        // ~80% nutrient. (ballpark)
-        const curveAmount = THREE.Math.mapLinear(this.growthPercentage, 0, 0.8, this.curveUpwardAmountBase, 0);
+        // ~90% nutrient. (ballpark)
+        const curveAmount = THREE.Math.mapLinear(this.growthPercentage, 0, 0.9, this.curveUpwardAmountBase, 0);
         if (curveAmount > 0) {
             // this is the same as getWorldQuaternion() but without eating the
             // computeMatrixWorld (which will be computed each frame by .render() anyways) perf hit (which is ~30% of total traverse)
@@ -97,18 +92,17 @@ export class BranchBone extends THREE.Bone {
 
         // Model rocking back and forth while growing.
         // don't do this once we hit ~80% nutrient.
-        let rotateScalar = THREE.Math.mapLinear(this.growthPercentage, 0, 0.8, 1, 0);
+        let rotateScalar = THREE.Math.mapLinear(this.growthPercentage * (1 - this.growthPercentage), 0, 0.25, 0, 1);
         rotateScalar = Math.sqrt(rotateScalar);
         if (rotateScalar > 0) {
-            this.rotation.x = 0.1 * Math.sin(t / 9000) * rotateScalar;
-            // this.rotation.y = 0.5 * Math.sin(t / 200);
+            this.rotation.x = 0.1 * Math.sin(t / 4000) * rotateScalar;
         }
+        // TODO add a z rotation that can create twisty branches
+        // this.rotation.z = 0.5;
     }
 
     feed(t: number, nutrients: number) {
-        // basic model - feed n directly to me until I'm at growth 100%, then feed completely to my children.
-        // TODO eat half the nutrients in a smoothstep manner
-        const percentOfNutrientsWanted = THREE.Math.mapLinear(this.growthPercentage, 0, 1, 0.2, 0.01);
+        const percentOfNutrientsWanted = THREE.Math.mapLinear(this.growthPercentage, 0, 1, dna.growth.feedSelfMax, 0.01);
         const nutrientsForMe = nutrients * percentOfNutrientsWanted;
         const nutrientsLeft = nutrients - nutrientsForMe;
         const newGrowthPercentage = Math.min(1, this.growthPercentage + nutrientsForMe);

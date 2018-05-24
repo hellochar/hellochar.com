@@ -1,4 +1,5 @@
-import { Component, ComponentClass } from "../component";
+import { Component } from "../component";
+import dna from "../dna";
 import { Whorl } from "../whorl";
 import Stamen from "./stamen";
 
@@ -9,17 +10,7 @@ export default class Androecium extends Component {
     }
 
     static generate() {
-        const stamens = Whorl.generate({
-            num: 3,
-            endScale: 0.2,
-            startScale: 0.5,
-            startYRot: 0,
-            endYRot: Math.PI,
-            startZRot: 0,
-            endZRot: 0,
-            isBilateral: true,
-            generate: Stamen.generate,
-        })
+        const stamens = Whorl.generate(dna.stamenWhorl);
         return new Androecium(stamens);
     }
 }

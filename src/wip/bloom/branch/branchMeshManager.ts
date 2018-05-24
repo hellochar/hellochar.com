@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { dna } from "../dna";
 import { Branch } from "./branch";
 import { BranchBone, BranchSkeleton } from "./branchBone";
 
@@ -7,8 +8,6 @@ import { BranchBone, BranchSkeleton } from "./branchBone";
  * Has a big effect on perf. More bones = more objects to matrixWorldUpdate, but also smoother curves.
  */
 export const BONES_PER_UNIT_LENGTH = 10;
-
-const BRANCH_MATERIAL = new THREE.MeshLambertMaterial({ skinning: true, color: "green", side: THREE.DoubleSide });
 
 export class BranchMeshManager {
     public mesh: THREE.SkinnedMesh;
@@ -22,8 +21,8 @@ export class BranchMeshManager {
          * The cylinder's upwards is pointed at +y. The cylinder ranges in y from [0, finalBranchLength].
          */
         const geometry = new THREE.CylinderGeometry(
-            0.03,
-            0.03,
+            dna.branchTemplate.fullMaturityThickness,
+            dna.branchTemplate.fullMaturityThickness,
             finalBranchLength,
             5,
             numSegments,
@@ -55,7 +54,7 @@ export class BranchMeshManager {
 
         this.mesh = new THREE.SkinnedMesh(
             geometry,
-            BRANCH_MATERIAL,
+            dna.branchTemplate.material as any,
         );
         this.mesh.castShadow = true;
 

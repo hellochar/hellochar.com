@@ -8,7 +8,11 @@ export const dna: DNA = {
     get leafWhorlTemplate() { return dnaBacking.leafWhorlTemplate; },
     get petalWhorlTemplate() { return dnaBacking.petalWhorlTemplate; },
 
-    get branchingPattern() { return dnaBacking.branchingPattern; }
+    get growth() { return dnaBacking.growth; },
+    get branchTemplate() { return dnaBacking.branchTemplate; },
+
+    get branchingPattern() { return dnaBacking.branchingPattern; },
+    get stamenWhorl() { return dnaBacking.stamenWhorl; },
 };
 
 export * from "./dna";

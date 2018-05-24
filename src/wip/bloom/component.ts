@@ -5,7 +5,12 @@ export interface ComponentClass<T extends Component> {
     generate(): T;
 }
 
-export abstract class Component extends Object3D {
+// even more generic than Component - also includes individual branch Bones
+export interface Biological {
+    feed(nutrients: number): void;
+}
+
+export abstract class Component extends Object3D implements Biological {
     public timeBorn!: number;
 
     constructor() {
@@ -46,4 +51,8 @@ export abstract class Component extends Object3D {
     // }
 
     updateSelf?(time: number): void;
+
+    feed(nutrients: number) {
+        // TODO fill this in properly
+    }
 }
