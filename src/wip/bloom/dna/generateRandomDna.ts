@@ -168,15 +168,17 @@ export function randomWhorlParametersPetal(petalTemplate: LeafTemplate): WhorlPa
 }
 
 export function randomWhorlStamen() {
-    const num = THREE.Math.randInt(3, 8) + (Math.random() < 0.1 ? THREE.Math.randInt(20, 40) : 0);
+    const num = THREE.Math.randInt(3, 8) + (Math.random() < 0.1 ? THREE.Math.randInt(10, 20) : 0);
+    const endZRot = -Math.PI / 8;
+    // the problem with the whorls is that there's no symmetry - it's very easy to make asymmetric things.
     return {
         num,
-        endScale: 0.2,
+        endScale: 0.4,
         startScale: 0.5,
         startYRot: 0,
-        endYRot: Math.PI,
+        endYRot: Math.PI * 2,
         startZRot: 0,
-        endZRot: 0,
+        endZRot: endZRot,
         isBilateral: true,
         generate: Stamen.generate,
     };

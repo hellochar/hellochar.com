@@ -32,8 +32,8 @@ class Bloom extends ISketch {
     public orbitControls!: THREE.OrbitControls;
     public composer!: THREE.EffectComposer;
 
-    // public component!: THREE.Object3D;
-    public component!: Branch;
+    public component!: THREE.Object3D;
+    // public component!: Branch;
 
     private componentBoundingBox: THREE.Box3 = new THREE.Box3();
 
@@ -124,14 +124,14 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        const branch = new Branch(12);
-        // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
-        // scene.add(helper);
-        this.component = branch;
+        // const branch = new Branch(12);
+        // // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
+        // // scene.add(helper);
+        // this.component = branch;
 
-        // const flower = Flower.generate();
-        // // flower.rotation.z = -Math.PI / 4;
-        // this.component = flower;
+        const flower = Flower.generate();
+        // flower.rotation.z = -Math.PI / 4;
+        this.component = flower;
 
         // const petal = Petal.generate(dna.petalTemplate);
         // petal.position.y = 0.3;
@@ -185,7 +185,7 @@ class Bloom extends ISketch {
         this.updatePeoplePositions();
 
         if (this.r1 != null) {
-            this.r1.textContent = `Maturity: ${this.component.computeMaturityAmount().toFixed(3)}\nEstimated time: ${this.component.getEstimatedSecondsToMaturity()}\nCurrent time: ${((this.timeElapsed - this.component.timeBorn) / 1000).toFixed(3)}`;
+            // this.r1.textContent = `Maturity: ${this.component.computeMaturityAmount().toFixed(3)}\nEstimated time: ${this.component.getEstimatedSecondsToMaturity()}\nCurrent time: ${((this.timeElapsed - this.component.timeBorn) / 1000).toFixed(3)}`;
         }
         this.debugObjectCounts();
 
@@ -236,7 +236,7 @@ class Bloom extends ISketch {
     private updateCamera() {
         const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
 
-        const targetDist = minXZDist * 0.8;
+        const targetDist = minXZDist * 0.5;
         const targetY = this.componentBoundingBox.max.y - 0.6;
 
         const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
