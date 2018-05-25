@@ -13,6 +13,8 @@ export const dna: DNA = {
 
     get branchingPattern() { return dnaBacking.branchingPattern; },
     get stamenWhorl() { return dnaBacking.stamenWhorl; },
+    get tepalTemplate() { return dnaBacking.tepalTemplate; },
+    get tepalWhorl() { return dnaBacking.tepalWhorl; },
 };
 
 export * from "./dna";

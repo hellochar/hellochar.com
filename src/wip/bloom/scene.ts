@@ -18,8 +18,8 @@ const sky = (() => {
     // turbidity affects how brightly the sun/moon shines. You want turbidity ~8 for nighttime.
     uniforms.turbidity.value = 1;
     // rayleigh is the big thing that affects "daytime" or "nighttime". rayleigh 0 = full night, rayleigh 1 = full day
-    // uniforms.rayleigh.value = 0.3;
-    uniforms.rayleigh.value = 0.0;
+    uniforms.rayleigh.value = 0.8;
+    // uniforms.rayleigh.value = 0.0;
     // how bright the sun's light halo is
     // 0.1 = all light on the sun
     // 0 = no halo; sunlight is distributed to the "ground"
@@ -39,7 +39,7 @@ const sky = (() => {
  * Inclination angle of the sun/moon in the sky. 0 = right at the horizon, Math.PI/2 = at the top
  */
 // const theta = Math.PI / 12;
-const theta = Math.PI / 2 * 0.95;
+const theta = Math.PI / 2 * 0.8;
 /**
  * xz angle.
  */
@@ -54,7 +54,6 @@ sky.material.uniforms.sunPosition.value.set(
 scene.add(sky);
 
 const groundGeom = new THREE.CircleBufferGeometry(8, 120);
-// const groundGeom = new THREE.PlaneGeometry(100, 100, 100, 100);
 groundGeom.rotateX(-Math.PI / 2);
 const ground = new THREE.Mesh(groundGeom, new THREE.MeshLambertMaterial({
     // color: new THREE.Color("rgb(45, 29, 3)"),
@@ -62,7 +61,7 @@ const ground = new THREE.Mesh(groundGeom, new THREE.MeshLambertMaterial({
     dithering: true,
 }));
 ground.receiveShadow = true;
-scene.add(ground);
+// scene.add(ground);
 if (SHOW_HELPERS) {
     scene.add(new THREE.AxesHelper(10));
 }

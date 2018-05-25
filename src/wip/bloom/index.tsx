@@ -1,19 +1,15 @@
 import * as React from "react";
 import * as THREE from "three";
 
-import { LineBasicMaterial } from "three";
-import { map } from "../../math";
-import { ISketch, SketchAudioContext } from "../../sketch";
-import { Branch } from "./branch";
-import { Component, ComponentClass } from "./component";
-import dna, { randomizeDna } from "./dna";
-import { Flower } from "./flower";
-import Petal from "./flower/petal";
-import { Leaf } from "./leaf";
+import { ISketch } from "../../sketch";
+import { Branch, NUTRIENT_PER_SECOND } from "./branch";
+import { Component } from "./component";
+import { randomizeDna } from "./dna";
+import { FeedParticles } from "./feedParticles";
 import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
+import { PersonMesh } from "./person";
 import scene from "./scene";
-import { Whorl } from "./whorl";
 
 class Bloom extends ISketch {
     public events = {
@@ -32,23 +28,25 @@ class Bloom extends ISketch {
     public orbitControls!: THREE.OrbitControls;
     public composer!: THREE.EffectComposer;
 
-    public component!: THREE.Object3D;
+    public component?: THREE.Object3D;
     // public component!: Branch;
 
     private componentBoundingBox: THREE.Box3 = new THREE.Box3();
 
-    public person: THREE.Mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 0.1, 0.1));
+    public peopleMeshes: PersonMesh[] = [];
 
     public openPoseManager!: OpenPoseManager;
+
+    public feedParticles!: FeedParticles;
 
     public init() {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        // this.renderer.setClearColor(new THREE.Color("rgb(193, 255, 251)"));
 
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 50);
         this.camera.position.y = 1;
         this.camera.position.z = 1;
+        this.scene.add(this.camera);
 
         this.orbitControls = new THREE.OrbitControls(this.camera);
         this.orbitControls.autoRotate = true;
@@ -62,12 +60,24 @@ class Bloom extends ISketch {
         randomizeDna(this.envMap);
 
         this.initComponent();
-        this.scene.add(this.component);
+        if (this.component != null) {
+            this.scene.add(this.component);
+        }
 
-        // // console.log(leaf.skeleton);
         this.initPostprocessing();
 
-        scene.add(this.person);
+        this.feedParticles = new FeedParticles();
+        this.scene.add(this.feedParticles);
+
+        for (let i = 0; i < 20; i++) {
+            const personMesh = new PersonMesh(i);
+            this.peopleMeshes[i] = personMesh;
+            personMesh.position.z = -1;
+            this.camera.add(personMesh);
+            // this.scene.add(personMesh);
+        }
+
+        // scene.add(this.person);
 
         // const bhelper = new THREE.Box3Helper(this.componentBoundingBox);
         // scene.add(bhelper);
@@ -124,14 +134,14 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        // const branch = new Branch(12);
-        // // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
-        // // scene.add(helper);
-        // this.component = branch;
+        const branch = new Branch(10);
+        // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
+        // scene.add(helper);
+        this.component = branch;
 
-        const flower = Flower.generate();
-        // flower.rotation.z = -Math.PI / 4;
-        this.component = flower;
+        // const flower = Flower.generate();
+        // // flower.rotation.z = -Math.PI / 4;
+        // this.component = flower;
 
         // const petal = Petal.generate(dna.petalTemplate);
         // petal.position.y = 0.3;
@@ -180,12 +190,17 @@ class Bloom extends ISketch {
     ];
 
     public animate(ms: number) {
+        const nutrientsPerSecond = 0.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
+        NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateCamera();
-        this.updatePeoplePositions();
+        this.updatePersonMeshes();
+        this.feedParticles.animate(ms);
 
         if (this.r1 != null) {
-            // this.r1.textContent = `Maturity: ${this.component.computeMaturityAmount().toFixed(3)}\nEstimated time: ${this.component.getEstimatedSecondsToMaturity()}\nCurrent time: ${((this.timeElapsed - this.component.timeBorn) / 1000).toFixed(3)}`;
+            this.r1.style.background = "white";
+            this.r1.textContent = `${nutrientsPerSecond}`;
+            // this.r1.textContent = `${this.feedParticles.pointsStartIndex}, ${this.feedParticles.numActivePoints}`;
         }
         this.debugObjectCounts();
 
@@ -194,14 +209,17 @@ class Bloom extends ISketch {
         this.composer.render();
     }
 
-    private updatePeoplePositions() {
-        const people = this.openPoseManager.getPeople();
-        for (const person of people) {
-            const [headX, headY] = person.pose_keypoints_2d;
-            const worldX = THREE.Math.mapLinear(headX, 0, 640, -1, 1);
-            const worldY = THREE.Math.mapLinear(headY, 0, 640, 0, 2);
-            this.person.position.x = worldX;
-            this.person.position.y = worldY;
+    private updatePersonMeshes() {
+        const people = this.openPoseManager.getLatestFramePeople();
+        for (const personMesh of this.peopleMeshes) {
+            personMesh.updateFromOpenPoseFrame(people);
+            if (personMesh.visible) {
+                const p = new THREE.Vector3();
+                personMesh.getWorldHeadPosition(p);
+                if (Math.random() < 0.1) {
+                    this.feedParticles.addPoint(p);
+                }
+            }
         }
     }
 
@@ -209,6 +227,9 @@ class Bloom extends ISketch {
         this.componentBoundingBox.min.set(-0.5, 0, -0.5);
         this.componentBoundingBox.max.set(0.5, 0.5, 0.5);
         const pos = new THREE.Vector3();
+        if (this.component == null) {
+            return;
+        }
         this.component.traverse((obj) => {
             if (obj instanceof Component) {
                 const newBorn = obj.timeBorn == null;
@@ -236,15 +257,15 @@ class Bloom extends ISketch {
     private updateCamera() {
         const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
 
-        const targetDist = minXZDist * 0.5;
-        const targetY = this.componentBoundingBox.max.y - 0.6;
+        const targetDist = minXZDist * 0.7;
+        const targetY = this.componentBoundingBox.max.y - 0.5;
 
         const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
         xz.setLength(targetDist);
-        this.camera.position.x = xz.x;
-        this.camera.position.z = xz.y;
 
         this.orbitControls.target.set(0, targetY, 0);
+        this.camera.position.x = xz.x;
+        this.camera.position.z = xz.y;
         this.camera.position.y = targetY + 1;
     }
 

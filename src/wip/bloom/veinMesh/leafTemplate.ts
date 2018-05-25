@@ -6,7 +6,7 @@ import { VeinedLeaf } from "../vein/veinedLeaf";
 import { TextureGenerator, TextureGeneratorParameters } from "./textureGenerator";
 import { VeinedLeafSkeleton } from "./veinedLeafSkeleton";
 
-export const LEAF_NUM_BONES = 5;
+export const LEAF_NUM_BONES = 2;
 
 /**
  * A LeafTemplate holds a VeinedLeaf and a geometry and material on top of that veining structure.

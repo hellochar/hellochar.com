@@ -20,12 +20,12 @@ exports.start = (callback) => {
     // output the json
     `--write_json ${OUTPUT_FOLDER_NAME}`,
     // in trial and error, camera 1 was the genius wide angle
-    "--camera 1",
+    "--camera 0",
     // flip the wide angle camera since we're displaying ourselves back on the screen
     "--frame_flip",
 
     // debug
-    "--display 0",
+    // "--display 0",
   ];
   const command = `${execName} ${execParams.join(" ")}`;
   const cwd = path.resolve("/", "Users", "hello", "Downloads", "openpose-1.3.0-win64-gpu-binaries", "openpose-1.3.0-win64-gpu-binaries");

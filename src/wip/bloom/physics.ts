@@ -33,12 +33,12 @@ export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003) {
     quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), localFacing);
     bone.quaternion.multiply(quaternion);
 
-    // compute how angled in z i am compared to my parent
+    // compute how angled i am compared to my parent
     const eulers = new THREE.Euler().setFromQuaternion(bone.quaternion);
     // rotate a bit back straight, according to stiffness
-    // const stiffness = mouse.x * 0.1;
     eulers.x *= -stiffness;
-    eulers.y *= -stiffness;
+    // y is naturally stiffer; the leaf more easily resists side to side "wiggling"
+    eulers.y *= -stiffness * 2;
     eulers.z *= -stiffness;
     quaternion.setFromEuler(eulers);
 

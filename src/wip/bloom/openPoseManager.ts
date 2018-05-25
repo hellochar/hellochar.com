@@ -63,7 +63,7 @@ export class OpenPoseManager {
         }
     }
 
-    public getPeople() {
+    public getLatestFramePeople() {
         if (this.latestFrame == null) {
             return [];
         } else {

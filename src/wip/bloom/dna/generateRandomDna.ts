@@ -1,21 +1,24 @@
 import * as THREE from "three";
 
 import { Branch } from "../branch";
-import { Flower, Petal, Stamen } from "../flower";
+import { Flower, Petal, Stamen, Tepal } from "../flower";
 import { Leaf } from "../leaf";
-import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateVeinGrowthParameters } from "../vein/veinedLeaf";
+import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateVeinGrowthParameters, generateTepalGrowthParameters } from "../vein/veinedLeaf";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
 import { BranchingPattern, BranchTemplate, DNA, GrowthParameters } from "./dna";
+import Leaves from "../leaf/leaves";
 
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
     const branchTemplate = randomBranchTemplate(envMap);
     const leafTemplate = randomLeafTemplate(envMap);
     const petalTemplate = randomPetalTemplate(envMap);
+    const tepalTemplate = randomTepalTemplate(envMap);
 
     const leafWhorlTemplate = randomWhorlParametersLeaf(leafTemplate);
     const petalWhorlTemplate = randomWhorlParametersPetal(petalTemplate);
+    const tepalWhorl = randomWhorlParametersTepal(tepalTemplate);
     const stamenWhorl = randomWhorlStamen();
 
     const branchingPattern = randomBranchingPattern(leafTemplate);
@@ -31,6 +34,8 @@ export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
         petalTemplate,
         petalWhorlTemplate,
         stamenWhorl,
+        tepalTemplate,
+        tepalWhorl,
     };
 }
 
@@ -89,6 +94,22 @@ export function randomPetalTemplate(envMap: THREE.CubeTexture) {
         },
     };
     return LeafTemplate.fromVeinedLeaf(veinedPetal, petalTextureParameters, envMap);
+}
+
+export function randomTepalTemplate(envMap: THREE.CubeTexture) {
+    const veinedTepal = generateRandomVeinedLeaf(generateTepalGrowthParameters);
+    const tepalTextureParameters: TextureGeneratorParameters = {
+        innerColor: new THREE.Color("green"),
+        outerColor: new THREE.Color("green"),
+        veinColor: new THREE.Color("darkgreen"),
+        veinAlpha: 0.1,
+        bumpNoiseHeight: 0,
+        baseMaterialParams: {
+            roughness: 0.8,
+            metalness: 0,
+        },
+    };
+    return LeafTemplate.fromVeinedLeaf(veinedTepal, tepalTextureParameters, envMap);
 }
 
 export function randomWhorlParametersLeaf(leafTemplate: LeafTemplate): WhorlParameters<Leaf> {
@@ -167,6 +188,65 @@ export function randomWhorlParametersPetal(petalTemplate: LeafTemplate): WhorlPa
     // }
 }
 
+export function randomWhorlParametersTepal(tepalTemplate: LeafTemplate): WhorlParameters<Tepal> {
+    // const num = THREE.Math.randInt(5, 12 + (Math.random() < 0.1 ? THREE.Math.randInt(20, 40) : 0));
+    const num = THREE.Math.randInt(5, 12);
+    const maxRotations = Math.floor(num / 8);
+    const zRot = Math.PI / 3;
+    return {
+        num,
+        startYRot: 0,
+        endYRot: Math.PI * 2,
+        startScale: 1,
+        endScale: 1,
+        startZRot: zRot,
+        endZRot: zRot,
+        // endZRot: THREE.Math.randFloat(Math.PI / 12, Math.PI / 4),
+        isBilateral: false,
+        generate: () => Petal.generate(tepalTemplate),
+    };
+    // if (Math.random() < 1 / 3) {
+    //     // make 5 big ones
+    //     return {
+    //         num: 5,
+    //         startYRot: 0,
+    //         endYRot: Math.PI * 2,
+    //         startScale: 0.9,
+    //         endScale: 0.9,
+    //         startZRot: Math.PI / 12,
+    //         endZRot: Math.PI / 12,
+    //         isBilateral: false,
+    //         generate: Petal.generate,
+    //     };
+    // } else if(Math.random() < 0.5) {
+    //     // 6 evenly spread
+    //     return {
+    //         num: 6,
+    //         startYRot: 0,
+    //         endYRot: Math.PI * 2,
+    //         startScale: 1,
+    //         endScale: 1,
+    //         startZRot: Math.PI / 4,
+    //         endZRot: Math.PI / 4,
+    //         isBilateral: false,
+    //         generate: Petal.generate,
+    //     };
+    // } else {
+    //     return {
+    //         num: 63,
+    //         startYRot: 0,
+    //         endYRot: Math.PI * 8,
+    //         startScale: 0.8,
+    //         endScale: 0.5,
+    //         startZRot: 0,
+    //         endZRot: Math.PI / 4,
+    //         isBilateral: false,
+    //         generate: Petal.generate,
+    //     };
+    // }
+}
+
+
 export function randomWhorlStamen() {
     const num = THREE.Math.randInt(3, 8) + (Math.random() < 0.1 ? THREE.Math.randInt(10, 20) : 0);
     const endZRot = -Math.PI / 8;
@@ -204,11 +284,12 @@ export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPat
                     const leaf = Leaf.generate(leafTemplate);
                     leaf.rotateY(yAngle);
                     leaf.rotateZ(Math.PI / 4);
+                    leaf.scale.multiplyScalar(0.6);
                     return leaf;
                 }
                 const xAngle = bone.index / BONES_PER_GROWTH * Math.PI * 2 / growthsPerRotation;
-                const leaves = [genLeaf(xAngle), genLeaf(xAngle + Math.PI)];
-                // const leaves = [Leaves.generate()];
+                // const leaves = [genLeaf(xAngle), genLeaf(xAngle + Math.PI)];
+                const leaves = [Leaves.generate()];
 
                 const totalBones = bone.branch.meshManager.skeleton.bones.length;
                 const percentDist = bone.index / totalBones;
@@ -235,7 +316,8 @@ export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPat
 }
 
 export function randomGrowthParameters(): GrowthParameters {
-    const boneCurveUpwardsFactor = 0.0001;
+    // const boneCurveUpwardsFactor = 0.0001;
+    const boneCurveUpwardsFactor = 0.001;
     const budDevelopmentThreshold = 0.1;
     const childScalar = 0.8;
     const feedSelfMax = 0.2;

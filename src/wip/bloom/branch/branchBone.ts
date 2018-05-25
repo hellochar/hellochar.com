@@ -96,9 +96,9 @@ export class BranchBone extends THREE.Bone {
         rotateScalar = Math.sqrt(rotateScalar);
         if (rotateScalar > 0) {
             this.rotation.x = 0.1 * Math.sin(t / 4000) * rotateScalar;
+            // TODO add a z rotation that can create twisty branches
+            this.rotation.y = 0.01 * rotateScalar * Math.sin(t / 10000);
         }
-        // TODO add a z rotation that can create twisty branches
-        // this.rotation.z = 0.5;
     }
 
     feed(t: number, nutrients: number) {

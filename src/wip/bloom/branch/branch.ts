@@ -6,7 +6,9 @@ import Leaves from "../leaf/leaves";
 import { BONES_PER_UNIT_LENGTH, BranchMeshManager } from "./branchMeshManager";
 
 // TODO move this to the base, and feed nutrients from the root, and allow feeding in generic Components
-export const NUTRIENT_PER_SECOND = 1;
+export let NUTRIENT_PER_SECOND = {
+    value: 0.2,
+};
 
 export class Branch extends Component {
     meshManager: BranchMeshManager;
@@ -26,7 +28,7 @@ export class Branch extends Component {
     public getEstimatedSecondsToMaturity() {
         // x = v*t; v = BRANCH_GROWTH_FACTOR, x = finalBranchLength * BONES_PER_UNIT_LENGTH
         // t = x / v
-        return this.finalBranchLength * BONES_PER_UNIT_LENGTH / NUTRIENT_PER_SECOND;
+        return this.finalBranchLength * BONES_PER_UNIT_LENGTH / NUTRIENT_PER_SECOND.value;
     }
 
     public computeMaturityAmount() {
@@ -47,7 +49,7 @@ export class Branch extends Component {
         const timeAlive = t - this.timeBorn;
         const { bones } = this.meshManager.skeleton;
         const deltaMs = t - this.lastT;
-        const nutrientsGiven = NUTRIENT_PER_SECOND / 1000 * deltaMs;
+        const nutrientsGiven = NUTRIENT_PER_SECOND.value / 1000 * deltaMs;
         bones[0].feed(t, nutrientsGiven);
 
         this.lastT = t;
