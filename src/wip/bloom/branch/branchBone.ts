@@ -95,9 +95,10 @@ export class BranchBone extends THREE.Bone {
         let rotateScalar = THREE.Math.mapLinear(this.growthPercentage * (1 - this.growthPercentage), 0, 0.25, 0, 1);
         rotateScalar = Math.sqrt(rotateScalar);
         if (rotateScalar > 0) {
-            this.rotation.x = 0.1 * Math.sin(t / 4000) * rotateScalar;
+            const time = Date.now();
+            this.rotation.x = 0.1 * Math.sin(time / 4000) * rotateScalar;
             // TODO add a z rotation that can create twisty branches
-            this.rotation.y = 0.01 * rotateScalar * Math.sin(t / 10000);
+            this.rotation.y = 0.01 * rotateScalar * Math.sin(time / 10000);
         }
     }
 

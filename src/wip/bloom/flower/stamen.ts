@@ -2,6 +2,9 @@ import * as THREE from "three";
 
 import { Component, ComponentClass } from "../component";
 
+const stamenColor = new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(75, 100)}%)`);
+const filamentColor = new THREE.Color(`hsl(${THREE.Math.randInt(320, 320 + 200)}, ${THREE.Math.randInt(0, 100)}%, ${THREE.Math.randInt(25, 75)}%)`);
+
 export default class Stamen extends Component {
     filament: THREE.Mesh;
     anther!: THREE.Mesh;
@@ -20,7 +23,8 @@ export default class Stamen extends Component {
             // TODO probably improve this
             const material = new THREE.MeshLambertMaterial({
                 // color: new THREE.Color("rgb(255, 50, 101)"),
-                color: 0xffffff,
+                // color: 0xffffff,
+                color: filamentColor,
                 side: THREE.DoubleSide,
             });
             const geometry = new THREE.TubeBufferGeometry(curve,
@@ -49,7 +53,8 @@ export default class Stamen extends Component {
             );
             geometry.scale(0.8, 1, 0.74);
             const material = new THREE.MeshLambertMaterial({
-                color: new THREE.Color("rgb(255, 50, 101)"),
+                // color: new THREE.Color("rgb(255, 50, 101)"),
+                color: stamenColor,
                 side: THREE.DoubleSide,
             });
             const anther = new THREE.Mesh(

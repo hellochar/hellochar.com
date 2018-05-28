@@ -56,12 +56,11 @@ scene.add(sky);
 const groundGeom = new THREE.CircleBufferGeometry(8, 120);
 groundGeom.rotateX(-Math.PI / 2);
 const ground = new THREE.Mesh(groundGeom, new THREE.MeshLambertMaterial({
-    // color: new THREE.Color("rgb(45, 29, 3)"),
     color: new THREE.Color("rgb(220, 220, 231)"),
     dithering: true,
 }));
 ground.receiveShadow = true;
-// scene.add(ground);
+scene.add(ground);
 if (SHOW_HELPERS) {
     scene.add(new THREE.AxesHelper(10));
 }
@@ -128,5 +127,36 @@ const particles = (() => {
     return points;
 })();
 scene.add(particles);
+
+const rocks = (() => {
+    const geom = new THREE.SphereGeometry(1, 4, 4);
+    geom.vertices.forEach((v) => {
+        v.x += Math.random() * 0.2 - 0.1;
+        v.y += Math.random() * 0.2 - 0.1;
+        v.z += Math.random() * 0.2 - 0.1;
+    });
+    geom.verticesNeedUpdate = true;
+    geom.computeFaceNormals();
+    geom.computeFlatVertexNormals();
+
+    const material = new THREE.MeshLambertMaterial({
+        color: "gray",
+        side: THREE.DoubleSide,
+        flatShading: true,
+    });
+
+    for (let i = 0; i < 20; i++) {
+        const mesh = new THREE.Mesh(geom, material);
+        const radius = THREE.Math.randFloat(1, 5);
+        const angle = THREE.Math.randFloat(0, Math.PI * 2);
+        mesh.scale.setScalar(0.1);
+        mesh.scale.x *= Math.pow(2, THREE.Math.randFloat(0.5, 2));
+        mesh.scale.z *= Math.pow(2, THREE.Math.randFloat(0.7, 1.2));
+        mesh.position.x = radius * Math.cos(angle);
+        mesh.position.z = radius * Math.sin(angle);
+        mesh.position.y = THREE.Math.randFloat(-0.03, 0.03);
+        scene.add(mesh);
+    }
+})();
 
 export default scene;

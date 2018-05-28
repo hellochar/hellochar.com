@@ -233,7 +233,6 @@ export function generateTepalGrowthParameters(): IVeinGrowthParameters {
     };
 }
 
-
 export class VeinedLeaf {
     public world: Vein[] = [];
 

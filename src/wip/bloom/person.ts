@@ -83,6 +83,7 @@ export class PersonMesh extends THREE.Object3D {
     public getWorldHeadPosition(target: THREE.Vector3) {
         const localHeadPosition = this.vertexArray[0];
         target.copy(localHeadPosition);
+        // target.z = 0;
         this.lineSegments.localToWorld(target);
         return target;
     }

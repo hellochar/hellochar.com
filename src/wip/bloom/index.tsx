@@ -4,12 +4,15 @@ import * as THREE from "three";
 import { ISketch } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
 import { Component } from "./component";
-import { randomizeDna } from "./dna";
+import dna, { randomizeDna } from "./dna";
 import { FeedParticles } from "./feedParticles";
+import { Flower, Petal, Tepal } from "./flower";
 import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./person";
 import scene from "./scene";
+import { Leaf } from "./leaf";
+
 
 class Bloom extends ISketch {
     public events = {
@@ -43,7 +46,7 @@ class Bloom extends ISketch {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.1, 50);
+        this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 50);
         this.camera.position.y = 1;
         this.camera.position.z = 1;
         this.scene.add(this.camera);
@@ -58,6 +61,7 @@ class Bloom extends ISketch {
         this.initCubeTexture();
 
         randomizeDna(this.envMap);
+        this.preloadTextures();
 
         this.initComponent();
         if (this.component != null) {
@@ -82,6 +86,22 @@ class Bloom extends ISketch {
         // const bhelper = new THREE.Box3Helper(this.componentBoundingBox);
         // scene.add(bhelper);
 
+    }
+
+    private preloadTextures() {
+        const petal = Petal.generate(dna.petalTemplate);
+        petal.visible = false;
+        const tepal = Tepal.generate(dna.tepalTemplate);
+        tepal.visible = false;
+        const leaf = Leaf.generate(dna.leafTemplate);
+        leaf.visible = false;
+
+        scene.add(petal, tepal, leaf);
+
+        // do a single render with a dummy leaf, tepal, and petal
+        this.renderer.render(this.scene, this.camera);
+
+        scene.remove(petal, tepal, leaf);
     }
 
     public envMap!: THREE.CubeTexture;
@@ -184,8 +204,8 @@ class Bloom extends ISketch {
 
     public elements = [
         <div style={{ textAlign: "left" }}>
-            <div ref={(r) => this.r1 = r} />
-            <pre ref={(r) => this.r2 = r} />
+            {/* <div ref={(r) => this.r1 = r} />
+            <pre ref={(r) => this.r2 = r} /> */}
         </div>,
     ];
 
@@ -207,6 +227,11 @@ class Bloom extends ISketch {
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
+
+        if (this.timeElapsed > 5 * 60 * 1000) {
+            // hack hack "generate" a new flower
+            location.reload();
+        }
     }
 
     private updatePersonMeshes() {
@@ -223,9 +248,12 @@ class Bloom extends ISketch {
         }
     }
 
+    public currentCameraFocus?: THREE.Object3D;
+    public timeCameraChangedFocus: number = 0;
+
     private updateComponentAndComputeBoundingBox() {
-        this.componentBoundingBox.min.set(-0.5, 0, -0.5);
-        this.componentBoundingBox.max.set(0.5, 0.5, 0.5);
+        this.componentBoundingBox.min.set(-0.2, 0, -0.2);
+        this.componentBoundingBox.max.set(0.2, 0.2, 0.2);
         const pos = new THREE.Vector3();
         if (this.component == null) {
             return;
@@ -250,23 +278,65 @@ class Bloom extends ISketch {
                         this.componentBoundingBox.expandByPoint(pos);
                     }
                 }
+                const timeThisCameraFocus = this.timeElapsed - this.timeCameraChangedFocus;
+
+                if (timeThisCameraFocus > 20000) {
+                    // if (Math.random() < 0.3) {
+                    //     if (Math.random() < 0.5) {
+                    //         this.currentCameraFocus = undefined;
+                    //     }
+                    //     this.timeCameraChangedFocus = this.timeElapsed;
+                    // }
+                    if (obj instanceof Flower && Math.random() < 0.1) {
+                        const timeAlive = this.timeElapsed - obj.timeBorn;
+                        // if (timeAlive > 1000 && timeAlive < 10000) {
+                            // chose this flower
+                            this.currentCameraFocus = obj;
+                            this.timeCameraChangedFocus = this.timeElapsed;
+                        // }
+                    }
+                }
             }
         });
     }
 
     private updateCamera() {
-        const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
+        if (this.currentCameraFocus == null) {
+            const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
 
-        const targetDist = minXZDist * 0.7;
-        const targetY = this.componentBoundingBox.max.y - 0.5;
+            const targetDist = Math.sqrt(minXZDist);
+            const targetY = this.componentBoundingBox.max.y - 0.3;
 
-        const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
-        xz.setLength(targetDist);
+            const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
+            xz.setLength(targetDist);
 
-        this.orbitControls.target.set(0, targetY, 0);
-        this.camera.position.x = xz.x;
-        this.camera.position.z = xz.y;
-        this.camera.position.y = targetY + 1;
+            this.orbitControls.target.set(0, targetY, 0);
+            this.camera.position.x = xz.x;
+            this.camera.position.z = xz.y;
+            this.camera.position.y = targetY + 0.7;
+        } else {
+            const wantedTarget = new THREE.Vector3();
+            this.currentCameraFocus.getWorldPosition(wantedTarget);
+            const targetDist = 0.2;
+            const cameraOffsetY = 0.15;
+
+            const currentTarget = this.orbitControls.target;
+            currentTarget.lerp(wantedTarget, 0.05);
+
+            this.orbitControls.target.copy(currentTarget);
+            // wantedTarget.lerpVectors(currentTarget, wantedTarget, 0.01);
+
+            // this.orbitControls.target.copy(wantedTarget);
+
+            const posLerp = 0.05;
+
+            this.camera.position.y = this.camera.position.y * (1 - posLerp) + (wantedTarget.y + cameraOffsetY) * posLerp;
+
+            const xzOffset = new THREE.Vector2(this.camera.position.x - wantedTarget.x, this.camera.position.z - wantedTarget.z);
+            xzOffset.setLength(xzOffset.length() * (1 - posLerp) + targetDist * posLerp);
+            this.camera.position.x = xzOffset.x + wantedTarget.x;
+            this.camera.position.z = xzOffset.y + wantedTarget.z;
+        }
     }
 
     private debugObjectCounts() {

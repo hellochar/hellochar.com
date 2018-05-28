@@ -18,8 +18,8 @@ export interface TextureGeneratorParameters {
  * Procedurally draws a textures for a VeinedLeaf to use in THREE.js materials.
  */
 export class TextureGenerator {
-    public width = 512;
-    public height = 512;
+    public width = 2048;
+    public height = 2048;
     private boundingBox: THREE.Box3;
     public pixelBounds = new THREE.Box2(new THREE.Vector2(), new THREE.Vector2(this.width, this.height));
 
@@ -98,16 +98,16 @@ export class TextureGenerator {
         bump.fillStyle = "black";
         bump.fillRect(0, 0, bumpCanvas.width, bumpCanvas.height);
 
-        // very slow
-        if (parameters.bumpNoiseHeight > 0) {
-            for (let x = 0; x < this.width; x++) {
-                for (let y = 0; y < this.height; y++) {
-                    const b = THREE.Math.randInt(255 - parameters.bumpNoiseHeight, 255);
-                    bump.fillStyle = `rgb(${b}, ${b}, ${b})`;
-                    bump.fillRect(x, y, 1, 1);
-                }
-            }
-        }
+        // TODO improve this, it's very slow
+        // if (parameters.bumpNoiseHeight > 0) {
+        //     for (let x = 0; x < this.width; x++) {
+        //         for (let y = 0; y < this.height; y++) {
+        //             const b = THREE.Math.randInt(255 - parameters.bumpNoiseHeight, 255);
+        //             bump.fillStyle = `rgb(${b}, ${b}, ${b})`;
+        //             bump.fillRect(x, y, 1, 1);
+        //         }
+        //     }
+        // }
 
         const VEIN_THICKNESS = 4.0;
         const outlineVeins = (t: number) => {

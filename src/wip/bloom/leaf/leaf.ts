@@ -38,13 +38,15 @@ export class Leaf extends Component {
     }
 
     updateSelf(t: number) {
-        const logisticX = (t - this.timeBorn) / 1000 - 6;
+        const msAlive = t - this.timeBorn;
+        const logisticX = msAlive / 1000 - 6;
         const s = logistic(logisticX);
         this.scale.set(s, s, s);
 
         const [...bones] = this.lamina.skeleton.bones;
+        const stiffness = THREE.Math.mapLinear(Math.sin(msAlive / 1000), -1, 1, 0, 0.01);
         for (const bone of bones) {
-            simulateVeinBoneGravity(bone, 0.006);
+            simulateVeinBoneGravity(bone, stiffness);
         }
 
         // for (const boneUncast of this.lamina.skeleton.bones) {

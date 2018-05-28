@@ -1,20 +1,31 @@
 import * as THREE from "three";
 
 import { Branch } from "../branch";
+import { FeedParticles } from "../feedParticles";
 import { Flower, Petal, Stamen, Tepal } from "../flower";
 import { Leaf } from "../leaf";
-import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateVeinGrowthParameters, generateTepalGrowthParameters } from "../vein/veinedLeaf";
+import Leaves from "../leaf/leaves";
+import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateTepalGrowthParameters, generateVeinGrowthParameters } from "../vein/veinedLeaf";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
 import { BranchingPattern, BranchTemplate, DNA, GrowthParameters } from "./dna";
-import Leaves from "../leaf/leaves";
 
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
-    const branchTemplate = randomBranchTemplate(envMap);
-    const leafTemplate = randomLeafTemplate(envMap);
+
+    // const hue = THREE.Math.randInt(130, 160);
+    const hue = THREE.Math.randInt(105, 135);
+    const saturationPercent = Math.sqrt(THREE.Math.randFloat(0.5, 1)) * 100;
+    const luminancePercent = THREE.Math.randInt(50, 100);
+    const color = new THREE.Color(`hsl(${hue}, ${saturationPercent.toFixed(0)}%, ${luminancePercent}%)`);
+
+    FeedParticles.material.color = color;
+    FeedParticles.material.needsUpdate = true;
+
+    const branchTemplate = randomBranchTemplate(color, envMap);
+    const leafTemplate = randomLeafTemplate(color, envMap);
     const petalTemplate = randomPetalTemplate(envMap);
-    const tepalTemplate = randomTepalTemplate(envMap);
+    const tepalTemplate = randomTepalTemplate(color, envMap);
 
     const leafWhorlTemplate = randomWhorlParametersLeaf(leafTemplate);
     const petalWhorlTemplate = randomWhorlParametersPetal(petalTemplate);
@@ -39,16 +50,12 @@ export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
     };
 }
 
-export function randomBranchTemplate(envMap: THREE.CubeTexture): BranchTemplate {
-    // const hue = THREE.Math.randInt(130, 160);
-    // const saturationPercent = Math.sqrt(THREE.Math.randFloat(0.25, 1)) * 100;
-    // const luminancePercent = THREE.Math.randInt(50, 100);
-    // const color = new THREE.Color(`hsl(${hue}, ${saturationPercent.toFixed(0)}%, ${luminancePercent}%)`);
+export function randomBranchTemplate(greenColor: THREE.Color, envMap: THREE.CubeTexture): BranchTemplate {
     // console.log(hue, saturationPercent, luminancePercent, color);
 
-    const color = "green";
+    // const color = "green";
     // TODO maybe use envmap for this? probably don't need to though honestly
-    const material = new THREE.MeshLambertMaterial({ skinning: true, color, side: THREE.DoubleSide });
+    const material = new THREE.MeshLambertMaterial({ skinning: true, color: greenColor, side: THREE.DoubleSide });
 
     const fullMaturityThickness = THREE.Math.mapLinear(
         Math.random() + Math.random() + Math.random() + Math.random(),
@@ -63,11 +70,11 @@ export function randomBranchTemplate(envMap: THREE.CubeTexture): BranchTemplate 
     };
 }
 
-export function randomLeafTemplate(envMap: THREE.CubeTexture) {
+export function randomLeafTemplate(color: THREE.Color, envMap: THREE.CubeTexture) {
     const veinedLeaf = generateRandomVeinedLeaf(generateVeinGrowthParameters);
     const leafTextureParameters: TextureGeneratorParameters = {
-        innerColor: new THREE.Color("green"),
-        outerColor: new THREE.Color("green"),
+        innerColor: color,
+        outerColor: color,
         veinColor: new THREE.Color("darkgreen"),
         veinAlpha: 1,
         bumpNoiseHeight: 1,
@@ -96,15 +103,16 @@ export function randomPetalTemplate(envMap: THREE.CubeTexture) {
     return LeafTemplate.fromVeinedLeaf(veinedPetal, petalTextureParameters, envMap);
 }
 
-export function randomTepalTemplate(envMap: THREE.CubeTexture) {
+export function randomTepalTemplate(color: THREE.Color, envMap: THREE.CubeTexture) {
     const veinedTepal = generateRandomVeinedLeaf(generateTepalGrowthParameters);
     const tepalTextureParameters: TextureGeneratorParameters = {
-        innerColor: new THREE.Color("green"),
-        outerColor: new THREE.Color("green"),
+        innerColor: color,
+        outerColor: color,
         veinColor: new THREE.Color("darkgreen"),
-        veinAlpha: 0.1,
+        veinAlpha: 0.0,
         bumpNoiseHeight: 0,
         baseMaterialParams: {
+            bumpScale: 0.01,
             roughness: 0.8,
             metalness: 0,
         },
@@ -246,9 +254,8 @@ export function randomWhorlParametersTepal(tepalTemplate: LeafTemplate): WhorlPa
     // }
 }
 
-
 export function randomWhorlStamen() {
-    const num = THREE.Math.randInt(3, 8) + (Math.random() < 0.1 ? THREE.Math.randInt(10, 20) : 0);
+    const num = THREE.Math.randInt(3, 6) + (Math.random() < 0.1 ? THREE.Math.randInt(10, 20) : 0);
     const endZRot = -Math.PI / 8;
     // the problem with the whorls is that there's no symmetry - it's very easy to make asymmetric things.
     return {
@@ -265,6 +272,8 @@ export function randomWhorlStamen() {
 }
 
 export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPattern {
+    const branchLengthScalar = THREE.Math.randFloat(0.7, 0.9);
+    const branchRotationZ = THREE.Math.randFloat(Math.PI / 3, Math.PI / 12);
     return {
         getComponentsFor: (bone) => {
             // we're at the end, grow a flower
@@ -279,15 +288,15 @@ export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPat
             const growthsPerRotation = 4;
 
             if (bone.index % BONES_PER_GROWTH === BONES_PER_GROWTH - 1) {
-                // create a leaf
-                function genLeaf(yAngle: number) {
-                    const leaf = Leaf.generate(leafTemplate);
-                    leaf.rotateY(yAngle);
-                    leaf.rotateZ(Math.PI / 4);
-                    leaf.scale.multiplyScalar(0.6);
-                    return leaf;
-                }
-                const xAngle = bone.index / BONES_PER_GROWTH * Math.PI * 2 / growthsPerRotation;
+                // // create a leaf
+                // function genLeaf(yAngle: number) {
+                //     const leaf = Leaf.generate(leafTemplate);
+                //     leaf.rotateY(yAngle);
+                //     leaf.rotateZ(Math.PI / 4);
+                //     leaf.scale.multiplyScalar(0.6);
+                //     return leaf;
+                // }
+                // const xAngle = bone.index / BONES_PER_GROWTH * Math.PI * 2 / growthsPerRotation;
                 // const leaves = [genLeaf(xAngle), genLeaf(xAngle + Math.PI)];
                 const leaves = [Leaves.generate()];
 
@@ -295,14 +304,14 @@ export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPat
                 const percentDist = bone.index / totalBones;
                 // console.log(percentDist);
                 if (Math.random() > percentDist) {
-                    const newBranchLength = (1 - percentDist) * 0.8 * bone.branch.finalBranchLength;
+                    const newBranchLength = (1 - percentDist) * branchLengthScalar * bone.branch.finalBranchLength;
                     if (newBranchLength >= 1) {
                         const branch = new Branch(newBranchLength);
                         branch.rotateY(Math.PI * 2 * Math.random());
                         // const randYDir = Math.random() * Math.PI * 2;
                         // TODO should we rotate bones[0]? or should we rotate the Branch itself?
                         // branch.meshManager.skeleton.bones[0].rotateZ(-Math.PI / 2);
-                        branch.rotateZ(-Math.PI / 4);
+                        branch.rotateZ(-branchRotationZ);
                         return [branch, ...leaves];
                     }
                     return leaves;
@@ -316,8 +325,8 @@ export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPat
 }
 
 export function randomGrowthParameters(): GrowthParameters {
-    // const boneCurveUpwardsFactor = 0.0001;
-    const boneCurveUpwardsFactor = 0.001;
+    const boneCurveUpwardsFactor = 0.0001;
+    // const boneCurveUpwardsFactor = 0.001;
     const budDevelopmentThreshold = 0.1;
     const childScalar = 0.8;
     const feedSelfMax = 0.2;

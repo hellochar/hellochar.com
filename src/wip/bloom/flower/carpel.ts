@@ -15,7 +15,7 @@ export default class Carpel extends Component {
     })();
 
     static styleMeshTemplate = (() => {
-        const styleHeight = 0.5;
+        const styleHeight = THREE.Math.randFloat(0.3, 0.8);
         const geom = new THREE.CylinderGeometry(1, 1, styleHeight, 20, 20);
         geom.translate(0, styleHeight / 2, 0);
         for (const vertex of geom.vertices) {

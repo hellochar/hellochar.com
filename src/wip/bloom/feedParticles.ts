@@ -9,17 +9,17 @@ const noiseY = new Noise(1);
 const noiseZ = new Noise(2);
 
 export class FeedParticles extends THREE.Object3D {
-    private static material = (() => {
+    static material = (() => {
         const starTexture = new THREE.TextureLoader().load("/assets/sketches/disc.png");
         // starTexture.minFilter = THREE.NearestFilter;
         return new THREE.PointsMaterial({
             // blending: THREE.AdditiveBlending,
-            // depthTest: false,
+            depthTest: false,
             depthWrite: false,
             // alphaTest: 0.0,
             color: "green",
-            size: 0.05,
-            sizeAttenuation: true,
+            size: 12,
+            sizeAttenuation: false,
             map: starTexture,
             opacity: 0.6,
             transparent: true,
