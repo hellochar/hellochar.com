@@ -201,12 +201,17 @@ p ~ p {
     left: 0;
     right: 0;
     bottom: 0;
-    // start off closed
     background: white;
-    transition: opacity 2s;
+
+    // 5s is time of outtro
+    transition: opacity 5s;
+
     animation-name: opacify;
+    // this is time to intro
     animation-duration: 2s;
     animation-timing-function: ease;
+
+    // sest this for the transition to work properly
     opacity: 0;
 
     &.closed {
@@ -216,6 +221,7 @@ p ~ p {
 
 @keyframes opacify {
     from {
+        // start off closed
         opacity: 1;
     }
 

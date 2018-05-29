@@ -1,7 +1,8 @@
+import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 
-import { ISketch } from "../../sketch";
+import { ISketch, SketchAudioContext } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
 import { Component } from "./component";
 import { Curtain } from "./curtain";
@@ -82,11 +83,27 @@ class Bloom extends ISketch {
             // this.scene.add(personMesh);
         }
 
+        this.initAudio();
+
         // scene.add(this.person);
 
         // const bhelper = new THREE.Box3Helper(this.componentBoundingBox);
         // scene.add(bhelper);
 
+    }
+
+    private gain!: GainNode;
+    private initAudio() {
+        const ctx = this.audioContext;
+        const audio = (
+            $("<audio autoplay loop>")
+                .append(`<source src="/assets/audio/bloom.mp3" type="audio/mp3">`)
+                .append(`<source src="/assets/audio/bloom.wav" type="audio/wav">`) as JQuery<HTMLAudioElement>
+        )[0];
+        const source = ctx.createMediaElementSource(audio);
+        this.gain = ctx.createGain();
+        source.connect(this.gain);
+        this.gain.connect(ctx.gain);
     }
 
     private preloadTextures() {
@@ -207,8 +224,8 @@ class Bloom extends ISketch {
 
     public elements = [
         <div style={{ textAlign: "left" }}>
-            {/* <div ref={(r) => this.r1 = r} />
-            <pre ref={(r) => this.r2 = r} /> */}
+            <div ref={(r) => this.r1 = r} />
+            <pre ref={(r) => this.r2 = r} />
         </div>,
         <Curtain ref={(curtainRef) => this.curtain = curtainRef} />,
     ];
@@ -216,7 +233,7 @@ class Bloom extends ISketch {
     private triedReload = false;
 
     public animate(ms: number) {
-        const nutrientsPerSecond = 0.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
+        const nutrientsPerSecond = 10.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateCamera();
@@ -225,7 +242,8 @@ class Bloom extends ISketch {
 
         if (this.r1 != null) {
             this.r1.style.background = "white";
-            this.r1.textContent = `${nutrientsPerSecond}`;
+            this.r1.textContent = this.audioContext.state;
+            // this.r1.textContent = `${nutrientsPerSecond}`;
             // this.r1.textContent = `${this.feedParticles.pointsStartIndex}, ${this.feedParticles.numActivePoints}`;
         }
         this.debugObjectCounts();
@@ -234,20 +252,22 @@ class Bloom extends ISketch {
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
 
-        if (this.timeElapsed > 5 * 60 * 1000) {
+        // song is 10 and a half minutes long
+        if (this.timeElapsed > (10 * 60 + 40) * 1000) {
             this.triggerReload();
         }
     }
 
     public triggerReload() {
+        const outtroFadeOutSeconds = 5;
         if (!this.triedReload) {
-            // hack hack "generate" a new flower
             if (this.curtain != null) {
                 this.curtain.setState({ closed: true });
             }
+            this.gain.gain.exponentialRampToValueAtTime(0.0001, this.audioContext.currentTime + outtroFadeOutSeconds);
             setTimeout(() => {
                 location.reload();
-            }, 2000);
+            }, outtroFadeOutSeconds * 1000 + 1000);
             this.triedReload = true;
         }
     }
@@ -308,7 +328,7 @@ class Bloom extends ISketch {
                     if (obj instanceof Flower && Math.random() < 0.1) {
                         const timeAlive = this.timeElapsed - obj.timeBorn;
                         // if (timeAlive > 1000 && timeAlive < 10000) {
-                            // chose this flower
+                        //     chose this flower
                             this.currentCameraFocus = obj;
                             this.timeCameraChangedFocus = this.timeElapsed;
                         // }
@@ -374,7 +394,7 @@ class Bloom extends ISketch {
             entries.sort(([_, countA], [__, countB]) => countB - countA);
             this.r2.textContent = [
                 `Total: ${total} (${numActive})`,
-                ...entries.map( ([name, count]) => `${name}: ${count}` )
+                ...entries.map( ([name, count]) => `${name}: ${count}` ),
             ].join("\n");
         }
     }
