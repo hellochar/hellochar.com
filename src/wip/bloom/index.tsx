@@ -209,6 +209,8 @@ class Bloom extends ISketch {
         </div>,
     ];
 
+    private triedReload = false;
+
     public animate(ms: number) {
         const nutrientsPerSecond = 0.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
@@ -228,9 +230,10 @@ class Bloom extends ISketch {
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
 
-        if (this.timeElapsed > 5 * 60 * 1000) {
+        if (this.timeElapsed > 5 * 60 * 1000 && !this.triedReload) {
             // hack hack "generate" a new flower
             location.reload();
+            this.triedReload = true;
         }
     }
 

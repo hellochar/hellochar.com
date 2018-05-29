@@ -14,10 +14,11 @@ import { BranchingPattern, BranchTemplate, DNA, GrowthParameters } from "./dna";
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
 
     // const hue = THREE.Math.randInt(130, 160);
-    const hue = THREE.Math.randInt(105, 135);
-    const saturationPercent = Math.sqrt(THREE.Math.randFloat(0.5, 1)) * 100;
-    const luminancePercent = THREE.Math.randInt(50, 100);
-    const color = new THREE.Color(`hsl(${hue}, ${saturationPercent.toFixed(0)}%, ${luminancePercent}%)`);
+    // const hue = THREE.Math.randInt(105, 135);
+    // const saturationPercent = Math.sqrt(THREE.Math.randFloat(0.5, 1)) * 100;
+    // const luminancePercent = THREE.Math.randInt(50, 100);
+    // const color = new THREE.Color(`hsl(${hue}, ${saturationPercent.toFixed(0)}%, ${luminancePercent}%)`);
+    const color = new THREE.Color("green");
 
     FeedParticles.material.color = color;
     FeedParticles.material.needsUpdate = true;
