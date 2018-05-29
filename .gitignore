@@ -1,9 +1,15 @@
 node_modules/
+
 ableton music
+
 Thumbs.db
+
 *.js.map
+
 .idea/
+
 yarn-error.log
+
 public/main.js
 public/node-static.js
 public/*.worker.js
@@ -12,3 +18,5 @@ public/report.html
 public/index.html
 public/main.css
 public/vendors~main.bundle.js
+
+openpose-1.3.0-win64-gpu-binaries/
