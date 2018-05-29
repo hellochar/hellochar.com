@@ -194,3 +194,32 @@ p ~ p {
         -webkit-padding-start: 20px;
     }
 }
+
+.curtain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    // start off closed
+    background: white;
+    transition: opacity 2s;
+    animation-name: opacify;
+    animation-duration: 2s;
+    animation-timing-function: ease;
+    opacity: 0;
+
+    &.closed {
+        opacity: 1;
+    }
+}
+
+@keyframes opacify {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}

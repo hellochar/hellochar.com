@@ -4,14 +4,15 @@ import * as THREE from "three";
 import { ISketch } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
 import { Component } from "./component";
+import { Curtain } from "./curtain";
 import dna, { randomizeDna } from "./dna";
 import { FeedParticles } from "./feedParticles";
 import { Flower, Petal, Tepal } from "./flower";
+import { Leaf } from "./leaf";
 import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./person";
 import scene from "./scene";
-import { Leaf } from "./leaf";
 
 
 class Bloom extends ISketch {
@@ -202,11 +203,14 @@ class Bloom extends ISketch {
     private r1: HTMLDivElement | null = null;
     private r2: HTMLPreElement | null = null;
 
+    private curtain: Curtain | null = null;
+
     public elements = [
         <div style={{ textAlign: "left" }}>
             {/* <div ref={(r) => this.r1 = r} />
             <pre ref={(r) => this.r2 = r} /> */}
         </div>,
+        <Curtain ref={(curtainRef) => this.curtain = curtainRef} />,
     ];
 
     private triedReload = false;
@@ -230,9 +234,20 @@ class Bloom extends ISketch {
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
 
-        if (this.timeElapsed > 5 * 60 * 1000 && !this.triedReload) {
+        if (this.timeElapsed > 5 * 60 * 1000) {
+            this.triggerReload();
+        }
+    }
+
+    public triggerReload() {
+        if (!this.triedReload) {
             // hack hack "generate" a new flower
-            location.reload();
+            if (this.curtain != null) {
+                this.curtain.setState({ closed: true });
+            }
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
             this.triedReload = true;
         }
     }
