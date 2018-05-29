@@ -42,6 +42,8 @@ export class FeedParticles extends THREE.Object3D {
         super();
         this.geometry.addAttribute('position', this.positionsAttribute);
         this.points = new THREE.Points(this.geometry, FeedParticles.material);
+        this.frustumCulled = false;
+        this.points.frustumCulled = false;
         this.add(this.points);
     }
 
