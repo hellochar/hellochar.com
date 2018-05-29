@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
+import { CameraController, CameraFocusOnBoxController, CameraFocusOnObjectController } from "./cameraController";
 import { Component } from "./component";
 import { Curtain } from "./curtain";
 import dna, { randomizeDna } from "./dna";
@@ -285,8 +286,8 @@ class Bloom extends ISketch {
         }
     }
 
-    public currentCameraFocus?: THREE.Object3D;
-    public timeCameraChangedFocus: number = 0;
+    public cameraController: CameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
+    public focusTargets: THREE.Object3D[] = [];
 
     private updateComponentAndComputeBoundingBox() {
         this.componentBoundingBox.min.set(-0.2, 0, -0.2);
@@ -295,6 +296,7 @@ class Bloom extends ISketch {
         if (this.component == null) {
             return;
         }
+        this.focusTargets = [];
         this.component.traverse((obj) => {
             if (obj instanceof Component) {
                 const newBorn = obj.timeBorn == null;
@@ -315,67 +317,24 @@ class Bloom extends ISketch {
                         this.componentBoundingBox.expandByPoint(pos);
                     }
                 }
-                const timeThisCameraFocus = this.timeElapsed - this.timeCameraChangedFocus;
-
-                if (timeThisCameraFocus > 20000) {
-                    // if (Math.random() < 0.3) {
-                    //     if (Math.random() < 0.5) {
-                    //         this.currentCameraFocus = undefined;
-                    //     }
-                    //     this.timeCameraChangedFocus = this.timeElapsed;
-                    // }
-                    if (obj instanceof Flower && Math.random() < 0.1) {
-                        const timeAlive = this.timeElapsed - obj.timeBorn;
-                        // if (timeAlive > 1000 && timeAlive < 10000) {
-                        //     chose this flower
-                            this.currentCameraFocus = obj;
-                            this.timeCameraChangedFocus = this.timeElapsed;
-                        // }
-                    }
+                if (obj instanceof Flower) {
+                    this.focusTargets.push(obj);
                 }
             }
         });
     }
 
     private updateCamera() {
-        if (this.currentCameraFocus == null) {
-            const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
-
-            const targetDist = Math.sqrt(minXZDist);
-            const targetY = this.componentBoundingBox.max.y - 0.3;
-
-            const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
-            xz.setLength(targetDist);
-
-            this.orbitControls.target.set(0, targetY, 0);
-            this.camera.position.x = xz.x;
-            this.camera.position.z = xz.y;
-            this.camera.position.y = targetY + 0.7;
-        } else {
-            const wantedTarget = new THREE.Vector3();
-            this.currentCameraFocus.getWorldPosition(wantedTarget);
-            // const targetDist = 0.2;
-            const targetDist = THREE.Math.mapLinear(Math.sin(this.timeElapsed / 10000), -1, 1, 0.2, 2);
-            // const cameraOffsetY = 0.15;
-            const cameraOffsetY = targetDist * 3 * Math.sin(this.timeElapsed / 8000);
-
-            const currentTarget = this.orbitControls.target;
-            currentTarget.lerp(wantedTarget, 0.05);
-
-            this.orbitControls.target.copy(currentTarget);
-            // wantedTarget.lerpVectors(currentTarget, wantedTarget, 0.01);
-
-            // this.orbitControls.target.copy(wantedTarget);
-
-            const posLerp = 0.05;
-
-            this.camera.position.y = this.camera.position.y * (1 - posLerp) + (wantedTarget.y + cameraOffsetY) * posLerp;
-
-            const xzOffset = new THREE.Vector2(this.camera.position.x - wantedTarget.x, this.camera.position.z - wantedTarget.z);
-            xzOffset.setLength(xzOffset.length() * (1 - posLerp) + targetDist * posLerp);
-            this.camera.position.x = xzOffset.x + wantedTarget.x;
-            this.camera.position.z = xzOffset.y + wantedTarget.z;
+        if (this.cameraController.timeAlive > 20000) {
+            if (Math.random() < 0.5) {
+                this.cameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
+            } else {
+                // focus on a random target
+                const focusTarget = this.focusTargets[THREE.Math.randInt(0, this.focusTargets.length - 1)];
+                this.cameraController = new CameraFocusOnObjectController(this, focusTarget);
+            }
         }
+        this.cameraController.updateCamera();
     }
 
     private debugObjectCounts() {
