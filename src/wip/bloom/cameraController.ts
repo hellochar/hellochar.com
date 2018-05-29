@@ -48,13 +48,16 @@ export class CameraFocusOnBoxController extends CameraController {
 }
 
 export class CameraFocusOnObjectController extends CameraController {
-    public posLerp = 0.05;
-    public yOffsetScalar = THREE.Math.randFloat(0.5, 1.5);
+    public targetPosLerp = 0.03;
+    public posLerp = 0;
+
+    public yOffsetScalar = THREE.Math.randFloat(0.5, 1.1);
     constructor(bloom: Bloom, public focus: THREE.Object3D) {
         super(bloom);
     }
 
     updateCamera() {
+        this.posLerp = this.posLerp * 0.97 + this.targetPosLerp * 0.03;
         const { posLerp, camera, orbitControls, focus } = this;
 
         const wantedTarget = new THREE.Vector3();
@@ -62,7 +65,7 @@ export class CameraFocusOnObjectController extends CameraController {
         // const targetDist = 0.2;
         const targetDist = THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0.2, 0.8);
         // const cameraOffsetY = 0.15;
-        const cameraOffsetY = targetDist * this.yOffsetScalar * Math.sin(this.bloom.timeElapsed / 8000);
+        const cameraOffsetY = targetDist * this.yOffsetScalar * (0.4 + Math.sin(this.bloom.timeElapsed / 8000) / 2);
 
         const currentTarget = orbitControls.target;
         currentTarget.lerp(wantedTarget, posLerp);

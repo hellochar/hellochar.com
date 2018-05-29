@@ -328,7 +328,7 @@ class Bloom extends ISketch {
         if (this.cameraController.timeAlive > 20000) {
             if (Math.random() < 0.5) {
                 this.cameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
-            } else {
+            } else if(this.focusTargets.length > 0) {
                 // focus on a random target
                 const focusTarget = this.focusTargets[THREE.Math.randInt(0, this.focusTargets.length - 1)];
                 this.cameraController = new CameraFocusOnObjectController(this, focusTarget);
