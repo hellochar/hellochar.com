@@ -354,8 +354,10 @@ class Bloom extends ISketch {
         } else {
             const wantedTarget = new THREE.Vector3();
             this.currentCameraFocus.getWorldPosition(wantedTarget);
-            const targetDist = 0.2;
-            const cameraOffsetY = 0.15;
+            // const targetDist = 0.2;
+            const targetDist = THREE.Math.mapLinear(Math.sin(this.timeElapsed / 10000), -1, 1, 0.2, 2);
+            // const cameraOffsetY = 0.15;
+            const cameraOffsetY = targetDist * 3 * Math.sin(this.timeElapsed / 8000);
 
             const currentTarget = this.orbitControls.target;
             currentTarget.lerp(wantedTarget, 0.05);
