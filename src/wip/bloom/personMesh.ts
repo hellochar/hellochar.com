@@ -112,9 +112,9 @@ export class PersonMesh extends THREE.Object3D {
             const aspectRatio = keypointsWidth / keypointsHeight; // width / height of keypoint space, which ranges [320x240];
 
             // [1, 1] across the screen width, from left to right
-            const worldX = (pixelX / keypointsWidth - 0.5) * 2 * 0.333;
+            const worldX = (pixelX / keypointsWidth - 0.5) * 2;
             // [-1/aspectRatio, 1/aspectRatio] across the screen height, from bottom to top
-            const worldY = -1 * (pixelY / keypointsHeight - 0.5) * 2 / aspectRatio * 0.333;
+            const worldY = -1 * (pixelY / keypointsHeight - 0.5) * 2 / aspectRatio;
 
             vertex.x = worldX;
             vertex.y = worldY;
