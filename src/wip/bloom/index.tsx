@@ -12,9 +12,8 @@ import { Flower, Petal, Tepal } from "./flower";
 import { Leaf } from "./leaf";
 import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
-import { PersonMesh } from "./person";
+import { PersonMesh } from "./personMesh";
 import scene from "./scene";
-
 
 class Bloom extends ISketch {
     public events = {
