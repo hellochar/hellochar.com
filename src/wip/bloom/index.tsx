@@ -153,9 +153,8 @@ class Bloom extends ISketch {
         scene.add(skeletonHelper);
 
         // const leaf = new Leaf(dna.leafTemplate);
-        // leaf.position.x = 0;
-        // leaf.position.y = 0.2;
-        // leaf.position.z = 0;
+        // leaf.position.y = 0.3;
+        // leaf.rotation.z = Math.PI / 3;
         // this.component = leaf;
         // const skeletonHelper = new THREE.SkeletonHelper(leaf.lamina.skeleton.bones[0]);
         // scene.add(skeletonHelper);

@@ -105,7 +105,7 @@ export function randomPetalTemplate(envMap: THREE.CubeTexture) {
         outerColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
         veinColor: new THREE.Color(),
         veinAlpha: 0,
-        bumpNoiseHeight: 0.1,
+        bumpNoiseHeight: 0.5,
         baseMaterialParams: {
             roughness: 1,
             metalness: 0,

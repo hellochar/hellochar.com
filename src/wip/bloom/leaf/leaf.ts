@@ -29,10 +29,11 @@ export class Leaf extends Component {
                     Leaf.petioleGeometry,
                     Leaf.petioleMaterial,
                 );
-                petioleMesh.scale.setScalar(petioleLength);
                 petioleMesh.castShadow = true;
                 petioleMesh.receiveShadow = true;
                 petioleMesh.matrixAutoUpdate = false;
+                petioleMesh.scale.setScalar(petioleLength);
+                petioleMesh.updateMatrix();
                 return petioleMesh;
             })();
             this.add(petiole);

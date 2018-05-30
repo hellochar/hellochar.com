@@ -1,8 +1,7 @@
-import Delaunator from "delaunator";
 import * as THREE from "three";
 
-import { VeinedLeaf } from "../vein/veinedLeaf";
 import { Vein } from "../vein/vein";
+import { VeinedLeaf } from "../vein/veinedLeaf";
 
 export interface TextureGeneratorParameters {
     innerColor: THREE.Color;
@@ -25,6 +24,13 @@ export class TextureGenerator {
 
     public colorMap!: THREE.Texture;
     public bumpMap!: THREE.Texture;
+
+    static whiteNoiseImage = new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.src = "/assets/sketches/whiteNoise.png";
+        image.onload = () => resolve(image);
+        image.onerror = (err) => reject(err);
+    });
 
     get detailScalar() {
         return this.width / 512;
@@ -98,16 +104,16 @@ export class TextureGenerator {
         bump.fillStyle = "white";
         bump.fillRect(0, 0, bumpCanvas.width, bumpCanvas.height);
 
-        // TODO improve this, it's very slow
-        // if (parameters.bumpNoiseHeight > 0) {
-        //     for (let x = 0; x < this.width; x++) {
-        //         for (let y = 0; y < this.height; y++) {
-        //             const b = THREE.Math.randInt(255 - parameters.bumpNoiseHeight, 255);
-        //             bump.fillStyle = `rgb(${b}, ${b}, ${b})`;
-        //             bump.fillRect(x, y, 1, 1);
-        //         }
-        //     }
-        // }
+        if (parameters.bumpNoiseHeight > 0) {
+            TextureGenerator.whiteNoiseImage.then((img) => {
+                bump.globalAlpha = parameters.bumpNoiseHeight / 255;
+                for (let i = 1; i <= 8; i *= 2) {
+                    bump.drawImage(img, 0, 0, bumpCanvas.width * i, bumpCanvas.height * i);
+                }
+                bump.globalAlpha = 1;
+                this.bumpMap.needsUpdate = true;
+            });
+        }
 
         const VEIN_THICKNESS = 4.0;
         const outlineVeins = (t: number) => {
