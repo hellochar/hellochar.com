@@ -10,6 +10,7 @@ export interface TextureGeneratorParameters {
     veinAlpha: number;
 
     bumpNoiseHeight: number;
+    bumpVeinAlpha: number;
     baseMaterialParams?: THREE.MeshStandardMaterialParameters;
 }
 
@@ -119,7 +120,7 @@ export class TextureGenerator {
         const outlineVeins = (t: number) => {
             const { r, g, b } = parameters.veinColor;
             color.strokeStyle = `rgba(${r}, ${g}, ${b}, ${t * 5 / detailIterations * parameters.veinAlpha})`;
-            bump.strokeStyle = `rgba(235, 235, 235, ${t / detailIterations})`;
+            bump.strokeStyle = `rgba(235, 235, 235, ${t / detailIterations * parameters.bumpVeinAlpha})`;
             for (const leafNode of this.leaf.world) {
                 const { x, y } = this.pixelPosition(leafNode);
                 for (const child of leafNode.children) {

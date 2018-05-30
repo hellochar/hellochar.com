@@ -16,6 +16,18 @@ import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./personMesh";
 import scene from "./scene";
 
+// https://gist.github.com/blixt/f17b47c62508be59987b
+let _seed = 4; // Date.now() % 2147483647;
+if (_seed <= 0) {
+    _seed += 2147483646;
+}
+
+Math.random = () => {
+    const next = (_seed = _seed * 16807 % 2147483647);
+    return (next - 1) / 2147483646;
+
+}
+
 class Bloom extends ISketch {
     public events = {
         mousemove: (e: JQuery.Event) => {
@@ -135,22 +147,29 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        // const branch = new Branch(10);
-        // // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
-        // // scene.add(helper);
-        // this.component = branch;
+        const branch = new Branch(10);
+        // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
+        // scene.add(helper);
+        this.component = branch;
 
         // const flower = Flower.generate();
         // // flower.rotation.z = -Math.PI / 4;
         // flower.position.y = 0.3;
         // this.component = flower;
 
-        const petal = Petal.generate(dna.petalTemplate);
-        petal.position.y = 0.3;
-        petal.rotation.z = Math.PI / 3;
-        this.component = petal;
-        const skeletonHelper = new THREE.SkeletonHelper(petal.mesh.skeleton.bones[0]);
-        scene.add(skeletonHelper);
+        // const petal = Petal.generate(dna.petalTemplate);
+        // petal.position.y = 0.3;
+        // petal.rotation.z = Math.PI / 3;
+        // this.component = petal;
+        // const skeletonHelper = new THREE.SkeletonHelper(petal.mesh.skeleton.bones[0]);
+        // scene.add(skeletonHelper);
+
+        // const tepal = Tepal.generate(dna.tepalTemplate);
+        // tepal.position.y = 0.3;
+        // tepal.rotation.z = Math.PI / 3;
+        // this.component = tepal;
+        // const skeletonHelper = new THREE.SkeletonHelper(tepal.mesh.skeleton.bones[0]);
+        // scene.add(skeletonHelper);
 
         // const leaf = new Leaf(dna.leafTemplate);
         // leaf.position.y = 0.3;
@@ -179,7 +198,7 @@ class Bloom extends ISketch {
         const nutrientsPerSecond = 5.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
-        // this.updateCamera();
+        this.updateCamera();
         this.updatePersonMeshes();
         this.feedParticles.animate(ms);
 
@@ -194,7 +213,6 @@ class Bloom extends ISketch {
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
-        // this.renderer.shadowMap.needsUpdate = this.frameCount % 2 === 0;
 
         // song is 10 and a half minutes long
         if (this.timeElapsed > (10 * 60 + 40) * 1000) {

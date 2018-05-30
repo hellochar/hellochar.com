@@ -19,7 +19,7 @@ const eulers = new THREE.Euler();
  * Also simulate the bone bouncing back because of the spring stiffness. A stiffness of 0.01 is already very good.
  *
  */
-export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003) {
+export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003, forward = new THREE.Vector3(1, 0, 0)) {
     // 1)
     // bone.getWorldQuaternion(quaternion);
 
@@ -29,7 +29,7 @@ export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003) {
     // growing slowly anyways
     bone.matrixWorld.decompose(dummyPosition, quaternion, dummyScale);
 
-    const worldFacing = new THREE.Vector3(1, 0, 0).applyQuaternion(quaternion);
+    const worldFacing = forward.clone().applyQuaternion(quaternion);
 
     // 2)
     worldFacing.y -= 0.002;
@@ -41,7 +41,7 @@ export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003) {
 
     // 4)
     // reuse quaternion variable to compute that rotation
-    quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), localFacing);
+    quaternion.setFromUnitVectors(forward, localFacing);
     bone.quaternion.multiply(quaternion);
 
     // compute how angled i am compared to my parent

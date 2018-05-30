@@ -10,18 +10,6 @@ import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
 import { BranchTemplate, DNA, GrowthParameters } from "./dna";
 
-// https://gist.github.com/blixt/f17b47c62508be59987b
-let _seed = 1; // Date.now() % 2147483647;
-if (_seed <= 0) {
-    _seed += 2147483646;
-}
-
-Math.random = () => {
-    const next = (_seed = _seed * 16807 % 2147483647);
-    return (next - 1) / 2147483646;
-
-}
-
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
 
     // const hue = THREE.Math.randInt(130, 160);
@@ -89,6 +77,7 @@ export function randomLeafTemplate(color: THREE.Color, envMap: THREE.CubeTexture
         outerColor: color,
         veinColor: new THREE.Color("darkgreen"),
         veinAlpha: 1,
+        bumpVeinAlpha: 1,
         bumpNoiseHeight: 1,
         baseMaterialParams: {
             roughness: 0.4,
@@ -105,6 +94,7 @@ export function randomPetalTemplate(envMap: THREE.CubeTexture) {
         outerColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
         veinColor: new THREE.Color(),
         veinAlpha: 0,
+        bumpVeinAlpha: 0.5,
         bumpNoiseHeight: 0.5,
         baseMaterialParams: {
             roughness: 1,
@@ -121,10 +111,11 @@ export function randomTepalTemplate(color: THREE.Color, envMap: THREE.CubeTextur
         innerColor: color,
         outerColor: color,
         veinColor: new THREE.Color("darkgreen"),
-        veinAlpha: 0.0,
-        bumpNoiseHeight: 0,
+        veinAlpha: 0.01,
+        bumpNoiseHeight: 2,
+        bumpVeinAlpha: 0.5,
         baseMaterialParams: {
-            bumpScale: 0.01,
+            bumpScale: 0.05,
             roughness: 0.8,
             metalness: 0,
         },

@@ -20,6 +20,7 @@ export default class Petal extends Component {
         const stiffnessScalar = THREE.Math.mapLinear(Math.sin(timeAlive / 10000), -1, 1, 0, 2);
 
         const bones = this.mesh.skeleton.bones;
+        // don't include orthobone
         for (let i = 0; i < bones.length - 1; i++) {
             const bone = bones[i];
             // TODO stiffness factored by time alive
@@ -28,7 +29,8 @@ export default class Petal extends Component {
             simulateVeinBoneGravity(bone, THREE.Math.mapLinear(Math.sqrt(i / (bones.length - 2)), 0, 1, 0.05, 0.001) * stiffnessScalar);
         }
         const sideBone = bones[bones.length - 1];
-        simulateVeinBoneGravity(sideBone, 0);
+        sideBone.position.y = Math.sin(timeAlive / 10000) * 0.2;
+        // simulateVeinBoneGravity(sideBone, 0.1, new THREE.Vector3(0, 1, 0));
     }
 
     static generate(template: LeafTemplate) {

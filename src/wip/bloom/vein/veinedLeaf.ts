@@ -163,6 +163,10 @@ export interface IVeinGrowthParameters {
     yLiftFrequency: number;
 
     yLiftAmount: number;
+
+    yFrayScale: number;
+
+    yCupAmount: number;
 }
 
 export function generateVeinGrowthParameters(): IVeinGrowthParameters {
@@ -170,24 +174,26 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         TOO_CLOSE_DIST: 1,
         EXPAND_SCALAR: random(0.75, 1.25), // 0.75; //1
         get EXPAND_DIST() { return this.TOO_CLOSE_DIST * this.EXPAND_SCALAR },
-        MAX_PATH_COST: 100,
+        MAX_PATH_COST: 200,
         SIDEWAYS_COST_RATIO: random(-1, 1) * random(0, 1) * 0.5, // 0.5;
         SIDE_ANGLE: random(PI / 6, PI / 2), // PI / 3;
         SIDE_ANGLE_RANDOM: random(0, 1) * random(0, 1) * PI / 6, // random(0, PI / 4); //PI / 6;
         DEPTH_STEPS_BEFORE_BRANCHING: 1 + randInt(0, 3), // 2
         SECONDARY_BRANCH_PERIOD: 1 + floor(random(0, 1) * random(0, 1) * random(0, 1) * 6),
-        TURN_TOWARDS_X_FACTOR: random(0, 1) * random(0, 1) * 0.1, // 0.2
-        AVOID_NEIGHBOR_FORCE: random(0, 1) * random(0, 1) * 0.1, // 1
+        TURN_TOWARDS_X_FACTOR: random(0, 1) * random(0, 1) * 1, // 0.2
+        AVOID_NEIGHBOR_FORCE: random(0, 1) * random(0, 1) * 1, // 1
         randWiggle: 0.0,
-        BASE_DISINCENTIVE: pow(10, random(0, 3)),
-        COST_DISTANCE_TO_ROOT_DIVISOR: 5e2,
+        BASE_DISINCENTIVE: Math.max(0, pow(10, random(0, 4)) - 3),
+        COST_DISTANCE_TO_ROOT_DIVISOR: 1e3,
         COST_NEGATIVE_X_GROWTH: pow(10, random(-1, 0)), // 0.2
         GROW_FORWARD_FACTOR: pow(10, random(0, 2)), // 10
         SECONDARY_BRANCH_SCALAR: 1 - (random(0, 1) * random(0, 1) * 0.2), // 0.85;
-        COST_TO_TURN: 0,
+        COST_TO_TURN: random(0, 1) * random(0, 5),
         growForwardBranch: true,
         yLiftFrequency: random(6, 12),
         yLiftAmount: random(-0.03, 0.12) * random(0, 1),
+        yFrayScale: random(0, 0.04),
+        yCupAmount: -random(0.5, 1) * random(0.75, 1) * random(0.75, 1.25),
     };
 }
 
@@ -204,16 +210,18 @@ export function generatePetalGrowthParameters(): IVeinGrowthParameters {
         SECONDARY_BRANCH_PERIOD: 1,
         TURN_TOWARDS_X_FACTOR: random(0, 1) * 0.2, // 0.2
         AVOID_NEIGHBOR_FORCE: random(0, 1) * 0.75, // 1
-        randWiggle: 0.05,
-        BASE_DISINCENTIVE: 10,
+        randWiggle: random(0, 0.5) * random(0, 1),
+        BASE_DISINCENTIVE: Math.pow(10, random(2, 3)),
         COST_DISTANCE_TO_ROOT_DIVISOR: 5e2,
         COST_NEGATIVE_X_GROWTH: 1,
         GROW_FORWARD_FACTOR: random(10, 30),
         SECONDARY_BRANCH_SCALAR: random(0.8, 1),
-        COST_TO_TURN: -0.5,
+        COST_TO_TURN: random(-0.5, 0.5),
         growForwardBranch: true,
         yLiftAmount: 0,
         yLiftFrequency: 0,
+        yFrayScale: random(0, 0.01),
+        yCupAmount: random(0.75, 1.25),
     };
 }
 
@@ -223,24 +231,26 @@ export function generateTepalGrowthParameters(): IVeinGrowthParameters {
         TOO_CLOSE_DIST: 1,
         EXPAND_SCALAR: 1.25,
         get EXPAND_DIST() { return this.TOO_CLOSE_DIST * this.EXPAND_SCALAR },
-        MAX_PATH_COST: 50,
-        SIDEWAYS_COST_RATIO: random(-0.3, 0.2), // 0.5;
-        SIDE_ANGLE: random(PI / 7, PI / 5), // PI / 3;
-        SIDE_ANGLE_RANDOM: random(0, 1) * PI / 4, // random(0, PI / 4); //PI / 6;
+        MAX_PATH_COST: 40,
+        SIDEWAYS_COST_RATIO: 1.5, // random(-0.3, 0.2), // 0.5;
+        SIDE_ANGLE: random(PI / 9, PI / 2), // PI / 3;
+        SIDE_ANGLE_RANDOM: 0.1, // random(0, 1) * PI / 4, // random(0, PI / 4); //PI / 6;
         DEPTH_STEPS_BEFORE_BRANCHING: 2, // 2
         SECONDARY_BRANCH_PERIOD: 1,
-        TURN_TOWARDS_X_FACTOR: random(0, 1) * 0.2, // 0.2
-        AVOID_NEIGHBOR_FORCE: random(0, 1) * 0.75, // 1
-        randWiggle: 0.05,
-        BASE_DISINCENTIVE: 10,
-        COST_DISTANCE_TO_ROOT_DIVISOR: 5e2,
-        COST_NEGATIVE_X_GROWTH: 1,
-        GROW_FORWARD_FACTOR: random(10, 30),
+        TURN_TOWARDS_X_FACTOR: random(-2.0, -0.5), // 0.2
+        AVOID_NEIGHBOR_FORCE: random(0, 1.2), // 1
+        randWiggle: 0.00,
+        BASE_DISINCENTIVE: 0,
+        COST_DISTANCE_TO_ROOT_DIVISOR: 10e2,
+        COST_NEGATIVE_X_GROWTH: 3.0,
+        GROW_FORWARD_FACTOR: 0.5,
         SECONDARY_BRANCH_SCALAR: random(0.8, 1),
-        COST_TO_TURN: -0.5,
+        COST_TO_TURN: 2,
         growForwardBranch: true,
         yLiftAmount: 0,
         yLiftFrequency: 0,
+        yFrayScale: 0,
+        yCupAmount: 0.15,
     };
 }
 
