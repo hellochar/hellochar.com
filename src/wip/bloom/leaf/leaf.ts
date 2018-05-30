@@ -7,26 +7,32 @@ import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
 
 export class Leaf extends Component {
+    static petioleMaterial = new THREE.MeshLambertMaterial({
+        color: "green",
+        side: THREE.DoubleSide,
+    });
+
+    static petioleGeometry = (() => {
+        const geom = new THREE.CylinderBufferGeometry(0.01, 0.006, 1);
+        geom.rotateZ(Math.PI / 2);
+        geom.translate(0.5, 0, 0);
+        return geom;
+    })();
+
     public lamina: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
         const petioleLength = THREE.Math.randFloat(0.4, 0.5);
         if (petioleLength > 0) {
             const petiole = (() => {
-                const mat = new THREE.MeshLambertMaterial({
-                    color: "green",
-                    side: THREE.DoubleSide,
-                });
-                const geom = new THREE.CylinderBufferGeometry(0.005, 0.003, petioleLength);
-                // const geom = new THREE.BoxBufferGeometry(petioleLength, 0.01, 0.04);
-                geom.rotateZ(Math.PI / 2);
-                geom.translate(petioleLength / 2, 0, 0);
                 const petioleMesh = new THREE.Mesh(
-                    geom,
-                    mat,
+                    Leaf.petioleGeometry,
+                    Leaf.petioleMaterial,
                 );
+                petioleMesh.scale.setScalar(petioleLength);
                 petioleMesh.castShadow = true;
                 petioleMesh.receiveShadow = true;
+                petioleMesh.matrixAutoUpdate = false;
                 return petioleMesh;
             })();
             this.add(petiole);

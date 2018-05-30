@@ -51,19 +51,20 @@ export class BranchBone extends THREE.Bone {
      */
     private components: Component[] | null | undefined;
 
+    private get isFullSized() {
+        return this.growthPercentage >= 1;
+    }
+
     /**
      * Manually call pose after you've calculated the inverses of all these branches.
      */
     constructor(public index: number, public branch: Branch) {
         super(null as any);
-        // // we don't need to render branchbones in any way
-        // this.visible = false;
-
         // be careful - we can't shrink ourselves down until we've calculated the inverses in the skeleton.
         // this.updateView();
     }
 
-    simulate(t: number) {
+    grow(t: number) {
         if (!this.isAlive) {
             return;
         }
@@ -106,15 +107,13 @@ export class BranchBone extends THREE.Bone {
     }
 
     feed(t: number, nutrients: number) {
+        const oldFullSized = this.isFullSized;
         const percentOfNutrientsWanted = THREE.Math.mapLinear(this.growthPercentage, 0, 1, dna.growth.feedSelfMax, 0.01);
         const nutrientsForMe = nutrients * percentOfNutrientsWanted;
         const nutrientsLeft = nutrients - nutrientsForMe;
         const newGrowthPercentage = Math.min(1, this.growthPercentage + nutrientsForMe);
         const leftOver = ((this.growthPercentage + nutrientsForMe) - newGrowthPercentage) + nutrientsLeft;
         this.growthPercentage = newGrowthPercentage;
-
-        this.simulate(t);
-
         if (leftOver > 0) {
             for (const child of this.children) {
                 // we're physically inaccurate here when there's more than one child, but that's fine.
@@ -123,7 +122,13 @@ export class BranchBone extends THREE.Bone {
                 }
             }
         }
-        this.updateView();
+
+        if (!oldFullSized) {
+            this.grow(t);
+            this.updateView();
+        } else {
+            this.matrixAutoUpdate = false;
+        }
     }
 
     updateView() {

@@ -176,7 +176,7 @@ class Bloom extends ISketch {
     private triedReload = false;
 
     public animate(ms: number) {
-        const nutrientsPerSecond = 10.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
+        const nutrientsPerSecond = 5.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateCamera();

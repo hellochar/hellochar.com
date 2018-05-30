@@ -2,6 +2,10 @@ import * as THREE from "three";
 import { mouse } from "./mouse";
 
 const quaternion = new THREE.Quaternion();
+const dummyPosition = new THREE.Vector3();
+const dummyScale = new THREE.Vector3();
+
+const eulers = new THREE.Euler();
 
 /**
  * Simulate gravity being applied to this vein bone. Assumes the bone's "outward" angle is (1, 0, 0).
@@ -17,7 +21,14 @@ const quaternion = new THREE.Quaternion();
  */
 export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003) {
     // 1)
-    bone.getWorldQuaternion(quaternion);
+    // bone.getWorldQuaternion(quaternion);
+
+    // this is the same as getWorldQuaternion() but without eating the
+    // computeMatrixWorld (which will be computed each frame by .render() anyways) perf hit (which is ~30% of total traverse)
+    // essentially we lag one frame behind, but that's no problem since we're
+    // growing slowly anyways
+    bone.matrixWorld.decompose(dummyPosition, quaternion, dummyScale);
+
     const worldFacing = new THREE.Vector3(1, 0, 0).applyQuaternion(quaternion);
 
     // 2)
@@ -34,7 +45,7 @@ export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003) {
     bone.quaternion.multiply(quaternion);
 
     // compute how angled i am compared to my parent
-    const eulers = new THREE.Euler().setFromQuaternion(bone.quaternion);
+    eulers.setFromQuaternion(bone.quaternion);
     // rotate a bit back straight, according to stiffness
     eulers.x *= -stiffness;
     // y is naturally stiffer; the leaf more easily resists side to side "wiggling"

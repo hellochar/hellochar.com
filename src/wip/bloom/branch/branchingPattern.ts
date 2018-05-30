@@ -1,12 +1,14 @@
 import * as THREE from "three";
 
 import { Component } from "../component";
+import dna from "../dna";
 import { Flower } from "../flower";
+import { Leaf } from "../leaf";
 import Leaves from "../leaf/leaves";
 import { Branch } from "./branch";
 import { BranchBone } from "./branchBone";
-import { Leaf } from "../leaf";
-import dna from "../dna";
+
+const worldPosition = new THREE.Vector3();
 
 export interface BranchingPattern {
     getComponentsFor(branch: BranchBone): Component[] | null;
@@ -25,7 +27,8 @@ export class DefaultBranchingPattern implements BranchingPattern {
     getComponentsFor(bone: BranchBone) {
         // we're at the end, grow a flower
         if (bone.children.length === 0) {
-            const shouldGrowFlower = bone.branch.finalBranchLength > 1.5 && bone.getWorldPosition().y > 1.5;
+            worldPosition.setFromMatrixPosition(bone.matrixWorld);
+            const shouldGrowFlower = bone.branch.finalBranchLength > 1.5 && worldPosition.y > 1.5;
             if (shouldGrowFlower) {
                 const flower = Flower.generate();
                 flower.position.y = bone.position.y;

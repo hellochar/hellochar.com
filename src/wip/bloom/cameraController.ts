@@ -61,7 +61,9 @@ export class CameraFocusOnObjectController extends CameraController {
         const { posLerp, camera, orbitControls, focus } = this;
 
         const wantedTarget = new THREE.Vector3();
-        focus.getWorldPosition(wantedTarget);
+        wantedTarget.setFromMatrixPosition(focus.matrixWorld);
+        // focus.getWorldPosition(wantedTarget);
+
         // const targetDist = 0.2;
         const targetDist = THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0.2, 0.8);
         // const cameraOffsetY = 0.15;
