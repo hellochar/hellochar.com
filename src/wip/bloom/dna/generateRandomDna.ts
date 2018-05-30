@@ -1,15 +1,14 @@
 import * as THREE from "three";
 
-import { Branch } from "../branch";
+import { BranchingPattern, DefaultBranchingPattern } from "../branch/branchingPattern";
 import { FeedParticles } from "../feedParticles";
-import { Flower, Petal, Stamen, Tepal } from "../flower";
+import { Petal, Stamen, Tepal } from "../flower";
 import { Leaf } from "../leaf";
-import Leaves from "../leaf/leaves";
 import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateTepalGrowthParameters, generateVeinGrowthParameters } from "../vein/veinedLeaf";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
-import { BranchingPattern, BranchTemplate, DNA, GrowthParameters } from "./dna";
+import { BranchTemplate, DNA, GrowthParameters } from "./dna";
 
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
 
@@ -33,7 +32,7 @@ export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
     const tepalWhorl = randomWhorlParametersTepal(tepalTemplate);
     const stamenWhorl = randomWhorlStamen();
 
-    const branchingPattern = randomBranchingPattern(leafTemplate);
+    const branchingPattern = randomBranchingPattern();
 
     const growth = randomGrowthParameters();
 
@@ -272,57 +271,8 @@ export function randomWhorlStamen() {
     };
 }
 
-export function randomBranchingPattern(leafTemplate: LeafTemplate): BranchingPattern {
-    const branchLengthScalar = THREE.Math.randFloat(0.7, 0.9);
-    const branchRotationZ = THREE.Math.randFloat(Math.PI / 3, Math.PI / 12);
-    return {
-        getComponentsFor: (bone) => {
-            // we're at the end, grow a flower
-            if (bone.children.length === 0) {
-                const flower = Flower.generate();
-                flower.position.y = bone.position.y;
-                return [flower];
-                // return Flower.generate();
-            }
-
-            const BONES_PER_GROWTH = 10;
-            const growthsPerRotation = 4;
-
-            if (bone.index % BONES_PER_GROWTH === BONES_PER_GROWTH - 1) {
-                // // create a leaf
-                // function genLeaf(yAngle: number) {
-                //     const leaf = Leaf.generate(leafTemplate);
-                //     leaf.rotateY(yAngle);
-                //     leaf.rotateZ(Math.PI / 4);
-                //     leaf.scale.multiplyScalar(0.6);
-                //     return leaf;
-                // }
-                // const xAngle = bone.index / BONES_PER_GROWTH * Math.PI * 2 / growthsPerRotation;
-                // const leaves = [genLeaf(xAngle), genLeaf(xAngle + Math.PI)];
-                const leaves = [Leaves.generate()];
-
-                const totalBones = bone.branch.meshManager.skeleton.bones.length;
-                const percentDist = bone.index / totalBones;
-                // console.log(percentDist);
-                if (Math.random() > percentDist) {
-                    const newBranchLength = (1 - percentDist) * branchLengthScalar * bone.branch.finalBranchLength;
-                    if (newBranchLength >= 1) {
-                        const branch = new Branch(newBranchLength);
-                        branch.rotateY(Math.PI * 2 * Math.random());
-                        // const randYDir = Math.random() * Math.PI * 2;
-                        // TODO should we rotate bones[0]? or should we rotate the Branch itself?
-                        // branch.meshManager.skeleton.bones[0].rotateZ(-Math.PI / 2);
-                        branch.rotateZ(-branchRotationZ);
-                        return [branch, ...leaves];
-                    }
-                    return leaves;
-                } else {
-                    return leaves;
-                }
-            }
-            return null;
-        },
-    };
+export function randomBranchingPattern(): BranchingPattern {
+    return new DefaultBranchingPattern();
 }
 
 export function randomGrowthParameters(): GrowthParameters {

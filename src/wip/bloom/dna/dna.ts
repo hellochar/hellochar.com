@@ -1,6 +1,5 @@
-import { BranchBone } from "../branch/branchBone";
-import { Component } from "../component";
-import { Petal, Tepal, Stamen } from "../flower";
+import { BranchingPattern } from "../branch/branchingPattern";
+import { Petal, Stamen, Tepal } from "../flower";
 import { Leaf } from "../leaf";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { WhorlParameters } from "../whorl";
@@ -16,10 +15,6 @@ export interface DNA {
     branchTemplate: BranchTemplate;
     growth: GrowthParameters;
     stamenWhorl: WhorlParameters<Stamen>;
-}
-
-export interface BranchingPattern {
-    getComponentsFor(branch: BranchBone): Component[] | null;
 }
 
 export interface BranchTemplate {
