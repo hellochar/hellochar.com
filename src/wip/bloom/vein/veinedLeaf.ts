@@ -158,6 +158,11 @@ export interface IVeinGrowthParameters {
      * This might work for petals.
      */
     growForwardBranch: boolean;
+
+    // unrelated to veined leaf directly but used in 3D geom generation
+    yLiftFrequency: number;
+
+    yLiftAmount: number;
 }
 
 export function generateVeinGrowthParameters(): IVeinGrowthParameters {
@@ -181,6 +186,8 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         SECONDARY_BRANCH_SCALAR: 1 - (random(0, 1) * random(0, 1) * 0.2), // 0.85;
         COST_TO_TURN: 0,
         growForwardBranch: true,
+        yLiftFrequency: random(6, 12),
+        yLiftAmount: random(-0.03, 0.12) * random(0, 1),
     };
 }
 
@@ -205,6 +212,8 @@ export function generatePetalGrowthParameters(): IVeinGrowthParameters {
         SECONDARY_BRANCH_SCALAR: random(0.8, 1),
         COST_TO_TURN: -0.5,
         growForwardBranch: true,
+        yLiftAmount: 0,
+        yLiftFrequency: 0,
     };
 }
 
@@ -230,6 +239,8 @@ export function generateTepalGrowthParameters(): IVeinGrowthParameters {
         SECONDARY_BRANCH_SCALAR: random(0.8, 1),
         COST_TO_TURN: -0.5,
         growForwardBranch: true,
+        yLiftAmount: 0,
+        yLiftFrequency: 0,
     };
 }
 

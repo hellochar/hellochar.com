@@ -95,7 +95,7 @@ export class TextureGenerator {
         color.fillStyle = gradient;
         color.fillRect(0, 0, colorCanvas.width, colorCanvas.height);
 
-        bump.fillStyle = "black";
+        bump.fillStyle = "white";
         bump.fillRect(0, 0, bumpCanvas.width, bumpCanvas.height);
 
         // TODO improve this, it's very slow

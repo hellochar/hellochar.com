@@ -17,19 +17,18 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
         let bone = baseBone;
         for (let i = 0; i < LEAF_NUM_BONES; i++) {
             const newBone = new THREE.Bone(null as any);
-            newBone.visible = false;
             newBone.position.x = 1 / LEAF_NUM_BONES;
             bone.add(newBone);
+            bones.push(newBone);
             bone = newBone;
-            bones.push(bone);
         }
         // const forwardBone = new THREE.Bone(null as any);
         // forwardBone.position.x = 1 / 3;
         const sideBone = new THREE.Bone(null as any);
-        sideBone.visible = false;
         sideBone.position.z = 1;
         sideBone.rotation.y = Math.PI / 2;
         baseBone.add(sideBone);
+        bones.push(sideBone);
 
         // const forwardCurlBone = new THREE.Bone(null as any);
         // forwardCurlBone.position.x = 0.1;
@@ -46,5 +45,6 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
 
     private constructor(public leaf: VeinedLeaf, bones: THREE.Bone[]) {
         super(bones);
+        console.log(this);
     }
 }

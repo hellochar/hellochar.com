@@ -135,21 +135,22 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        const branch = new Branch(10);
-        // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
-        // scene.add(helper);
-        this.component = branch;
+        // const branch = new Branch(10);
+        // // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
+        // // scene.add(helper);
+        // this.component = branch;
 
         // const flower = Flower.generate();
         // // flower.rotation.z = -Math.PI / 4;
+        // flower.position.y = 0.3;
         // this.component = flower;
 
-        // const petal = Petal.generate(dna.petalTemplate);
-        // petal.position.y = 0.3;
-        // petal.rotation.z = Math.PI / 3;
-        // this.component = petal;
-        // const skeletonHelper = new THREE.SkeletonHelper(petal.mesh.skeleton.bones[0]);
-        // scene.add(skeletonHelper);
+        const petal = Petal.generate(dna.petalTemplate);
+        petal.position.y = 0.3;
+        petal.rotation.z = Math.PI / 3;
+        this.component = petal;
+        const skeletonHelper = new THREE.SkeletonHelper(petal.mesh.skeleton.bones[0]);
+        scene.add(skeletonHelper);
 
         // const leaf = new Leaf(dna.leafTemplate);
         // leaf.position.x = 0;
@@ -179,7 +180,7 @@ class Bloom extends ISketch {
         const nutrientsPerSecond = 5.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
-        this.updateCamera();
+        // this.updateCamera();
         this.updatePersonMeshes();
         this.feedParticles.animate(ms);
 
