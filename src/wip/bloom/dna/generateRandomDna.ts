@@ -4,7 +4,7 @@ import { BranchingPattern, DefaultBranchingPattern } from "../branch/branchingPa
 import { FeedParticles } from "../feedParticles";
 import { Petal, Stamen, Tepal } from "../flower";
 import { Leaf } from "../leaf";
-import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateTepalGrowthParameters, generateVeinGrowthParameters } from "../vein/veinedLeaf";
+import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateTepalGrowthParameters, generateVeinGrowthParameters, VeinedLeaf } from "../vein/veinedLeaf";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
@@ -141,10 +141,26 @@ export function randomWhorlParametersLeaf(leafTemplate: LeafTemplate): WhorlPara
     };
 }
 
+function getRandomWhorlNum(leaf: LeafTemplate) {
+    const boundingBox = leaf.veinedLeaf.getBoundingBox();
+    const yExtent = boundingBox.getSize().y * leaf.veinedLeaf.normalizationDownScalar! * THREE.Math.randFloat(0.9, 1.2);
+    // at extent 1, we have a "fat" leaf and we can only fit like 4 of them probably
+    const totalAnglage = Math.PI * 2;
+    const angleOfOnePetal = THREE.Math.mapLinear(yExtent, 0, 1, 0, Math.PI / 2);
+    const num = THREE.Math.clamp(
+        Math.floor(totalAnglage / angleOfOnePetal + Math.random()),
+        3,
+        12,
+    );
+    return num;
+}
+
 export function randomWhorlParametersPetal(petalTemplate: LeafTemplate): WhorlParameters<Petal> {
     // const num = THREE.Math.randInt(5, 12 + (Math.random() < 0.1 ? THREE.Math.randInt(20, 40) : 0));
-    const num = THREE.Math.randInt(5, 12);
-    const maxRotations = Math.floor(num / 8);
+    // const num = THREE.Math.randInt(5, 12);
+
+    const num = getRandomWhorlNum(petalTemplate);
+
     const zRot = Math.PI / 2 * 0.9;
     return {
         num,
@@ -158,52 +174,15 @@ export function randomWhorlParametersPetal(petalTemplate: LeafTemplate): WhorlPa
         isBilateral: false,
         generate: () => Petal.generate(petalTemplate),
     };
-    // if (Math.random() < 1 / 3) {
-    //     // make 5 big ones
-    //     return {
-    //         num: 5,
-    //         startYRot: 0,
-    //         endYRot: Math.PI * 2,
-    //         startScale: 0.9,
-    //         endScale: 0.9,
-    //         startZRot: Math.PI / 12,
-    //         endZRot: Math.PI / 12,
-    //         isBilateral: false,
-    //         generate: Petal.generate,
-    //     };
-    // } else if(Math.random() < 0.5) {
-    //     // 6 evenly spread
-    //     return {
-    //         num: 6,
-    //         startYRot: 0,
-    //         endYRot: Math.PI * 2,
-    //         startScale: 1,
-    //         endScale: 1,
-    //         startZRot: Math.PI / 4,
-    //         endZRot: Math.PI / 4,
-    //         isBilateral: false,
-    //         generate: Petal.generate,
-    //     };
-    // } else {
-    //     return {
-    //         num: 63,
-    //         startYRot: 0,
-    //         endYRot: Math.PI * 8,
-    //         startScale: 0.8,
-    //         endScale: 0.5,
-    //         startZRot: 0,
-    //         endZRot: Math.PI / 4,
-    //         isBilateral: false,
-    //         generate: Petal.generate,
-    //     };
-    // }
 }
 
 export function randomWhorlParametersTepal(tepalTemplate: LeafTemplate): WhorlParameters<Tepal> {
+    const num = getRandomWhorlNum(tepalTemplate);
     // const num = THREE.Math.randInt(5, 12 + (Math.random() < 0.1 ? THREE.Math.randInt(20, 40) : 0));
-    const num = THREE.Math.randInt(5, 12);
+    // const num = THREE.Math.randInt(5, 12);
+
     const maxRotations = Math.floor(num / 8);
-    const zRot = Math.PI / 3;
+    const zRot = Math.PI / 2;
     return {
         num,
         startYRot: 0,
@@ -214,47 +193,8 @@ export function randomWhorlParametersTepal(tepalTemplate: LeafTemplate): WhorlPa
         endZRot: zRot,
         // endZRot: THREE.Math.randFloat(Math.PI / 12, Math.PI / 4),
         isBilateral: false,
-        generate: () => Petal.generate(tepalTemplate),
+        generate: () => Tepal.generate(tepalTemplate),
     };
-    // if (Math.random() < 1 / 3) {
-    //     // make 5 big ones
-    //     return {
-    //         num: 5,
-    //         startYRot: 0,
-    //         endYRot: Math.PI * 2,
-    //         startScale: 0.9,
-    //         endScale: 0.9,
-    //         startZRot: Math.PI / 12,
-    //         endZRot: Math.PI / 12,
-    //         isBilateral: false,
-    //         generate: Petal.generate,
-    //     };
-    // } else if(Math.random() < 0.5) {
-    //     // 6 evenly spread
-    //     return {
-    //         num: 6,
-    //         startYRot: 0,
-    //         endYRot: Math.PI * 2,
-    //         startScale: 1,
-    //         endScale: 1,
-    //         startZRot: Math.PI / 4,
-    //         endZRot: Math.PI / 4,
-    //         isBilateral: false,
-    //         generate: Petal.generate,
-    //     };
-    // } else {
-    //     return {
-    //         num: 63,
-    //         startYRot: 0,
-    //         endYRot: Math.PI * 8,
-    //         startScale: 0.8,
-    //         endScale: 0.5,
-    //         startZRot: 0,
-    //         endZRot: Math.PI / 4,
-    //         isBilateral: false,
-    //         generate: Petal.generate,
-    //     };
-    // }
 }
 
 export function randomWhorlStamen() {

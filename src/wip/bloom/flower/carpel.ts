@@ -2,6 +2,8 @@ import * as THREE from "three";
 
 import { Component } from "../component";
 
+const styleHeight = THREE.Math.randFloat(0.3, 0.8);
+
 export default class Carpel extends Component {
     static ovaryMeshTemplate = (() => {
         const geom = new THREE.SphereBufferGeometry(0.05);
@@ -15,7 +17,6 @@ export default class Carpel extends Component {
     })();
 
     static styleMeshTemplate = (() => {
-        const styleHeight = THREE.Math.randFloat(0.3, 0.8);
         const geom = new THREE.CylinderGeometry(1, 1, styleHeight, 20, 20);
         geom.translate(0, styleHeight / 2, 0);
         for (const vertex of geom.vertices) {
@@ -81,7 +82,7 @@ export default class Carpel extends Component {
         this.ovary.add(this.style);
         this.stigma = Carpel.stigmaMeshTemplate.clone();
         this.style.add(this.stigma);
-        this.stigma.position.y = 0.5 + 0.005;
+        this.stigma.position.y = styleHeight + 0.005;
     }
     static generate() {
         return new Carpel();

@@ -7,6 +7,7 @@ export default class Perianth extends Component {
         super();
         this.add(calyx);
         this.add(corolla);
+        corolla.position.y = 0.015;
     }
     static generate() {
         return new Perianth(Calyx.generate(), Corolla.generate());

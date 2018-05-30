@@ -4,13 +4,13 @@ import { Whorl } from "../whorl";
 import Tepal from "./tepal";
 
 export default class Calyx extends Component {
-    public constructor(public petals: Whorl<Tepal>) {
+    public constructor(public tepals: Whorl<Tepal>) {
         super();
-        this.add(petals);
+        this.add(tepals);
     }
 
     static generate() {
-        const petals = Whorl.generate(dna.tepalWhorl);
-        return new Calyx(petals);
+        const tepals = Whorl.generate(dna.tepalWhorl);
+        return new Calyx(tepals);
     }
 }

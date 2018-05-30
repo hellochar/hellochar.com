@@ -4,6 +4,11 @@ import { Component } from "../component";
 import { simulateVeinBoneGravity } from "../physics";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 
+const finalRotZ = THREE.Math.randFloat(Math.PI / 6, Math.PI / 3);
+const bone0Stiffness = Math.pow(10, THREE.Math.randFloat(-1, -3));
+const bone1Stiffness = bone0Stiffness * Math.pow(10, THREE.Math.randFloat(-1, -2));
+const sideBoneMax = Math.random() * Math.random();
+
 export default class Petal extends Component {
     public mesh: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
@@ -14,23 +19,18 @@ export default class Petal extends Component {
 
     updateSelf(t: number) {
         const timeAlive = (t - this.timeBorn);
-        const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, 0, Math.PI / 6);
+        const scale = THREE.Math.smoothstep(timeAlive, 0, 10000) + 0.01;
+        this.mesh.scale.setScalar(scale);
+
+        const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, 0, finalRotZ);
         this.mesh.rotation.z = rotZ;
 
-        const stiffnessScalar = THREE.Math.mapLinear(Math.sin(timeAlive / 10000), -1, 1, 0, 2);
+        const stiffnessScalar = THREE.Math.mapLinear(Math.sin(timeAlive / 10000), -1, 1, 0.8, 1.2);
 
-        const bones = this.mesh.skeleton.bones;
-        // don't include orthobone
-        for (let i = 0; i < bones.length - 1; i++) {
-            const bone = bones[i];
-            // TODO stiffness factored by time alive
-            // TODO stiffness changes as a function of time
-
-            simulateVeinBoneGravity(bone, THREE.Math.mapLinear(Math.sqrt(i / (bones.length - 2)), 0, 1, 0.05, 0.001) * stiffnessScalar);
-        }
-        const sideBone = bones[bones.length - 1];
-        sideBone.position.y = Math.sin(timeAlive / 10000) * 0.2;
-        // simulateVeinBoneGravity(sideBone, 0.1, new THREE.Vector3(0, 1, 0));
+        const [bone0, bone1, sideBone] = this.mesh.skeleton.bones;
+        simulateVeinBoneGravity(bone0, bone0Stiffness * stiffnessScalar);
+        simulateVeinBoneGravity(bone1, bone1Stiffness * stiffnessScalar);
+        sideBone.position.y = Math.sin(timeAlive / 10000) * sideBoneMax;
     }
 
     static generate(template: LeafTemplate) {

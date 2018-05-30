@@ -93,7 +93,7 @@ export class LeafTemplate {
 
             const orthoIndex = 2;
 
-            const orthoWeight = Math.abs(z);
+            const orthoWeight = Math.abs(z * z);
             // const orthoWeight = 0;
 
             geometry.skinIndices.push(new THREE.Vector4(prevIndex, nextIndex, -1, orthoIndex) as any);

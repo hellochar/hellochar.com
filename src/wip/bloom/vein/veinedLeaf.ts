@@ -211,7 +211,7 @@ export function generatePetalGrowthParameters(): IVeinGrowthParameters {
         TURN_TOWARDS_X_FACTOR: random(0, 1) * 0.2, // 0.2
         AVOID_NEIGHBOR_FORCE: random(0, 1) * 0.75, // 1
         randWiggle: random(0, 0.5) * random(0, 1),
-        BASE_DISINCENTIVE: Math.pow(10, random(2, 3)),
+        BASE_DISINCENTIVE: Math.pow(10, random(0.5, 2)),
         COST_DISTANCE_TO_ROOT_DIVISOR: 5e2,
         COST_NEGATIVE_X_GROWTH: 1,
         GROW_FORWARD_FACTOR: random(10, 30),
