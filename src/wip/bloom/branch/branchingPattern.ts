@@ -16,7 +16,7 @@ export interface BranchingPattern {
 
 export class DefaultBranchingPattern implements BranchingPattern {
     public branchLengthScalar = THREE.Math.randFloat(0.7, 0.9);
-    public branchRotationZ = THREE.Math.randFloat(Math.PI / 3, Math.PI / 12);
+    public branchRotationZ = THREE.Math.randFloat(Math.PI / 2, Math.PI / 8);
 
     public BONES_PER_GROWTH = 10;
 
@@ -41,17 +41,11 @@ export class DefaultBranchingPattern implements BranchingPattern {
         }
 
         if (bone.index % this.BONES_PER_GROWTH === this.BONES_PER_GROWTH - 1) {
-            // // create a leaf
-            // function genLeaf(yAngle: number) {
-            //     const leaf = Leaf.generate(leafTemplate);
-            //     leaf.rotateY(yAngle);
-            //     leaf.rotateZ(Math.PI / 4);
-            //     leaf.scale.multiplyScalar(0.6);
-            //     return leaf;
-            // }
-            // const xAngle = bone.index / BONES_PER_GROWTH * Math.PI * 2 / growthsPerRotation;
-            // const leaves = [genLeaf(xAngle), genLeaf(xAngle + Math.PI)];
-            const leaves = [Leaves.generate()];
+            const growthIndex = (bone.index + 1) / this.BONES_PER_GROWTH;
+            const rotY = Math.PI * 2 * growthIndex / this.growthsPerRotation;
+            const leafWhorl = Leaves.generate();
+            leafWhorl.rotateY(rotY);
+            const leaves = [leafWhorl];
             // const leaves: Component[] = [];
 
             const totalBones = bone.branch.meshManager.skeleton.bones.length;
@@ -62,7 +56,8 @@ export class DefaultBranchingPattern implements BranchingPattern {
                 const newBranchLength = (1 - percentDist) * this.branchLengthScalar * bone.branch.finalBranchLength;
                 if (newBranchLength >= 1) {
                     const branch = new Branch(newBranchLength);
-                    branch.rotateY(Math.PI * 2 * Math.random());
+                    branch.rotateY(rotY);
+                    // branch.rotateY(Math.PI * 2 * Math.random());
                     // const randYDir = Math.random() * Math.PI * 2;
                     // TODO should we rotate bones[0]? or should we rotate the Branch itself?
                     // branch.meshManager.skeleton.bones[0].rotateZ(-Math.PI / 2);

@@ -10,7 +10,6 @@ export default class Reproductive extends Component {
     }
 
     static generate() {
-        const gynoecium = Gynoecium.generate();
-        return new Reproductive(Androecium.generate(), gynoecium);
+        return new Reproductive(Androecium.generate(), Gynoecium.generate());
     }
 }
