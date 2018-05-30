@@ -195,12 +195,13 @@ class Bloom extends ISketch {
     private triedReload = false;
 
     public animate(ms: number) {
-        const nutrientsPerSecond = 5.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
+        const nutrientsPerSecond = 0.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateCamera();
         this.updatePersonMeshes();
         this.feedParticles.animate(ms);
+        this.updateDyingObjects();
 
         if (this.r1 != null) {
             this.r1.style.background = "white";
@@ -217,6 +218,15 @@ class Bloom extends ISketch {
         // song is 10 and a half minutes long
         if (this.timeElapsed > (10 * 60 + 40) * 1000) {
             this.triggerReload();
+        }
+    }
+
+    public updateDyingObjects() {
+        for (const obj of this.dyingObjects) {
+            obj.update();
+            if (obj.parent == null) {
+                this.dyingObjects.delete(obj);
+            }
         }
     }
 
@@ -248,6 +258,8 @@ class Bloom extends ISketch {
         }
     }
 
+    public dyingObjects: Set<DyingObject> = new Set();
+
     public cameraController: CameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
     public focusTargets: THREE.Object3D[] = [];
 
@@ -259,6 +271,7 @@ class Bloom extends ISketch {
             return;
         }
         this.focusTargets = [];
+        const toDelete: THREE.Object3D[] = [];
         this.component.traverse((obj) => {
             if (obj instanceof Component) {
                 const newBorn = obj.timeBorn == null;
@@ -282,8 +295,26 @@ class Bloom extends ISketch {
                 if (obj instanceof Flower) {
                     this.focusTargets.push(obj);
                 }
+
+                const deathStart = 1000 * 120;
+                if (!(obj instanceof Branch) && (this.timeElapsed - obj.timeBorn) > deathStart) {
+                    toDelete.push(obj);
+                    // const deathAmount = THREE.Math.smoothstep(this.timeElapsed - obj.timeBorn, deathStart, deathStart + deathDuration);
+                    // if (deathAmount === 1) {
+                    //     toDelete.push(obj);
+                    //     // obj.parent.remove(obj);
+                    // } else {
+                    //     obj.scale.setScalar(1 - deathAmount);
+                    // }
+                }
             }
         });
+        for (const obj of toDelete) {
+            const dyingObject = new DyingObject(obj);
+            this.dyingObjects.add(dyingObject);
+            this.scene.add(dyingObject);
+            // obj.parent.remove(obj);
+        }
     }
 
     private updateCamera() {
@@ -324,6 +355,41 @@ class Bloom extends ISketch {
     public resize(width: number, height: number) {
         this.camera.aspect = 1 / this.aspectRatio;
         this.camera.updateProjectionMatrix();
+    }
+}
+
+class DyingObject extends THREE.Object3D {
+    public velocity = new THREE.Vector3();
+    public time = 0;
+    constructor(public object: THREE.Object3D) {
+        super();
+        // clone the world transform of the object
+        const transform = object.matrixWorld.decompose(this.position, this.quaternion, this.scale);
+        // now, deparent it and add it to this.
+        if (object.parent != null) {
+            object.parent.remove(object);
+            object.position.set(0, 0, 0);
+            object.quaternion.setFromEuler(new THREE.Euler(0, 0, 0));
+            object.scale.setScalar(1);
+            this.add(object);
+        }
+    }
+
+    update() {
+        this.velocity.y -= 0.0001;
+
+        this.rotateX(0.01);
+        this.rotateY(0.02);
+        this.rotateZ(0.005);
+        this.position.add(this.velocity);
+        // if (this.time < 200) {
+        if (this.scale.lengthSq() > 0.01 * 0.01) {
+            this.scale.multiplyScalar(0.99);
+            // this.scale.setScalar(1 - this.time / 200);
+        } else {
+            this.visible = false;
+            this.parent.remove(this);
+        }
     }
 }
 

@@ -6,6 +6,8 @@ import { simulateVeinBoneGravity } from "../physics";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
 
+const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 0.5);
+
 export class Leaf extends Component {
     static petioleMaterial = new THREE.MeshLambertMaterial({
         color: "green",
@@ -22,7 +24,6 @@ export class Leaf extends Component {
     public lamina: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
-        const petioleLength = THREE.Math.randFloat(0.4, 0.5);
         if (petioleLength > 0) {
             const petiole = (() => {
                 const petioleMesh = new THREE.Mesh(
