@@ -135,7 +135,7 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        const branch = new Branch(12);
+        const branch = new Branch(10);
         // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
         // scene.add(helper);
         this.component = branch;
