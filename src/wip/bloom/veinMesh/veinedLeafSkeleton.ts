@@ -12,10 +12,12 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
         // veined leaf into skeleton
         // for now, just convert every leaf vein into a bone.
         const baseBone = new THREE.Bone(null as any);
+        baseBone.visible = false;
         const bones: THREE.Bone[] = [baseBone];
         let bone = baseBone;
         for (let i = 0; i < LEAF_NUM_BONES; i++) {
             const newBone = new THREE.Bone(null as any);
+            newBone.visible = false;
             newBone.position.x = 1 / LEAF_NUM_BONES;
             bone.add(newBone);
             bone = newBone;
@@ -24,6 +26,7 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
         // const forwardBone = new THREE.Bone(null as any);
         // forwardBone.position.x = 1 / 3;
         const sideBone = new THREE.Bone(null as any);
+        sideBone.visible = false;
         sideBone.position.z = 1;
         sideBone.rotation.y = Math.PI / 2;
         baseBone.add(sideBone);

@@ -30,6 +30,8 @@ export abstract class ISketch {
      */
     public timeElapsed = 0;
 
+    public frameCount = 0;
+
     constructor(public renderer: THREE.WebGLRenderer, public audioContext: SketchAudioContext) {}
 
     /**

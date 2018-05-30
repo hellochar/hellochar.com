@@ -56,6 +56,9 @@ export class BranchBone extends THREE.Bone {
      */
     constructor(public index: number, public branch: Branch) {
         super(null as any);
+        // // we don't need to render branchbones in any way
+        // this.visible = false;
+
         // be careful - we can't shrink ourselves down until we've calculated the inverses in the skeleton.
         // this.updateView();
     }

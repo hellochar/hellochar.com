@@ -87,6 +87,7 @@ class SketchSuccessComponent extends React.Component<{ sketch: ISketch }, {}> {
     private loop = (timestamp: number) => {
         const millisElapsed = timestamp - this.lastTimestamp;
         this.lastTimestamp = timestamp;
+        this.props.sketch.frameCount++;
         this.props.sketch.timeElapsed = timestamp;
         this.props.sketch.animate(millisElapsed);
         this.frameId = requestAnimationFrame(this.loop);

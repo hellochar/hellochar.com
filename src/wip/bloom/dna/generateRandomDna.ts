@@ -10,6 +10,18 @@ import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
 import { BranchTemplate, DNA, GrowthParameters } from "./dna";
 
+// https://gist.github.com/blixt/f17b47c62508be59987b
+let _seed = 1; // Date.now() % 2147483647;
+if (_seed <= 0) {
+    _seed += 2147483646;
+}
+
+Math.random = () => {
+    const next = (_seed = _seed * 16807 % 2147483647);
+    return (next - 1) / 2147483646;
+
+}
+
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
 
     // const hue = THREE.Math.randInt(130, 160);

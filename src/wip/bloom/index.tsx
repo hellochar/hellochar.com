@@ -46,6 +46,8 @@ class Bloom extends ISketch {
     public init() {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // this.renderer.shadowMap.autoUpdate = false;
+        // this.renderer.shadowMap.needsUpdate = true;
 
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 50);
         this.camera.position.y = 1;
@@ -192,6 +194,7 @@ class Bloom extends ISketch {
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
+        // this.renderer.shadowMap.needsUpdate = this.frameCount % 2 === 0;
 
         // song is 10 and a half minutes long
         if (this.timeElapsed > (10 * 60 + 40) * 1000) {

@@ -45,7 +45,8 @@ export class DefaultBranchingPattern implements BranchingPattern {
             const totalBones = bone.branch.meshManager.skeleton.bones.length;
             const percentDist = bone.index / totalBones;
             // console.log(percentDist);
-            if (Math.random() > percentDist) {
+            if (percentDist < 0.5) {
+            // if (Math.random() > percentDist) {
                 const newBranchLength = (1 - percentDist) * this.branchLengthScalar * bone.branch.finalBranchLength;
                 if (newBranchLength >= 1) {
                     const branch = new Branch(newBranchLength);

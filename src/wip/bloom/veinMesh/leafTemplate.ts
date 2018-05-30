@@ -149,7 +149,7 @@ export class LeafTemplate {
     public instantiateLeaf() {
         // const leaf = new THREE.SkinnedMesh(this.geometry, this.material as THREE.MeshBasicMaterial);
         // HACK the typings; the typings are too restrictive and don't allow generic THREE.Material
-        const leaf = new SkinnedMeshHack(this.geometry, this.material as THREE.MeshBasicMaterial);
+        const leaf = new SkinnedMeshLeaf(this.geometry, this.material as THREE.MeshBasicMaterial);
         // create a separate skeleton for each leaf
         const skeleton = VeinedLeafSkeleton.createFromVeinedLeaf(this.veinedLeaf);
         leaf.add(skeleton.bones[0]);
@@ -170,7 +170,7 @@ export class LeafTemplate {
  * THREE.SkinnedMesh's constructor always calls normalizeSkinWeights(), which we don't want to do,
  * so we hack around it by overriding the method.
  */
-class SkinnedMeshHack extends THREE.SkinnedMesh {
+class SkinnedMeshLeaf extends THREE.SkinnedMesh {
     normalizeSkinWeights() {
         // do nothing! lol
     }
