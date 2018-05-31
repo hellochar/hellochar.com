@@ -195,18 +195,23 @@ class Bloom extends ISketch {
     private triedReload = false;
 
     public animate(ms: number) {
-        const nutrientsPerSecond = 9.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
+        this.updatePersonMeshes();
+        const numNutrientsThisFrame = this.feedParticles.animate(ms);
+        // average like 6 per person per frame
+        // console.log(numNutrientsThisFrame);
+
+        // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
+        const nutrientsPerSecond = Math.min(9.9, 0.2 + Math.sqrt(numNutrientsThisFrame) / 3);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
+
         this.updateCamera();
-        this.updatePersonMeshes();
-        this.feedParticles.animate(ms);
         this.updateDyingObjects();
 
         if (this.r1 != null) {
             this.r1.style.background = "white";
-            this.r1.textContent = this.audioContext.state;
-            // this.r1.textContent = `${nutrientsPerSecond}`;
+            // this.r1.textContent = this.audioContext.state;
+            this.r1.textContent = `${nutrientsPerSecond}`;
             // this.r1.textContent = `${this.feedParticles.pointsStartIndex}, ${this.feedParticles.numActivePoints}`;
         }
         this.debugObjectCounts();
@@ -251,10 +256,20 @@ class Bloom extends ISketch {
             personMesh.updateFromOpenPosePerson(maybePerson);
             if (maybePerson != null) {
                 const p = new THREE.Vector3();
-                personMesh.getWorldHeadPosition(p);
-                if (Math.random() < 0.1) {
-                    this.feedParticles.addPoint(p);
+                for (const keypointSphere of personMesh.keypointSpheres) {
+                    // this is anywhere from 1e-10, (or 0), to 0.001 at max lol
+                    const maxVel = 0.05;
+                    const vel = keypointSphere.keypoint.offset.length();
+                    const probability = vel / maxVel;
+                    if (Math.random() < probability) {
+                        p.copy(keypointSphere.position);
+                        personMesh.localToWorld(p);
+                        this.feedParticles.addPoint(p);
+                    }
                 }
+                // personMesh.getWorldPosition(p);
+                // if (Math.random() < 0.1) {
+                // }
             }
         }
     }

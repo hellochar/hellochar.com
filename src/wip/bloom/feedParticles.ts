@@ -114,5 +114,6 @@ export class FeedParticles extends THREE.Object3D {
         this.numActivePoints -= numDeadPoints;
         this.positionsAttribute.needsUpdate = true;
         this.geometry.setDrawRange(this.pointsStartIndex, this.numActivePoints);
+        return numDeadPoints;
     }
 }

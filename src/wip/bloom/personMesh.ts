@@ -44,12 +44,12 @@ export class PersonMesh extends THREE.Object3D {
         // ] = this.keypoints;
     }
 
-    public getWorldHeadPosition(target: THREE.Vector3) {
-        const localHeadPosition = this.keypoints[0].position;
-        target.copy(localHeadPosition);
-        this.localToWorld(target);
-        return target;
-    }
+    // public getWorldPosition(target: THREE.Vector3) {
+    //     const localHeadPosition = this.keypoints[0].position;
+    //     target.copy(localHeadPosition);
+    //     this.localToWorld(target);
+    //     return target;
+    // }
 
     updateFromOpenPosePerson(maybePerson: OpenPosePerson) {
         if (maybePerson == null) {
@@ -90,12 +90,14 @@ export class PersonMesh extends THREE.Object3D {
 }
 
 class Keypoint {
+    public offset = new THREE.Vector3();
     public position = new THREE.Vector3();
     public confidence: number = 0;
     constructor() {}
     update(confidence: number, keypointX?: number, keypointY?: number) {
         this.confidence = confidence;
         if (confidence !== 0) {
+            this.offset.copy(this.position);
             // [1, 1] across the screen width, from left to right
             const worldX = (keypointX! / KEYPOINTS_WIDTH - 0.5) * 2;
             // [-1/aspectRatio, 1/aspectRatio] across the screen height, from bottom to top
@@ -103,6 +105,9 @@ class Keypoint {
 
             this.position.x = worldX;
             this.position.y = worldY;
+            this.offset.subVectors(this.position, this.offset);
+        } else {
+            this.offset.setScalar(0);
         }
     }
 }
@@ -120,6 +125,7 @@ class KeypointSphere extends THREE.Mesh {
             depthWrite: false,
         });
     })();
+
     constructor(public keypoint: Keypoint) {
         super(KeypointSphere.geometry, KeypointSphere.material);
     }
