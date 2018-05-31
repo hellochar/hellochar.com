@@ -72,6 +72,8 @@ export function randomBranchTemplate(greenColor: THREE.Color, envMap: THREE.Cube
 
 export function randomLeafTemplate(color: THREE.Color, envMap: THREE.CubeTexture) {
     const veinedLeaf = generateRandomVeinedLeaf(generateVeinGrowthParameters);
+    const roughness = THREE.Math.randFloat(0.2, 1);
+    const metalness = THREE.Math.randFloat(0, 0.25);
     const leafTextureParameters: TextureGeneratorParameters = {
         innerColor: color,
         outerColor: color,
@@ -80,8 +82,8 @@ export function randomLeafTemplate(color: THREE.Color, envMap: THREE.CubeTexture
         bumpVeinAlpha: 1,
         bumpNoiseHeight: 1,
         baseMaterialParams: {
-            roughness: 0.4,
-            metalness: 0,
+            roughness,
+            metalness,
         },
     };
     return LeafTemplate.fromVeinedLeaf(veinedLeaf, leafTextureParameters, envMap);
