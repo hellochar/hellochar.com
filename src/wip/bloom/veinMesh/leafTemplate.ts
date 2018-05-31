@@ -65,7 +65,8 @@ export class LeafTemplate {
         };
         const material = new THREE.MeshStandardMaterial(materialParams);
 
-        return new LeafTemplate(leaf, geometry, material);
+        const bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
+        return new LeafTemplate(leaf, bufferGeometry, material);
     }
 
     /**
@@ -85,8 +86,6 @@ export class LeafTemplate {
             const y = yCup + yLift + yNoise + yFray;
             // const y = 0;
             geometry.vertices.push(new THREE.Vector3(x, y, z));
-            // bone array goes like this:
-            // [baseBone, forwardBones x5, sideBone]
             const prevIndex = Math.floor(x);
             const nextIndex = Math.ceil(x);
             const t = x - prevIndex;
@@ -125,7 +124,7 @@ export class LeafTemplate {
 
     constructor(
         public veinedLeaf: VeinedLeaf,
-        public geometry: THREE.Geometry,
+        public geometry: THREE.BufferGeometry,
         public material: THREE.Material,
     ) {}
 

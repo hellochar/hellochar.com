@@ -316,7 +316,7 @@ class Bloom extends ISketch {
                 }
 
                 const deathStart = 1000 * 120;
-                if (!(obj instanceof Branch) && (this.timeElapsed - obj.timeBorn) > deathStart) {
+                if (!(obj instanceof Branch) && (this.timeElapsed - obj.timeBorn) > deathStart && obj.children.length === 0) {
                     toDelete.push(obj);
                     // const deathAmount = THREE.Math.smoothstep(this.timeElapsed - obj.timeBorn, deathStart, deathStart + deathDuration);
                     // if (deathAmount === 1) {
