@@ -2,8 +2,10 @@ import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 
-import { ISketch, SketchAudioContext } from "../../sketch";
+import { ISketch } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
+import { BranchBone } from "./branch/branchBone";
+import { Bud } from "./branch/bud";
 import { CameraController, CameraFocusOnBoxController, CameraFocusOnObjectController } from "./cameraController";
 import { Component } from "./component";
 import { Curtain } from "./curtain";
@@ -15,6 +17,7 @@ import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./personMesh";
 import scene from "./scene";
+import { season } from "./season";
 
 // https://gist.github.com/blixt/f17b47c62508be59987b
 let _seed = Date.now() % 2147483647;
@@ -54,6 +57,8 @@ class Bloom extends ISketch {
     public openPoseManager!: OpenPoseManager;
 
     public feedParticles!: FeedParticles;
+
+    public seasonalEffect: SeasonalEffect = new GrowingSeasonalEffect();
 
     public init() {
         this.renderer.shadowMap.enabled = true;
@@ -147,15 +152,15 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        // const branch = new Branch(10);
-        // // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
-        // // scene.add(helper);
-        // this.component = branch;
+        const branch = new Branch(10);
+        // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
+        // scene.add(helper);
+        this.component = branch;
 
-        const flower = Flower.generate();
-        flower.rotation.z = -Math.PI / 4;
-        flower.position.y = 0.3;
-        this.component = flower;
+        // const flower = Flower.generate();
+        // flower.rotation.z = -Math.PI / 4;
+        // flower.position.y = 0.3;
+        // this.component = flower;
 
         // const petal = Petal.generate(dna.petalTemplate);
         // petal.position.y = 0.3;
@@ -195,23 +200,25 @@ class Bloom extends ISketch {
     private triedReload = false;
 
     public animate(ms: number) {
+        this.setSeason();
         this.updatePersonMeshes();
         const numNutrientsThisFrame = this.feedParticles.animate(ms);
-        // average like 6 per person per frame
-        // console.log(numNutrientsThisFrame);
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
-        const nutrientsPerSecond = Math.min(9.9, 1.2 + Math.sqrt(numNutrientsThisFrame) / 3);
+        const nutrientsPerSecond = Math.min(9.9, 9.2 + Math.sqrt(numNutrientsThisFrame) / 3);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
+        this.updateSeasonalEffect();
 
         // this.updateCamera();
+
         this.updateDyingObjects();
 
         if (this.r1 != null) {
             this.r1.style.background = "white";
             // this.r1.textContent = this.audioContext.state;
-            this.r1.textContent = `${nutrientsPerSecond}`;
+            // this.r1.textContent = `${nutrientsPerSecond}`;
+            this.r1.textContent = JSON.stringify(season);
             // this.r1.textContent = `${this.feedParticles.pointsStartIndex}, ${this.feedParticles.numActivePoints}`;
         }
         this.debugObjectCounts();
@@ -221,9 +228,37 @@ class Bloom extends ISketch {
         this.composer.render();
 
         // song is 10 and a half minutes long
-        if (this.timeElapsed > (10 * 60 + 40) * 1000) {
+        if (season.type === "dying" && season.percent > 1) {
             this.triggerReload();
         }
+    }
+
+    public setSeason() {
+        const [flowerTime, dieTime, restartTime] = [
+            (5 * 60 + 32) * 40,
+            (8 * 60 + 13) * 10,
+            (10 * 60 + 13) * 100,
+        ];
+        if (this.timeElapsed < flowerTime) {
+            season.type = "growing";
+            season.percent = this.timeElapsed / flowerTime;
+        } else if (this.timeElapsed < dieTime) {
+            season.type = "flowering";
+            season.percent = (this.timeElapsed - flowerTime) / (dieTime - flowerTime);
+        } else {
+            season.type = "dying";
+            season.percent = (this.timeElapsed - dieTime) / (restartTime - dieTime);
+        }
+    }
+
+    public updateSeasonalEffect() {
+        if (season.type === "flowering" && !(this.seasonalEffect instanceof FloweringSeasonalEffect)) {
+            this.seasonalEffect = new FloweringSeasonalEffect(this);
+        } else if (season.type === "dying" && !(this.seasonalEffect instanceof DyingSeasonalEffect)) {
+            this.seasonalEffect = new DyingSeasonalEffect(this);
+        }
+
+        this.seasonalEffect.update();
     }
 
     public updateDyingObjects() {
@@ -254,6 +289,8 @@ class Bloom extends ISketch {
         for (const personMesh of this.peopleMeshes) {
             const maybePerson = people[personMesh.index];
             personMesh.updateFromOpenPosePerson(maybePerson);
+
+            if (season.type !== "dying") {
             if (maybePerson != null) {
                 const p = new THREE.Vector3();
                 for (const keypointSphere of personMesh.keypointSpheres) {
@@ -270,11 +307,9 @@ class Bloom extends ISketch {
                         }
                     }
                 }
-                // personMesh.getWorldPosition(p);
-                // if (Math.random() < 0.1) {
-                // }
             }
         }
+    }
     }
 
     public dyingObjects: Set<DyingObject> = new Set();
@@ -290,7 +325,6 @@ class Bloom extends ISketch {
             return;
         }
         this.focusTargets = [];
-        const toDelete: THREE.Object3D[] = [];
         this.component.traverse((obj) => {
             if (obj instanceof Component) {
                 const newBorn = obj.timeBorn == null;
@@ -311,29 +345,19 @@ class Bloom extends ISketch {
                         this.componentBoundingBox.expandByPoint(pos);
                     }
                 }
-                if (obj instanceof Flower) {
+                if (obj instanceof BranchBone && obj.getGrowthPercentage() > 0.25 && obj.getGrowthPercentage() < 0.75) {
                     this.focusTargets.push(obj);
-                }
-
-                const deathStart = 1000 * 120;
-                if (!(obj instanceof Branch) && (this.timeElapsed - obj.timeBorn) > deathStart && obj.children.length === 0) {
-                    toDelete.push(obj);
-                    // const deathAmount = THREE.Math.smoothstep(this.timeElapsed - obj.timeBorn, deathStart, deathStart + deathDuration);
-                    // if (deathAmount === 1) {
-                    //     toDelete.push(obj);
-                    //     // obj.parent.remove(obj);
-                    // } else {
-                    //     obj.scale.setScalar(1 - deathAmount);
-                    // }
+                } else if (obj instanceof Flower) {
+                    this.focusTargets.push(obj);
                 }
             }
         });
-        for (const obj of toDelete) {
+    }
+
+    public triggerDeath(obj: Component) {
             const dyingObject = new DyingObject(obj);
             this.dyingObjects.add(dyingObject);
             this.scene.add(dyingObject);
-            // obj.parent.remove(obj);
-        }
     }
 
     private updateCamera() {
@@ -395,19 +419,79 @@ class DyingObject extends THREE.Object3D {
     }
 
     update() {
-        this.velocity.y -= 0.0001;
+        this.velocity.y -= 0.00007;
 
         this.rotateX(0.01);
         this.rotateY(0.02);
         this.rotateZ(0.005);
         this.position.add(this.velocity);
-        // if (this.time < 200) {
         if (this.scale.lengthSq() > 0.01 * 0.01) {
             this.scale.multiplyScalar(0.99);
             // this.scale.setScalar(1 - this.time / 200);
         } else {
             this.visible = false;
             this.parent.remove(this);
+        }
+    }
+}
+
+interface SeasonalEffect {
+    update(): void;
+}
+
+class GrowingSeasonalEffect implements SeasonalEffect {
+    update() {
+
+    }
+}
+
+class FloweringSeasonalEffect implements SeasonalEffect {
+    constructor(public bloom: Bloom) {}
+    update() {
+
+    }
+}
+
+class DyingSeasonalEffect implements SeasonalEffect {
+    private deathSchedules: Map<Component, number> = new Map();
+    constructor(public bloom: Bloom) {
+
+        // fill in death schedules
+        this.bloom.component!.traverse((obj) => {
+            // add everything but the root
+            if (obj instanceof Component && !(obj instanceof Branch) && !(obj instanceof Bud)) {
+                const deathTime = (1 - Math.random() * Math.random() * Math.random()) * 0.8;
+                this.deathSchedules.set(obj, deathTime);
+            }
+        });
+    }
+
+    update() {
+        // find any new ones that need to be scheduled
+        const percent = season.percent;
+        for (const personMesh of this.bloom.peopleMeshes) {
+            const scale = Math.max(0.01,
+                THREE.Math.mapLinear(percent, 0, 0.5, 1, 0.01),
+            );
+            if (scale <= 0.01 && personMesh.parent != null) {
+                personMesh.parent.remove(personMesh);
+            } else {
+                personMesh.scale.x = scale;
+                personMesh.scale.y = scale;
+            }
+        }
+        for (const [component, deathTime] of this.deathSchedules) {
+            if (percent > deathTime) {
+                // if (component.children.length === 0) {
+                    // we can kill it
+                this.bloom.triggerDeath(component);
+                this.deathSchedules.delete(component);
+                // break;
+                // } else {
+                    // you have dependents; wait a second
+
+                // }
+            }
         }
     }
 }
