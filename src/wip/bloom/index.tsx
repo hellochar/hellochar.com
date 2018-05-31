@@ -88,7 +88,7 @@ class Bloom extends ISketch {
         this.feedParticles = new FeedParticles();
         this.scene.add(this.feedParticles);
 
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 12; i++) {
             const personMesh = new PersonMesh(i);
             this.peopleMeshes[i] = personMesh;
             personMesh.position.z = -1.5;
@@ -257,14 +257,17 @@ class Bloom extends ISketch {
             if (maybePerson != null) {
                 const p = new THREE.Vector3();
                 for (const keypointSphere of personMesh.keypointSpheres) {
-                    // this is anywhere from 1e-10, (or 0), to 0.001 at max lol
-                    const maxVel = 0.05;
-                    const vel = keypointSphere.keypoint.offset.length();
-                    const probability = vel / maxVel;
-                    if (Math.random() < probability) {
-                        p.copy(keypointSphere.position);
-                        personMesh.localToWorld(p);
-                        this.feedParticles.addPoint(p);
+                    const keypoint = keypointSphere.keypoint;
+                    if (keypoint.confidence > 0) {
+                        // this is anywhere from 1e-10, (or 0), to 0.001 at max lol
+                        const maxVel = 0.05;
+                        const vel = keypoint.offset.length();
+                        const probability = vel / maxVel - 0.1; // bias against total stillness
+                        if (Math.random() < probability) {
+                            p.copy(keypointSphere.position);
+                            personMesh.localToWorld(p);
+                            this.feedParticles.addPoint(p);
+                        }
                     }
                 }
                 // personMesh.getWorldPosition(p);

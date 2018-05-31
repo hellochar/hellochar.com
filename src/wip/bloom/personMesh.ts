@@ -59,6 +59,15 @@ export class PersonMesh extends THREE.Object3D {
             this.updateKeypoints(maybePerson.pose_keypoints_2d);
         }
         this.updateSpheres();
+        if (this.isEverySphereInvisible()) {
+            this.visible = false;
+        } else {
+            this.visible = true;
+        }
+    }
+
+    private isEverySphereInvisible() {
+        return this.keypointSpheres.every((s) => !s.visible);
     }
 
     private updateSpheres() {
@@ -137,7 +146,11 @@ class KeypointSphere extends THREE.Mesh {
         const { confidence } = this.keypoint;
         if (confidence === 0) {
             this.scale.lerp(KeypointSphere.noConfidenceScale, 0.1);
+            if (this.scale.x < 0.01) {
+                this.visible = false;
+            }
         } else {
+            this.visible = true;
             const oldPosition = this.position.clone();
             this.scale.lerp(KeypointSphere.confidentScale, 0.1);
             this.position.lerp(this.keypoint.position, 0.5);
