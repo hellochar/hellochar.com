@@ -21,7 +21,7 @@ export class BranchMeshManager {
     constructor(public branch: Branch) {
         const { finalBranchLength } = branch;
         // initialize the geometry, material, skeleton, and skinnedmesh
-        const numSegments = BONES_PER_UNIT_LENGTH * branch.finalBranchLength;
+        const numSegments = Math.ceil(BONES_PER_UNIT_LENGTH * branch.finalBranchLength);
         /*
          * The cylinder's upwards is pointed at +y. The cylinder ranges in y from [0, finalBranchLength].
          */
@@ -36,14 +36,15 @@ export class BranchMeshManager {
         geometry.translate(0, finalBranchLength / 2, 0);
         const segmentHeight = finalBranchLength / numSegments;
         for (const vertex of geometry.vertices) {
-            const boneIndex = Math.floor(THREE.Math.mapLinear(vertex.y, 0, finalBranchLength, 0, numSegments));
-            geometry.skinIndices.push(new THREE.Vector4(boneIndex, 0, 0, 0) as any);
-            geometry.skinWeights.push(new THREE.Vector4(1, 0, 0, 0) as any);
-        }
+            const fractionalBoneIndex = THREE.Math.mapLinear(vertex.y, 0, finalBranchLength, 0, numSegments);
+            const boneIndexLow = Math.floor(fractionalBoneIndex);
+            const boneIndexHigh = Math.ceil(fractionalBoneIndex);
 
-        // // test bone children
-        // const testGeom = new THREE.SphereBufferGeometry(0.03);
-        // const testMat = new THREE.MeshPhongMaterial();
+            const amountHigh = fractionalBoneIndex - boneIndexLow;
+
+            geometry.skinIndices.push(new THREE.Vector4(boneIndexLow, boneIndexHigh, 0, 0) as any);
+            geometry.skinWeights.push(new THREE.Vector4(1 - amountHigh, amountHigh, 0, 0) as any);
+        }
 
         const bones: BranchBone[] = [];
 
@@ -71,6 +72,5 @@ export class BranchMeshManager {
         for (const bone of bones) {
             bone.updateView();
         }
-        // this.skeleton.bones[0].add(new THREE.AxesHelper(1));
     }
 }
