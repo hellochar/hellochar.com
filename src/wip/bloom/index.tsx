@@ -91,7 +91,7 @@ class Bloom extends ISketch {
         for (let i = 0; i < 20; i++) {
             const personMesh = new PersonMesh(i);
             this.peopleMeshes[i] = personMesh;
-            personMesh.position.z = -1;
+            personMesh.position.z = -1.5;
             this.camera.add(personMesh);
         }
 
@@ -195,7 +195,7 @@ class Bloom extends ISketch {
     private triedReload = false;
 
     public animate(ms: number) {
-        const nutrientsPerSecond = 0.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
+        const nutrientsPerSecond = 9.2 + Math.log(this.openPoseManager.getLatestFramePeople().length + 1) / 3;
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateCamera();
@@ -247,8 +247,9 @@ class Bloom extends ISketch {
     private updatePersonMeshes() {
         const people = this.openPoseManager.getLatestFramePeople();
         for (const personMesh of this.peopleMeshes) {
-            personMesh.updateFromOpenPoseFrame(people);
-            if (personMesh.visible) {
+            const maybePerson = people[personMesh.index];
+            personMesh.updateFromOpenPosePerson(maybePerson);
+            if (maybePerson != null) {
                 const p = new THREE.Vector3();
                 personMesh.getWorldHeadPosition(p);
                 if (Math.random() < 0.1) {

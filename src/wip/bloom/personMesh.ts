@@ -2,124 +2,145 @@ import * as THREE from "three";
 
 import { OpenPoseKeypoints, OpenPosePerson } from "./openPoseManager";
 
+const KEYPOINTS_WIDTH = 640;
+const KEYPOINTS_HEIGHT = 480;
+const KEYPOINTS_ASPECT_RATIO = KEYPOINTS_WIDTH / KEYPOINTS_HEIGHT; // width / height of keypoint space, which ranges [320x240];
+
 /**
  * Add this to the camera.
  */
 export class PersonMesh extends THREE.Object3D {
-    static material = new THREE.LineBasicMaterial({
-        color: 0xffffff,
-        linewidth: 1,
-        depthTest: false,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-    });
-    private geom: THREE.Geometry;
-    private lineSegments: THREE.LineSegments;
+    private keypoints: Keypoint[] = [];
 
-    private vertexArray: THREE.Vector3[];
+    public keypointSpheres: KeypointSphere[] = [];
 
     constructor(public index: number) {
         super();
-        this.vertexArray = [];
+        this.renderOrder = 1000;
+
         for (let i = 0; i < 15; i++) {
-            const vertex = new THREE.Vector3();
-            this.vertexArray.push(vertex);
-            // this.geom.vertices.push(vertex);
+            const keypoint = new Keypoint();
+            this.keypoints.push(keypoint);
+            const sphere = new KeypointSphere(keypoint);
+            this.keypointSpheres.push(sphere);
+            this.add(sphere);
         }
-        const [
-            Head,
-            Neck,
-            RShoulder,
-            RElbow,
-            RWrist,
-            LShoulder,
-            LElbow,
-            LWrist,
-            RHip,
-            RKnee,
-            RAnkle,
-            LHip,
-            LKnee,
-            LAnkle,
-            Chest,
-        ] = this.vertexArray;
-
-        this.geom = new THREE.Geometry();
-
-        const line = (p1: THREE.Vector3, p2: THREE.Vector3) => {
-            this.geom.vertices.push(p1);
-            this.geom.vertices.push(p2);
-        }
-
-        line(Head, Neck);
-
-        line(Neck, RShoulder);
-        // line(RShoulder, RElbow);
-        // line(RElbow, RWrist);
-
-        line(Neck, LShoulder);
-        // line(LShoulder, LElbow);
-        // line(LElbow, LWrist);
-
-        line(LShoulder, RShoulder);
-
-        line(Neck, Chest);
-
-        line(RShoulder, Chest);
-        line(LShoulder, Chest);
-
-        // line(Chest, RHip);
-        // line(RHip, RKnee);
-        // line(RKnee, RAnkle);
-
-        // line(Chest, LHip);
-        // line(LHip, LKnee);
-        // line(LKnee, LAnkle);
-
-        this.lineSegments = new THREE.LineSegments(this.geom, PersonMesh.material);
-        this.add(this.lineSegments);
+        // const [
+        //     Head,
+        //     Neck,
+        //     RShoulder,
+        //     RElbow,
+        //     RWrist,
+        //     LShoulder,
+        //     LElbow,
+        //     LWrist,
+        //     RHip,
+        //     RKnee,
+        //     RAnkle,
+        //     LHip,
+        //     LKnee,
+        //     LAnkle,
+        //     Chest,
+        // ] = this.keypoints;
     }
 
     public getWorldHeadPosition(target: THREE.Vector3) {
-        const localHeadPosition = this.vertexArray[0];
+        const localHeadPosition = this.keypoints[0].position;
         target.copy(localHeadPosition);
-        // target.z = 0;
-        this.lineSegments.localToWorld(target);
+        this.localToWorld(target);
         return target;
     }
 
-    updateFromOpenPoseFrame(people: OpenPosePerson[]) {
-        const maybePerson = people[this.index];
+    updateFromOpenPosePerson(maybePerson: OpenPosePerson) {
         if (maybePerson == null) {
-            this.visible = false;
+            // we lost the person; treat this as losing every keypoint
+            this.lostPerson();
         } else {
-            this.visible = true;
-            this.updateVertices(maybePerson.pose_keypoints_2d);
+            this.updateKeypoints(maybePerson.pose_keypoints_2d);
+        }
+        this.updateSpheres();
+    }
+
+    private updateSpheres() {
+        for (const sphere of this.keypointSpheres) {
+            sphere.updateSizeAndPosition();
         }
     }
 
-    updateVertices(poseKeypoints2D: number[]) {
-        const keypointsWidth = 640;
-        const keypointsHeight = 480;
-        for (let i = 0; i < 15; i++) {
-            const vertex = this.vertexArray[i];
+    lostPerson() {
+        for (const keypoint of this.keypoints) {
+            keypoint.update(0);
+        }
+    }
+
+    updateKeypoints(poseKeypoints2D: number[]) {
+        for (let i = 0; i < this.keypoints.length; i++) {
+            const keypoint = this.keypoints[i];
+
             const indexX = i * 3;
             const indexY = i * 3 + 1;
+            const indexConfidence = i * 3 + 2;
+            const keypointX = poseKeypoints2D[indexX];
+            const keypointY = poseKeypoints2D[indexY];
+            const confidence = poseKeypoints2D[indexConfidence];
 
-            const pixelX = poseKeypoints2D[indexX];
-            const pixelY = poseKeypoints2D[indexY];
-
-            const aspectRatio = keypointsWidth / keypointsHeight; // width / height of keypoint space, which ranges [320x240];
-
-            // [1, 1] across the screen width, from left to right
-            const worldX = (pixelX / keypointsWidth - 0.5) * 2;
-            // [-1/aspectRatio, 1/aspectRatio] across the screen height, from bottom to top
-            const worldY = -1 * (pixelY / keypointsHeight - 0.5) * 2 / aspectRatio;
-
-            vertex.x = worldX;
-            vertex.y = worldY;
-            // how far away from the camera this is
+            keypoint.update(confidence, keypointX, keypointY);
         }
-        this.geom.verticesNeedUpdate = true;
+    }
+}
+
+class Keypoint {
+    public position = new THREE.Vector3();
+    public confidence: number = 0;
+    constructor() {}
+    update(confidence: number, keypointX?: number, keypointY?: number) {
+        this.confidence = confidence;
+        if (confidence !== 0) {
+            // [1, 1] across the screen width, from left to right
+            const worldX = (keypointX! / KEYPOINTS_WIDTH - 0.5) * 2;
+            // [-1/aspectRatio, 1/aspectRatio] across the screen height, from bottom to top
+            const worldY = -1 * (keypointY! / KEYPOINTS_HEIGHT - 0.5) * 2 / KEYPOINTS_ASPECT_RATIO;
+
+            this.position.x = worldX;
+            this.position.y = worldY;
+        }
+    }
+}
+
+class KeypointSphere extends THREE.Mesh {
+    static geometry = (() => {
+        return new THREE.SphereBufferGeometry(0.03, 10, 8);
+    })();
+    static material = (() => {
+        return new THREE.MeshPhongMaterial({
+            flatShading: true,
+            color: "lightgray",
+            shininess: 0,
+            depthTest: false,
+            depthWrite: false,
+        });
+    })();
+    constructor(public keypoint: Keypoint) {
+        super(KeypointSphere.geometry, KeypointSphere.material);
+    }
+
+    static noConfidenceScale = new THREE.Vector3().setScalar(0.01);
+    static confidentScale = new THREE.Vector3().setScalar(1);
+
+    public updateSizeAndPosition() {
+        const { confidence } = this.keypoint;
+        if (confidence === 0) {
+            this.scale.lerp(KeypointSphere.noConfidenceScale, 0.1);
+        } else {
+            const oldPosition = this.position.clone();
+            this.scale.lerp(KeypointSphere.confidentScale, 0.1);
+            this.position.lerp(this.keypoint.position, 0.5);
+
+            const rotateY = (this.position.x - oldPosition.x) * 5;
+            const rotateX = (this.position.y - oldPosition.y) * 5;
+
+            this.rotateY(rotateY);
+            this.rotateX(rotateX);
+        }
     }
 }
