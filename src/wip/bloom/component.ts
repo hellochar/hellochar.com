@@ -7,7 +7,7 @@ export interface ComponentClass<T extends Component> {
 
 // even more generic than Component - also includes individual branch Bones
 export interface Biological {
-    feed(nutrients: number): void;
+    feed(time: number, nutrients: number): void;
 }
 
 export abstract class Component extends Object3D implements Biological {
@@ -52,7 +52,7 @@ export abstract class Component extends Object3D implements Biological {
 
     updateSelf?(time: number): void;
 
-    feed(nutrients: number) {
+    feed(time: number, nutrients: number) {
         // TODO fill this in properly
     }
 }

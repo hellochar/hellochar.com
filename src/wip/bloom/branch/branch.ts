@@ -4,6 +4,8 @@ import { Component } from "../component";
 import { Flower } from "../flower";
 import Leaves from "../leaf/leaves";
 import { BONES_PER_UNIT_LENGTH, BranchMeshManager } from "./branchMeshManager";
+import scene from "../scene";
+import dna from "../dna";
 
 // TODO move this to the base, and feed nutrients from the root, and allow feeding in generic Components
 export let NUTRIENT_PER_SECOND = {
@@ -19,6 +21,10 @@ export class Branch extends Component {
         this.meshManager = new BranchMeshManager(this);
         this.add(this.meshManager.mesh);
         // this.growthManager = new BranchGrowthManager(this, this.meshManager.skeleton);
+        const helper = new THREE.SkeletonHelper(this.meshManager.skeleton.bones[0]);
+        scene.add(helper);
+
+        dna.branchingPattern.addBuds(this);
     }
 
     /**

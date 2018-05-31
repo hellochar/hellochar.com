@@ -201,11 +201,11 @@ class Bloom extends ISketch {
         // console.log(numNutrientsThisFrame);
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
-        const nutrientsPerSecond = Math.min(9.9, 0.2 + Math.sqrt(numNutrientsThisFrame) / 3);
+        const nutrientsPerSecond = Math.min(9.9, 1.2 + Math.sqrt(numNutrientsThisFrame) / 3);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
 
-        this.updateCamera();
+        // this.updateCamera();
         this.updateDyingObjects();
 
         if (this.r1 != null) {

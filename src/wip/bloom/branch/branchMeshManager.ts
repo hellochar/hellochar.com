@@ -6,8 +6,13 @@ import { BranchBone, BranchSkeleton } from "./branchBone";
 
 /**
  * Has a big effect on perf. More bones = more objects to matrixWorldUpdate, but also smoother curves.
+ *
+ * Changing this value affects several things:
+ * 1) branchingpattern's "BONES_PER_GROWTH" variable
+ * 2) effect of BranchBone's CurveUpwardAmount
  */
-export const BONES_PER_UNIT_LENGTH = 10;
+export const BONES_PER_UNIT_LENGTH = 5;
+export const LENGTH_PER_BONE = 1 / BONES_PER_UNIT_LENGTH;
 
 export class BranchMeshManager {
     public mesh: THREE.SkinnedMesh;

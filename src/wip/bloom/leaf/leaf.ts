@@ -6,7 +6,8 @@ import { simulateVeinBoneGravity } from "../physics";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
 
-const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 0.5);
+// const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 0.5);
+const petioleLength = 0;
 
 export class Leaf extends Component {
     static petioleMaterial = new THREE.MeshLambertMaterial({
@@ -41,7 +42,7 @@ export class Leaf extends Component {
         }
         this.lamina = template.instantiateLeaf();
         this.lamina.position.x = petioleLength * 0.98;
-        this.lamina.position.y = 0.0015;
+        // this.lamina.position.y = 0.0015;
         this.add(this.lamina);
     }
 

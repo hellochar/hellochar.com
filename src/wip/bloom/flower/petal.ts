@@ -5,7 +5,7 @@ import { simulateVeinBoneGravity } from "../physics";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 
 const finalRotZ = THREE.Math.randFloat(Math.PI / 6, Math.PI / 3);
-const bone0Stiffness = Math.pow(10, THREE.Math.randFloat(-1, -3));
+const bone0Stiffness = Math.pow(10, THREE.Math.randFloat(-1, -1.5));
 const bone1Stiffness = bone0Stiffness * Math.pow(10, THREE.Math.randFloat(-1, -2));
 const sideBoneMax = Math.random() * Math.random();
 

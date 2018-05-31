@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
-import { Component } from "../component";
 import dna from "../dna";
 import { Branch } from "./branch";
+import { Bud } from "./bud";
 
 // Makes a huge deal as to the final shape, since
 // the apex flower will be scaled by MAX_GROWTH_SCALE^(number of bones)
@@ -49,7 +49,7 @@ export class BranchBone extends THREE.Bone {
      * null = reached growth state, and we're not growing anything.
      * non-null = the component we're growing.
      */
-    private components: Component[] | null | undefined;
+    // private components: Component[] | null | undefined;
 
     private get isFullSized() {
         return this.growthPercentage >= 1;
@@ -64,19 +64,15 @@ export class BranchBone extends THREE.Bone {
         // this.updateView();
     }
 
+    private buds: Bud[] = [];
+    public addBud(bud: Bud) {
+        this.buds.push(bud);
+        this.add(bud);
+    }
+
     grow(t: number) {
         if (!this.isAlive) {
             return;
-        }
-        if (this.growthPercentage > dna.growth.budDevelopmentThreshold && this.components === undefined) {
-            const components = dna.branchingPattern.getComponentsFor(this);
-            this.components = components;
-            if (components != null) {
-                for (const c of components) {
-                    c.scale.multiplyScalar(dna.growth.childScalar);
-                }
-                this.add(...components);
-            }
         }
 
         // Model that curving upwards behavior that branches do.
@@ -118,6 +114,8 @@ export class BranchBone extends THREE.Bone {
             for (const child of this.children) {
                 // we're physically inaccurate here when there's more than one child, but that's fine.
                 if (child instanceof BranchBone) {
+                    child.feed(t, leftOver);
+                } else if (child instanceof Bud) {
                     child.feed(t, leftOver);
                 }
             }

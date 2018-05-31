@@ -1,74 +1,78 @@
 import * as THREE from "three";
 
 import { Component } from "../component";
-import dna from "../dna";
 import { Flower } from "../flower";
-import { Leaf } from "../leaf";
 import Leaves from "../leaf/leaves";
 import { Branch } from "./branch";
-import { BranchBone } from "./branchBone";
+import { LENGTH_PER_BONE } from "./branchMeshManager";
+import { Bud } from "./bud";
 
 const worldPosition = new THREE.Vector3();
 
 export interface BranchingPattern {
-    getComponentsFor(branch: BranchBone): Component[] | null;
+    // getComponentsFor(branch: BranchBone): Component[] | null;
+
+    addBuds(branch: Branch): void;
 }
 
 export class DefaultBranchingPattern implements BranchingPattern {
     public branchLengthScalar = THREE.Math.randFloat(0.7, 0.9);
-    public branchRotationZ = THREE.Math.randFloat(Math.PI / 2, Math.PI / 8);
+    public branchRotationZ = THREE.Math.mapLinear(Math.random() * Math.random(), 0, 1, Math.PI / 2, Math.PI / 8);
 
-    public BONES_PER_GROWTH = 10;
+    // this *dramatically* changes growth
+    public lengthPerGrowth = 1.0;
 
-    public growthsPerRotation = 4;
+    public lengthPerYRotation = 4;
+
+    public baseYRot = Math.random() * Math.PI * 2;
 
     constructor() { }
 
-    getComponentsFor(bone: BranchBone) {
-        // we're at the end, grow a flower
-        if (bone.children.length === 0) {
-            worldPosition.setFromMatrixPosition(bone.matrixWorld);
-            const shouldGrowFlower = bone.branch.finalBranchLength > 1.5 && worldPosition.y > 1.5;
-            if (shouldGrowFlower) {
-                const flower = Flower.generate();
-                flower.position.y = bone.position.y;
-                return [flower];
-            } else {
-                const leaf = Leaf.generate(dna.leafTemplate);
-                leaf.rotateZ(Math.PI / 2);
-                return [leaf];
-            }
-        }
+    addBuds(branch: Branch) {
+        // ok, so, for instance
+        // 5 bones per length, final length 10 = 50 bones
+        // 0.2 length per bone
+        // length = 1, 2, 3, 4, 5, 6, 7, 8, 9
+        // boneIndex = Math.floor(length / length_per_bone)
+        // boneStartLength = boneIndex * length_per_bone
+        // position.y = boneStartLength - length
 
-        if (bone.index % this.BONES_PER_GROWTH === this.BONES_PER_GROWTH - 1) {
-            const growthIndex = (bone.index + 1) / this.BONES_PER_GROWTH;
-            const rotY = Math.PI * 2 * growthIndex / this.growthsPerRotation;
-            const leafWhorl = Leaves.generate();
-            leafWhorl.rotateY(rotY);
-            const leaves = [leafWhorl];
-            // const leaves: Component[] = [];
+        const bones = branch.meshManager.skeleton.bones;
+        for (let length = this.lengthPerGrowth; length < branch.finalBranchLength; length += this.lengthPerGrowth) {
+            const boneIndex = Math.floor(length / LENGTH_PER_BONE);
+            const boneStartLength = boneIndex * LENGTH_PER_BONE;
+            const y = length - boneStartLength;
+            const rotY = Math.PI * 2 * length / this.lengthPerYRotation + this.baseYRot;
 
-            const totalBones = bone.branch.meshManager.skeleton.bones.length;
-            const percentDist = bone.index / totalBones;
-            // console.log(percentDist);
-            if (percentDist < 0.5) {
-            // if (Math.random() > percentDist) {
-                const newBranchLength = (1 - percentDist) * this.branchLengthScalar * bone.branch.finalBranchLength;
-                if (newBranchLength >= 1) {
-                    const branch = new Branch(newBranchLength);
-                    branch.rotateY(rotY);
-                    // branch.rotateY(Math.PI * 2 * Math.random());
-                    // const randYDir = Math.random() * Math.PI * 2;
-                    // TODO should we rotate bones[0]? or should we rotate the Branch itself?
-                    // branch.meshManager.skeleton.bones[0].rotateZ(-Math.PI / 2);
-                    branch.rotateZ(-this.branchRotationZ);
-                    return [branch, ...leaves];
+            const bud = new Bud(() => {
+                const components: Component[] = [];
+
+                const leafWhorl = Leaves.generate();
+                components.push(leafWhorl);
+
+                const percentDist = length / branch.finalBranchLength;
+                // console.log(percentDist);
+                if (percentDist < 0.5) {
+                    const newBranchLength = (1 - percentDist) * this.branchLengthScalar * branch.finalBranchLength;
+                    if (newBranchLength >= 1) {
+                        const newBranch = new Branch(newBranchLength);
+                        newBranch.rotateZ(-this.branchRotationZ);
+                        components.push(newBranch);
+                    }
                 }
-                return leaves;
-            } else {
-                return leaves;
-            }
+
+                return components;
+            });
+            bud.rotateY(rotY);
+            bud.position.y = y;
+            bones[boneIndex].addBud(bud);
         }
-        return null;
+
+        // add flower on last bone
+        const lastBone = bones[bones.length - 1];
+        lastBone.addBud(new Bud(() => {
+            const flower = Flower.generate();
+            return [flower];
+        }));
     }
 }
