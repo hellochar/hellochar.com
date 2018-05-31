@@ -6,6 +6,8 @@ import Leaves from "../leaf/leaves";
 import { Branch } from "./branch";
 import { LENGTH_PER_BONE } from "./branchMeshManager";
 import { Bud } from "./bud";
+import { Leaf } from "../leaf";
+import dna from "../dna";
 
 const worldPosition = new THREE.Vector3();
 
@@ -38,7 +40,7 @@ export class DefaultBranchingPattern implements BranchingPattern {
         // position.y = boneStartLength - length
 
         const bones = branch.meshManager.skeleton.bones;
-        for (let length = this.lengthPerGrowth; length < branch.finalBranchLength; length += this.lengthPerGrowth) {
+        for (let length = this.lengthPerGrowth; length <= branch.finalBranchLength - this.lengthPerGrowth; length += this.lengthPerGrowth) {
             const boneIndex = Math.floor(length / LENGTH_PER_BONE);
             const boneStartLength = boneIndex * LENGTH_PER_BONE;
             const y = length - boneStartLength;
@@ -68,11 +70,18 @@ export class DefaultBranchingPattern implements BranchingPattern {
             bones[boneIndex].addBud(bud);
         }
 
-        // add flower on last bone
+        // add flower on last bone or leaf on last bone
         const lastBone = bones[bones.length - 1];
-        lastBone.addBud(new Bud(() => {
-            const flower = Flower.generate();
-            return [flower];
+        lastBone.addBud(new Bud((bud) => {
+            const pos = bud.getWorldPosition();
+            if (pos.y > 1.5) {
+                const flower = Flower.generate();
+                return [flower];
+            } else {
+                const leaf = Leaf.generate(dna.leafTemplate);
+                leaf.rotateZ(Math.PI / 2);
+                return [leaf];
+            }
         }));
     }
 }

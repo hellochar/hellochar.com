@@ -17,7 +17,7 @@ import { PersonMesh } from "./personMesh";
 import scene from "./scene";
 
 // https://gist.github.com/blixt/f17b47c62508be59987b
-let _seed = 4 % 2147483647;
+let _seed = Date.now() % 2147483647;
 if (_seed <= 0) {
     _seed += 2147483646;
 }

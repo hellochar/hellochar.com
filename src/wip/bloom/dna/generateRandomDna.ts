@@ -223,7 +223,7 @@ export function randomBranchingPattern(): BranchingPattern {
 export function randomGrowthParameters(): GrowthParameters {
     const boneCurveUpwardsFactor = 0.0001;
     // const boneCurveUpwardsFactor = 0.001;
-    const budDevelopmentThreshold = 0.1;
+    const budDevelopmentThreshold = 0.5;
     const childScalar = 0.8;
     const feedSelfMax = 0.2;
 

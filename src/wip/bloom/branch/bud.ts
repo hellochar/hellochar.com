@@ -16,7 +16,7 @@ export class Bud extends Component {
 
     public sphere: THREE.Mesh;
 
-    constructor(public eventualSprouts: () => Component[]) {
+    constructor(public eventualSprouts: (bud: Bud) => Component[]) {
         super();
         this.sphere = new THREE.Mesh(Bud.geom, dna.branchTemplate.material);
         // this.add(this.sphere);
@@ -25,9 +25,11 @@ export class Bud extends Component {
 
     feed(time: number, nutrients: number) {
         this.growthPercentage = Math.min(1, this.growthPercentage + nutrients);
-        if (!this.sprouted && this.growthPercentage > dna.growth.budDevelopmentThreshold) {
+        // if (!this.sprouted && this.growthPercentage > dna.growth.budDevelopmentThreshold) {
+        const worldScale = this.getWorldScale();
+        if (!this.sprouted && worldScale.y > 0.01 && this.growthPercentage > 0.75) {
             this.sprouted = true;
-            const sprouts = this.eventualSprouts();
+            const sprouts = this.eventualSprouts(this);
             this.add(...sprouts);
         }
     }
