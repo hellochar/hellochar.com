@@ -15,7 +15,7 @@ export class Leaf extends Component {
     });
 
     static petioleGeometry = (() => {
-        const geom = new THREE.CylinderBufferGeometry(0.01, 0.006, 1);
+        const geom = new THREE.CylinderBufferGeometry(0.02, 0.012, 1);
         geom.rotateZ(Math.PI / 2);
         geom.translate(0.5, 0, 0);
         return geom;
