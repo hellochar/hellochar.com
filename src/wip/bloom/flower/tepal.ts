@@ -5,7 +5,7 @@ import { simulateVeinBoneGravity } from "../physics";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 
 const tepalScalar = THREE.Math.randFloat(0.5, 1);
-const tepalFinalRotZScalar = THREE.Math.randFloat(0.85, 1.15);
+const tepalFinalRotZ = THREE.Math.randFloat(0.85, 1.15) * Math.PI / 2;
 const tepalSidePositionY = THREE.Math.randFloat(0.5, 1.5);
 
 export default class Tepal extends Component {
@@ -20,7 +20,7 @@ export default class Tepal extends Component {
 
     updateSelf(t: number) {
         const timeAlive = (t - this.timeBorn);
-        const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, Math.PI / 2 * 0., Math.PI / 2 * tepalFinalRotZScalar);
+        const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, 0., tepalFinalRotZ);
         this.mesh.rotation.z = rotZ;
 
         const bones = this.mesh.skeleton.bones;

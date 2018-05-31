@@ -61,10 +61,15 @@ export default class Carpel extends Component {
         geom.verticesNeedUpdate = true;
         geom.computeFaceNormals();
         geom.computeVertexNormals();
-        const material = new THREE.MeshLambertMaterial({
-            color: "white",
+
+        const color = new THREE.Color(`hsl(${THREE.Math.randInt(0, 60)}, 100%, ${THREE.Math.randInt(75, 100)}%)`);
+        const stigmaMaterial = new THREE.MeshLambertMaterial({
+            color,
         });
-        const mesh = new THREE.Mesh(geom, material);
+
+        const bufferGeom = new THREE.BufferGeometry().fromGeometry(geom);
+
+        const mesh = new THREE.Mesh(bufferGeom, stigmaMaterial);
         mesh.receiveShadow = true;
         mesh.castShadow = true;
         return mesh;

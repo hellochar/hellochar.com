@@ -37,7 +37,7 @@ const antherGeometry = new THREE.SphereBufferGeometry(
     0,
     Math.PI,
 );
-antherGeometry.scale(0.8, 1, 0.74);
+antherGeometry.scale(0.8, THREE.Math.randFloat(0.5, 1.1), 0.74);
 const antherMaterial = new THREE.MeshLambertMaterial({
     // color: new THREE.Color("rgb(255, 50, 101)"),
     color: stamenColor,

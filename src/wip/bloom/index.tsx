@@ -147,15 +147,15 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        const branch = new Branch(10);
-        // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
-        // scene.add(helper);
-        this.component = branch;
+        // const branch = new Branch(10);
+        // // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
+        // // scene.add(helper);
+        // this.component = branch;
 
-        // const flower = Flower.generate();
-        // flower.rotation.z = -Math.PI / 4;
-        // flower.position.y = 0.3;
-        // this.component = flower;
+        const flower = Flower.generate();
+        flower.rotation.z = -Math.PI / 4;
+        flower.position.y = 0.3;
+        this.component = flower;
 
         // const petal = Petal.generate(dna.petalTemplate);
         // petal.position.y = 0.3;

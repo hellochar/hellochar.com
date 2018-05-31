@@ -152,7 +152,7 @@ function getRandomWhorlNum(leaf: LeafTemplate) {
     const num = THREE.Math.clamp(
         Math.floor(totalAnglage / angleOfOnePetal + Math.random()),
         3,
-        12,
+        20,
     );
     return num;
 }
