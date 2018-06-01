@@ -18,6 +18,7 @@ import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./personMesh";
 import scene from "./scene";
 import { season } from "./season";
+import { Whorl } from "./whorl";
 
 // // https://gist.github.com/blixt/f17b47c62508be59987b
 // let _seed = Date.now() % 2147483647;
@@ -260,12 +261,14 @@ class Bloom extends ISketch {
     }
 
     public updateDyingObjects() {
+        const toDelete: Set<DyingObject> = new Set();
         for (const obj of this.dyingObjects) {
             obj.update();
             if (obj.parent == null) {
-                this.dyingObjects.delete(obj);
+                toDelete.add(obj);
             }
         }
+        this.dyingObjects = this.dyingObjects.filter((o) => !toDelete.has(o));
     }
 
     public triggerReload() {
@@ -310,7 +313,7 @@ class Bloom extends ISketch {
     }
     }
 
-    public dyingObjects: Set<DyingObject> = new Set();
+    public dyingObjects: DyingObject[] = [];
 
     public cameraController: CameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
     public focusTargets: THREE.Object3D[] = [];
@@ -353,22 +356,44 @@ class Bloom extends ISketch {
     }
 
     public triggerDeath(obj: Component) {
-            const dyingObject = new DyingObject(obj);
-            this.dyingObjects.add(dyingObject);
-            this.scene.add(dyingObject);
+        const objParent = obj.parent;
+        const dyingObject = new DyingObject(obj);
+        this.dyingObjects.push(dyingObject);
+        this.scene.add(dyingObject);
+        if (objParent != null && objParent instanceof Component && objParent.children.length === 0) {
+            // this is a container component with nothing left; just kill it off
+            if (objParent.parent != null) {
+                objParent.parent.remove(objParent);
+            }
+        }
     }
 
     private updateCamera() {
         if (this.cameraController.timeAlive > 20000) {
-            if (Math.random() < 0.5) {
-                this.cameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
-            } else if(this.focusTargets.length > 0) {
-                // focus on a random target
-                const focusTarget = this.focusTargets[THREE.Math.randInt(0, this.focusTargets.length - 1)];
-                this.cameraController = new CameraFocusOnObjectController(this, focusTarget);
-            }
+            this.changeCameraController();
         }
         this.cameraController.updateCamera();
+    }
+
+    public changeCameraController() {
+        // probably, look at individual leaves
+        if (season.type === "dying" && Math.random() < 0.5) {
+            // the last one is the newest dying object
+            const focus = this.dyingObjects[this.dyingObjects.length - 1];
+            if (focus != null) {
+                this.cameraController = new CameraFocusOnObjectController(this, focus, 0.15, 0.1);
+                // this.cameraController.lerpAmount = 0.02;
+                // this.cameraController.targetPosLerp = 0.1;
+                return;
+            }
+        }
+        if (Math.random() < 0.5) {
+            this.cameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
+        } else if (this.focusTargets.length > 0) {
+            // focus on a random target
+            const focusTarget = this.focusTargets[THREE.Math.randInt(0, this.focusTargets.length - 1)];
+            this.cameraController = new CameraFocusOnObjectController(this, focusTarget);
+        }
     }
 
     private debugObjectCounts() {
@@ -419,15 +444,25 @@ class DyingObject extends THREE.Object3D {
     update() {
         this.velocity.y -= 0.00007;
 
-        this.rotateX(0.01);
-        this.rotateY(0.02);
-        this.rotateZ(0.005);
-        this.position.add(this.velocity);
+        if (this.position.y <= 0.01) {
+            this.position.y = 0.01;
+            this.velocity.setScalar(0);
+        } else {
+            this.velocity.x += (Math.random() - 0.5) * 2 * 0.00007;
+            this.velocity.z += (Math.random() - 0.5) * 2 * 0.00007;
+            this.position.add(this.velocity);
+
+            this.rotateX(0.01);
+            this.rotateY(0.02);
+            this.rotateZ(0.005);
+        }
+
         if (this.scale.lengthSq() > 0.01 * 0.01) {
-            this.scale.multiplyScalar(0.99);
+            // this.scale.multiplyScalar(0.99);
             // this.scale.setScalar(1 - this.time / 200);
         } else {
             this.visible = false;
+            this.object.visible = false;
             this.parent.remove(this);
         }
     }
@@ -458,7 +493,7 @@ class DyingSeasonalEffect implements SeasonalEffect {
         this.bloom.component!.traverse((obj) => {
             // add everything but the root
             if (obj instanceof Component && !(obj instanceof Branch) && !(obj instanceof Bud)) {
-                const deathTime = (1 - Math.random() * Math.random() * Math.random()) * 0.8;
+                const deathTime = Math.random() * Math.random() * 0.8;
                 this.deathSchedules.set(obj, deathTime);
             }
         });
