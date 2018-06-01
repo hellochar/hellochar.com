@@ -46,7 +46,7 @@ export abstract class CameraController {
 
 export class CameraFocusOnBoxController extends CameraController {
 
-    constructor(bloom: Bloom, public componentBoundingBox: THREE.Box3, public targetYScalar = THREE.Math.randFloat(0.7, 1)) {
+    constructor(bloom: Bloom, public componentBoundingBox: THREE.Box3, public targetYScalar = THREE.Math.randFloat(0.7, 1), public targetYOffset = 0.7) {
         super(bloom);
     }
 
@@ -61,7 +61,7 @@ export class CameraFocusOnBoxController extends CameraController {
         xz.setLength(targetDist);
 
         this.lerpOrbitControlsTarget(new THREE.Vector3(0, targetY, 0));
-        this.lerpCameraPosition(new THREE.Vector3(xz.x, targetY + 0.7, xz.y));
+        this.lerpCameraPosition(new THREE.Vector3(xz.x, targetY + this.targetYOffset, xz.y));
     }
 }
 

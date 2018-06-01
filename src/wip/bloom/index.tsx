@@ -335,12 +335,16 @@ class Bloom extends ISketch {
 
     public dyingObjects: DyingObject[] = [];
 
-    public cameraController: CameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
+    public cameraController: CameraController = (() => {
+        const c = new CameraFocusOnBoxController(this, this.componentBoundingBox, 1, 0.0);
+        c.lifeTime *= 1.5;
+        return c;
+    })();
     public focusTargets: THREE.Object3D[] = [];
 
     private updateComponentAndComputeBoundingBox() {
-        this.componentBoundingBox.min.set(-0.2, 0, -0.2);
-        this.componentBoundingBox.max.set(0.2, 0.2, 0.2);
+        this.componentBoundingBox.min.set(-0.1, 0, -0.1);
+        this.componentBoundingBox.max.set(0.1, 0.3, 0.1);
         const pos = new THREE.Vector3();
         if (this.component == null) {
             return;
