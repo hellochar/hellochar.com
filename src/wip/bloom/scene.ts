@@ -105,7 +105,7 @@ if (SHOW_HELPERS) {
     scene.add(shadowCameraHelper);
 }
 
-const particles = (() => {
+export const particles = (() => {
     const geom = new THREE.Geometry();
     for (let i = 0; i < 10000; i++) {
         const vertex = new THREE.Vector3(Math.random() * 30 - 15, Math.random() * 30, Math.random() * 30 - 15);

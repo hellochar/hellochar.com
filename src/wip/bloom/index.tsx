@@ -498,7 +498,12 @@ class GrowingSeasonalEffect implements SeasonalEffect {
 class FloweringSeasonalEffect implements SeasonalEffect {
     constructor(public bloom: Bloom) {}
     update() {
-
+        const rotSpeedScalar = Math.max(
+            Math.pow(season.percent, 6) * 1 / (1 + Math.exp(300 * (season.percent - 0.98))) - 0.01,
+            0,
+        );
+        particles.rotateY(0.4 * rotSpeedScalar);
+        particles.material.opacity = rotSpeedScalar + 0.2;
     }
 }
 
