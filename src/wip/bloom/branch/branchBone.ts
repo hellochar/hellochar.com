@@ -1,8 +1,10 @@
 import * as THREE from "three";
 
 import dna from "../dna";
-import { Branch } from "./branch";
+import { Branch, FlowerWhorlBranch } from "./branch";
 import { Bud } from "./bud";
+import { lerp } from "../../../math";
+import { rotateMove } from "../physics";
 
 // Makes a huge deal as to the final shape, since
 // the apex flower will be scaled by MAX_GROWTH_SCALE^(number of bones)
@@ -32,7 +34,7 @@ const QUATERNION_UP = new THREE.Quaternion();
  */
 export class BranchBone extends THREE.Bone {
     private growthPercentage = 0;
-    private curveUpwardAmountBase = dna.growth.boneCurveUpwardsFactor;
+    public curveUpwardAmountBase = dna.growth.boneCurveUpwardsFactor;
 
     public get isAlive() {
         return this.growthPercentage > 0;
@@ -75,10 +77,17 @@ export class BranchBone extends THREE.Bone {
             return;
         }
 
+        const globalScale = new THREE.Vector3().setFromMatrixScale(this.matrixWorld).lengthSq();
+        const zRot = (1 - THREE.Math.smootherstep(globalScale, 0, 0.85)) * Math.PI / 6 * dna.growth.zCurlFactor;
+        this.rotation.z = zRot;
+
         // Model that curving upwards behavior that branches do.
         // we don't want to always do this - we don't want to do this once we hit
         // ~90% nutrient. (ballpark)
         const curveAmount = THREE.Math.mapLinear(this.growthPercentage, 0, 0.9, this.curveUpwardAmountBase, 0);
+        if (this.branch instanceof FlowerWhorlBranch) {
+            this.rotation.z *= 0.1;
+        }
         if (curveAmount > 0) {
             // this is the same as getWorldQuaternion() but without eating the
             // computeMatrixWorld (which will be computed each frame by .render() anyways) perf hit (which is ~30% of total traverse)
@@ -97,10 +106,11 @@ export class BranchBone extends THREE.Bone {
         if (rotateScalar > 0) {
             const time = Date.now();
             this.rotation.x = 0.1 * Math.sin(time / 4000) * rotateScalar;
-            // TODO add a z rotation that can create twisty branches
-            this.rotation.y = 0.01 * rotateScalar * Math.sin(time / 10000);
+            this.rotation.y = lerp(0.05 * Math.sin(time / 10000), this.finalYRotation, this.growthPercentage);
         }
     }
+
+    private finalYRotation = THREE.Math.randFloat(-0.1, 0.1) * 2;
 
     feed(t: number, nutrients: number) {
         const oldFullSized = this.isFullSized;
@@ -123,6 +133,11 @@ export class BranchBone extends THREE.Bone {
 
         if (!oldFullSized) {
             this.grow(t);
+            // const worldPosition = new THREE.Vector3().setFromMatrixPosition(this.matrixWorld);
+            // if (worldPosition.y < 0.00) {
+            //     const offset = 0.00 - worldPosition.y;
+            //     rotateMove(this, new THREE.Vector3(0, 1, 0), 0, offset, 0);
+            // }
             this.updateView();
         } else {
             this.matrixAutoUpdate = false;

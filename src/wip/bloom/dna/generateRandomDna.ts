@@ -25,7 +25,7 @@ export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
     const leafTemplate = randomLeafTemplate(color, envMap);
     const petalTemplate = randomPetalTemplate(envMap);
 
-    const tepalTemplate = randomTepalTemplate(color, envMap);
+    const tepalTemplate = randomTepalTemplate(Math.random() < 0.1 ? new THREE.Color("white") : color, envMap);
 
     const leafWhorlTemplate = randomWhorlParametersLeaf(leafTemplate);
     const petalWhorlTemplate = randomWhorlParametersPetal(petalTemplate);
@@ -221,8 +221,13 @@ export function randomBranchingPattern(): BranchingPattern {
 }
 
 export function randomGrowthParameters(): GrowthParameters {
-    const boneCurveUpwardsFactor = 0.0001 * Math.pow(2, THREE.Math.randFloat(-1, 1));
-    // const boneCurveUpwardsFactor = 0.001;
+    const zCurlFactor = Math.random() < 0.2 ? THREE.Math.randFloat(0.5, 1) : 0;
+
+    let boneCurveUpwardsFactor = 0.0001 * Math.pow(2, THREE.Math.randFloat(-1, 2));
+    if (zCurlFactor > 0) {
+        boneCurveUpwardsFactor *= 3;
+    }
+
     const budDevelopmentThreshold = 0.5;
     const childScalar = 0.8;
     const feedSelfMax = THREE.Math.randFloat(0.1, 0.3);
@@ -232,5 +237,6 @@ export function randomGrowthParameters(): GrowthParameters {
         budDevelopmentThreshold,
         childScalar,
         feedSelfMax,
+        zCurlFactor,
     };
 }

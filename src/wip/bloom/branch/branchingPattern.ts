@@ -34,10 +34,17 @@ export class DefaultBranchingPattern implements BranchingPattern {
 
     public baseYRot = Math.random() * Math.PI * 2;
 
+    public growthsPerBranch = 1;
+
     constructor() {
         // special - if max branch depth is 1, grow twice as much and maybe grow flowers right on the tree
+        if (MAX_BRANCH_DEPTH === 2) {
+            this.lengthPerGrowth /= 1.3;
+            this.growthsPerBranch = 2;
+        }
         if (MAX_BRANCH_DEPTH === 1) {
             this.lengthPerGrowth /= 3;
+            // this.growthsPerBranch = 4;
         }
     }
 
@@ -52,11 +59,13 @@ export class DefaultBranchingPattern implements BranchingPattern {
 
         const newDepth = branch.depth + 1;
         const bones = branch.meshManager.skeleton.bones;
-        for (let length = this.lengthPerGrowth; length <= branch.finalBranchLength - this.lengthPerGrowth; length += this.lengthPerGrowth) {
+        for (let length = this.lengthPerGrowth, growthCount = 0; length <= branch.finalBranchLength - this.lengthPerGrowth; length += this.lengthPerGrowth, growthCount++) {
             const boneIndex = Math.floor(length / LENGTH_PER_BONE);
             const boneStartLength = boneIndex * LENGTH_PER_BONE;
             const y = length - boneStartLength;
             const rotY = Math.PI * 2 * length / this.lengthPerYRotation + this.baseYRot;
+
+            const curGrowthCount = growthCount;
 
             const bud = new Bud(() => {
                 const components: Component[] = [];
@@ -66,10 +75,12 @@ export class DefaultBranchingPattern implements BranchingPattern {
 
                 const percentDist = length / branch.finalBranchLength;
                 // console.log(percentDist);
-                if (percentDist < 0.5 && newDepth < MAX_BRANCH_DEPTH) {
+                if (percentDist < 0.5 && newDepth < MAX_BRANCH_DEPTH && curGrowthCount % this.growthsPerBranch === 0) {
                     const newBranchLength = (1 - percentDist) * this.branchLengthScalar * branch.finalBranchLength;
                     if (newBranchLength >= 1) {
                         const newBranch = new Branch(newBranchLength, newDepth);
+                        // put it opposite the leaf
+                        newBranch.rotateY(Math.PI);
                         newBranch.rotateZ(-this.branchRotationZ);
                         components.push(newBranch);
                     }
@@ -87,50 +98,56 @@ export class DefaultBranchingPattern implements BranchingPattern {
         const bones = branch.meshManager.skeleton.bones;
         // add flower on last bone or leaf on last bone
         const lastBone = bones[bones.length - 1];
-        lastBone.addBud(new Bud((bud) => {
-            const pos = bud.getWorldPosition();
-            if (pos.y > 1.5) {
-                const flower = Flower.generate();
-                return [flower];
-            } else {
-                const leaf = Leaf.generate(dna.leafTemplate);
-                leaf.rotateZ(Math.PI / 2);
-                return [leaf];
-            }
-        }));
+
+        if (MAX_BRANCH_DEPTH <= 2 && !(branch instanceof FlowerWhorlBranch)) {
+            const num = MAX_BRANCH_DEPTH === 1 ? THREE.Math.randInt(8, 16) : THREE.Math.randInt(3, 5);
+            const branchLength = MAX_BRANCH_DEPTH === 1 ? 3 : 1.5;
+
+            lastBone.addBud(this.createFlowerWhorlBud(num, branchLength));
+        } else {
+            lastBone.addBud(new Bud((bud) => {
+                const pos = bud.getWorldPosition();
+                const chance = THREE.Math.mapLinear(pos.y, 1.5, 2.5, 0, 1);
+
+                if (Math.random() < chance || branch instanceof FlowerWhorlBranch) {
+                    const flower = Flower.generate();
+                    return [flower];
+                } else {
+                    const leaf = Leaf.generate(dna.leafTemplate);
+                    leaf.rotateZ(Math.PI / 2);
+                    return [leaf];
+                }
+            }));
+        }
     }
 
     addBuds(branch: Branch) {
         if (!(branch instanceof FlowerWhorlBranch)) {
             this.addBudsOnSides(branch);
-
-            // add a whorl of flowers at the end
-            if (MAX_BRANCH_DEPTH === 1) {
-                const newDepth = branch.depth + 1;
-                const bones = branch.meshManager.skeleton.bones;
-                bones[bones.length - 2].addBud(new Bud((bud) => {
-                    const startYRot = 0; // THREE.Math.randFloat(Math.PI / 2, Math.PI / 4);
-                    const endYRot = Math.PI * 2; // startYRot * 0.5;
-                    const num = THREE.Math.randInt(3, 9);
-                    const flowerWhorl = Whorl.generate({
-                        num,
-                        startZRot: -Math.PI / 4,
-                        endZRot: -Math.PI / 2,
-                        startYRot,
-                        endYRot,
-                        endScale: 0.8,
-                        startScale: 1,
-                        isBilateral: true,
-                        generate: () => {
-                            return new FlowerWhorlBranch(2, newDepth)
-                        },
-                    });
-                    // flowerWhorl.rotateZ(Math.PI / 2);
-                    return [flowerWhorl];
-                }));
-            }
         }
 
         this.addFlowerBudAtEnd(branch);
+    }
+
+    createFlowerWhorlBud(num: number, branchLength: number) {
+        return new Bud((bud) => {
+            const startYRot = 0; // THREE.Math.randFloat(Math.PI / 2, Math.PI / 4);
+            const endYRot = Math.PI * 2; // startYRot * 0.5;
+            const flowerWhorl = Whorl.generate({
+                num,
+                startZRot: -Math.PI / 4,
+                endZRot: -Math.PI / 2,
+                startYRot,
+                endYRot,
+                endScale: 0.8,
+                startScale: 1,
+                isBilateral: true,
+                generate: () => {
+                    return new FlowerWhorlBranch(branchLength, Infinity)
+                },
+            });
+            // flowerWhorl.rotateZ(Math.PI / 2);
+            return [flowerWhorl];
+        });
     }
 }

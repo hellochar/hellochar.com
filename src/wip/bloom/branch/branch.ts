@@ -35,4 +35,11 @@ export class Branch extends Component {
     }
 }
 
-export class FlowerWhorlBranch extends Branch {}
+export class FlowerWhorlBranch extends Branch {
+    constructor(finalBranchLength: number, depth: number) {
+        super(finalBranchLength, depth);
+        for (const bone of this.meshManager.skeleton.bones) {
+            bone.curveUpwardAmountBase *= 3;
+        }
+    }
+}

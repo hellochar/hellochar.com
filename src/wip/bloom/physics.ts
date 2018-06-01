@@ -19,7 +19,25 @@ const eulers = new THREE.Euler();
  * Also simulate the bone bouncing back because of the spring stiffness. A stiffness of 0.01 is already very good.
  *
  */
+
+const GRAVITY = -0.002;
+
 export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003, forward = new THREE.Vector3(1, 0, 0)) {
+    rotateMove(bone, forward, 0, GRAVITY, 0);
+
+    // compute how angled i am compared to my parent
+    eulers.setFromQuaternion(bone.quaternion);
+    // rotate a bit back straight, according to stiffness
+    eulers.x *= -stiffness;
+    // y is naturally stiffer; the leaf more easily resists side to side "wiggling"
+    eulers.y *= -stiffness * 2;
+    eulers.z *= -stiffness;
+    quaternion.setFromEuler(eulers);
+
+    bone.quaternion.multiply(quaternion);
+}
+
+export function rotateMove(bone: THREE.Bone, forward: THREE.Vector3, dx: number, dy: number, dz: number) {
     // 1)
     // bone.getWorldQuaternion(quaternion);
 
@@ -42,16 +60,5 @@ export function simulateVeinBoneGravity(bone: THREE.Bone, stiffness = 0.003, for
     // 4)
     // reuse quaternion variable to compute that rotation
     quaternion.setFromUnitVectors(forward, localFacing);
-    bone.quaternion.multiply(quaternion);
-
-    // compute how angled i am compared to my parent
-    eulers.setFromQuaternion(bone.quaternion);
-    // rotate a bit back straight, according to stiffness
-    eulers.x *= -stiffness;
-    // y is naturally stiffer; the leaf more easily resists side to side "wiggling"
-    eulers.y *= -stiffness * 2;
-    eulers.z *= -stiffness;
-    quaternion.setFromEuler(eulers);
-
     bone.quaternion.multiply(quaternion);
 }

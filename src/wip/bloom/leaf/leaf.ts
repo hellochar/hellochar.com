@@ -9,6 +9,8 @@ import { LeafTemplate } from "../veinMesh/leafTemplate";
 // const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 0.5);
 const petioleLength = 0.0;
 
+const leafScalar = Math.pow(2, THREE.Math.randFloat(-1, 0)) - Math.random() * Math.random() * THREE.Math.randFloat(-1, 1) * 0.2;
+
 const leafStiffness = Math.pow(10, THREE.Math.randFloat(-2, -1));
 
 export class Leaf extends Component {
@@ -47,6 +49,7 @@ export class Leaf extends Component {
         }
         this.lamina = template.instantiateLeaf();
         this.lamina.position.x = petioleLength * 0.98;
+        this.lamina.scale.multiplyScalar(leafScalar);
         // this.lamina.position.y = 0.0015;
         this.add(this.lamina);
     }

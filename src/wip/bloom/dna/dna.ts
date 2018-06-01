@@ -50,4 +50,6 @@ export interface GrowthParameters {
      * This influences how "simultaneous" the growth of multiple branches is.
      */
     feedSelfMax: number;
+
+    zCurlFactor: number;
 }

@@ -59,7 +59,7 @@ export class BranchMeshManager {
         }
 
         this.mesh = new THREE.SkinnedMesh(
-            geometry,
+            new THREE.BufferGeometry().fromGeometry(geometry),
             dna.branchTemplate.material as any,
         );
         this.mesh.castShadow = true;

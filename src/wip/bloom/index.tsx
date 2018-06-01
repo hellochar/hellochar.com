@@ -189,10 +189,10 @@ class Bloom extends ISketch {
     private curtain: Curtain | null = null;
 
     public elements = [
-        <div style={{ textAlign: "left" }}>
-            <div ref={(r) => this.r1 = r} />
-            <pre ref={(r) => this.r2 = r} />
-        </div>,
+        // <div style={{ textAlign: "left" }}>
+        //     <div ref={(r) => this.r1 = r} />
+        //     <pre ref={(r) => this.r2 = r} />
+        // </div>,
         <Curtain ref={(curtainRef) => this.curtain = curtainRef} />,
     ];
 
@@ -209,11 +209,11 @@ class Bloom extends ISketch {
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
         // const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
-        const nutrientsPerSecond = Math.min(9.9, 9.17 + Math.sqrt(numFeedParticles) / 5);
+        const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateSeasonalEffect();
-        // this.updateCamera();
+        this.updateCamera();
 
         this.updateDyingObjects();
 
@@ -242,7 +242,7 @@ class Bloom extends ISketch {
             (8 * 60 + 25),
             (10 * 60 + 14),
         ];
-        const currentTime = this.audio.currentTime * 20;
+        const currentTime = this.audio.currentTime;
         if (currentTime < flowerTime) {
             season.type = "growing";
             season.percent = currentTime / flowerTime;
