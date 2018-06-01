@@ -161,11 +161,31 @@ const rocks = (() => {
     }
 })();
 
-export function setTimeOfDay(t: number) {
-    theta = THREE.Math.mapLinear(t, 0, 1, 0, Math.PI);
+const nightTime = Math.random() < 0.1;
+if (nightTime) {
+    const uniforms = sky.material.uniforms;
+    // turbidity affects how brightly the sun/moon shines. You want turbidity ~8 for nighttime.
+    uniforms.turbidity.value = 5;
+    // rayleigh is the big thing that affects "daytime" or "nighttime". rayleigh 0 = full night, rayleigh 1 = full day
+    uniforms.rayleigh.value = 0.0;
 
-    // const sunlightScalar = Math.sqrt(Math.max(0, Math.sin(theta)));
-    const sunlightScalar = 1;
+    uniforms.mieCoefficient.value = 0.012;
+    uniforms.mieDirectionalG.value = 0.70;
+}
+
+export function setTimeOfDay(t: number) {
+    theta = THREE.Math.mapLinear(t, 0.0, 0.99, 0, Math.PI);
+
+    // if (theta > Math.PI) {
+    //     spotLight.intensity = 0;
+    // }
+
+    let sunlightScalar = Math.min(1, Math.exp(Math.max(0, Math.sin(theta) * 4)) - 1);
+    if (nightTime) {
+        sunlightScalar *= 0.33;
+    }
+    // console.log(sunlightScalar);
+    // const sunlightScalar = 1;
     spotLight.intensity = 0.3 + 1 * sunlightScalar;
     ambientLight.intensity = 0.2 + 0.2 * sunlightScalar;
     hemisphereLight.intensity = 0.15 + 0.15 * sunlightScalar;

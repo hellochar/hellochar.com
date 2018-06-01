@@ -208,8 +208,8 @@ class Bloom extends ISketch {
         const numFeedParticles = this.feedParticles.animate(ms);
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
-        // const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
         const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
+        // const nutrientsPerSecond = Math.min(9.9, 9.17 + Math.sqrt(numFeedParticles) / 5);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateSeasonalEffect();
@@ -253,7 +253,7 @@ class Bloom extends ISketch {
             season.type = "dying";
             season.percent = (currentTime - dieTime) / (restartTime - dieTime);
         }
-        const timeOfDay = currentTime / restartTime;
+        const timeOfDay = Math.min(currentTime / restartTime, 1);
         setTimeOfDay(timeOfDay);
     }
 
