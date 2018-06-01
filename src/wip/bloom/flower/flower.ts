@@ -5,7 +5,7 @@ import { Component, ComponentClass } from "../component";
 import Perianth from "./perianth";
 import Reproductive from "./reproductive";
 
-const flowerSize = THREE.Math.randFloat(2, 3);
+const flowerSize = THREE.Math.randFloat(1.5, 3.0);
 
 export default class Flower extends Component {
     public constructor(public perianth: Perianth, public reproductive: Reproductive) {

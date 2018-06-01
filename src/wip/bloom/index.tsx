@@ -205,7 +205,7 @@ class Bloom extends ISketch {
         const numNutrientsThisFrame = this.feedParticles.animate(ms);
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
-        const nutrientsPerSecond = Math.min(9.9, 0.2 + Math.sqrt(numNutrientsThisFrame) / 3);
+        const nutrientsPerSecond = Math.min(9.9, 0.15 + Math.sqrt(numNutrientsThisFrame) / 4);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateSeasonalEffect();
