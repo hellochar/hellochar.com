@@ -336,7 +336,7 @@ class Bloom extends ISketch {
     public dyingObjects: DyingObject[] = [];
 
     public cameraController: CameraController = (() => {
-        const c = new CameraFocusOnBoxController(this, this.componentBoundingBox, 1, 0.0);
+        const c = new CameraFocusOnBoxController(this, this.componentBoundingBox, true, 1, 0.0);
         c.lifeTime *= 1.5;
         return c;
     })();
@@ -393,9 +393,6 @@ class Bloom extends ISketch {
     }
 
     private updateCamera() {
-        if (season.type === "flowering") {
-            this.cameraController.lifeTime = 10000;
-        }
         if (this.cameraController.timeAlive > this.cameraController.lifeTime) {
             this.cameraController = this.newCameraController();
             if (Math.random() < 0.1) {
@@ -408,7 +405,10 @@ class Bloom extends ISketch {
     public newCameraController() {
             // just focus on the bare tree at the end
         if (season.type === "dying" && season.percent > 0.8) {
-            return new CameraFocusOnBoxController(this, this.componentBoundingBox);
+            return new CameraFocusOnBoxController(this, this.componentBoundingBox, true);
+        }
+        if (season.type === "flowering" && season.percent > 0.8) {
+            return new CameraFocusOnBoxController(this, this.componentBoundingBox, true);
         }
         // probably, look at individual leaves
         if (season.type === "dying" && Math.random() < 0.5 && !(this.cameraController instanceof CameraFocusOnObjectController)) {
@@ -417,23 +417,27 @@ class Bloom extends ISketch {
             if (focus != null) {
                 const dist = THREE.Math.randFloat(0.1, 0.8);
                 const c = new CameraFocusOnObjectController(this, focus, 0.15, dist);
+                c.targetPosLerp = 0.15;
                 c.lifeTime = 8000;
                 return c;
             }
         }
-        if (Math.random() < 0.5 && this.focusTargets.length > 0) {
+        const shouldDoFocusShot = season.type === "flowering" || Math.random() < 0.5;
+        if (shouldDoFocusShot && this.focusTargets.length > 0) {
             // focus on a random target
             const focusTarget = this.focusTargets[THREE.Math.randInt(0, this.focusTargets.length - 1)];
-            const shouldLocalFocus = focusTarget instanceof Flower ? Math.random() < 0.9 : Math.random() < 0.3;
+            const shouldLocalFocus = focusTarget instanceof Flower ? Math.random() < 0.9 : Math.random() < 0.5;
             if (focusTarget instanceof Flower) {
-                // get up realll close
-                return new CameraFocusOnObjectController(this, focusTarget, 0.1, 0.1, shouldLocalFocus);
+                // get up real close
+                const flowerShot = new CameraFocusOnObjectController(this, focusTarget, 0.1, 0.1, shouldLocalFocus);
+                flowerShot.lifeTime = THREE.Math.randFloat(10000, 20000);
+                return flowerShot;
             } else {
                 return new CameraFocusOnObjectController(this, focusTarget);
             }
         } else {
             // just use a default one
-            return new CameraFocusOnBoxController(this, this.componentBoundingBox);
+            return new CameraFocusOnBoxController(this, this.componentBoundingBox, false);
         }
     }
 
@@ -483,14 +487,14 @@ class DyingObject extends THREE.Object3D {
     }
 
     update() {
-        this.velocity.y -= 0.00007;
+        this.velocity.y -= 0.00005;
 
         if (this.position.y <= 0.01) {
             this.position.y = 0.01;
             this.velocity.setScalar(0);
         } else {
-            this.velocity.x += (Math.random() - 0.5) * 2 * 0.00007;
-            this.velocity.z += (Math.random() - 0.5) * 2 * 0.00007;
+            this.velocity.x += (Math.random() - 0.5) * 2 * 0.0002;
+            this.velocity.z += (Math.random() - 0.5) * 2 * 0.0002;
             this.position.add(this.velocity);
 
             this.rotateX(0.01);

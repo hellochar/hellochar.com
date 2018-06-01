@@ -46,7 +46,7 @@ export abstract class CameraController {
 
 export class CameraFocusOnBoxController extends CameraController {
 
-    constructor(bloom: Bloom, public componentBoundingBox: THREE.Box3, public targetYScalar = THREE.Math.randFloat(0.7, 1), public targetYOffset = 0.7) {
+    constructor(bloom: Bloom, public componentBoundingBox: THREE.Box3, public forceFocusOut: boolean, public targetYScalar = THREE.Math.randFloat(0.7, 1), public targetYOffset = 0.7) {
         super(bloom);
     }
 
@@ -54,7 +54,7 @@ export class CameraFocusOnBoxController extends CameraController {
         super.updateCamera();
         const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
 
-        const targetDist = THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0.2, minXZDist * 2);
+        const targetDist = this.forceFocusOut ? minXZDist * 1.0 : THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0.2, minXZDist * 2);
         const targetY = this.componentBoundingBox.max.y * this.targetYScalar - 0.3;
 
         const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
@@ -68,8 +68,8 @@ export class CameraFocusOnBoxController extends CameraController {
 export class CameraFocusOnObjectController extends CameraController {
     constructor(bloom: Bloom,
                 public focus: THREE.Object3D,
-                public targetDist = THREE.Math.randFloat(0.1, 0.8),
-                public cameraOffsetY = 0.4 + targetDist * THREE.Math.randFloat(0.5, 1.1),
+                public targetDist = THREE.Math.randFloat(0.3, 0.6),
+                public cameraOffsetY = 0.3 + targetDist * THREE.Math.randFloat(0.5, 1.1),
                 public localFocus?: boolean,
     ) {
         super(bloom);
