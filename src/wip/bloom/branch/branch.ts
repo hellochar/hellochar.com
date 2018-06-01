@@ -11,31 +11,12 @@ export class Branch extends Component {
     meshManager: BranchMeshManager;
     // growthManager: BranchGrowthManager;
 
-    public constructor(public finalBranchLength: number) {
+    public constructor(public finalBranchLength: number, public depth: number) {
         super();
         this.meshManager = new BranchMeshManager(this);
         this.add(this.meshManager.mesh);
         // this.growthManager = new BranchGrowthManager(this, this.meshManager.skeleton);
         dna.branchingPattern.addBuds(this);
-    }
-
-    /**
-     * Time it'll take this branch to grow to maturity. Maturity is defined
-     * as when all the branch bones are at 100% growth.
-     */
-    public getEstimatedSecondsToMaturity() {
-        // x = v*t; v = BRANCH_GROWTH_FACTOR, x = finalBranchLength * BONES_PER_UNIT_LENGTH
-        // t = x / v
-        return this.finalBranchLength * BONES_PER_UNIT_LENGTH / NUTRIENT_PER_SECOND.value;
-    }
-
-    public computeMaturityAmount() {
-        const bones = this.meshManager.skeleton.bones;
-        let totalGrowthPercentage = 0;
-        for (const b of bones) {
-            totalGrowthPercentage += b.getGrowthPercentage();
-        }
-        return totalGrowthPercentage / this.meshManager.skeleton.bones.length;
     }
 
     private lastT: number = -1;
@@ -53,3 +34,5 @@ export class Branch extends Component {
         this.lastT = t;
     }
 }
+
+export class FlowerWhorlBranch extends Branch {}

@@ -5,11 +5,17 @@ import dna from "../dna";
 import { Flower } from "../flower";
 import { Leaf } from "../leaf";
 import Leaves from "../leaf/leaves";
-import { Branch } from "./branch";
+import { Whorl } from "../whorl";
+import { Branch, FlowerWhorlBranch } from "./branch";
 import { LENGTH_PER_BONE } from "./branchMeshManager";
 import { Bud } from "./bud";
 
 const worldPosition = new THREE.Vector3();
+
+let MAX_BRANCH_DEPTH = 8 / THREE.Math.randInt(1, 2) / THREE.Math.randInt(1, 2);
+if (MAX_BRANCH_DEPTH === 2 && Math.random() < 0.2) {
+    MAX_BRANCH_DEPTH = 1;
+}
 
 export interface BranchingPattern {
     // getComponentsFor(branch: BranchBone): Component[] | null;
@@ -28,9 +34,14 @@ export class DefaultBranchingPattern implements BranchingPattern {
 
     public baseYRot = Math.random() * Math.PI * 2;
 
-    constructor() { }
+    constructor() {
+        // special - if max branch depth is 1, grow twice as much and maybe grow flowers right on the tree
+        if (MAX_BRANCH_DEPTH === 1) {
+            this.lengthPerGrowth /= 3;
+        }
+    }
 
-    addBuds(branch: Branch) {
+    addBudsOnSides(branch: Branch) {
         // ok, so, for instance
         // 5 bones per length, final length 10 = 50 bones
         // 0.2 length per bone
@@ -39,6 +50,7 @@ export class DefaultBranchingPattern implements BranchingPattern {
         // boneStartLength = boneIndex * length_per_bone
         // position.y = boneStartLength - length
 
+        const newDepth = branch.depth + 1;
         const bones = branch.meshManager.skeleton.bones;
         for (let length = this.lengthPerGrowth; length <= branch.finalBranchLength - this.lengthPerGrowth; length += this.lengthPerGrowth) {
             const boneIndex = Math.floor(length / LENGTH_PER_BONE);
@@ -54,10 +66,10 @@ export class DefaultBranchingPattern implements BranchingPattern {
 
                 const percentDist = length / branch.finalBranchLength;
                 // console.log(percentDist);
-                if (percentDist < 0.5) {
+                if (percentDist < 0.5 && newDepth < MAX_BRANCH_DEPTH) {
                     const newBranchLength = (1 - percentDist) * this.branchLengthScalar * branch.finalBranchLength;
                     if (newBranchLength >= 1) {
-                        const newBranch = new Branch(newBranchLength);
+                        const newBranch = new Branch(newBranchLength, newDepth);
                         newBranch.rotateZ(-this.branchRotationZ);
                         components.push(newBranch);
                     }
@@ -69,7 +81,10 @@ export class DefaultBranchingPattern implements BranchingPattern {
             bud.position.y = y;
             bones[boneIndex].addBud(bud);
         }
+    }
 
+    addFlowerBudAtEnd(branch: Branch) {
+        const bones = branch.meshManager.skeleton.bones;
         // add flower on last bone or leaf on last bone
         const lastBone = bones[bones.length - 1];
         lastBone.addBud(new Bud((bud) => {
@@ -83,5 +98,39 @@ export class DefaultBranchingPattern implements BranchingPattern {
                 return [leaf];
             }
         }));
+    }
+
+    addBuds(branch: Branch) {
+        if (!(branch instanceof FlowerWhorlBranch)) {
+            this.addBudsOnSides(branch);
+
+            // add a whorl of flowers at the end
+            if (MAX_BRANCH_DEPTH === 1) {
+                const newDepth = branch.depth + 1;
+                const bones = branch.meshManager.skeleton.bones;
+                bones[bones.length - 2].addBud(new Bud((bud) => {
+                    const startYRot = 0; // THREE.Math.randFloat(Math.PI / 2, Math.PI / 4);
+                    const endYRot = Math.PI * 2; // startYRot * 0.5;
+                    const num = THREE.Math.randInt(3, 9);
+                    const flowerWhorl = Whorl.generate({
+                        num,
+                        startZRot: -Math.PI / 4,
+                        endZRot: -Math.PI / 2,
+                        startYRot,
+                        endYRot,
+                        endScale: 0.8,
+                        startScale: 1,
+                        isBilateral: true,
+                        generate: () => {
+                            return new FlowerWhorlBranch(2, newDepth)
+                        },
+                    });
+                    // flowerWhorl.rotateZ(Math.PI / 2);
+                    return [flowerWhorl];
+                }));
+            }
+        }
+
+        this.addFlowerBudAtEnd(branch);
     }
 }

@@ -151,7 +151,7 @@ class Bloom extends ISketch {
     }
 
     public initComponent() {
-        const branch = new Branch(10);
+        const branch = new Branch(10, 0);
         // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
         // scene.add(helper);
         this.component = branch;
@@ -208,11 +208,12 @@ class Bloom extends ISketch {
         const numFeedParticles = this.feedParticles.animate(ms);
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
-        const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
+        // const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
+        const nutrientsPerSecond = Math.min(9.9, 9.17 + Math.sqrt(numFeedParticles) / 5);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateSeasonalEffect();
-        this.updateCamera();
+        // this.updateCamera();
 
         this.updateDyingObjects();
 
@@ -241,7 +242,7 @@ class Bloom extends ISketch {
             (8 * 60 + 25),
             (10 * 60 + 14),
         ];
-        const currentTime = this.audio.currentTime;
+        const currentTime = this.audio.currentTime * 20;
         if (currentTime < flowerTime) {
             season.type = "growing";
             season.percent = currentTime / flowerTime;
