@@ -61,8 +61,8 @@ export class LeafTemplate {
             const yLift = -Math.tanh(Math.abs(z * leaf.growthParameters.yLiftFrequency)) * leaf.growthParameters.yLiftAmount;
             const yNoise = THREE.Math.randFloat(-1, 1) * leaf.growthParameters.yNoiseScalar;
             // const yFray = Math.pow(cost, 6) * 0.05 * Math.cos((x * 9 + Math.abs(z) * 9) * (1 - x) * 12);
-            const yFray = Math.pow(cost, 8) * leaf.growthParameters.yFrayScale * Math.cos(vein.distanceToRoot / 2 / vein.depth);
-            const y = yCup + yLift + yNoise + yFray;
+            // const yFray = Math.pow(cost, 8) * leaf.growthParameters.yFrayScale * Math.cos(vein.distanceToRoot / 2 / vein.depth);
+            const y = yCup + yLift + yNoise;
             // const y = 0;
             const vertex = new THREE.Vector3(x, y, z);
             geometry.vertices.push(vertex);
