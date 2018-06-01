@@ -25,8 +25,7 @@ export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
     const leafTemplate = randomLeafTemplate(color, envMap);
     const petalTemplate = randomPetalTemplate(envMap);
 
-    const tepalColor = new THREE.Color(`hsl(${THREE.Math.randInt(110, 130)}, 90%, 50%)`);
-    const tepalTemplate = randomTepalTemplate(tepalColor, envMap);
+    const tepalTemplate = randomTepalTemplate(color, envMap);
 
     const leafWhorlTemplate = randomWhorlParametersLeaf(leafTemplate);
     const petalWhorlTemplate = randomWhorlParametersPetal(petalTemplate);

@@ -24,6 +24,8 @@ export class Leaf extends Component {
         return geom;
     })();
 
+    public growthPercentage = 0;
+
     public lamina: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
@@ -53,6 +55,7 @@ export class Leaf extends Component {
         const logisticX = msAlive / 5000 - 6;
         // const logisticX = msAlive / 500 - 6;
         const s = logistic(logisticX);
+        this.growthPercentage = s;
         this.scale.set(s, s, s);
 
         const [...bones] = this.lamina.skeleton.bones;

@@ -343,7 +343,7 @@ class Bloom extends ISketch {
                         this.componentBoundingBox.expandByPoint(pos);
                     }
                 }
-                if (obj instanceof BranchBone && obj.getGrowthPercentage() > 0.25 && obj.getGrowthPercentage() < 0.75) {
+                if (obj instanceof Leaf && obj.growthPercentage < 0.25) {
                     this.focusTargets.push(obj);
                 } else if (obj instanceof Flower) {
                     this.focusTargets.push(obj);

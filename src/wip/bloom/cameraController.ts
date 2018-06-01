@@ -3,6 +3,8 @@ import * as THREE from "three";
 import Bloom from "./index";
 
 export abstract class CameraController {
+    public targetPosLerp = 0.04;
+    public lerpAmount = 0;
 
     get camera() {
         return this.bloom.camera;
@@ -22,7 +24,19 @@ export abstract class CameraController {
         this.timeBorn = this.bloom.timeElapsed;
     }
 
-    abstract updateCamera(): void;
+    updateCamera() {
+        this.lerpAmount = this.lerpAmount * 0.97 + this.targetPosLerp * 0.03;
+    }
+
+    public lerpOrbitControlsTarget(wantedTarget: THREE.Vector3) {
+        const currentTarget = this.orbitControls.target;
+        currentTarget.lerp(wantedTarget, this.lerpAmount);
+        this.orbitControls.target.copy(currentTarget);
+    }
+
+    public lerpCameraPosition(wantedPosition: THREE.Vector3) {
+        this.camera.position.lerp(wantedPosition, this.lerpAmount);
+    }
 }
 
 export class CameraFocusOnBoxController extends CameraController {
@@ -32,56 +46,45 @@ export class CameraFocusOnBoxController extends CameraController {
     }
 
     updateCamera() {
+        super.updateCamera();
         const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
 
-        const targetDist = Math.sqrt(minXZDist);
+        const targetDist = THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0, minXZDist * 2);
         const targetY = this.componentBoundingBox.max.y - 0.3;
 
         const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
         xz.setLength(targetDist);
 
-        this.orbitControls.target.set(0, targetY, 0);
-        this.camera.position.x = xz.x;
-        this.camera.position.z = xz.y;
-        this.camera.position.y = targetY + 0.7;
+        this.lerpOrbitControlsTarget(new THREE.Vector3(0, targetY, 0));
+        this.lerpCameraPosition(new THREE.Vector3(xz.x, targetY + 0.7, xz.y));
     }
 }
 
 export class CameraFocusOnObjectController extends CameraController {
-    public targetPosLerp = 0.03;
-    public posLerp = 0;
-
     public yOffsetScalar = THREE.Math.randFloat(0.5, 1.1);
     constructor(bloom: Bloom, public focus: THREE.Object3D) {
         super(bloom);
     }
 
     updateCamera() {
-        this.posLerp = this.posLerp * 0.97 + this.targetPosLerp * 0.03;
-        const { posLerp, camera, orbitControls, focus } = this;
+        super.updateCamera();
+        const { lerpAmount, camera, orbitControls, focus } = this;
 
         const wantedTarget = new THREE.Vector3();
         wantedTarget.setFromMatrixPosition(focus.matrixWorld);
-        // focus.getWorldPosition(wantedTarget);
+        this.lerpOrbitControlsTarget(wantedTarget);
 
-        // const targetDist = 0.2;
         const targetDist = THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0.2, 0.8);
-        // const cameraOffsetY = 0.15;
-        const cameraOffsetY = targetDist * this.yOffsetScalar * (0.4 + Math.sin(this.bloom.timeElapsed / 8000) / 2);
-
-        const currentTarget = orbitControls.target;
-        currentTarget.lerp(wantedTarget, posLerp);
-
-        orbitControls.target.copy(currentTarget);
-        // wantedTarget.lerpVectors(currentTarget, wantedTarget, 0.01);
-
-        // orbitControls.target.copy(wantedTarget);
-
-        camera.position.y = camera.position.y * (1 - posLerp) + (wantedTarget.y + cameraOffsetY) * posLerp;
+        const cameraOffsetY = 0.4 + targetDist * this.yOffsetScalar * (THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 8000), -1, 1, 0.8, 1.2));
 
         const xzOffset = new THREE.Vector2(camera.position.x - wantedTarget.x, camera.position.z - wantedTarget.z);
-        xzOffset.setLength(xzOffset.length() * (1 - posLerp) + targetDist * posLerp);
-        camera.position.x = xzOffset.x + wantedTarget.x;
-        camera.position.z = xzOffset.y + wantedTarget.z;
+        xzOffset.setLength(targetDist);
+        const wantedPosition = new THREE.Vector3(
+            wantedTarget.x + xzOffset.x,
+            wantedTarget.y + cameraOffsetY,
+            wantedTarget.z + xzOffset.y,
+        );
+
+        this.lerpCameraPosition(wantedPosition);
     }
 }
