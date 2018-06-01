@@ -5,7 +5,7 @@ import { simulateVeinBoneGravity } from "../physics";
 import { season } from "../season";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 
-const tepalScalar = THREE.Math.randFloat(0.5, 1);
+const tepalScalar = THREE.Math.randFloat(0.5, 1.5);
 const tepalFinalRotZ = THREE.Math.randFloat(0.85, 1.15) * Math.PI / 2 * 1.1;
 const tepalSidePositionY = THREE.Math.randFloat(0.5, 1.5);
 
