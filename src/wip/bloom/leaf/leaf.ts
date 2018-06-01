@@ -3,8 +3,8 @@ import * as THREE from "three";
 import { logistic } from "../../../math";
 import { Component } from "../component";
 import { simulateVeinBoneGravity } from "../physics";
+import { season } from "../season";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
-import { VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
 
 // const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 0.5);
 const petioleLength = 0.0;
@@ -60,7 +60,10 @@ export class Leaf extends Component {
         this.scale.set(s, s, s);
 
         const [...bones] = this.lamina.skeleton.bones;
-        const stiffness = THREE.Math.mapLinear(Math.sin(msAlive / 5000), -1, 1, 0, leafStiffness);
+        let stiffness = THREE.Math.mapLinear(Math.sin(msAlive / 5000), -1, 1, 0, leafStiffness);
+        if (season.type === "dying") {
+            stiffness *= 1 - season.percent;
+        }
         for (const bone of bones) {
             simulateVeinBoneGravity(bone, stiffness);
         }
