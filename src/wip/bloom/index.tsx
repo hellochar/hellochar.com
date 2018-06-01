@@ -4,7 +4,6 @@ import * as THREE from "three";
 
 import { ISketch } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
-import { BranchBone } from "./branch/branchBone";
 import { Bud } from "./branch/bud";
 import { CameraController, CameraFocusOnBoxController, CameraFocusOnObjectController } from "./cameraController";
 import { Component } from "./component";
@@ -16,9 +15,8 @@ import { Leaf } from "./leaf";
 import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./personMesh";
-import scene, { setTimeOfDay } from "./scene";
+import scene, { particles, setTimeOfDay } from "./scene";
 import { season } from "./season";
-import { Whorl } from "./whorl";
 
 // // https://gist.github.com/blixt/f17b47c62508be59987b
 // let _seed = 11 % 2147483647;
