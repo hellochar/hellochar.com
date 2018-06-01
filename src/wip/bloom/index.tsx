@@ -208,9 +208,7 @@ class Bloom extends ISketch {
             numFeedParticles = this.feedParticles.animate(ms);
         } catch {}
 
-        // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
         const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
-        // const nutrientsPerSecond = Math.min(9.9, 9.17 + Math.sqrt(numFeedParticles) / 5);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         try {
             this.updateComponentAndComputeBoundingBox();
@@ -391,8 +389,14 @@ class Bloom extends ISketch {
     }
 
     private updateCamera() {
+        if (season.type === "flowering") {
+            this.cameraController.lifeTime = 10000;
+        }
         if (this.cameraController.timeAlive > this.cameraController.lifeTime) {
             this.cameraController = this.newCameraController();
+            if (Math.random() < 0.1) {
+                this.cameraController.targetPosLerp *= 10;
+            }
         }
         this.cameraController.updateCamera();
     }
@@ -416,9 +420,10 @@ class Bloom extends ISketch {
         if (Math.random() < 0.5 && this.focusTargets.length > 0) {
             // focus on a random target
             const focusTarget = this.focusTargets[THREE.Math.randInt(0, this.focusTargets.length - 1)];
+            const shouldLocalFocus = focusTarget instanceof Flower ? Math.random() < 0.9 : Math.random() < 0.3;
             if (focusTarget instanceof Flower) {
                 // get up realll close
-                return new CameraFocusOnObjectController(this, focusTarget, 0.1, 0.1);
+                return new CameraFocusOnObjectController(this, focusTarget, 0.1, 0.1, shouldLocalFocus);
             } else {
                 return new CameraFocusOnObjectController(this, focusTarget);
             }

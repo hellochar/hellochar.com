@@ -107,7 +107,7 @@ export class DefaultBranchingPattern implements BranchingPattern {
         } else {
             lastBone.addBud(new Bud((bud) => {
                 const pos = bud.getWorldPosition();
-                const chance = THREE.Math.mapLinear(pos.y, 1.5, 2.5, 0, 1);
+                const chance = THREE.Math.mapLinear(pos.y, 0.5, 2.5, 0, 1);
 
                 if (Math.random() < chance || branch instanceof FlowerWhorlBranch) {
                     const flower = Flower.generate();
