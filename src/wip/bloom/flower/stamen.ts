@@ -71,8 +71,8 @@ export default class Stamen extends Component {
         this.filament.add(this.anther);
     }
 
-    private growStart = THREE.Math.randFloat(0.4, 0.7);
-    private growEnd = THREE.Math.randFloat(this.growStart + 0.1, 1);
+    private growStart = THREE.Math.randFloat(0.3, 0.5);
+    private growEnd = THREE.Math.randFloat(this.growStart + 0.1, 0.80);
 
     private growAntherStart = this.growEnd * THREE.Math.randFloat(0.25, 0.5);
     private growAntherEnd = this.growAntherStart + THREE.Math.randFloat(0.05, 0.1);
