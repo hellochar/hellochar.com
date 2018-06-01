@@ -103,14 +103,15 @@ class Bloom extends ISketch {
     }
 
     private gain!: GainNode;
+    private audio!: HTMLAudioElement;
     private initAudio() {
         const ctx = this.audioContext;
-        const audio = (
+        this.audio = (
             $("<audio autoplay loop>")
                 .append(`<source src="/assets/audio/bloom.mp3" type="audio/mp3">`)
                 .append(`<source src="/assets/audio/bloom.wav" type="audio/wav">`) as JQuery<HTMLAudioElement>
         )[0];
-        const source = ctx.createMediaElementSource(audio);
+        const source = ctx.createMediaElementSource(this.audio);
         this.gain = ctx.createGain();
         source.connect(this.gain);
         this.gain.connect(ctx.gain);
@@ -188,10 +189,10 @@ class Bloom extends ISketch {
     private curtain: Curtain | null = null;
 
     public elements = [
-        // <div style={{ textAlign: "left" }}>
-        //     <div ref={(r) => this.r1 = r} />
-        //     <pre ref={(r) => this.r2 = r} />
-        // </div>,
+        <div style={{ textAlign: "left" }}>
+            <div ref={(r) => this.r1 = r} />
+            <pre ref={(r) => this.r2 = r} />
+        </div>,
         <Curtain ref={(curtainRef) => this.curtain = curtainRef} />,
     ];
 
@@ -207,7 +208,7 @@ class Bloom extends ISketch {
         const numFeedParticles = this.feedParticles.animate(ms);
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
-        const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 3.5);
+        const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateSeasonalEffect();
@@ -215,11 +216,11 @@ class Bloom extends ISketch {
 
         this.updateDyingObjects();
 
-        if (this.r1 != null) {
-            this.r1.style.background = "white";
+        if (this.r2 != null) {
+            this.r2.style.background = "white";
             // this.r1.textContent = this.audioContext.state;
             // this.r1.textContent = `${nutrientsPerSecond}`;
-            this.r1.textContent = JSON.stringify(season);
+            this.r2.textContent = JSON.stringify(season) + "\n" + this.audio.currentTime;
             // this.r1.textContent = `${this.feedParticles.pointsStartIndex}, ${this.feedParticles.numActivePoints}`;
         }
         // this.debugObjectCounts();
@@ -236,21 +237,22 @@ class Bloom extends ISketch {
 
     public setSeason() {
         const [flowerTime, dieTime, restartTime] = [
-            (5 * 60 + 32) * 1000,
-            (8 * 60 + 13) * 1000,
-            (10 * 60 + 13) * 1000,
+            (5 * 60 + 20),
+            (8 * 60 + 25),
+            (10 * 60 + 14),
         ];
-        if (this.timeElapsed < flowerTime) {
+        const currentTime = this.audio.currentTime;
+        if (currentTime < flowerTime) {
             season.type = "growing";
-            season.percent = this.timeElapsed / flowerTime;
-        } else if (this.timeElapsed < dieTime) {
+            season.percent = currentTime / flowerTime;
+        } else if (currentTime < dieTime) {
             season.type = "flowering";
-            season.percent = (this.timeElapsed - flowerTime) / (dieTime - flowerTime);
+            season.percent = (currentTime - flowerTime) / (dieTime - flowerTime);
         } else {
             season.type = "dying";
-            season.percent = (this.timeElapsed - dieTime) / (restartTime - dieTime);
+            season.percent = (currentTime - dieTime) / (restartTime - dieTime);
         }
-        const timeOfDay = this.timeElapsed / restartTime;
+        const timeOfDay = currentTime / restartTime;
         setTimeOfDay(timeOfDay);
     }
 
@@ -350,7 +352,7 @@ class Bloom extends ISketch {
                         this.componentBoundingBox.expandByPoint(pos);
                     }
                 }
-                if (obj instanceof Leaf && obj.growthPercentage < 0.25) {
+                if (obj instanceof Leaf && obj.growthPercentage < 0.25 && season.type !== "flowering") {
                     this.focusTargets.push(obj);
                 } else if (obj instanceof Flower) {
                     this.focusTargets.push(obj);
@@ -373,34 +375,40 @@ class Bloom extends ISketch {
     }
 
     private updateCamera() {
-        if (this.cameraController.timeAlive > 20000) {
-            this.changeCameraController();
+        if (this.cameraController.timeAlive > this.cameraController.lifeTime) {
+            this.cameraController = this.newCameraController();
         }
         this.cameraController.updateCamera();
     }
 
-    public changeCameraController() {
-        // probably, look at individual leaves
-        if (season.type === "dying" && Math.random() < 0.5) {
+    public newCameraController() {
             // just focus on the bare tree at the end
-            if (season.percent > 0.9) {
-                this.cameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
-            }
+        if (season.type === "dying" && season.percent > 0.8) {
+            return new CameraFocusOnBoxController(this, this.componentBoundingBox);
+        }
+        // probably, look at individual leaves
+        if (season.type === "dying" && Math.random() < 0.5 && !(this.cameraController instanceof CameraFocusOnObjectController)) {
             // the last one is the newest dying object
             const focus = this.dyingObjects[this.dyingObjects.length - 1];
             if (focus != null) {
-                this.cameraController = new CameraFocusOnObjectController(this, focus, 0.15, 0.1);
-                // this.cameraController.lerpAmount = 0.02;
-                // this.cameraController.targetPosLerp = 0.1;
-                return;
+                const dist = THREE.Math.randFloat(0.1, 0.8);
+                const c = new CameraFocusOnObjectController(this, focus, 0.15, dist);
+                c.lifeTime = 8000;
+                return c;
             }
         }
-        if (Math.random() < 0.5) {
-            this.cameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
-        } else if (this.focusTargets.length > 0) {
+        if (Math.random() < 0.5 && this.focusTargets.length > 0) {
             // focus on a random target
             const focusTarget = this.focusTargets[THREE.Math.randInt(0, this.focusTargets.length - 1)];
-            this.cameraController = new CameraFocusOnObjectController(this, focusTarget);
+            if (focusTarget instanceof Flower) {
+                // get up realll close
+                return new CameraFocusOnObjectController(this, focusTarget, 0.1, 0.1);
+            } else {
+                return new CameraFocusOnObjectController(this, focusTarget);
+            }
+        } else {
+            // just use a default one
+            return new CameraFocusOnBoxController(this, this.componentBoundingBox);
         }
     }
 
@@ -501,7 +509,7 @@ class DyingSeasonalEffect implements SeasonalEffect {
         this.bloom.component!.traverse((obj) => {
             // add everything but the root
             if (obj instanceof Component && !(obj instanceof Branch) && !(obj instanceof Bud)) {
-                const deathTime = Math.random() * Math.random() * 0.8;
+                const deathTime = Math.random() * 0.8;
                 this.deathSchedules.set(obj, deathTime);
             }
         });

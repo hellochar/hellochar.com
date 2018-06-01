@@ -186,7 +186,7 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         SECONDARY_BRANCH_PERIOD: 1 + floor(random(0, 1) * random(0, 1) * random(0, 1) * 6),
         TURN_TOWARDS_X_FACTOR: random(0, 1) * random(0, 1) * 1, // 0.2
         AVOID_NEIGHBOR_FORCE: random(0, 1) * random(0, 1) * 1, // 1
-        randWiggle: random(0, 0.1),
+        randWiggle: random(0, 0.05) * random(0, 1),
         BASE_DISINCENTIVE: Math.max(0, pow(10, random(0, 4)) - 3),
         COST_DISTANCE_TO_ROOT_DIVISOR: 1e3,
         COST_NEGATIVE_X_GROWTH: pow(10, random(-1, 0)), // 0.2

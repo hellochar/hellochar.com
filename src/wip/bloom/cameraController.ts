@@ -6,6 +6,8 @@ export abstract class CameraController {
     public targetPosLerp = 0.03;
     public lerpAmount = 0;
 
+    public lifeTime = 20000;
+
     get camera() {
         return this.bloom.camera;
     }
@@ -25,7 +27,7 @@ export abstract class CameraController {
     }
 
     updateCamera() {
-        this.lerpAmount = this.lerpAmount * 0.97 + this.targetPosLerp * 0.03;
+        this.lerpAmount = this.lerpAmount * 0.98 + this.targetPosLerp * 0.02;
     }
 
     public lerpOrbitControlsTarget(wantedTarget: THREE.Vector3) {
@@ -44,7 +46,7 @@ export abstract class CameraController {
 
 export class CameraFocusOnBoxController extends CameraController {
 
-    constructor(bloom: Bloom, public componentBoundingBox: THREE.Box3) {
+    constructor(bloom: Bloom, public componentBoundingBox: THREE.Box3, public targetYScalar = THREE.Math.randFloat(0.7, 1)) {
         super(bloom);
     }
 
@@ -53,7 +55,7 @@ export class CameraFocusOnBoxController extends CameraController {
         const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
 
         const targetDist = THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0.2, minXZDist * 2);
-        const targetY = this.componentBoundingBox.max.y - 0.3;
+        const targetY = this.componentBoundingBox.max.y * this.targetYScalar - 0.3;
 
         const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);
         xz.setLength(targetDist);
@@ -66,7 +68,7 @@ export class CameraFocusOnBoxController extends CameraController {
 export class CameraFocusOnObjectController extends CameraController {
     constructor(bloom: Bloom,
                 public focus: THREE.Object3D,
-                public targetDist = THREE.Math.randFloat(0.5, 0.8),
+                public targetDist = THREE.Math.randFloat(0.1, 0.8),
                 public cameraOffsetY = 0.4 + targetDist * THREE.Math.randFloat(0.5, 1.1),
     ) {
         super(bloom);
@@ -94,7 +96,7 @@ export class CameraFocusOnObjectController extends CameraController {
 
         // may be set by dyingobject
         if (!focus.visible) {
-            this.bloom.changeCameraController();
+            this.bloom.newCameraController();
         }
     }
 }

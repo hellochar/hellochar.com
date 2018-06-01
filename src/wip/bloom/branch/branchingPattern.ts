@@ -22,7 +22,7 @@ export class DefaultBranchingPattern implements BranchingPattern {
     public branchRotationZ = THREE.Math.mapLinear(Math.random() * Math.random(), 0, 1, Math.PI / 2, Math.PI / 8);
 
     // this *dramatically* changes growth
-    public lengthPerGrowth = 1.0;
+    public lengthPerGrowth = THREE.Math.randFloat(0.95, 1.05);
 
     public lengthPerYRotation = THREE.Math.randFloat(2, 4);
 

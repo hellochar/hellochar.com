@@ -164,7 +164,8 @@ const rocks = (() => {
 export function setTimeOfDay(t: number) {
     theta = THREE.Math.mapLinear(t, 0, 1, 0, Math.PI);
 
-    const sunlightScalar = Math.sqrt(Math.max(0, Math.sin(theta)));
+    // const sunlightScalar = Math.sqrt(Math.max(0, Math.sin(theta)));
+    const sunlightScalar = 1;
     spotLight.intensity = 0.3 + 1 * sunlightScalar;
     ambientLight.intensity = 0.2 + 0.2 * sunlightScalar;
     hemisphereLight.intensity = 0.15 + 0.15 * sunlightScalar;
