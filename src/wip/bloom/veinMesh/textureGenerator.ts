@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { Vein } from "../vein/vein";
+import { Vein, ReasonStopped } from "../vein/vein";
 import { VeinedLeaf } from "../vein/veinedLeaf";
 
 export interface TextureGeneratorParameters {
@@ -116,6 +116,29 @@ export class TextureGenerator {
             });
         }
 
+        const drawVein = (t: number, x: number, y: number, child: Vein) => {
+            // const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar;
+            const width = Math.max(
+                0.2,
+                VEIN_THICKNESS * Math.log(1 + child.weight) * (1 - t) * this.detailScalar / (1 + child.numTurns),
+            );
+            // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 3) * (1 - t) * this.detailScalar;
+            // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 2) * (1 - t) * this.detailScalar;
+            // const width = VEIN_THICKNESS * 2 * this.detailScalar * (1 - t);
+
+            color.lineWidth = width;
+            bump.lineWidth = width * 1.25;
+            color.beginPath();
+            bump.beginPath();
+            const { x: px, y: py } = this.pixelPosition(child);
+            color.moveTo(x, y);
+            color.lineTo(px, py);
+
+            bump.moveTo(x, y);
+            bump.lineTo(px, py);
+            color.stroke();
+            bump.stroke();
+        };
         const VEIN_THICKNESS = 4.0;
         const outlineVeins = (t: number) => {
             const { r, g, b } = parameters.veinColor;
@@ -124,26 +147,10 @@ export class TextureGenerator {
             for (const leafNode of this.leaf.world) {
                 const { x, y } = this.pixelPosition(leafNode);
                 for (const child of leafNode.children) {
-                    // const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar;
-                    const width = Math.max(
-                        0.2,
-                        VEIN_THICKNESS * Math.log(1 + child.weight) * (1 - t) * this.detailScalar / (1 + child.numTurns),
-                    );
-                    // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 3) * (1 - t) * this.detailScalar;
-                    // const width = VEIN_THICKNESS * Math.pow(child.vein.weight, 1 / 2) * (1 - t) * this.detailScalar;
-                    // const width = VEIN_THICKNESS * 2 * this.detailScalar * (1 - t);
-                    color.lineWidth = width;
-                    bump.lineWidth = width * 1.25;
-                    color.beginPath();
-                    bump.beginPath();
-                    const { x: px, y: py } = this.pixelPosition(child);
-                    color.moveTo(x, y);
-                    color.lineTo(px, py);
-
-                    bump.moveTo(x, y);
-                    bump.lineTo(px, py);
-                    color.stroke();
-                    bump.stroke();
+                    drawVein(t, x, y, child);
+                }
+                if (leafNode.nearestNeighbor != null && leafNode.reason === ReasonStopped.Crowded) {
+                    drawVein(t, x, y, leafNode.nearestNeighbor);
                 }
             }
         };

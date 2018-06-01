@@ -280,6 +280,8 @@ export class Vein {
         return newHeading;
     }
 
+    public nearestNeighbor?: Vein;
+
     maybeAddBranch(heading: Vector2, mag: number) {
         if (this.costToRoot > this.leaf.growthParameters.MAX_PATH_COST) {
             return ReasonStopped.Expensive;
@@ -291,8 +293,8 @@ export class Vein {
         // we've now moved away from everyone.
         const childPosition = this.position.clone().add(avoidedHeading.setLength(mag));
         const isTerminal = false;
-        const nearestNeighbor = this.nearestCollidableNeighbor(childPosition);
-        if (nearestNeighbor != null && nearestNeighbor.position.distanceTo(childPosition) < this.leaf.growthParameters.TOO_CLOSE_DIST) {
+        this.nearestNeighbor = this.nearestCollidableNeighbor(childPosition);
+        if (this.nearestNeighbor != null && this.nearestNeighbor.position.distanceTo(childPosition) < this.leaf.growthParameters.TOO_CLOSE_DIST) {
             // we're too close! terminate ourselves
             return ReasonStopped.Crowded;
 
