@@ -116,7 +116,8 @@ export class TextureGenerator {
             });
         }
 
-        const drawVein = (t: number, x: number, y: number, child: Vein) => {
+        const VEIN_THICKNESS = 4.0;
+        const drawVein = (t: number, x: number, y: number, child: Vein, parent: Vein) => {
             // const width = VEIN_THICKNESS * Math.log(1 + child.vein.weight) * (1 - t) * this.detailScalar;
             const width = Math.max(
                 0.2,
@@ -127,30 +128,35 @@ export class TextureGenerator {
             // const width = VEIN_THICKNESS * 2 * this.detailScalar * (1 - t);
 
             color.lineWidth = width;
-            bump.lineWidth = width * 1.25;
+            bump.lineWidth = width * 5.5;
             color.beginPath();
             bump.beginPath();
-            const { x: px, y: py } = this.pixelPosition(child);
-            color.moveTo(x, y);
-            color.lineTo(px, py);
+            const parentPos = this.pixelPosition(parent);
+            const childPos = this.pixelPosition(child);
+            color.moveTo(parentPos.x, parentPos.y);
+            color.quadraticCurveTo(x, y, childPos.x, childPos.y);
 
-            bump.moveTo(x, y);
-            bump.lineTo(px, py);
+            bump.moveTo(parentPos.x, parentPos.y);
+            bump.quadraticCurveTo(x, y, childPos.x, childPos.y);
             color.stroke();
             bump.stroke();
         };
-        const VEIN_THICKNESS = 4.0;
         const outlineVeins = (t: number) => {
             const { r, g, b } = parameters.veinColor;
             color.strokeStyle = `rgba(${r}, ${g}, ${b}, ${t * 5 / detailIterations * parameters.veinAlpha})`;
             bump.strokeStyle = `rgba(235, 235, 235, ${t / detailIterations * parameters.bumpVeinAlpha})`;
             for (const leafNode of this.leaf.world) {
-                const { x, y } = this.pixelPosition(leafNode);
-                for (const child of leafNode.children) {
-                    drawVein(t, x, y, child);
-                }
-                if (leafNode.nearestNeighbor != null && leafNode.reason === ReasonStopped.Crowded) {
-                    drawVein(t, x, y, leafNode.nearestNeighbor);
+                const parent = leafNode.parent;
+                if (parent != null) {
+                    const { x, y } = this.pixelPosition(leafNode);
+                    for (const child of leafNode.children) {
+                        drawVein(t, x, y, child, parent);
+                    }
+                    if (leafNode.nearestNeighbor != null && leafNode.reason === ReasonStopped.Crowded) {
+                        if (leafNode.nearestNeighbor.parent != parent) {
+                            drawVein(t, x, y, leafNode.nearestNeighbor, parent);
+                        }
+                    }
                 }
             }
         };
