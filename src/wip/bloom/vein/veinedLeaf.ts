@@ -164,7 +164,7 @@ export interface IVeinGrowthParameters {
 
     yLiftAmount: number;
 
-    yFrayScale: number;
+    yWeightLiftScale: number;
 
     yCupAmount: number;
 
@@ -186,7 +186,7 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         SECONDARY_BRANCH_PERIOD: 1 + floor(random(0, 1) * random(0, 1) * random(0, 1) * 6),
         TURN_TOWARDS_X_FACTOR: random(0, 1) * random(0, 1) * 1, // 0.2
         AVOID_NEIGHBOR_FORCE: random(0, 1) * random(0, 1) * 1, // 1
-        randWiggle: random(0, 0.05) * random(0, 1),
+        randWiggle: random(0, 0.04) * random(0, 1),
         BASE_DISINCENTIVE: Math.max(0, pow(10, random(0, 4)) - 3),
         COST_DISTANCE_TO_ROOT_DIVISOR: 1e3,
         COST_NEGATIVE_X_GROWTH: pow(10, random(-1, 0)), // 0.2
@@ -196,9 +196,9 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         growForwardBranch: true,
         yLiftFrequency: random(6, 12),
         yLiftAmount: random(-0.03, 0.12) * random(0, 1),
-        yFrayScale: random(0, 0.04),
+        yWeightLiftScale: random(0, 0.003),
         yCupAmount: -random(0.5, 1) * random(0.75, 1) * random(0.75, 1.25),
-        yNoiseScalar: random(0, 1) * random(0, 1) *0.002,
+        yNoiseScalar: random(0, 1) * random(0, 1) * 0.002,
     };
 }
 
@@ -225,7 +225,7 @@ export function generatePetalGrowthParameters(): IVeinGrowthParameters {
         growForwardBranch: true,
         yLiftAmount: 0,
         yLiftFrequency: 0,
-        yFrayScale: random(0, 0.01),
+        yWeightLiftScale: random(0, 0.001),
         yCupAmount: random(0.75, 1.25),
         curlSidesAmount: random(0, 1.5),
         yNoiseScalar: random(0.001, 0.004),
@@ -256,7 +256,7 @@ export function generateTepalGrowthParameters(): IVeinGrowthParameters {
         growForwardBranch: true,
         yLiftAmount: 0,
         yLiftFrequency: 0,
-        yFrayScale: 0,
+        yWeightLiftScale: random(0, 0.001),
         yCupAmount: 0.15,
         curlSidesAmount: random(0.75, 1),
         yNoiseScalar: 0.002,
