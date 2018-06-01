@@ -9,6 +9,7 @@ import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
 import { BranchTemplate, DNA, GrowthParameters } from "./dna";
+import { Vein } from "../vein/vein";
 
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
 
@@ -25,7 +26,7 @@ export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
     const leafTemplate = randomLeafTemplate(color, envMap);
     const petalTemplate = randomPetalTemplate(envMap);
 
-    const tepalTemplate = randomTepalTemplate(Math.random() < 0.1 ? new THREE.Color("white") : color, envMap);
+    const tepalTemplate = randomTepalTemplate(color, envMap);
 
     const leafWhorlTemplate = randomWhorlParametersLeaf(leafTemplate);
     const petalWhorlTemplate = randomWhorlParametersPetal(petalTemplate);
@@ -77,8 +78,7 @@ export function randomLeafTemplate(color: THREE.Color, envMap: THREE.CubeTexture
     const leafTextureParameters: TextureGeneratorParameters = {
         innerColor: color,
         outerColor: color,
-        veinColor: new THREE.Color("darkgreen"),
-        veinAlpha: 1,
+        strokeStyle: () => "black",
         bumpVeinAlpha: 1,
         bumpNoiseHeight: 1,
         baseMaterialParams: {
@@ -89,13 +89,52 @@ export function randomLeafTemplate(color: THREE.Color, envMap: THREE.CubeTexture
     return LeafTemplate.fromVeinedLeaf(veinedLeaf, leafTextureParameters, envMap);
 }
 
-export function randomPetalTemplate(envMap: THREE.CubeTexture) {
-    const veinedPetal = generateRandomVeinedLeaf(generatePetalGrowthParameters);
-    const petalTextureParameters: TextureGeneratorParameters = {
-        innerColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
-        outerColor: new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`),
-        veinColor: new THREE.Color(),
-        veinAlpha: 0,
+function randomStrokeStyleFunction() {
+    const functions = [
+        () => "transparent",
+        () => "transparent",
+
+        // put a color at the front
+        (() => {
+            const startColor = new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`);
+            const stop = THREE.Math.randFloat(0.5, 1);
+            return (vein: Vein) => {
+                const {r, g, b} = startColor;
+                let alpha = 1 - THREE.Math.smoothstep(vein.normalizedPosition.x - vein.leaf.root.normalizedPosition.x, 0, stop);
+                // alpha *= alpha;
+                return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${alpha})`;
+            }
+        })(),
+
+        // put a color at the end
+        (() => {
+            const endColor = new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(25, 75)}%)`);
+            const start = THREE.Math.randFloat(0.3, 0.6);
+            return (vein: Vein) => {
+                const {r, g, b} = endColor;
+                let alpha = THREE.Math.smootherstep(vein.normalizedPosition.x - vein.leaf.root.normalizedPosition.x, start, 1);
+                alpha = Math.sqrt(alpha);
+                return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${alpha})`;
+            }
+        })(),
+    ];
+    return functions[THREE.Math.randInt(0, functions.length - 1)];
+}
+
+export function randomPetalTextureGeneratorParameters() {
+    const innerColor = new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`);
+    const outerColor = Math.random() < 0.5
+        ? new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(50, 100)}%)`)
+        : innerColor;
+    const tipColor = Math.random() < 0.1
+        ? new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 25%, ${THREE.Math.randInt(0, 25)}%)`)
+        : undefined;
+
+    const params: TextureGeneratorParameters = {
+        innerColor,
+        outerColor,
+        tipColor,
+        strokeStyle: randomStrokeStyleFunction(),
         bumpVeinAlpha: 0.5,
         bumpNoiseHeight: Math.random() < 0.25 ? 0 : 0.5,
         baseMaterialParams: {
@@ -104,24 +143,34 @@ export function randomPetalTemplate(envMap: THREE.CubeTexture) {
             // shininess: 0,
         },
     };
+    return params;
+}
+
+export function randomPetalTemplate(envMap: THREE.CubeTexture) {
+    const veinedPetal = generateRandomVeinedLeaf(generatePetalGrowthParameters);
+    const petalTextureParameters = randomPetalTextureGeneratorParameters();
     return LeafTemplate.fromVeinedLeaf(veinedPetal, petalTextureParameters, envMap);
 }
 
 export function randomTepalTemplate(color: THREE.Color, envMap: THREE.CubeTexture) {
     const veinedTepal = generateRandomVeinedLeaf(generateTepalGrowthParameters);
-    const tepalTextureParameters: TextureGeneratorParameters = {
-        innerColor: color,
-        outerColor: color,
-        veinColor: new THREE.Color("darkgreen"),
-        veinAlpha: 0.01,
-        bumpNoiseHeight: 2,
-        bumpVeinAlpha: 0.5,
-        baseMaterialParams: {
-            bumpScale: 0.05,
-            roughness: 0.8,
-            metalness: 0,
-        },
-    };
+    let tepalTextureParameters: TextureGeneratorParameters;
+    if (Math.random() < 0.05) {
+        tepalTextureParameters = randomPetalTextureGeneratorParameters();
+    } else {
+        tepalTextureParameters = {
+            innerColor: color,
+            outerColor: color,
+            strokeStyle: () => "rgba(1, 50, 32, 0.01)",
+            bumpNoiseHeight: 2,
+            bumpVeinAlpha: 0.5,
+            baseMaterialParams: {
+                bumpScale: 0.05,
+                roughness: 0.8,
+                metalness: 0,
+            },
+        }
+    }
     return LeafTemplate.fromVeinedLeaf(veinedTepal, tepalTextureParameters, envMap);
 }
 

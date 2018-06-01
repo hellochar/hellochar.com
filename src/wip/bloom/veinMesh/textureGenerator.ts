@@ -6,8 +6,9 @@ import { VeinedLeaf } from "../vein/veinedLeaf";
 export interface TextureGeneratorParameters {
     innerColor: THREE.Color;
     outerColor: THREE.Color;
-    veinColor: THREE.Color;
-    veinAlpha: number;
+
+    tipColor?: THREE.Color;
+    strokeStyle: (vein: Vein) => string;
 
     bumpNoiseHeight: number;
     bumpVeinAlpha: number;
@@ -98,7 +99,10 @@ export class TextureGenerator {
 
         const gradient = color.createLinearGradient(0, 0, this.width, 0);
         gradient.addColorStop(0, parameters.innerColor.getStyle());
-        gradient.addColorStop(1, parameters.outerColor.getStyle());
+        gradient.addColorStop(0.9, parameters.outerColor.getStyle());
+        if (parameters.tipColor != null) {
+            gradient.addColorStop(1, parameters.tipColor.getStyle());
+        }
         color.fillStyle = gradient;
         color.fillRect(0, 0, colorCanvas.width, colorCanvas.height);
 
@@ -140,21 +144,21 @@ export class TextureGenerator {
             bump.quadraticCurveTo(x, y, childPos.x, childPos.y);
             color.stroke();
             bump.stroke();
+
         };
         const outlineVeins = (t: number) => {
-            const { r, g, b } = parameters.veinColor;
-            color.strokeStyle = `rgba(${r}, ${g}, ${b}, ${t * 5 / detailIterations * parameters.veinAlpha})`;
             bump.strokeStyle = `rgba(235, 235, 235, ${t / detailIterations * parameters.bumpVeinAlpha})`;
-            for (const leafNode of this.leaf.world) {
-                const parent = leafNode.parent;
+            for (const vein of this.leaf.world) {
+                color.strokeStyle = parameters.strokeStyle(vein);
+                const parent = vein.parent;
                 if (parent != null) {
-                    const { x, y } = this.pixelPosition(leafNode);
-                    for (const child of leafNode.children) {
+                    const { x, y } = this.pixelPosition(vein);
+                    for (const child of vein.children) {
                         drawVein(t, x, y, child, parent);
                     }
-                    if (leafNode.nearestNeighbor != null && leafNode.reason === ReasonStopped.Crowded) {
-                        if (leafNode.nearestNeighbor.parent != parent) {
-                            drawVein(t, x, y, leafNode.nearestNeighbor, parent);
+                    if (vein.nearestNeighbor != null && vein.reason === ReasonStopped.Crowded) {
+                        if (vein.nearestNeighbor.parent !== parent) {
+                            drawVein(t, x, y, vein.nearestNeighbor, parent);
                         }
                     }
                 }
