@@ -97,7 +97,7 @@ export function randomPetalTemplate(envMap: THREE.CubeTexture) {
         veinColor: new THREE.Color(),
         veinAlpha: 0,
         bumpVeinAlpha: 0.5,
-        bumpNoiseHeight: 0.5,
+        bumpNoiseHeight: Math.random() < 0.25 ? 0 : 0.5,
         baseMaterialParams: {
             roughness: 1,
             metalness: 0,
