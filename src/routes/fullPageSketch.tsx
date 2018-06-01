@@ -15,7 +15,8 @@ export interface ISketchRouteProps {
 export class FullPageSketch extends React.Component<ISketchRouteProps, {}> {
     public render() {
         const isPresentationMode = !!parse(location.search).presentationMode;
-        const classes = classnames("full-page-sketch", { "presentation-mode": isPresentationMode });
+        const isKiosk = !!parse(location.search).kioskMode;
+        const classes = classnames("full-page-sketch", { "presentation-mode": isPresentationMode, "kiosk-mode": isKiosk });
         return (
             <div className={classes}>
                 <Link className="back-button" to="/">&#10094;</Link>

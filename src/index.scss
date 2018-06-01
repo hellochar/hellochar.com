@@ -79,6 +79,12 @@ p ~ p {
     }
 }
 
+.kiosk-mode {
+    @extend .presentation-mode;
+
+    cursor: none !important;
+}
+
 .inventory-info {
     span~span:before {
         content: ", ";

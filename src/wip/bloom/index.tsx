@@ -199,21 +199,34 @@ class Bloom extends ISketch {
     public animate(ms: number) {
         this.setSeason();
 
-        // season.type = "flowering" as any;
-        // season.percent = (mouse.x + 1) / 2;
+        try {
+            this.updatePersonMeshes();
+        } catch {}
 
-        this.updatePersonMeshes();
-        const numFeedParticles = this.feedParticles.animate(ms);
+        let numFeedParticles = 0;
+        try {
+            numFeedParticles = this.feedParticles.animate(ms);
+        } catch {}
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
         const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
         // const nutrientsPerSecond = Math.min(9.9, 9.17 + Math.sqrt(numFeedParticles) / 5);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
-        this.updateComponentAndComputeBoundingBox();
-        this.updateSeasonalEffect();
-        this.updateCamera();
+        try {
+            this.updateComponentAndComputeBoundingBox();
+        } catch {}
 
-        this.updateDyingObjects();
+        try {
+            this.updateSeasonalEffect();
+        } catch {}
+
+        try {
+            this.updateCamera();
+        } catch {}
+
+        try {
+            this.updateDyingObjects();
+        } catch {}
 
         if (this.r2 != null) {
             this.r2.style.background = "white";
@@ -226,18 +239,22 @@ class Bloom extends ISketch {
 
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
-        this.composer.render();
+        try {
+            this.composer.render();
+        } catch {}
 
-        // song is 10 and a half minutes long
-        if (season.type === "dying" && season.percent > 1) {
-            this.triggerReload();
-        }
+        try {
+            // song is 10 and a half minutes long
+            if (season.type === "dying" && season.percent > 1) {
+                this.triggerReload();
+            }
+        } catch {}
     }
 
     public setSeason() {
         const [flowerTime, dieTime, restartTime] = [
             (5 * 60 + 20),
-            (8 * 60 + 25),
+            (8 * 60 + 16),
             (10 * 60 + 14),
         ];
         const currentTime = this.audio.currentTime;
@@ -513,7 +530,12 @@ class DyingSeasonalEffect implements SeasonalEffect {
         this.bloom.component!.traverse((obj) => {
             // add everything but the root
             if (obj instanceof Component && !(obj instanceof Branch) && !(obj instanceof Bud)) {
-                const deathTime = Math.random() * 0.8;
+                // sqrt(deathTime) makes *everything* die right at the end
+                // deathTime*deathTime makes *everything* die right at the start
+                // deathTime puts things a bit too much at the start
+                // so do pow(, 0.8) for a slight curve
+                const deathTime = Math.pow(Math.random(), 0.8) * 0.8;
+
                 this.deathSchedules.set(obj, deathTime);
             }
         });
