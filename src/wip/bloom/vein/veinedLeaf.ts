@@ -167,6 +167,10 @@ export interface IVeinGrowthParameters {
     yFrayScale: number;
 
     yCupAmount: number;
+
+    yNoiseScalar: number;
+
+    curlSidesAmount?: number;
 }
 
 export function generateVeinGrowthParameters(): IVeinGrowthParameters {
@@ -177,12 +181,12 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         MAX_PATH_COST: 200,
         SIDEWAYS_COST_RATIO: random(-1, 1) * random(0, 1) * 0.5, // 0.5;
         SIDE_ANGLE: random(PI / 6, PI / 2), // PI / 3;
-        SIDE_ANGLE_RANDOM: random(0, 1) * random(0, 1) * PI / 6, // random(0, PI / 4); //PI / 6;
+        SIDE_ANGLE_RANDOM: random(0, 1) * random(0, 1) * PI / 2, // random(0, PI / 4); //PI / 6;
         DEPTH_STEPS_BEFORE_BRANCHING: 1 + randInt(0, 3), // 2
         SECONDARY_BRANCH_PERIOD: 1 + floor(random(0, 1) * random(0, 1) * random(0, 1) * 6),
         TURN_TOWARDS_X_FACTOR: random(0, 1) * random(0, 1) * 1, // 0.2
         AVOID_NEIGHBOR_FORCE: random(0, 1) * random(0, 1) * 1, // 1
-        randWiggle: 0.0,
+        randWiggle: random(0, 0.1),
         BASE_DISINCENTIVE: Math.max(0, pow(10, random(0, 4)) - 3),
         COST_DISTANCE_TO_ROOT_DIVISOR: 1e3,
         COST_NEGATIVE_X_GROWTH: pow(10, random(-1, 0)), // 0.2
@@ -194,6 +198,7 @@ export function generateVeinGrowthParameters(): IVeinGrowthParameters {
         yLiftAmount: random(-0.03, 0.12) * random(0, 1),
         yFrayScale: random(0, 0.04),
         yCupAmount: -random(0.5, 1) * random(0.75, 1) * random(0.75, 1.25),
+        yNoiseScalar: random(0, 1) * random(0, 1) *0.002,
     };
 }
 
@@ -222,6 +227,8 @@ export function generatePetalGrowthParameters(): IVeinGrowthParameters {
         yLiftFrequency: 0,
         yFrayScale: random(0, 0.01),
         yCupAmount: random(0.75, 1.25),
+        curlSidesAmount: random(0, 1.5),
+        yNoiseScalar: random(0.001, 0.004),
     };
 }
 
@@ -251,6 +258,8 @@ export function generateTepalGrowthParameters(): IVeinGrowthParameters {
         yLiftFrequency: 0,
         yFrayScale: 0,
         yCupAmount: 0.15,
+        curlSidesAmount: random(0.75, 1),
+        yNoiseScalar: 0.002,
     };
 }
 

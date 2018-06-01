@@ -201,6 +201,10 @@ class Bloom extends ISketch {
 
     public animate(ms: number) {
         this.setSeason();
+
+        // season.type = "flowering" as any;
+        // season.percent = (mouse.x + 1) / 2;
+
         this.updatePersonMeshes();
         const numNutrientsThisFrame = this.feedParticles.animate(ms);
 

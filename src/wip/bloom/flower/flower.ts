@@ -15,12 +15,12 @@ export default class Flower extends Component {
     }
 
     updateSelf(t: number) {
-        const timeAlive = t - this.timeBorn;
-        const logisticX = timeAlive / 10000 - 6;
-        // const logisticX = timeAlive / 500 - 6;
-        const s = logistic(logisticX) * flowerSize;
-        // const s = 1;
-        this.scale.setScalar(s);
+        // const timeAlive = t - this.timeBorn;
+        // const logisticX = timeAlive / 10000 - 6;
+        // // const logisticX = timeAlive / 500 - 6;
+        // const s = logistic(logisticX) * flowerSize;
+        // // const s = 1;
+        // this.scale.setScalar(s);
     }
 
     static generate() {

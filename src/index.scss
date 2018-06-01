@@ -211,6 +211,8 @@ p ~ p {
     animation-duration: 5s;
     animation-timing-function: ease;
 
+    user-select: none;
+
     // sest this for the transition to work properly
     opacity: 0;
 

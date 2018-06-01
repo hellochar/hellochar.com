@@ -59,12 +59,13 @@ export class LeafTemplate {
             const { x, y: z } = vein.normalizedPosition;
             const yCup = x * (1 - x) * leaf.growthParameters.yCupAmount;
             const yLift = -Math.tanh(Math.abs(z * leaf.growthParameters.yLiftFrequency)) * leaf.growthParameters.yLiftAmount;
-            const yNoise = THREE.Math.randFloat(-1, 1) * 0.002;
+            const yNoise = THREE.Math.randFloat(-1, 1) * leaf.growthParameters.yNoiseScalar;
             // const yFray = Math.pow(cost, 6) * 0.05 * Math.cos((x * 9 + Math.abs(z) * 9) * (1 - x) * 12);
             const yFray = Math.pow(cost, 8) * leaf.growthParameters.yFrayScale * Math.cos(vein.distanceToRoot / 2 / vein.depth);
             const y = yCup + yLift + yNoise + yFray;
             // const y = 0;
-            geometry.vertices.push(new THREE.Vector3(x, y, z));
+            const vertex = new THREE.Vector3(x, y, z);
+            geometry.vertices.push(vertex);
             const prevIndex = Math.floor(x);
             const nextIndex = Math.ceil(x);
             const t = x - prevIndex;
@@ -81,6 +82,18 @@ export class LeafTemplate {
                 0,
                 orthoWeight,
             ) as any);
+
+            // curl inwards according to abs(z)
+            const { curlSidesAmount } = leaf.growthParameters;
+            if (curlSidesAmount != null && curlSidesAmount > 0) {
+                const signum = z > 0 ? 1 : z < 0 ? -1 : 0;
+                const length = Math.abs(z);
+                const angle = length * Math.PI / 3 * curlSidesAmount;
+                const newZ = Math.cos(angle) * signum * length;
+                const dY = Math.sin(angle) * length;
+                vertex.z = newZ;
+                vertex.y -= dY;
+            }
         }
         geometry.verticesNeedUpdate = true;
     }

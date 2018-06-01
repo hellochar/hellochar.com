@@ -1,8 +1,9 @@
 import * as THREE from "three";
 
 import { Component } from "../component";
+import { season } from "../season";
 
-const styleHeight = THREE.Math.randFloat(0.3, 0.8);
+const styleHeight = THREE.Math.randFloat(0.3, 0.8) + Math.random() * Math.random() * Math.random();
 
 export default class Carpel extends Component {
     static ovaryMeshTemplate = (() => {
@@ -82,6 +83,7 @@ export default class Carpel extends Component {
     constructor() {
         super();
         this.ovary = Carpel.ovaryMeshTemplate.clone();
+        this.ovary.scale.setScalar(0.001);
         this.add(this.ovary);
         this.style = Carpel.styleMeshTemplate.clone();
         this.ovary.add(this.style);
@@ -89,6 +91,18 @@ export default class Carpel extends Component {
         this.style.add(this.stigma);
         this.stigma.position.y = styleHeight + 0.005;
     }
+
+    private styleGrowStart = 0.25 * THREE.Math.randFloat(0.8, 1.2);
+    private styleGrowEnd = 0.75 * THREE.Math.randFloat(0.9, 1.1);
+
+    updateSelf(ms: number) {
+        this.ovary.scale.lerp(new THREE.Vector3(1, 1, 1), 0.001);
+        if (season.type === "flowering") {
+            const styleScale = THREE.Math.smootherstep(season.percent, this.styleGrowStart, this.styleGrowEnd) * 0.99 + 0.01;
+            this.style.scale.setScalar(styleScale);
+        }
+    }
+
     static generate() {
         return new Carpel();
     }
