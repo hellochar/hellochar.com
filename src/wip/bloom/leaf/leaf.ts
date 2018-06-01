@@ -9,7 +9,7 @@ import { VeinedLeafSkeleton } from "../veinMesh/veinedLeafSkeleton";
 // const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 0.5);
 const petioleLength = 0.0;
 
-const leafStiffness = Math.pow(10, THREE.Math.randFloat(-3, -1));
+const leafStiffness = Math.pow(10, THREE.Math.randFloat(-2, -1));
 
 export class Leaf extends Component {
     static petioleMaterial = new THREE.MeshLambertMaterial({

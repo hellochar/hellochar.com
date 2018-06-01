@@ -126,7 +126,7 @@ export function randomTepalTemplate(color: THREE.Color, envMap: THREE.CubeTextur
 }
 
 export function randomWhorlParametersLeaf(leafTemplate: LeafTemplate): WhorlParameters<Leaf> {
-    const zRot = THREE.Math.randFloat(Math.PI / 20, Math.PI / 3);
+    const zRot = THREE.Math.randFloat(Math.PI / 12, Math.PI / 3);
     const endYRot = Math.random() < 0.5 ? Math.PI * 2 : Math.PI;
     const scale = THREE.Math.randFloat(0.5, 1);
     const isBilateral = Math.random() < 0.5;
