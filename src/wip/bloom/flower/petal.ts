@@ -13,6 +13,7 @@ export default class Petal extends Component {
     public mesh: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
+        this.frustumCulled = false;
         this.mesh = template.instantiateLeaf();
         this.add(this.mesh);
     }

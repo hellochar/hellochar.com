@@ -29,6 +29,7 @@ export class Leaf extends Component {
     public lamina: THREE.SkinnedMesh;
     constructor(template: LeafTemplate) {
         super();
+        this.frustumCulled = false;
         if (petioleLength > 0) {
             const petiole = (() => {
                 const petioleMesh = new THREE.Mesh(

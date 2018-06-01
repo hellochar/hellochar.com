@@ -9,6 +9,7 @@ export class Whorl<T extends Component> extends Component {
         for (const el of elements) {
             this.add(el);
         }
+        this.frustumCulled = false;
     }
 
     static generate<T extends Component>(parameters: WhorlParameters<T>) {
