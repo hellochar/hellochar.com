@@ -53,10 +53,12 @@ export class LeafTemplate {
      * Also attaches skinIndices/skinWeights corresponding to that bone.
      */
     private static addVerticesAndSkinningAtVeinPositions(leaf: VeinedLeaf, geometry: THREE.Geometry) {
+        const leafOrigin = leaf.root.normalizedPosition;
         for (let i = 0; i < leaf.world.length; i++) {
             const vein = leaf.world[i];
             const cost = Math.min(1, vein.costToRoot / leaf.growthParameters.MAX_PATH_COST);
-            const { x, y: z } = vein.normalizedPosition;
+            let { x, y: z } = vein.normalizedPosition;
+            x -= leafOrigin.x;
             const yCup = x * (1 - x) * leaf.growthParameters.yCupAmount;
             const yLift = -Math.tanh(Math.abs(z * leaf.growthParameters.yLiftFrequency)) * leaf.growthParameters.yLiftAmount;
             const yNoise = THREE.Math.randFloat(-1, 1) * leaf.growthParameters.yNoiseScalar;
