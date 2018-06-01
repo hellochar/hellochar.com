@@ -96,6 +96,9 @@ export default class Carpel extends Component {
     private styleGrowEnd = 0.75 * THREE.Math.randFloat(0.9, 1.1);
 
     updateSelf(ms: number) {
+        if (season.type === "growing") {
+            this.style.scale.setScalar(0.001);
+        }
         this.ovary.scale.lerp(new THREE.Vector3(1, 1, 1), 0.001);
         if (season.type === "flowering") {
             const styleScale = THREE.Math.smootherstep(season.percent, this.styleGrowStart, this.styleGrowEnd) * 0.99 + 0.01;

@@ -78,6 +78,11 @@ export default class Stamen extends Component {
     private growAntherEnd = this.growAntherStart + THREE.Math.randFloat(0.05, 0.1);
 
     updateSelf(t: number) {
+        if (season.type === "growing") {
+            this.filament.scale.setScalar(0.001);
+            this.anther.scale.setScalar(0.001);
+            return;
+        }
         if (season.type === "flowering") {
             const scaleFilament = THREE.Math.smootherstep(season.percent, this.growStart, this.growEnd) * 0.99 + 0.01;
             this.filament.scale.setScalar(scaleFilament);

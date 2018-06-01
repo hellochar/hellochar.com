@@ -28,6 +28,7 @@ export default class Petal extends Component {
 
     updateSelf(t: number) {
         if (season.type === "growing") {
+            this.mesh.scale.setScalar(0.001);
             // don't do anything yet
             return;
         }

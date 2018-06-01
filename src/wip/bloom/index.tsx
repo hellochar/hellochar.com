@@ -21,7 +21,7 @@ import { season } from "./season";
 import { Whorl } from "./whorl";
 
 // // https://gist.github.com/blixt/f17b47c62508be59987b
-// let _seed = Date.now() % 2147483647;
+// let _seed = 11 % 2147483647;
 // if (_seed <= 0) {
 //     _seed += 2147483646;
 // }
@@ -63,8 +63,6 @@ class Bloom extends ISketch {
     public init() {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        // this.renderer.shadowMap.autoUpdate = false;
-        // this.renderer.shadowMap.needsUpdate = true;
 
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 50);
         this.camera.position.y = 1;
@@ -206,10 +204,10 @@ class Bloom extends ISketch {
         // season.percent = (mouse.x + 1) / 2;
 
         this.updatePersonMeshes();
-        const numNutrientsThisFrame = this.feedParticles.animate(ms);
+        const numFeedParticles = this.feedParticles.animate(ms);
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
-        const nutrientsPerSecond = Math.min(9.9, 0.15 + Math.sqrt(numNutrientsThisFrame) / 4);
+        const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 3.5);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateSeasonalEffect();

@@ -3,7 +3,7 @@ import * as THREE from "three";
 import Bloom from "./index";
 
 export abstract class CameraController {
-    public targetPosLerp = 0.04;
+    public targetPosLerp = 0.03;
     public lerpAmount = 0;
 
     get camera() {
@@ -52,7 +52,7 @@ export class CameraFocusOnBoxController extends CameraController {
         super.updateCamera();
         const minXZDist = Math.min(this.componentBoundingBox.max.z - this.componentBoundingBox.min.z, this.componentBoundingBox.max.x - this.componentBoundingBox.min.x);
 
-        const targetDist = THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0, minXZDist * 2);
+        const targetDist = THREE.Math.mapLinear(Math.sin(this.bloom.timeElapsed / 10000), -1, 1, 0.2, minXZDist * 2);
         const targetY = this.componentBoundingBox.max.y - 0.3;
 
         const xz = new THREE.Vector2(this.camera.position.x, this.camera.position.z);

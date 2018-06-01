@@ -16,7 +16,6 @@ export class PersonMesh extends THREE.Object3D {
 
     constructor(public index: number) {
         super();
-        this.renderOrder = 1000;
 
         for (let i = 0; i < 15; i++) {
             const keypoint = new Keypoint();
@@ -130,8 +129,8 @@ class KeypointSphere extends THREE.Mesh {
             flatShading: true,
             color: "lightgray",
             shininess: 0,
-            depthTest: false,
-            depthWrite: false,
+            transparent: true,
+            depthFunc: THREE.AlwaysDepth,
         });
     })();
 

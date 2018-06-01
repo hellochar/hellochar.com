@@ -25,6 +25,7 @@ export default class Tepal extends Component {
 
     updateSelf(t: number) {
         if (season.type === "growing") {
+            this.mesh.scale.setScalar(0.001);
             return;
         }
         const timeAlive = t - this.timeBorn;
