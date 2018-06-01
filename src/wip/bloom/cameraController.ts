@@ -35,6 +35,9 @@ export abstract class CameraController {
     }
 
     public lerpCameraPosition(wantedPosition: THREE.Vector3) {
+        if (wantedPosition.y < 0.1) {
+            wantedPosition.y = 0.1;
+        }
         this.camera.position.lerp(wantedPosition, this.lerpAmount);
     }
 }

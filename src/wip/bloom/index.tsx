@@ -16,7 +16,7 @@ import { Leaf } from "./leaf";
 import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./personMesh";
-import scene from "./scene";
+import scene, { setTimeOfDay } from "./scene";
 import { season } from "./season";
 import { Whorl } from "./whorl";
 
@@ -73,7 +73,7 @@ class Bloom extends ISketch {
 
         this.orbitControls = new THREE.OrbitControls(this.camera);
         this.orbitControls.autoRotate = true;
-        this.orbitControls.autoRotateSpeed = 0.6;
+        this.orbitControls.autoRotateSpeed = 1.6;
 
         this.openPoseManager = new OpenPoseManager();
 
@@ -248,6 +248,8 @@ class Bloom extends ISketch {
             season.type = "dying";
             season.percent = (this.timeElapsed - dieTime) / (restartTime - dieTime);
         }
+        const timeOfDay = this.timeElapsed / restartTime;
+        setTimeOfDay(timeOfDay);
     }
 
     public updateSeasonalEffect() {
@@ -292,25 +294,25 @@ class Bloom extends ISketch {
             personMesh.updateFromOpenPosePerson(maybePerson);
 
             if (season.type !== "dying") {
-            if (maybePerson != null) {
-                const p = new THREE.Vector3();
-                for (const keypointSphere of personMesh.keypointSpheres) {
-                    const keypoint = keypointSphere.keypoint;
-                    if (keypoint.confidence > 0) {
-                        // this is anywhere from 1e-10, (or 0), to 0.001 at max lol
-                        const maxVel = 0.05;
-                        const vel = keypoint.offset.length();
-                        const probability = vel / maxVel - 0.1; // bias against total stillness
-                        if (Math.random() < probability) {
-                            p.copy(keypointSphere.position);
-                            personMesh.localToWorld(p);
-                            this.feedParticles.addPoint(p);
+                if (maybePerson != null) {
+                    const p = new THREE.Vector3();
+                    for (const keypointSphere of personMesh.keypointSpheres) {
+                        const keypoint = keypointSphere.keypoint;
+                        if (keypoint.confidence > 0) {
+                            // this is anywhere from 1e-10, (or 0), to 0.001 at max lol
+                            const maxVel = 0.05;
+                            const vel = keypoint.offset.length();
+                            const probability = vel / maxVel - 0.1; // bias against total stillness
+                            if (Math.random() < probability) {
+                                p.copy(keypointSphere.position);
+                                personMesh.localToWorld(p);
+                                this.feedParticles.addPoint(p);
+                            }
                         }
                     }
                 }
             }
         }
-    }
     }
 
     public dyingObjects: DyingObject[] = [];
@@ -378,6 +380,10 @@ class Bloom extends ISketch {
     public changeCameraController() {
         // probably, look at individual leaves
         if (season.type === "dying" && Math.random() < 0.5) {
+            // just focus on the bare tree at the end
+            if (season.percent > 0.9) {
+                this.cameraController = new CameraFocusOnBoxController(this, this.componentBoundingBox);
+            }
             // the last one is the newest dying object
             const focus = this.dyingObjects[this.dyingObjects.length - 1];
             if (focus != null) {

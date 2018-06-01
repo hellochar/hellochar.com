@@ -39,7 +39,7 @@ const sky = (() => {
  * Inclination angle of the sun/moon in the sky. 0 = right at the horizon, Math.PI/2 = at the top
  */
 // const theta = Math.PI / 12;
-const theta = Math.PI / 2 * 0.8;
+let theta = Math.PI / 2 * 0.8;
 /**
  * xz angle.
  */
@@ -88,7 +88,7 @@ spotLight.castShadow = true;
 spotLight.shadow.mapSize.width = 2048 * 2;
 spotLight.shadow.mapSize.height = 2048 * 2;
 
-spotLight.shadow.bias = -0.001; // try not to make leaves self-shadow
+spotLight.shadow.bias = 0.000;
 spotLight.shadow.radius = 1.5; // 1 is normal; 1.5 makes it a bit blurrier
 spotLight.shadow.camera.near = 90;
 spotLight.shadow.camera.far = 101;
@@ -147,6 +147,8 @@ const rocks = (() => {
 
     for (let i = 0; i < 20; i++) {
         const mesh = new THREE.Mesh(geom, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
         const radius = THREE.Math.randFloat(1, 5);
         const angle = THREE.Math.randFloat(0, Math.PI * 2);
         mesh.scale.setScalar(0.1);
@@ -158,5 +160,21 @@ const rocks = (() => {
         scene.add(mesh);
     }
 })();
+
+export function setTimeOfDay(t: number) {
+    theta = THREE.Math.mapLinear(t, 0, 1, 0, Math.PI);
+
+    const sunlightScalar = Math.sqrt(Math.max(0, Math.sin(theta)));
+    spotLight.intensity = 0.3 + 1 * sunlightScalar;
+    ambientLight.intensity = 0.2 + 0.2 * sunlightScalar;
+    hemisphereLight.intensity = 0.15 + 0.15 * sunlightScalar;
+    // const rayleigh = THREE.Math.mapLinear(Math.sin(theta), 0, 1, ;
+    sky.material.uniforms.sunPosition.value.set(
+        distance * Math.cos(phi),
+        distance * Math.sin(phi) * Math.sin(theta),
+        distance * Math.sin(phi) * Math.cos(theta),
+    );
+    spotLight.position.copy(sky.material.uniforms.sunPosition.value);
+}
 
 export default scene;
