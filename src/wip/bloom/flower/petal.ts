@@ -19,10 +19,14 @@ export default class Petal extends Component {
 
     updateSelf(t: number) {
         const timeAlive = (t - this.timeBorn);
-        const scale = THREE.Math.smoothstep(timeAlive, 0, 10000) + 0.01;
+        const scale = THREE.Math.smoothstep(timeAlive, 0, 20000) * 0.99 + 0.01;
         this.mesh.scale.setScalar(scale);
 
-        const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, 0, finalRotZ);
+        const rotZ = THREE.Math.mapLinear(
+            THREE.Math.clamp(THREE.Math.smoothstep(timeAlive, 10000, 40000), 0, 1),
+            0, 1,
+            0, finalRotZ,
+        );
         this.mesh.rotation.z = rotZ;
 
         const stiffnessScalar = THREE.Math.mapLinear(Math.sin(timeAlive / 10000), -1, 1, 0.8, 1.2);
@@ -30,7 +34,7 @@ export default class Petal extends Component {
         const [bone0, bone1, sideBone] = this.mesh.skeleton.bones;
         simulateVeinBoneGravity(bone0, bone0Stiffness * stiffnessScalar);
         simulateVeinBoneGravity(bone1, bone1Stiffness * stiffnessScalar);
-        sideBone.position.y = Math.sin(timeAlive / 10000) * sideBoneMax;
+        sideBone.position.y = Math.sin(timeAlive / 4000) * sideBoneMax;
     }
 
     static generate(template: LeafTemplate) {

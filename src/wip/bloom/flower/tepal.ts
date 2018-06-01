@@ -20,13 +20,16 @@ export default class Tepal extends Component {
 
     updateSelf(t: number) {
         const timeAlive = (t - this.timeBorn);
+        const scale = THREE.Math.smoothstep(timeAlive, 0, 20000) + 0.01;
+        this.mesh.scale.setScalar(scale);
+
         const rotZ = THREE.Math.mapLinear(THREE.Math.smoothstep(timeAlive, 0, 10000), 0, 1, 0., tepalFinalRotZ);
         this.mesh.rotation.z = rotZ;
 
         const bones = this.mesh.skeleton.bones;
         for (let i = 0; i < bones.length - 1; i++) {
             const bone = bones[i];
-            simulateVeinBoneGravity(bone, 0.5);
+            simulateVeinBoneGravity(bone, 0.2);
         }
         const sideBone = bones[bones.length - 1];
         sideBone.position.y = tepalSidePositionY + Math.sin(timeAlive / 4000) * 0.25;

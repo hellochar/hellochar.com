@@ -84,7 +84,7 @@ exports.start = (callback) => {
         // console.log(json);
         callback(json);
       } catch (e) {
-        console.error(e);
+        // console.error(e);
       }
     }
   }, delay);

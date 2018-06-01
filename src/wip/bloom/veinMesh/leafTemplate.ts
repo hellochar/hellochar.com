@@ -1,5 +1,4 @@
 import alphaComplex = require("alpha-complex");
-import Delaunator from "delaunator";
 import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";
@@ -22,7 +21,7 @@ export class LeafTemplate {
         // alpha too low puts holes in the leaf where the veins haven't explored into
         // the depth_steps significantly controls the leaf inner whitespace so we factor it
         // while choosing alpha
-        const alpha = leaf.growthParameters.EXPAND_DIST / (leaf.growthParameters.DEPTH_STEPS_BEFORE_BRANCHING * 1.5);
+        const alpha = leaf.growthParameters.EXPAND_DIST / (leaf.growthParameters.DEPTH_STEPS_BEFORE_BRANCHING * 1.6);
         LeafTemplate.addAlphaHullFaces(alpha, leaf, geometry);
 
         geometry.computeFaceNormals();
@@ -34,26 +33,6 @@ export class LeafTemplate {
         generator.updateGeometryFaceVertexUvs();
         generator.generateAndDrawMaps(textureGeneratorParams);
 
-        // const materialParams: THREE.MeshPhongMaterialParameters = {
-        //     skinning: true,
-        //     side: THREE.DoubleSide,
-        //     // specular: 0x111111,
-        //     specular: 0x222222,
-        //     // specular: 0x444444,
-        //     // specular: 0xffffff,
-        //     // shininess: 20000,
-        //     shininess: 40,
-        //     // shininess: 0.1,
-
-        //     bumpScale: 0.04,
-
-        //     // wireframe: true,
-        //     map: generator.colorMap,
-        //     bumpMap: generator.bumpMap,
-
-        //     ...textureGeneratorParams.baseMaterialParams,
-        // };
-        // const material = new THREE.MeshPhongMaterial(materialParams);
         const materialParams: THREE.MeshStandardMaterialParameters = {
             skinning: true,
             side: THREE.DoubleSide,

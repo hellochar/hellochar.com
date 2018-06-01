@@ -50,8 +50,8 @@ export class Leaf extends Component {
 
     updateSelf(t: number) {
         const msAlive = t - this.timeBorn;
-        // const logisticX = msAlive / 5000 - 6;
-        const logisticX = msAlive / 500 - 6;
+        const logisticX = msAlive / 5000 - 6;
+        // const logisticX = msAlive / 500 - 6;
         const s = logistic(logisticX);
         this.scale.set(s, s, s);
 

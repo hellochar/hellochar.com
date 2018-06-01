@@ -19,17 +19,16 @@ import { PersonMesh } from "./personMesh";
 import scene from "./scene";
 import { season } from "./season";
 
-// https://gist.github.com/blixt/f17b47c62508be59987b
-let _seed = Date.now() % 2147483647;
-if (_seed <= 0) {
-    _seed += 2147483646;
-}
+// // https://gist.github.com/blixt/f17b47c62508be59987b
+// let _seed = Date.now() % 2147483647;
+// if (_seed <= 0) {
+//     _seed += 2147483646;
+// }
 
-Math.random = () => {
-    const next = (_seed = _seed * 16807 % 2147483647);
-    return (next - 1) / 2147483646;
-
-}
+// Math.random = () => {
+//     const next = (_seed = _seed * 16807 % 2147483647);
+//     return (next - 1) / 2147483646;
+// }
 
 class Bloom extends ISketch {
     public events = {
@@ -190,10 +189,10 @@ class Bloom extends ISketch {
     private curtain: Curtain | null = null;
 
     public elements = [
-        <div style={{ textAlign: "left" }}>
-            <div ref={(r) => this.r1 = r} />
-            <pre ref={(r) => this.r2 = r} />
-        </div>,
+        // <div style={{ textAlign: "left" }}>
+        //     <div ref={(r) => this.r1 = r} />
+        //     <pre ref={(r) => this.r2 = r} />
+        // </div>,
         <Curtain ref={(curtainRef) => this.curtain = curtainRef} />,
     ];
 
@@ -205,12 +204,11 @@ class Bloom extends ISketch {
         const numNutrientsThisFrame = this.feedParticles.animate(ms);
 
         // const nutrientsPerSecond = 0.2 + Math.log(numNutrientsThisFrame + 1) / 3;
-        const nutrientsPerSecond = Math.min(9.9, 9.2 + Math.sqrt(numNutrientsThisFrame) / 3);
+        const nutrientsPerSecond = Math.min(9.9, 0.2 + Math.sqrt(numNutrientsThisFrame) / 3);
         NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
         this.updateComponentAndComputeBoundingBox();
         this.updateSeasonalEffect();
-
-        // this.updateCamera();
+        this.updateCamera();
 
         this.updateDyingObjects();
 
@@ -221,7 +219,7 @@ class Bloom extends ISketch {
             this.r1.textContent = JSON.stringify(season);
             // this.r1.textContent = `${this.feedParticles.pointsStartIndex}, ${this.feedParticles.numActivePoints}`;
         }
-        this.debugObjectCounts();
+        // this.debugObjectCounts();
 
         this.orbitControls.update();
         // this.renderer.render(this.scene, this.camera);
@@ -235,9 +233,9 @@ class Bloom extends ISketch {
 
     public setSeason() {
         const [flowerTime, dieTime, restartTime] = [
-            (5 * 60 + 32) * 40,
-            (8 * 60 + 13) * 10,
-            (10 * 60 + 13) * 100,
+            (5 * 60 + 32) * 1000,
+            (8 * 60 + 13) * 1000,
+            (10 * 60 + 13) * 1000,
         ];
         if (this.timeElapsed < flowerTime) {
             season.type = "growing";

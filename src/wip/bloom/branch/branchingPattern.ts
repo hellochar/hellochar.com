@@ -1,13 +1,13 @@
 import * as THREE from "three";
 
 import { Component } from "../component";
+import dna from "../dna";
 import { Flower } from "../flower";
+import { Leaf } from "../leaf";
 import Leaves from "../leaf/leaves";
 import { Branch } from "./branch";
 import { LENGTH_PER_BONE } from "./branchMeshManager";
 import { Bud } from "./bud";
-import { Leaf } from "../leaf";
-import dna from "../dna";
 
 const worldPosition = new THREE.Vector3();
 
@@ -24,7 +24,7 @@ export class DefaultBranchingPattern implements BranchingPattern {
     // this *dramatically* changes growth
     public lengthPerGrowth = 1.0;
 
-    public lengthPerYRotation = 4;
+    public lengthPerYRotation = THREE.Math.randFloat(2, 4);
 
     public baseYRot = Math.random() * Math.PI * 2;
 
