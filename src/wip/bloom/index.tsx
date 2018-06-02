@@ -230,7 +230,8 @@ class Bloom extends ISketch {
             this.r2.style.background = "white";
             // this.r1.textContent = this.audioContext.state;
             // this.r1.textContent = `${nutrientsPerSecond}`;
-            this.r2.textContent = JSON.stringify(season) + "\n" + this.audio.currentTime;
+            // this.r2.textContent = `${this.canvas.width},${this.canvas.height}, ${window.devicePixelRatio}, ${this.renderer.getPixelRatio()}\n${(1000 / ms).toFixed(2)}`;
+            // this.r2.textContent = JSON.stringify(season) + "\n" + this.audio.currentTime;
             // this.r1.textContent = `${this.feedParticles.pointsStartIndex}, ${this.feedParticles.numActivePoints}`;
         }
         // this.debugObjectCounts();
@@ -466,6 +467,7 @@ class Bloom extends ISketch {
     public resize(width: number, height: number) {
         this.camera.aspect = 1 / this.aspectRatio;
         this.camera.updateProjectionMatrix();
+        this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
     }
 }
 

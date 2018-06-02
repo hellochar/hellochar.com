@@ -52,7 +52,7 @@ exports.start = (callback) => {
     }
   });
 
-  const delay = 1000 / 25; // target 25fps
+  const delay = 1000 / 60;
   intervalTimeoutId = setInterval(() => {
     // these come out relative to outputFolder
     let files;
@@ -89,8 +89,10 @@ exports.start = (callback) => {
     }
   }, delay);
 
-  process.on('exit', () => {
+  function killOpenPose() {
     console.log("got exit, killing openpose");
     openPoseProcess.kill();
-  });
+  }
+  process.on('exit', killOpenPose);
+  process.on('SIGINT', killOpenPose);
 }

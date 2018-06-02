@@ -139,7 +139,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
                 document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
                 const renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true, antialias: true });
-                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
                 ref.appendChild(renderer.domElement);
 
                 const sketch = new (this.props.sketchClass)(renderer, this.audioContext);
