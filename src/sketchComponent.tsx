@@ -76,9 +76,9 @@ class SketchSuccessComponent extends React.Component<{ sketch: ISketch }, {}> {
     componentWillUnmount() {
         if (this.props.sketch.destroy) {
             this.props.sketch.destroy();
-            if (this.frameId != null) {
-                cancelAnimationFrame(this.frameId);
-            }
+        }
+        if (this.frameId != null) {
+            cancelAnimationFrame(this.frameId);
         }
         this.props.sketch.renderer.dispose();
         $window.off("resize", this.handleWindowResize);
