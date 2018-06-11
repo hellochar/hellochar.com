@@ -35,27 +35,36 @@
 
 .header {
     padding: 80px 0;
-    height: 350px;
     max-width: 800px;
     margin: auto;
     transition: all 0.2s;
-	font-family: $palatino-family;
+    font-family: $palatino-family;
     text-align: center;
+    display: flex;
+    flex-direction: column;
 
     &.minimized {
         padding: 10px;
         height: auto;
         text-align: initial;
+        flex-direction: row;
 
-        .header-name h1 {
-            font-size: 20px;
-            margin: 0;
-            display: inline-block;
+        .header-name {
+            white-space: nowrap;
+            overflow: hidden;
+
+            h1 {
+                font-size: 20px;
+                margin: 0;
+            }
         }
 
         .header-nav {
-            float: right;
             line-height: 20px;
+            margin-left: auto;
+            align-self: flex-end;
+            white-space: nowrap;
+            flex-shrink: 0;
 
             a:last-of-type {
                 margin-right: 0;
@@ -89,4 +98,17 @@
     width: 100%;
     height: 50px;
     position: fixed; // move it out of the DOM flow
+}
+
+@media screen and (max-width: 539px) {
+    .header {
+        padding: 40px 0;
+
+        .header-name {
+            h1 {
+                font-size: 50px;
+                margin-bottom: 50px;
+            }
+        }
+    }
 }

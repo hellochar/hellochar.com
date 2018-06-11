@@ -84,3 +84,9 @@
         font-size: 16px;
     }
 }
+
+@media screen and (max-width: 539px) {
+    .content {
+        padding-top: 150px;
+    }
+}
