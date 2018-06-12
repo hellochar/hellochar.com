@@ -119,5 +119,7 @@ void main() {
 
     gl_FragColor.a *= opacityScalar;
     gl_FragColor.a = max(gl_FragColor.a, 1. / 255.);
+
+    gl_FragColor = pow(gl_FragColor, vec4(0.545));
 }
 `;
