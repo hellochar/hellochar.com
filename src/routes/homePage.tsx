@@ -57,11 +57,11 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     private renderWork() {
         return (
             <section className="content-section work" id="work">
-                { this.renderHighlight("Flame", "/assets/images/flame.png") }
-                { this.renderHighlight("Line", "/assets/images/gravity4_cropped.png") }
-                { this.renderHighlight("Dots", "/assets/images/dots2.png") }
-                { this.renderHighlight("Waves", "/assets/images/waves2.png") }
-                { this.renderHighlight("Cymatics", "/assets/images/cymatics1.png") }
+                { this.renderHighlight("Flame", "/assets/images/flame.jpg") }
+                { this.renderHighlight("Line", "/assets/images/gravity4_cropped.jpg") }
+                { this.renderHighlight("Dots", "/assets/images/dots2.jpg") }
+                { this.renderHighlight("Waves", "/assets/images/waves2.jpg") }
+                { this.renderHighlight("Cymatics", "/assets/images/cymatics1.jpg") }
             </section>
         );
     }
