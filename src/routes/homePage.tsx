@@ -1,4 +1,5 @@
 import * as React from "react";
+import LazyLoad from 'react-lazyload';
 import { RouteComponentProps } from "react-router";
 import { Link, NavLink } from "react-router-dom";
 
@@ -152,7 +153,9 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <figcaption>
                     <Link className="work-highlight-name" to={linkUrl}>{name}</Link>
                 </figcaption>
-                <Link to={linkUrl}><img className="full-width" src={imageUrl} /></Link>
+                <LazyLoad height="500px" once>
+                    <Link to={linkUrl}><img className="full-width" src={imageUrl} /></Link>
+                </LazyLoad>
             </figure>
         );
     }

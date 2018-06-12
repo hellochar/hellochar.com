@@ -1,17 +1,25 @@
 import * as classnames from "classnames";
 import * as React from "react";
+import LazyLoad from "react-lazyload";
 
 import { Images } from "../common/images";
 
 export const HistorySection = () => (
     <section className="content-section history" id="history">
         <h1>Big List of Stuff</h1>
-        <History2017 />
-        <History2016 />
-        <History2015 />
-        <History2014 />
-        {/* <HistoryOlder /> */}
-        </section>
+        <LazyLoad once>
+            <History2017 />
+        </LazyLoad>
+        <LazyLoad once>
+            <History2016 />
+        </LazyLoad>
+        <LazyLoad once>
+            <History2015 />
+        </LazyLoad>
+        <LazyLoad once>
+            <History2014 />
+        </LazyLoad>
+    </section>
 );
 
 const Title: React.StatelessComponent<{href?: string}> = ({href, children}) => {
@@ -383,84 +391,6 @@ const History2014 = () => (
         <p>
             <Title href="http://p5wscala.wordpress.com">p5wscala</Title>. My college blog dedicated to my creative coding using Processing
             with the Scala programming language.
-        </p>
-    </History>
-);
-
-const HistoryOlder = () => (
-    <History name="Older">
-        <p>
-[ ]   Universe - punt
-
-[ ]   Tree - punt
-
-[ ]   Spiral - meh
-
-[ ]   PlasmaFractal
-
-[ ]   Particle_Formulator
-
-[ ]   Noise_Net
-
-[ ]   ModSquare
-
-[ ]   Chains
-
-[ ]   Chainv1_5
-
-[ ]   ChaosGame
-
-[ ]   Cling
-
-[ ]   ColorBasedAttraction
-
-[ ]   Curlicue
-
-[ ]   FallingSand
-
-[ ]   FlexiLine
-
-[ ]   Fluidity
-
-[ ]   Fluidv1
-
-[ ]   Fluidv2
-
-[ ]   FractalDrawer
-
-[ ]   FractalTree
-
-[ ]   GravTrail
-     _Old/_2010
-
-[ ]   cyclic_cellular_automoton
-
-[ ]   Nodes (need to fix)
-_Finished
-     [ ] BlockRender
-     [ ] CA_1D
-     [ ] Change
-     [ ] FuncDrawer_2D
-_Misc
-     [ ] Derivate2
-_Suspended
-     [ ] Growth
-     [ ] People
-
-Top Level
-
-[ ] DLA
-Bifurication
-bustop_2
-CentripetalForce
-fbm
-histogram
-mooddev
-sketch_jun04a
-sketch_mar10a
-spirals
-SpringGrid
-Thingy
         </p>
     </History>
 );
