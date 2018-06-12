@@ -1,13 +1,13 @@
 // import * as OrbitControls from "imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls";
 import { parse } from "query-string";
-import { KeyboardEvent, MouseEvent } from "react";
 import * as React from "react";
 import * as THREE from "three";
 
-import { createPinkNoise, createWhiteNoise } from "../audio/noise";
-import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, UpdateVisitor, VARIATIONS, VelocityTrackerVisitor } from "../common/flame";
-import { lerp, map, sampleArray } from "../math";
-import { ISketch, SketchAudioContext } from "../sketch";
+import { createWhiteNoise } from "../../audio/noise";
+import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, VARIATIONS, VelocityTrackerVisitor } from "../../common/flame";
+import { map } from "../../math";
+import { ISketch, SketchAudioContext } from "../../sketch";
+import { FlamePointsMaterial } from "./flamePointsMaterial";
 
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
@@ -100,104 +100,21 @@ function stringHash(s: string) {
 let camera: THREE.PerspectiveCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
-const material: THREE.PointsMaterial = new THREE.PointsMaterial({
-    vertexColors: THREE.VertexColors,
-    size: 0.008,
-    transparent: true,
-    opacity: 0.9,
-    sizeAttenuation: true,
-    blending: THREE.AdditiveBlending,
-    depthTest: false,
-    // alphaTest: 0.5,
-});
-
-// const material = new THREE.ShaderMaterial({
+// const material: THREE.PointsMaterial = new THREE.PointsMaterial({
 //     vertexColors: THREE.VertexColors,
+//     size: 0.008,
 //     transparent: true,
-//     opacity: 0.2,
+//     opacity: 0.9,
+//     sizeAttenuation: true,
 //     blending: THREE.AdditiveBlending,
 //     depthTest: false,
 //     // alphaTest: 0.5,
-//     uniforms: THREE.UniformsUtils.merge( [
-// 			THREE.UniformsLib.points,
-// 			THREE.UniformsLib.fog
-// 		] ),
+// });
 
-//     vertexShader: `
-// uniform float size;
-// uniform float scale;
+const material = new FlamePointsMaterial();
 
-// #include <common>
-// #include <color_pars_vertex>
-// #include <fog_pars_vertex>
-// #include <morphtarget_pars_vertex>
-// #include <logdepthbuf_pars_vertex>
-// #include <clipping_planes_pars_vertex>
-
-// void main() {
-
-// 	#include <color_vertex>
-// 	#include <begin_vertex>
-// 	#include <morphtarget_vertex>
-// 	#include <project_vertex>
-
-//     gl_PointSize = 5. * ( scale / - mvPosition.z );
-
-// 	#include <logdepthbuf_vertex>
-// 	#include <clipping_planes_vertex>
-// 	#include <worldpos_vertex>
-// 	#include <fog_vertex>
-
-// }
-
-// `,
-//     fragmentShader: `
-// uniform vec3 diffuse;
-// uniform float opacity;
-
-// #include <common>
-// #include <packing>
-// #include <color_pars_fragment>
-// #include <map_particle_pars_fragment>
-// #include <fog_pars_fragment>
-// #include <logdepthbuf_pars_fragment>
-// #include <clipping_planes_pars_fragment>
-
-// void main() {
-
-// 	#include <clipping_planes_fragment>
-
-// 	vec3 outgoingLight = vec3( 0.0 );
-// 	vec4 diffuseColor = vec4( diffuse, opacity );
-
-// 	#include <logdepthbuf_fragment>
-// 	#include <map_particle_fragment>
-// 	#include <color_fragment>
-// 	#include <alphatest_fragment>
-
-// 	outgoingLight = diffuseColor.rgb;
-
-// 	gl_FragColor = vec4( outgoingLight, diffuseColor.a );
-
-// 	#include <premultiplied_alpha_fragment>
-// 	#include <tonemapping_fragment>
-// 	#include <encodings_fragment>
-// 	#include <fog_fragment>
-
-// }
-
-// `,
-// })
-new THREE.TextureLoader().load("/assets/disc.png", (tex) => {
-    // console.log(material.uniforms.map);
-    // material.uniforms.map.value = tex;
-    material.map = tex;
-    material.needsUpdate = true;
-});
 let pointCloud: THREE.Points;
-const mousePressed = false;
 const mousePosition = new THREE.Vector2(0, 0);
-const lastMousePosition = new THREE.Vector2(0, 0);
 let controls: THREE.OrbitControls;
 
 let globalBranches: Branch[];
@@ -367,10 +284,10 @@ function computeDepth() {
 }
 
 function mousemove(event: JQuery.Event) {
-    // cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -1.5, 1.5), 3);
-    // cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 1.5, -1.5), 3);
-    // cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -0.5, 0.5), 1);
-    // cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 0.5, -0.5), 1);
+    const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+    const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+    mousePosition.x = mouseX;
+    mousePosition.y = mouseY;
 }
 
 function mousedown(event: JQuery.Event) {
@@ -411,7 +328,7 @@ class FlameNameInput extends React.Component<{ onInput: (newName: string) => voi
     }
 }
 
-class Flame extends ISketch {
+export class FlameSketch extends ISketch {
     public elements = [<FlameNameInput key="input" onInput={(name) => this.updateName(name)} />];
     public id = "flame";
     public events = {
@@ -497,6 +414,10 @@ class Flame extends ISketch {
         compressor.ratio.setTargetAtTime(1 + 3 / cameraLength, this.audioContext.currentTime, 0.016);
         this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
 
+        material.setFocalLength(
+            cameraLength * Math.pow(2, map(mousePosition.x, 0, this.renderer.domElement.width, -2, 2)),
+        );
+
         controls.update();
         // console.time("render");
         this.renderer.render(scene, camera);
@@ -553,5 +474,3 @@ class Flame extends ISketch {
         scene.add(pointCloud);
     }
 }
-
-export default Flame;
