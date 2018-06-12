@@ -102,10 +102,97 @@ let scene: THREE.Scene;
 let geometry: THREE.Geometry;
 const material: THREE.PointsMaterial = new THREE.PointsMaterial({
     vertexColors: THREE.VertexColors,
-    size: 0.004,
+    size: 0.008,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.9,
     sizeAttenuation: true,
+    blending: THREE.AdditiveBlending,
+    depthTest: false,
+    // alphaTest: 0.5,
+});
+
+// const material = new THREE.ShaderMaterial({
+//     vertexColors: THREE.VertexColors,
+//     transparent: true,
+//     opacity: 0.2,
+//     blending: THREE.AdditiveBlending,
+//     depthTest: false,
+//     // alphaTest: 0.5,
+//     uniforms: THREE.UniformsUtils.merge( [
+// 			THREE.UniformsLib.points,
+// 			THREE.UniformsLib.fog
+// 		] ),
+
+//     vertexShader: `
+// uniform float size;
+// uniform float scale;
+
+// #include <common>
+// #include <color_pars_vertex>
+// #include <fog_pars_vertex>
+// #include <morphtarget_pars_vertex>
+// #include <logdepthbuf_pars_vertex>
+// #include <clipping_planes_pars_vertex>
+
+// void main() {
+
+// 	#include <color_vertex>
+// 	#include <begin_vertex>
+// 	#include <morphtarget_vertex>
+// 	#include <project_vertex>
+
+//     gl_PointSize = 5. * ( scale / - mvPosition.z );
+
+// 	#include <logdepthbuf_vertex>
+// 	#include <clipping_planes_vertex>
+// 	#include <worldpos_vertex>
+// 	#include <fog_vertex>
+
+// }
+
+// `,
+//     fragmentShader: `
+// uniform vec3 diffuse;
+// uniform float opacity;
+
+// #include <common>
+// #include <packing>
+// #include <color_pars_fragment>
+// #include <map_particle_pars_fragment>
+// #include <fog_pars_fragment>
+// #include <logdepthbuf_pars_fragment>
+// #include <clipping_planes_pars_fragment>
+
+// void main() {
+
+// 	#include <clipping_planes_fragment>
+
+// 	vec3 outgoingLight = vec3( 0.0 );
+// 	vec4 diffuseColor = vec4( diffuse, opacity );
+
+// 	#include <logdepthbuf_fragment>
+// 	#include <map_particle_fragment>
+// 	#include <color_fragment>
+// 	#include <alphatest_fragment>
+
+// 	outgoingLight = diffuseColor.rgb;
+
+// 	gl_FragColor = vec4( outgoingLight, diffuseColor.a );
+
+// 	#include <premultiplied_alpha_fragment>
+// 	#include <tonemapping_fragment>
+// 	#include <encodings_fragment>
+// 	#include <fog_fragment>
+
+// }
+
+// `,
+// })
+new THREE.TextureLoader().load("/assets/disc.png", (tex) => {
+    // console.log(material.uniforms.map);
+    // material.uniforms.map.value = tex;
+    material.map = tex;
+    material.needsUpdate = true;
 });
 let pointCloud: THREE.Points;
 const mousePressed = false;
@@ -335,17 +422,19 @@ class Flame extends ISketch {
 
     public init() {
         initAudio(this.audioContext);
+        const bgColor = new THREE.Color("#10101f")
         scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0, 12, 50);
+        scene.fog = new THREE.Fog(bgColor.getHex(), 2, 60);
+        scene.background = bgColor;
 
-        camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);
-        camera.position.z = 3;
+        camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 25);
+        camera.position.z = 2;
         camera.position.y = 1;
         camera.lookAt(new THREE.Vector3());
         controls = new THREE.OrbitControls(camera, this.renderer.domElement);
         controls.autoRotate = true;
         controls.autoRotateSpeed = 1;
-        controls.maxDistance = 10;
+        controls.maxDistance = 8;
         controls.minDistance = 0.1;
         controls.enableKeys = false;
         controls.enablePan = false;
