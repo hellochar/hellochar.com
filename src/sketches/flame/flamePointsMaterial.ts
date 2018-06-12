@@ -13,8 +13,7 @@ export class FlamePointsMaterial extends THREE.ShaderMaterial {
         super({
             vertexColors: THREE.VertexColors,
             transparent: true,
-            // opacity: 0.2,
-            opacity: 1.0,
+            opacity: 0.2,
             blending: THREE.AdditiveBlending,
             depthTest: false,
             uniforms: THREE.UniformsUtils.merge([
@@ -67,7 +66,7 @@ void main() {
 
     float dist = -mvPosition.z;
     float originalSize = 2.;
-    float outOfFocusAmount = abs(dist - focalLength) / focalLength * 5.;
+    float outOfFocusAmount = abs(dist - focalLength) / focalLength * 3.;
     float unfocusedSize = originalSize * (1. + outOfFocusAmount);
 
     gl_PointSize = unfocusedSize * ( scale / - mvPosition.z );

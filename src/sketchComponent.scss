@@ -60,27 +60,6 @@
     }
 }
 
-.flame-input {
-    margin: auto auto 10% auto;
-    width: 33%;
-
-    input {
-        background: 0;
-        border: none;
-        border-bottom: 3px solid white;
-        color: white;
-
-        font-family: $palatino-family;
-        font-size: 20px;
-        font-weight: 400;
-        text-align: center;
-
-        &:focus {
-            outline: none;
-        }
-    }
-}
-
 .user-volume {
     position: absolute;
     top: 0;

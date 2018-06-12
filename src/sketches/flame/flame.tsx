@@ -415,7 +415,7 @@ export class FlameSketch extends ISketch {
         this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
 
         material.setFocalLength(
-            cameraLength * Math.pow(2, map(mousePosition.x, 0, this.renderer.domElement.width, -2, 2)),
+            cameraLength * Math.pow(2, map(mousePosition.y, 0, this.renderer.domElement.height, 2, -2)),
         );
 
         controls.update();
