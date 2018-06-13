@@ -2,6 +2,9 @@ import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 
+import FaVolumeOff = require("react-icons/lib/fa/volume-off");
+import FaVolumeUp = require("react-icons/lib/fa/volume-up");
+
 import * as classnames from "classnames";
 import { Link } from "react-router-dom";
 import { ISketch, SketchAudioContext, SketchConstructor, UI_EVENTS } from "./sketch";
@@ -193,13 +196,9 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
 
     private renderVolumeButton() {
         const { volumeEnabled } = this.state;
-        const volumeElementClassname = classnames("fa", {
-            "fa-volume-off": !volumeEnabled,
-            "fa-volume-up": volumeEnabled,
-        });
         return (
             <button className="user-volume" onClick={this.handleVolumeButtonClick}>
-                <i className={volumeElementClassname} aria-hidden="true" />
+                { volumeEnabled ? <FaVolumeUp /> : <FaVolumeOff /> }
             </button>
         );
     }
