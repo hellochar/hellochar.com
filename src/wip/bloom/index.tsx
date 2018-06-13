@@ -2,12 +2,12 @@ import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 
+import { Curtain } from "../../common/curtain";
 import { ISketch } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
 import { Bud } from "./branch/bud";
 import { CameraController, CameraFocusOnBoxController, CameraFocusOnObjectController } from "./cameraController";
 import { Component } from "./component";
-import { Curtain } from "./curtain";
 import dna, { randomizeDna } from "./dna";
 import { FeedParticles } from "./feedParticles";
 import { Flower, Petal, Tepal } from "./flower";
