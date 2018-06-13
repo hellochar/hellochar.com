@@ -14,7 +14,7 @@ import { Flower, Petal, Tepal } from "./flower";
 import { Leaf } from "./leaf";
 import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./personMesh";
-import scene, { particles, setTimeOfDay } from "./scene";
+import { BloomScene } from "./scene";
 import { season } from "./season";
 
 // // https://gist.github.com/blixt/f17b47c62508be59987b
@@ -29,7 +29,7 @@ import { season } from "./season";
 // }
 
 class Bloom extends ISketch {
-    public scene = scene;
+    public scene = new BloomScene();
     public camera!: THREE.PerspectiveCamera;
     public orbitControls!: THREE.OrbitControls;
     public composer!: THREE.EffectComposer;
@@ -111,20 +111,20 @@ class Bloom extends ISketch {
         const leaf = Leaf.generate(dna.leafTemplate);
         leaf.visible = false;
 
-        scene.add(petal, tepal, leaf);
+        this.scene.add(petal, tepal, leaf);
 
         // do a single render with a dummy leaf, tepal, and petal
         this.renderer.render(this.scene, this.camera);
 
-        scene.remove(petal, tepal, leaf);
+        this.scene.remove(petal, tepal, leaf);
     }
 
     public envMap!: THREE.CubeTexture;
     public initCubeTexture() {
         const cubeCamera = new THREE.CubeCamera(1, 100, 1024);
         cubeCamera.position.set(0, 1, 0);
-        scene.add(cubeCamera);
-        cubeCamera.update(this.renderer, scene);
+        this.scene.add(cubeCamera);
+        cubeCamera.update(this.renderer, this.scene);
 
         this.envMap = cubeCamera.renderTarget.texture as THREE.CubeTexture;
     }
@@ -256,7 +256,7 @@ class Bloom extends ISketch {
             season.percent = (currentTime - dieTime) / (restartTime - dieTime);
         }
         const timeOfDay = Math.min(currentTime / restartTime, 1);
-        setTimeOfDay(timeOfDay);
+        this.scene.setTimeOfDay(timeOfDay);
     }
 
     public updateSeasonalEffect() {
@@ -434,7 +434,7 @@ class Bloom extends ISketch {
         const counts = new Map<string, number>();
         let numActive = 0;
         let total = 0;
-        scene.traverse((obj) => {
+        this.scene.traverse((obj) => {
             const name = obj.constructor.name;
             counts.set(name, (counts.get(name) || 0) + 1);
             if (obj.matrixAutoUpdate) {
@@ -520,8 +520,8 @@ class FloweringSeasonalEffect implements SeasonalEffect {
             Math.pow(season.percent, 6) * 1 / (1 + Math.exp(300 * (season.percent - 0.98))) - 0.01,
             0,
         );
-        particles.rotateY(0.4 * rotSpeedScalar);
-        particles.material.opacity = rotSpeedScalar + 0.2;
+        this.bloom.scene.particles.rotateY(0.4 * rotSpeedScalar);
+        this.bloom.scene.particles.material.opacity = rotSpeedScalar + 0.2;
     }
 }
 
