@@ -152,8 +152,7 @@ class KeypointSphere extends THREE.Mesh {
             this.visible = true;
             const oldPosition = this.position.clone();
             this.scale.lerp(KeypointSphere.confidentScale, 0.1);
-            this.position.lerp(this.keypoint.position, 0.5);
-
+            this.position.lerp(this.keypoint.position, 1.0); // was .5
             const rotateY = (this.position.x - oldPosition.x) * 5;
             const rotateX = (this.position.y - oldPosition.y) * 5;
 
