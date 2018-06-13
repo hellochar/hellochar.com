@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { mouse } from "./mouse";
 
 const quaternion = new THREE.Quaternion();
 const dummyPosition = new THREE.Vector3();

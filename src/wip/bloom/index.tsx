@@ -12,7 +12,6 @@ import dna, { randomizeDna } from "./dna";
 import { FeedParticles } from "./feedParticles";
 import { Flower, Petal, Tepal } from "./flower";
 import { Leaf } from "./leaf";
-import { mouse } from "./mouse";
 import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./personMesh";
 import scene, { particles, setTimeOfDay } from "./scene";
@@ -30,17 +29,6 @@ import { season } from "./season";
 // }
 
 class Bloom extends ISketch {
-    public events = {
-        mousemove: (e: JQuery.Event) => {
-            mouse.x = THREE.Math.mapLinear(e.offsetX!, 0, this.canvas.width, -1, 1);
-            mouse.y = THREE.Math.mapLinear(e.offsetY!, 0, this.canvas.height, 1, -1);
-        },
-        mousedrag: (e: JQuery.Event) => {
-            mouse.x = THREE.Math.mapLinear(e.offsetX!, 0, this.canvas.width, -1, 1);
-            mouse.y = THREE.Math.mapLinear(e.offsetY!, 0, this.canvas.height, 1, -1);
-        },
-    };
-
     public scene = scene;
     public camera!: THREE.PerspectiveCamera;
     public orbitControls!: THREE.OrbitControls;
