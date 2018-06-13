@@ -7,11 +7,12 @@
   },
   "scripts": {
     "build": "webpack --config webpack.dev.js",
-    "kiosk": "npm-run-all -s prod:build prod:serverWithKiosk",
+    "kiosk": "npm-run-all -s kiosk:build kiosk:server",
+    "kiosk:build": "npm-run-all prod:build",
+    "kiosk:server": "node ./openpose_kiosk/server.js --kiosk",
     "prod": "npm-run-all -p prod:build prod:server",
     "prod:build": "webpack --config webpack.prod.js || true",
     "prod:server": "node ./bin/www",
-    "prod:serverWithKiosk": "node ./bin/www --kiosk",
     "start": "webpack-dev-server --open --config webpack.dev.js",
     "stats": "webpack --config webpack.dev.js --profile --json > stats.json"
   },

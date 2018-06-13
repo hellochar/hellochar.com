@@ -3,6 +3,17 @@ const path = require('path');
 const { exec } = require('child_process');
 const rimraf = require('rimraf');
 
+/**
+ * Runs OpenPoseDemo.exe, assuming the "openpose-1.3.0-win64-gpu-binaries" folder is here. Uses parameters tuned for installation:
+ * * small camera resolution
+ * * small net resolution
+ * * model_pose MPI_4_layers
+ * * use the camera
+ * * no display
+ *
+ * OpenPoseDemo.exe will output .json files to a temp folder; .start() will constantly poll this temp folder for new files and read the
+ * latest one as the newest "frame", which will be sent to the callback.
+ */
 exports.start = (callback) => {
   let intervalTimeoutId;
 
