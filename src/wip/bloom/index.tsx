@@ -2,6 +2,7 @@ import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 
+import { OpenPoseManager } from "../../../openpose_kiosk/src/openPoseManager";
 import { Curtain } from "../../common/curtain";
 import { ISketch } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
@@ -12,7 +13,6 @@ import dna, { randomizeDna } from "./dna";
 import { FeedParticles } from "./feedParticles";
 import { Flower, Petal, Tepal } from "./flower";
 import { Leaf } from "./leaf";
-import { OpenPoseManager } from "./openPoseManager";
 import { PersonMesh } from "./personMesh";
 import { BloomScene } from "./scene";
 import { season } from "./season";

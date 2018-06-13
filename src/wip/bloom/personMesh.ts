@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { OpenPoseKeypoints, OpenPosePerson } from "./openPoseManager";
+import { OpenPosePerson } from "../../../openpose_kiosk/src/openPoseManager";
 
 const KEYPOINTS_WIDTH = 640;
 const KEYPOINTS_HEIGHT = 480;
