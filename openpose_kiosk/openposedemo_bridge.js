@@ -39,7 +39,7 @@ exports.start = (callback) => {
     "--display 0",
   ];
   const command = `${execName} ${execParams.join(" ")}`;
-  const cwd = path.resolve(".", "openpose-1.3.0-win64-gpu-binaries");
+  const cwd = path.resolve(__dirname, "openpose-1.3.0-win64-gpu-binaries");
 
   const openPoseProcess = exec(command, {
     cwd: cwd
