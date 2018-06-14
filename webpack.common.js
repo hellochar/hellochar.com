@@ -4,6 +4,7 @@ const path = require("path");
 module.exports = {
   entry: {
     main: "./src/index.tsx",
+    kiosk: "./openpose_kiosk/src/index.tsx",
     // wip: "./src/wip/index.ts",
   },
   output: {
@@ -49,7 +50,16 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'index.html',
-      template: 'src/index.template.html'
-    })
+      template: 'src/index.template.html',
+      // brittle - manually find which chunks don't belong here and exclude them.
+      // see https://github.com/jantimon/html-webpack-plugin/issues/218
+      // they're trying to make it default in the next major rev
+      excludeChunks: ['kiosk', 'vendors~kiosk']
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'kiosk.html',
+      template: 'src/index.template.html',
+      excludeChunks: ['main', 'vendors~main']
+    }),
   ]
 };

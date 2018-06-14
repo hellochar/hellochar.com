@@ -10,16 +10,18 @@ import { ShrinkingHeader } from "./shrinkingHeader";
 
 export interface ISketchRouteProps {
     sketchClass: SketchConstructor;
+
+    isKiosk?: boolean;
 }
 
 export class FullPageSketch extends React.Component<ISketchRouteProps, {}> {
     public render() {
+        const { isKiosk } = this.props;
         const isPresentationMode = !!parse(location.search).presentationMode;
-        const isKiosk = !!parse(location.search).kioskMode;
         const classes = classnames("full-page-sketch", { "presentation-mode": isPresentationMode, "kiosk-mode": isKiosk });
         return (
             <div className={classes}>
-                <Link className="back-button" to="/">&#10094;</Link>
+                { !isKiosk ? <Link className="back-button" to="/">&#10094;</Link> : null }
                 {/* <ShrinkingHeader
                     alwaysShrunken
                     darkTheme={this.props.sketch.darkTheme}

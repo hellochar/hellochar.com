@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { Noise } from "../../common/perlin";
+import { Noise } from "../../src/common/perlin";
 
 const MAX_POINTS = 10000;
 

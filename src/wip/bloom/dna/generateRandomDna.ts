@@ -1,7 +1,6 @@
 import * as THREE from "three";
 
 import { BranchingPattern, DefaultBranchingPattern } from "../branch/branchingPattern";
-import { FeedParticles } from "../feedParticles";
 import { Petal, Stamen, Tepal } from "../flower";
 import { Leaf } from "../leaf";
 import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateTepalGrowthParameters, generateVeinGrowthParameters, VeinedLeaf } from "../vein/veinedLeaf";
@@ -22,8 +21,6 @@ function randGreen(lumLow = 20, lumHigh = 30) {
 export function generateRandomDNA(envMap: THREE.CubeTexture): DNA {
 
     const branchColor = randGreen();
-    FeedParticles.material.color = branchColor;
-    FeedParticles.material.needsUpdate = true;
 
     const branchTemplate = randomBranchTemplate(branchColor, envMap);
 

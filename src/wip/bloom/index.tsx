@@ -2,7 +2,6 @@ import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 
-import { OpenPoseManager } from "../../../openpose_kiosk/src/openPoseManager";
 import { Curtain } from "../../common/curtain";
 import { ISketch } from "../../sketch";
 import { Branch, NUTRIENT_PER_SECOND } from "./branch";
@@ -10,10 +9,8 @@ import { Bud } from "./branch/bud";
 import { CameraController, CameraFocusOnBoxController, CameraFocusOnObjectController } from "./cameraController";
 import { Component } from "./component";
 import dna, { randomizeDna } from "./dna";
-import { FeedParticles } from "./feedParticles";
 import { Flower, Petal, Tepal } from "./flower";
 import { Leaf } from "./leaf";
-import { PersonMesh } from "./personMesh";
 import { BloomScene } from "./scene";
 import { season } from "./season";
 
@@ -28,7 +25,7 @@ import { season } from "./season";
 //     return (next - 1) / 2147483646;
 // }
 
-class Bloom extends ISketch {
+export class Bloom extends ISketch {
     public scene = new BloomScene();
     public camera!: THREE.PerspectiveCamera;
     public orbitControls!: THREE.OrbitControls;
@@ -38,11 +35,7 @@ class Bloom extends ISketch {
 
     private componentBoundingBox: THREE.Box3 = new THREE.Box3();
 
-    public peopleMeshes: PersonMesh[] = [];
-
-    public openPoseManager!: OpenPoseManager;
-
-    public feedParticles!: FeedParticles;
+    public season = season;
 
     public seasonalEffect: SeasonalEffect = new GrowingSeasonalEffect();
 
@@ -59,8 +52,6 @@ class Bloom extends ISketch {
         this.orbitControls.autoRotate = true;
         this.orbitControls.autoRotateSpeed = 1.6;
 
-        this.openPoseManager = new OpenPoseManager();
-
         // do this before adding the flowers or anything
         this.initCubeTexture();
 
@@ -73,16 +64,6 @@ class Bloom extends ISketch {
         }
 
         this.initPostprocessing();
-
-        this.feedParticles = new FeedParticles();
-        this.scene.add(this.feedParticles);
-
-        for (let i = 0; i < 12; i++) {
-            const personMesh = new PersonMesh(i);
-            this.peopleMeshes[i] = personMesh;
-            personMesh.position.z = -1.5;
-            this.camera.add(personMesh);
-        }
 
         this.initAudio();
 
@@ -188,17 +169,6 @@ class Bloom extends ISketch {
         this.setSeason();
 
         try {
-            this.updatePersonMeshes();
-        } catch {}
-
-        let numFeedParticles = 0;
-        try {
-            numFeedParticles = this.feedParticles.animate(ms);
-        } catch {}
-
-        const nutrientsPerSecond = Math.min(9.9, 0.17 + Math.sqrt(numFeedParticles) / 5);
-        NUTRIENT_PER_SECOND.value = nutrientsPerSecond;
-        try {
             this.updateComponentAndComputeBoundingBox();
         } catch {}
 
@@ -291,34 +261,6 @@ class Bloom extends ISketch {
                 location.reload();
             }, outtroFadeOutSeconds * 1000 + 1000);
             this.triedReload = true;
-        }
-    }
-
-    private updatePersonMeshes() {
-        const people = this.openPoseManager.getLatestFramePeople();
-        for (const personMesh of this.peopleMeshes) {
-            const maybePerson = people[personMesh.index];
-            personMesh.updateFromOpenPosePerson(maybePerson);
-
-            if (season.type !== "dying") {
-                if (maybePerson != null) {
-                    const p = new THREE.Vector3();
-                    for (const keypointSphere of personMesh.keypointSpheres) {
-                        const keypoint = keypointSphere.keypoint;
-                        if (keypoint.confidence > 0) {
-                            // this is anywhere from 1e-10, (or 0), to 0.001 at max lol
-                            const maxVel = 0.05;
-                            const vel = keypoint.offset.length();
-                            const probability = vel / maxVel - 0.1; // bias against total stillness
-                            if (Math.random() < probability) {
-                                p.copy(keypointSphere.position);
-                                personMesh.localToWorld(p);
-                                this.feedParticles.addPoint(p);
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -547,17 +489,6 @@ class DyingSeasonalEffect implements SeasonalEffect {
     update() {
         // find any new ones that need to be scheduled
         const percent = season.percent;
-        for (const personMesh of this.bloom.peopleMeshes) {
-            const scale = Math.max(0.01,
-                THREE.Math.mapLinear(percent, 0, 0.5, 1, 0.01),
-            );
-            if (scale <= 0.01 && personMesh.parent != null) {
-                personMesh.parent.remove(personMesh);
-            } else {
-                personMesh.scale.x = scale;
-                personMesh.scale.y = scale;
-            }
-        }
         for (const [component, deathTime] of this.deathSchedules) {
             if (percent > deathTime) {
                 // if (component.children.length === 0) {

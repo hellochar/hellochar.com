@@ -22,7 +22,7 @@ export interface BranchTemplate {
      * 0.03 is a good number. How thick the branch is at full maturity
      */
     fullMaturityThickness: number;
-    material: THREE.Material;
+    material: THREE.MeshLambertMaterial;
 }
 
 export interface GrowthParameters {
