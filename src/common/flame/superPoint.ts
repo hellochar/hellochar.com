@@ -4,6 +4,9 @@ import { applyBranch, Branch } from "./branch";
 import { VARIATIONS } from "./transforms";
 import { UpdateVisitor } from "./updateVisitor";
 
+const tempPoint = new THREE.Vector3();
+const tempColor = new THREE.Color();
+
 export class SuperPoint {
     public children?: SuperPoint[];
     public lastPoint: THREE.Vector3 = new THREE.Vector3();
@@ -40,9 +43,16 @@ export class SuperPoint {
             const branch = this.branches[idx];
             // reset the child's position to your updated position so it's ready to get stepped
             child.lastPoint.copy(child.point);
-            child.point.copy(this.point);
-            child.color.copy(this.color);
-            applyBranch(branch, child.point, child.color);
+
+            // child.point.copy(this.point);
+            // child.color.copy(this.color);
+            // applyBranch(branch, child.point, child.color);
+
+            tempPoint.copy(this.point);
+            tempColor.copy(this.color);
+            applyBranch(branch, tempPoint, tempColor);
+            child.point.lerp(tempPoint, 0.5);
+            child.color.lerp(tempColor, 0.75);
 
             // take far away points and move them into the center again to keep points from getting too out of hand
             if (child.point.lengthSq() > 50 * 50) {

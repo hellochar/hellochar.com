@@ -924,6 +924,7 @@ class InventoryRenderer extends Renderer<Inventory> {
         map: textureFromSpritesheet(42, 12, "transparent"),
         transparent: true,
         opacity: 0.9,
+        color: "yellow",
         // color: new Color("yellow"),
         side: THREE.DoubleSide,
     }));

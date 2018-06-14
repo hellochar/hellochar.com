@@ -53,7 +53,7 @@
     a {
         margin: 0 15px;
 
-        .fa {
+        .fa-icon {
             margin-right: 5px;
         }
 
@@ -82,5 +82,11 @@
         padding-bottom: 20px;
         text-align: center;
         font-size: 16px;
+    }
+}
+
+@media screen and (max-width: 539px) {
+    .content {
+        padding-top: 150px;
     }
 }

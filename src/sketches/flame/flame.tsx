@@ -1,13 +1,13 @@
 // import * as OrbitControls from "imports-loader?THREE=three!exports-loader?THREE.OrbitControls!three-examples/controls/OrbitControls";
 import { parse } from "query-string";
-import { KeyboardEvent, MouseEvent } from "react";
 import * as React from "react";
 import * as THREE from "three";
 
-import { createPinkNoise, createWhiteNoise } from "../audio/noise";
-import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, UpdateVisitor, VARIATIONS, VelocityTrackerVisitor } from "../common/flame";
-import { lerp, map, sampleArray } from "../math";
-import { ISketch, SketchAudioContext } from "../sketch";
+import { createWhiteNoise } from "../../audio/noise";
+import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, VARIATIONS, VelocityTrackerVisitor } from "../../common/flame";
+import { map } from "../../math";
+import { ISketch, SketchAudioContext } from "../../sketch";
+import { FlamePointsMaterial } from "./flamePointsMaterial";
 
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
@@ -100,17 +100,21 @@ function stringHash(s: string) {
 let camera: THREE.PerspectiveCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
-const material: THREE.PointsMaterial = new THREE.PointsMaterial({
-    vertexColors: THREE.VertexColors,
-    size: 0.004,
-    transparent: true,
-    opacity: 0.7,
-    sizeAttenuation: true,
-});
+// const material: THREE.PointsMaterial = new THREE.PointsMaterial({
+//     vertexColors: THREE.VertexColors,
+//     size: 0.008,
+//     transparent: true,
+//     opacity: 0.9,
+//     sizeAttenuation: true,
+//     blending: THREE.AdditiveBlending,
+//     depthTest: false,
+//     // alphaTest: 0.5,
+// });
+
+const material = new FlamePointsMaterial();
+
 let pointCloud: THREE.Points;
-const mousePressed = false;
 const mousePosition = new THREE.Vector2(0, 0);
-const lastMousePosition = new THREE.Vector2(0, 0);
 let controls: THREE.OrbitControls;
 
 let globalBranches: Branch[];
@@ -280,10 +284,10 @@ function computeDepth() {
 }
 
 function mousemove(event: JQuery.Event) {
-    // cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -1.5, 1.5), 3);
-    // cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 1.5, -1.5), 3);
-    // cX = Math.pow(map(mouseX, 0, renderer.domElement.width, -0.5, 0.5), 1);
-    // cY = Math.pow(map(mouseY, 0, renderer.domElement.height, 0.5, -0.5), 1);
+    const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
+    const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+    mousePosition.x = mouseX;
+    mousePosition.y = mouseY;
 }
 
 function mousedown(event: JQuery.Event) {
@@ -324,7 +328,7 @@ class FlameNameInput extends React.Component<{ onInput: (newName: string) => voi
     }
 }
 
-class Flame extends ISketch {
+export class FlameSketch extends ISketch {
     public elements = [<FlameNameInput key="input" onInput={(name) => this.updateName(name)} />];
     public id = "flame";
     public events = {
@@ -335,17 +339,19 @@ class Flame extends ISketch {
 
     public init() {
         initAudio(this.audioContext);
+        const bgColor = new THREE.Color("#10101f")
         scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0, 12, 50);
+        scene.fog = new THREE.Fog(bgColor.getHex(), 2, 60);
+        scene.background = bgColor;
 
-        camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 1000);
-        camera.position.z = 3;
+        camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 0.01, 25);
+        camera.position.z = 2;
         camera.position.y = 1;
         camera.lookAt(new THREE.Vector3());
         controls = new THREE.OrbitControls(camera, this.renderer.domElement);
         controls.autoRotate = true;
         controls.autoRotateSpeed = 1;
-        controls.maxDistance = 10;
+        controls.maxDistance = 8;
         controls.minDistance = 0.1;
         controls.enableKeys = false;
         controls.enablePan = false;
@@ -408,6 +414,10 @@ class Flame extends ISketch {
         compressor.ratio.setTargetAtTime(1 + 3 / cameraLength, this.audioContext.currentTime, 0.016);
         this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
 
+        material.setFocalLength(
+            cameraLength * Math.pow(2, map(mousePosition.y, 0, this.renderer.domElement.height, 2, -2)),
+        );
+
         controls.update();
         // console.time("render");
         this.renderer.render(scene, camera);
@@ -464,5 +474,3 @@ class Flame extends ISketch {
         scene.add(pointCloud);
     }
 }
-
-export default Flame;

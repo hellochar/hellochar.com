@@ -1,6 +1,14 @@
 import * as React from "react";
+import LazyLoad from 'react-lazyload';
 import { RouteComponentProps } from "react-router";
 import { Link, NavLink } from "react-router-dom";
+
+import FaEnvelope = require("react-icons/lib/fa/envelope");
+import FaFacebookOfficial = require("react-icons/lib/fa/facebook-official");
+import FaGithub = require("react-icons/lib/fa/github");
+import FaInstagram = require("react-icons/lib/fa/instagram");
+import FaLinkedInSquare = require("react-icons/lib/fa/linkedin-square");
+import FaTwitter = require("react-icons/lib/fa/twitter");
 
 import { ISketch } from "../sketch";
 import { HistorySection } from "./history";
@@ -56,11 +64,11 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     private renderWork() {
         return (
             <section className="content-section work" id="work">
-                { this.renderHighlight("Flame", "/assets/images/flame.png") }
-                { this.renderHighlight("Line", "/assets/images/gravity4_cropped.png") }
-                { this.renderHighlight("Dots", "/assets/images/dots2.png") }
-                { this.renderHighlight("Waves", "/assets/images/waves2.png") }
-                { this.renderHighlight("Cymatics", "/assets/images/cymatics1.png") }
+                { this.renderHighlight("Flame", "/assets/images/flame.jpg") }
+                { this.renderHighlight("Line", "/assets/images/gravity4_cropped.jpg") }
+                { this.renderHighlight("Dots", "/assets/images/dots2.jpg") }
+                { this.renderHighlight("Waves", "/assets/images/waves2.jpg") }
+                { this.renderHighlight("Cymatics", "/assets/images/cymatics1.jpg") }
             </section>
         );
     }
@@ -112,32 +120,32 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 </p>
                 <p className="contact-links">
                     <a href="mailto:hellocharlien@hotmail.com">
-                        <i className="fa fa-envelope" aria-hidden="true"></i>
+                        <FaEnvelope />
                         Email
                     </a>
                     &middot;
                     <a href="https://www.facebook.com/xiaohan.zhang.16">
-                        <i className="fa fa-facebook-official" aria-hidden="true"></i>
+                        <FaFacebookOfficial />
                         Facebook
                     </a>
                     &middot;
                     <a href="https://github.com/hellochar">
-                        <i className="fa fa-github" aria-hidden="true"></i>
+                        <FaGithub />
                         Github
                     </a>
                     &middot;
                     <a href="https://twitter.com/hellocharlien">
-                        <i className="fa fa-twitter" aria-hidden="true"></i>
+                        <FaTwitter />
                         Twitter
                     </a>
                     &middot;
                     <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">
-                        <i className="fa fa-linkedin-square" aria-hidden="true"></i>
+                        <FaLinkedInSquare />
                         LinkedIn
                     </a>
                     &middot;
                     <a href="https://www.instagram.com/hellochar">
-                        <i className="fa fa-instagram" aria-hidden="true"></i>
+                        <FaInstagram />
                         Instagram
                     </a>
                 </p>
@@ -152,7 +160,9 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <figcaption>
                     <Link className="work-highlight-name" to={linkUrl}>{name}</Link>
                 </figcaption>
-                <Link to={linkUrl}><img className="full-width" src={imageUrl} /></Link>
+                <LazyLoad height="500px" once>
+                    <Link to={linkUrl}><img className="full-width" src={imageUrl} /></Link>
+                </LazyLoad>
             </figure>
         );
     }

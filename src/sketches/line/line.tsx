@@ -22,10 +22,9 @@ export class LineSketch extends ISketch {
         touchstart: (event: JQuery.Event) => {
             // prevent emulated mouse events from occuring
             event.preventDefault();
-            const canvasOffset = $(this.canvas).offset()!;
             const touch = (event.originalEvent as TouchEvent).touches[0];
-            const touchX = touch.pageX - canvasOffset.left;
-            let touchY = touch.pageY - canvasOffset.top;
+            const touchX = touch.pageX;
+            let touchY = touch.pageY;
             // offset the touchY by its radius so the attractor is above the thumb
             touchY -= 100;
 
@@ -35,10 +34,9 @@ export class LineSketch extends ISketch {
         },
 
         touchmove: (event: JQuery.Event) => {
-            const canvasOffset = $(this.canvas).offset()!;
             const touch = (event.originalEvent as TouchEvent).touches[0];
-            const touchX = touch.pageX - canvasOffset.left;
-            let touchY = touch.pageY - canvasOffset.top;
+            const touchX = touch.pageX;
+            let touchY = touch.pageY;
             touchY -= 100;
 
             this.mouseX = touchX;

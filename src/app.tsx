@@ -4,15 +4,30 @@ import { BrowserRouter } from "react-router-dom";
 import { GATracker } from "./analytics";
 import { Routes } from "./routes";
 
-const App = () => {
-    return (
-        <BrowserRouter>
-            <>
-                <GATracker />
-                <Routes />
-            </>
-        </BrowserRouter>
-    );
+class App extends React.PureComponent<{}, {}> {
+    static childContextTypes = {
+        reactIconBase: true,
+    }
+    getChildContext() {
+        return {
+            reactIconBase: {
+                className: "fa-icon",
+                style: {
+                    verticalAlign: "text-top",
+                },
+            },
+        };
+    }
+    render() {
+        return (
+            <BrowserRouter>
+                <>
+                    <GATracker />
+                    <Routes />
+                </>
+            </BrowserRouter>
+        );
+    }
 }
 
 export default App;
