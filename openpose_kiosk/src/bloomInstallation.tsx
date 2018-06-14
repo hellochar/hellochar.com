@@ -15,6 +15,7 @@ export class BloomInstallation extends Bloom {
     public feedParticles!: FeedParticles;
 
     public init() {
+        this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
         super.init();
         this.openPoseManager = new OpenPoseManager();
         const branchColor = dna.branchTemplate.material.color;
