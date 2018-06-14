@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-declare module 'THREE' {
+declare module 'three' {
     class Pass {
         enabled: boolean;
         needsSwap: boolean;
