@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
-import { Vein, ReasonStopped } from "../vein/vein";
+import lazy from "../../../common/lazy";
+import { ReasonStopped, Vein } from "../vein/vein";
 import { VeinedLeaf } from "../vein/veinedLeaf";
 
 export interface TextureGeneratorParameters {
@@ -27,12 +28,12 @@ export class TextureGenerator {
     public colorMap!: THREE.Texture;
     public bumpMap!: THREE.Texture;
 
-    static whiteNoiseImage = new Promise<HTMLImageElement>((resolve, reject) => {
+    static whiteNoiseImage = lazy(() => new Promise<HTMLImageElement>((resolve, reject) => {
         const image = new Image();
         image.src = "/assets/sketches/whiteNoise.png";
         image.onload = () => resolve(image);
         image.onerror = (err) => reject(err);
-    });
+    }));
 
     get detailScalar() {
         return this.width / 512;
@@ -110,7 +111,7 @@ export class TextureGenerator {
         bump.fillRect(0, 0, bumpCanvas.width, bumpCanvas.height);
 
         if (parameters.bumpNoiseHeight > 0) {
-            TextureGenerator.whiteNoiseImage.then((img) => {
+            TextureGenerator.whiteNoiseImage().then((img) => {
                 bump.globalAlpha = parameters.bumpNoiseHeight / 255;
                 for (let i = 1; i <= 8; i *= 2) {
                     bump.drawImage(img, 0, 0, bumpCanvas.width * i, bumpCanvas.height * i);

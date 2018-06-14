@@ -1,12 +1,13 @@
 import * as THREE from "three";
 
+import lazy from "../../../common/lazy";
 import { Component } from "../component";
 import { season } from "../season";
 
 const styleHeight = THREE.Math.randFloat(0.3, 0.8) + Math.random() * Math.random() * Math.random();
 
 export default class Carpel extends Component {
-    static ovaryMeshTemplate = (() => {
+    static ovaryMeshTemplate = lazy(() => {
         const geom = new THREE.SphereBufferGeometry(0.05);
         const material = new THREE.MeshLambertMaterial({
             color: "darkgreen",
@@ -15,9 +16,9 @@ export default class Carpel extends Component {
         mesh.receiveShadow = true;
         mesh.castShadow = true;
         return mesh;
-    })();
+    });
 
-    static styleMeshTemplate = (() => {
+    static styleMeshTemplate = lazy(() => {
         const geom = new THREE.CylinderGeometry(1, 1, styleHeight, 20, 20);
         geom.translate(0, styleHeight / 2, 0);
         for (const vertex of geom.vertices) {
@@ -38,9 +39,9 @@ export default class Carpel extends Component {
         mesh.receiveShadow = true;
         mesh.castShadow = true;
         return mesh;
-    })();
+    });
 
-    static stigmaMeshTemplate = (() => {
+    static stigmaMeshTemplate = lazy(() => {
         // take a sphere and then depress it
         const geom = new THREE.SphereGeometry(0.02, 80, 20);
         geom.scale(1, 0.3, 1);
@@ -74,20 +75,20 @@ export default class Carpel extends Component {
         mesh.receiveShadow = true;
         mesh.castShadow = true;
         return mesh;
-    })();
+    });
 
-    public ovary: (typeof Carpel)["ovaryMeshTemplate"];
-    public style: (typeof Carpel)["styleMeshTemplate"];
-    public stigma: (typeof Carpel)["stigmaMeshTemplate"];
+    public ovary: THREE.Mesh;
+    public style: THREE.Mesh;
+    public stigma: THREE.Mesh;
 
     constructor() {
         super();
-        this.ovary = Carpel.ovaryMeshTemplate.clone();
+        this.ovary = Carpel.ovaryMeshTemplate().clone();
         this.ovary.scale.setScalar(0.001);
         this.add(this.ovary);
-        this.style = Carpel.styleMeshTemplate.clone();
+        this.style = Carpel.styleMeshTemplate().clone();
         this.ovary.add(this.style);
-        this.stigma = Carpel.stigmaMeshTemplate.clone();
+        this.stigma = Carpel.stigmaMeshTemplate().clone();
         this.style.add(this.stigma);
         this.stigma.position.y = styleHeight + 0.005;
     }

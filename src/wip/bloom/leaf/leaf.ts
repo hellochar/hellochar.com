@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import lazy from "../../../common/lazy";
 import { logistic } from "../../../math";
 import { Component } from "../component";
 import { simulateVeinBoneGravity } from "../physics";
@@ -14,17 +15,17 @@ const leafScalar = Math.pow(2, THREE.Math.randFloat(-1, 0)) - Math.random() * Ma
 const leafStiffness = Math.pow(10, THREE.Math.randFloat(-2, -1));
 
 export class Leaf extends Component {
-    static petioleMaterial = new THREE.MeshLambertMaterial({
+    static petioleMaterial = lazy(() => new THREE.MeshLambertMaterial({
         color: "green",
         side: THREE.DoubleSide,
-    });
+    }));
 
-    static petioleGeometry = (() => {
+    static petioleGeometry = lazy(() => {
         const geom = new THREE.CylinderBufferGeometry(0.02, 0.012, 1);
         geom.rotateZ(Math.PI / 2);
         geom.translate(0.5, 0, 0);
         return geom;
-    })();
+    });
 
     public growthPercentage = 0;
 
@@ -35,8 +36,8 @@ export class Leaf extends Component {
         if (petioleLength > 0) {
             const petiole = (() => {
                 const petioleMesh = new THREE.Mesh(
-                    Leaf.petioleGeometry,
-                    Leaf.petioleMaterial,
+                    Leaf.petioleGeometry(),
+                    Leaf.petioleMaterial(),
                 );
                 petioleMesh.castShadow = true;
                 petioleMesh.receiveShadow = true;
