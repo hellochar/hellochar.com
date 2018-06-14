@@ -13,6 +13,7 @@ import { Leaf } from "./components/leaf";
 import dna, { randomizeDna } from "./dna";
 import { BloomScene } from "./scene";
 import { season } from "./season";
+import { DyingSeasonalEffect, FloweringSeasonalEffect, GrowingSeasonalEffect, SeasonalEffect } from "./season/seasonalEffects";
 
 // // https://gist.github.com/blixt/f17b47c62508be59987b
 // let _seed = 11 % 2147483647;
@@ -441,66 +442,6 @@ class DyingObject extends THREE.Object3D {
             this.visible = false;
             this.object.visible = false;
             this.parent.remove(this);
-        }
-    }
-}
-
-interface SeasonalEffect {
-    update(): void;
-}
-
-class GrowingSeasonalEffect implements SeasonalEffect {
-    update() {
-
-    }
-}
-
-class FloweringSeasonalEffect implements SeasonalEffect {
-    constructor(public bloom: Bloom) {}
-    update() {
-        const rotSpeedScalar = Math.max(
-            Math.pow(season.percent, 6) * 1 / (1 + Math.exp(300 * (season.percent - 0.98))) - 0.01,
-            0,
-        );
-        this.bloom.scene.particles.rotateY(0.4 * rotSpeedScalar);
-        this.bloom.scene.particles.material.opacity = rotSpeedScalar + 0.2;
-    }
-}
-
-class DyingSeasonalEffect implements SeasonalEffect {
-    private deathSchedules: Map<Component, number> = new Map();
-    constructor(public bloom: Bloom) {
-
-        // fill in death schedules
-        this.bloom.component!.traverse((obj) => {
-            // add everything but the root
-            if (obj instanceof Component && !(obj instanceof Branch) && !(obj instanceof Bud)) {
-                // sqrt(deathTime) makes *everything* die right at the end
-                // deathTime*deathTime makes *everything* die right at the start
-                // deathTime puts things a bit too much at the start
-                // so do pow(, 0.8) for a slight curve
-                const deathTime = Math.pow(Math.random(), 0.8) * 0.8;
-
-                this.deathSchedules.set(obj, deathTime);
-            }
-        });
-    }
-
-    update() {
-        // find any new ones that need to be scheduled
-        const percent = season.percent;
-        for (const [component, deathTime] of this.deathSchedules) {
-            if (percent > deathTime) {
-                // if (component.children.length === 0) {
-                    // we can kill it
-                this.bloom.triggerDeath(component);
-                this.deathSchedules.delete(component);
-                // break;
-                // } else {
-                    // you have dependents; wait a second
-
-                // }
-            }
         }
     }
 }
