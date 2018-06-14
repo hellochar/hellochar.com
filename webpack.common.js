@@ -1,3 +1,4 @@
+const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require("path");
 const merge = require('webpack-merge');
@@ -55,8 +56,10 @@ if (isKiosk) {
     plugins: [
       new HtmlWebpackPlugin({
         filename: 'kiosk.html',
+        inlineSource: ".css$",
         template: 'src/index.template.html',
       }),
+      new HtmlWebpackInlineSourcePlugin(),
     ]
   });
 } else {
@@ -67,8 +70,10 @@ if (isKiosk) {
     plugins: [
       new HtmlWebpackPlugin({
         filename: 'index.html',
+        inlineSource: ".css$",
         template: 'src/index.template.html',
       }),
+      new HtmlWebpackInlineSourcePlugin(),
     ]
   });
 }

@@ -86,7 +86,9 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     and physical simulations. I also care about UI, teaching, contributing to the broader
                     creative code community, music, and video games.
                 </p>
-                <img className="self" src="/assets/images/self_800x500.jpg" />
+                <LazyLoad once>
+                    <img className="self" src="/assets/images/self_800x500.jpg" />
+                </LazyLoad>
                 <p>
                     My interest in generative art grew from my sense of adventure and discovery
                     in nature. My family would go on weekend trips to national parks, hiking and
