@@ -1,12 +1,8 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require("path");
+const merge = require('webpack-merge');
 
-module.exports = {
-  entry: {
-    main: "./src/index.tsx",
-    kiosk: "./openpose_kiosk/src/index.tsx",
-    // wip: "./src/wip/index.ts",
-  },
+const config = {
   output: {
     publicPath: "/",
     path: path.resolve(__dirname, "public"),
@@ -47,19 +43,32 @@ module.exports = {
       'three-examples': path.resolve(__dirname, 'node_modules/three/examples/js/')
     }
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      filename: 'index.html',
-      template: 'src/index.template.html',
-      // brittle - manually find which chunks don't belong here and exclude them.
-      // see https://github.com/jantimon/html-webpack-plugin/issues/218
-      // they're trying to make it default in the next major rev
-      excludeChunks: ['kiosk', 'vendors~kiosk']
-    }),
-    new HtmlWebpackPlugin({
-      filename: 'kiosk.html',
-      template: 'src/index.template.html',
-      excludeChunks: ['main', 'vendors~main']
-    }),
-  ]
 };
+
+const isKiosk = !!process.env.KIOSK;
+
+if (isKiosk) {
+  module.exports = merge(config, {
+    entry: {
+      kiosk: "./openpose_kiosk/src/index.tsx",
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        filename: 'kiosk.html',
+        template: 'src/index.template.html',
+      }),
+    ]
+  });
+} else {
+  module.exports = merge(config, {
+    entry: {
+      main: "./src/index.tsx",
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        filename: 'index.html',
+        template: 'src/index.template.html',
+      }),
+    ]
+  });
+}
