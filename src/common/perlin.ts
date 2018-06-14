@@ -91,7 +91,7 @@ export class Noise {
         }
     };
 
-    constructor(seed: number = Date.now() + Math.random()) {
+    constructor(seed: number = Math.random() * 2147483647) {
         this.seed(seed);
     }
 

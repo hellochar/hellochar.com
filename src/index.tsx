@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import "./monkeypatchThree";
+import "./monkeypatch";
 
 import App from "./app";
 

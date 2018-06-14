@@ -1,0 +1,2 @@
+import "./monkeypatchMathRandom";
+import "./monkeypatchThree";
