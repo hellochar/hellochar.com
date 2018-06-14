@@ -1,11 +1,11 @@
 import * as THREE from "three";
 
-import lazy from "../../../common/lazy";
-import { logistic } from "../../../math";
+import lazy from "../../../../common/lazy";
+import { logistic } from "../../../../math";
+import { simulateVeinBoneGravity } from "../../physics";
+import { season } from "../../season";
+import { LeafTemplate } from "../../veinMesh/leafTemplate";
 import { Component } from "../component";
-import { simulateVeinBoneGravity } from "../physics";
-import { season } from "../season";
-import { LeafTemplate } from "../veinMesh/leafTemplate";
 
 // const petioleLength = Math.random() < 0.5 ? 0 : THREE.Math.randFloat(0.1, 0.5);
 const petioleLength = 0.0;

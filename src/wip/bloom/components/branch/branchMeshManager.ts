@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { dna } from "../dna";
+import { dna } from "../../dna";
 import { Branch } from "./branch";
 import { BranchBone, BranchSkeleton } from "./branchBone";
 

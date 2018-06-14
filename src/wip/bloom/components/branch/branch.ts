@@ -1,5 +1,5 @@
+import dna from "../../dna";
 import { Component } from "../component";
-import dna from "../dna";
 import { BONES_PER_UNIT_LENGTH, BranchMeshManager } from "./branchMeshManager";
 
 // TODO move this to the base, and feed nutrients from the root, and allow feeding in generic Components

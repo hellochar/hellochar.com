@@ -1,8 +1,8 @@
-import { BranchingPattern } from "../branch/branchingPattern";
-import { Petal, Stamen, Tepal } from "../flower";
-import { Leaf } from "../leaf";
+import { BranchingPattern } from "../components/branch/branchingPattern";
+import { Petal, Stamen, Tepal } from "../components/flower";
+import { Leaf } from "../components/leaf";
+import { WhorlParameters } from "../components/whorl";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
-import { WhorlParameters } from "../whorl";
 
 export interface DNA {
     leafTemplate: LeafTemplate;

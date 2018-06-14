@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
+import dna from "../../dna";
 import { Component } from "../component";
-import dna from "../dna";
 import { Flower } from "../flower";
 import { Leaf } from "../leaf";
 import Leaves from "../leaf/leaves";

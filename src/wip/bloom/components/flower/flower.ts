@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { logistic } from "../../../math";
+import { logistic } from "../../../../math";
 import { Component, ComponentClass } from "../component";
 import Perianth from "./perianth";
 import Reproductive from "./reproductive";

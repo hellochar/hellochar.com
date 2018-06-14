@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
-import { lerp } from "../../../math";
-import dna from "../dna";
-import { rotateMove } from "../physics";
+import { lerp } from "../../../../math";
+import dna from "../../dna";
+import { rotateMove } from "../../physics";
 import { Branch, FlowerWhorlBranch } from "./branch";
 import { Bud } from "./bud";
 

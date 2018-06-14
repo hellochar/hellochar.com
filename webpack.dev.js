@@ -32,8 +32,8 @@ module.exports = merge(common, {
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
-    new BundleAnalyzerPlugin({
-      analyzerMode: 'static'
-    }),
+    // new BundleAnalyzerPlugin({
+    //   analyzerMode: 'static'
+    // }),
   ],
 });

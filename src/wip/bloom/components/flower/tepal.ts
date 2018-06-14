@@ -1,9 +1,9 @@
 import * as THREE from "three";
 
+import { simulateVeinBoneGravity } from "../../physics";
+import { season } from "../../season";
+import { LeafTemplate } from "../../veinMesh/leafTemplate";
 import { Component } from "../component";
-import { simulateVeinBoneGravity } from "../physics";
-import { season } from "../season";
-import { LeafTemplate } from "../veinMesh/leafTemplate";
 
 const tepalScalar = THREE.Math.randFloat(0.5, 1.5);
 const tepalFinalRotZ = THREE.Math.randFloat(0.85, 1.15) * Math.PI / 2 * 1.1;

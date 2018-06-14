@@ -1,9 +1,9 @@
 import * as THREE from "three";
 
+import { simulateVeinBoneGravity } from "../../physics";
+import { season } from "../../season";
+import { LeafTemplate } from "../../veinMesh/leafTemplate";
 import { Component } from "../component";
-import { simulateVeinBoneGravity } from "../physics";
-import { season } from "../season";
-import { LeafTemplate } from "../veinMesh/leafTemplate";
 
 const finalRotZ = THREE.Math.randFloat(Math.PI / 16, Math.PI / 2.5);
 const bone0Stiffness = Math.pow(10, THREE.Math.randFloat(-1, -1.5));

@@ -4,13 +4,13 @@ import * as THREE from "three";
 
 import { Curtain } from "../../common/curtain";
 import { ISketch } from "../../sketch";
-import { Branch, NUTRIENT_PER_SECOND } from "./branch";
-import { Bud } from "./branch/bud";
 import { CameraController, CameraFocusOnBoxController, CameraFocusOnObjectController } from "./cameraController";
-import { Component } from "./component";
+import { Branch, NUTRIENT_PER_SECOND } from "./components/branch";
+import { Bud } from "./components/branch/bud";
+import { Component } from "./components/component";
+import { Flower, Petal, Tepal } from "./components/flower";
+import { Leaf } from "./components/leaf";
 import dna, { randomizeDna } from "./dna";
-import { Flower, Petal, Tepal } from "./flower";
-import { Leaf } from "./leaf";
 import { BloomScene } from "./scene";
 import { season } from "./season";
 

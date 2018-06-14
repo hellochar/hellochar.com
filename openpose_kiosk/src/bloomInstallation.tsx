@@ -3,7 +3,7 @@ import * as React from "react";
 import * as THREE from "three";
 
 import { Bloom } from "../../src/wip/bloom";
-import { NUTRIENT_PER_SECOND } from "../../src/wip/bloom/branch";
+import { NUTRIENT_PER_SECOND } from "../../src/wip/bloom/components/branch";
 import { dna } from "../../src/wip/bloom/dna";
 import { FeedParticles } from "./feedParticles";
 import { OpenPoseManager } from "./openPoseManager";

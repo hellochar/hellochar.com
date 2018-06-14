@@ -1,5 +1,5 @@
+import dna from "../../dna";
 import { Component, ComponentClass } from "../component";
-import dna from "../dna";
 import { Whorl } from "../whorl";
 import Petal from "./petal";
 

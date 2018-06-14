@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
+import { season } from "../../season";
 import { Component, ComponentClass } from "../component";
-import { season } from "../season";
 
 const stamenColor = new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 100%, ${THREE.Math.randInt(75, 100)}%)`);
 const filamentColor = new THREE.Color(`hsl(${THREE.Math.randInt(320, 320 + 200)}, ${THREE.Math.randInt(0, 100)}%, ${THREE.Math.randInt(25, 75)}%)`);

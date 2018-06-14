@@ -1,6 +1,5 @@
 import * as THREE from "three";
 
-import { map } from "../../math";
 import { Component, ComponentClass } from "./component";
 
 export class Whorl<T extends Component> extends Component {
@@ -46,17 +45,17 @@ export function whorl<T extends Component>(parameters: WhorlParameters<T>) {
     for (let i = 0; i < num; i++) {
         function create(bilat = false) {
             const element = generate();
-            let yRot = map(i, 0, num, startYRot, endYRot);
+            let yRot = THREE.Math.mapLinear(i, 0, num, startYRot, endYRot);
             if (bilat) {
                 yRot += Math.PI;
             }
             element.rotateY(yRot);
 
-            const zRot = map(i, 0, num, startZRot, endZRot);
+            const zRot = THREE.Math.mapLinear(i, 0, num, startZRot, endZRot);
             // Whorls angle elements close to the Y axis
             element.rotateZ(zRot);
 
-            const scale = map(i, 0, num, startScale, endScale);
+            const scale = THREE.Math.mapLinear(i, 0, num, startScale, endScale);
             element.scale.set(scale, scale, scale);
             return element;
         }

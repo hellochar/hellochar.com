@@ -1,8 +1,8 @@
 import * as THREE from "three";
 
-import lazy from "../../../common/lazy";
+import lazy from "../../../../common/lazy";
+import { season } from "../../season";
 import { Component } from "../component";
-import { season } from "../season";
 
 const styleHeight = THREE.Math.randFloat(0.3, 0.8) + Math.random() * Math.random() * Math.random();
 

@@ -1,13 +1,13 @@
 import * as THREE from "three";
 
-import { BranchingPattern, DefaultBranchingPattern } from "../branch/branchingPattern";
-import { Petal, Stamen, Tepal } from "../flower";
-import { Leaf } from "../leaf";
+import { BranchingPattern, DefaultBranchingPattern } from "../components/branch/branchingPattern";
+import { Petal, Stamen, Tepal } from "../components/flower";
+import { Leaf } from "../components/leaf";
+import { WhorlParameters } from "../components/whorl";
 import { Vein } from "../vein/vein";
 import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateTepalGrowthParameters, generateVeinGrowthParameters, VeinedLeaf } from "../vein/veinedLeaf";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
-import { WhorlParameters } from "../whorl";
 import { BranchTemplate, DNA, GrowthParameters } from "./dna";
 
 function randGreen(lumLow = 20, lumHigh = 30) {

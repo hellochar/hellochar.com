@@ -1,5 +1,5 @@
+import dna from "../../dna";
 import { Component } from "../component";
-import dna from "../dna";
 import { Whorl } from "../whorl";
 import Tepal from "./tepal";
 

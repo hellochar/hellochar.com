@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
+import dna from "../../dna";
 import { Component } from "../component";
-import dna from "../dna";
 
 export class Bud extends Component {
     public growthPercentage = 0;
