@@ -399,57 +399,14 @@ export class VeinedLeaf {
         }
         return boundingBox;
     }
-
-    //   void drawBoundary() {
-    //     stroke(64, 255, 64);
-    //     strokeWeight(0.5);
-    //     noFill();
-    //     beginShape();
-    //     // vertex(root.position.x, root.position.y);
-    //     Collections.sort(terminalNodes, new Comparator() {
-    //       public int compare(Object obj1, Object obj2) {
-    //         Small s1 = (Small)obj1;
-    //         Small s2 = (Small)obj2;
-    //         return Float.compare(atan2(s1.position.y, s1.position.x), atan2(s2.position.y, s2.position.x));
-    //       }
-    //     }
-    //     );
-    //     for (Small s : terminalNodes) {
-    //       if (s.reason == ReasonStopped.Expensive) {
-    //         vertex(s.position.x, s.position.y);
-    //       }
-    //     }
-    //     endShape();
-    //   }
 }
 
 export function generateRandomVeinedLeaf(parameterGen: () => IVeinGrowthParameters) {
     let veinedLeaf: VeinedLeaf;
     do {
         veinedLeaf = new VeinedLeaf(parameterGen());
-//         veinedLeaf = new VeinedLeaf({
-//   "TOO_CLOSE_DIST": 1,
-//   "EXPAND_SCALAR": 1.2412184636066348,
-//   "EXPAND_DIST": 1.2412184636066348,
-//   "MAX_PATH_COST": 400,
-//   "SIDEWAYS_COST_RATIO": 0.1100911124087456,
-//   "SIDE_ANGLE": 0.8710343371250968,
-//   "SIDE_ANGLE_RANDOM": 0.055582410403165826,
-//   "DEPTH_STEPS_BEFORE_BRANCHING": 3,
-//   "SECONDARY_BRANCH_PERIOD": 1,
-//   "TURN_TOWARDS_X_FACTOR": 0.00048394628521100896,
-//   "AVOID_NEIGHBOR_FORCE": 0.00616386452663065,
-//   "randWiggle": 0,
-//   "BASE_DISINCENTIVE": 367.5968676458393,
-//   "COST_DISTANCE_TO_ROOT_DIVISOR": 500,
-//   "COST_NEGATIVE_X_GROWTH": 0.26959565582038186,
-//   "GROW_FORWARD_FACTOR": 2.1190955635899456,
-//   "SECONDARY_BRANCH_SCALAR": 0.9799578808329089,
-//   "COST_TO_TURN": 0,
-//   "growForwardBranch": true
-// });
+        // this really shouldn't hit 1000, expandBoundary will make this basically a no-op once it's finished
         for (let i = 0; i < 1000; i++) {
-            // this really shouldn't hit 1000, expandBoundary will result in 0 soon
             veinedLeaf.expandBoundary();
         }
     } while (veinedLeaf.isDegenerate());

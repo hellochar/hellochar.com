@@ -1,15 +1,6 @@
 import * as THREE from "three";
 
 export class BloomScene extends THREE.Scene {
-    // const fog = new THREE.FogExp2(0x000000, 0.1);
-    // const fog = new THREE.Fog(0x000000, 10, 30);
-    // scene.fog = fog;
-    // scene.background = new THREE.Color(0xffffff);
-
-    // const cube = new THREE.Mesh(
-    //     new THREE.BoxBufferGeometry(100, 100, 100);
-    // const
-
     /**
      * Inclination angle of the sun/moon in the sky. 0 = right at the horizon, Math.PI/2 = at the top
      */
@@ -80,7 +71,6 @@ export class BloomScene extends THREE.Scene {
 
     public hemisphereLight = (() => {
         const light = new THREE.HemisphereLight("rgb(173, 216, 230)", "rgb(60, 60, 80)", 0.3);
-        // const light = new THREE.HemisphereLight("rgb(173, 216, 230)", "rgb(210, 250, 255)", 0.3);
         this.add(light);
         return light;
     })();
@@ -101,7 +91,6 @@ export class BloomScene extends THREE.Scene {
             1.25,
         );
         spotLight.position.copy(this.sky.material.uniforms.sunPosition.value);
-        // spotLight.position.set(10, 100, 10);
 
         spotLight.castShadow = true;
 

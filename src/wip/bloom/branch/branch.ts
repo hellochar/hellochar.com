@@ -9,13 +9,11 @@ export let NUTRIENT_PER_SECOND = {
 
 export class Branch extends Component {
     meshManager: BranchMeshManager;
-    // growthManager: BranchGrowthManager;
 
     public constructor(public finalBranchLength: number, public depth: number) {
         super();
         this.meshManager = new BranchMeshManager(this);
         this.add(this.meshManager.mesh);
-        // this.growthManager = new BranchGrowthManager(this, this.meshManager.skeleton);
         dna.branchingPattern.addBuds(this);
     }
 

@@ -7,14 +7,13 @@ const stamenColor = new THREE.Color(`hsl(${THREE.Math.randInt(180, 360 + 60)}, 1
 const filamentColor = new THREE.Color(`hsl(${THREE.Math.randInt(320, 320 + 200)}, ${THREE.Math.randInt(0, 100)}%, ${THREE.Math.randInt(25, 75)}%)`);
 
 const filamentMaterial = new THREE.MeshLambertMaterial({
-    // color: new THREE.Color("rgb(255, 50, 101)"),
-    // color: 0xffffff,
     color: filamentColor,
     side: THREE.DoubleSide,
 });
 
 const xDist = THREE.Math.randFloat(0, 0.3);
 const curveHeight = THREE.Math.randFloat(0.5, 2);
+// curvy path for the filament
 const curve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(xDist / 5, 0.05 * curveHeight * THREE.Math.randFloat(0.5, 1.5), 0),
@@ -42,40 +41,34 @@ antherGeometry.scale(0.8, THREE.Math.randFloat(0.5, 1.1), 0.74);
 const cScale = THREE.Math.randFloat(0.5, 1.2);
 antherGeometry.scale(cScale, cScale, cScale);
 const antherMaterial = new THREE.MeshLambertMaterial({
-    // color: new THREE.Color("rgb(255, 50, 101)"),
     color: stamenColor,
     side: THREE.DoubleSide,
 });
 
 export default class Stamen extends Component {
     filament: THREE.Mesh;
-    anther!: THREE.Mesh;
+    anther: THREE.Mesh;
+
+    private growStart = THREE.Math.randFloat(0.3, 0.5);
+    private growEnd = THREE.Math.randFloat(this.growStart + 0.1, 0.80);
+    private growAntherStart = this.growEnd * THREE.Math.randFloat(0.25, 0.5);
+    private growAntherEnd = this.growAntherStart + THREE.Math.randFloat(0.05, 0.1);
 
     constructor() {
         super();
-        // filament are usually curvy
         this.filament = new THREE.Mesh(
             filamentGeometry,
             filamentMaterial,
         );
         this.add(this.filament);
-        this.anther = (() => {
-            const anther = new THREE.Mesh(
-                antherGeometry,
-                antherMaterial,
-            );
-            const filamentEnd = curve.getPoint(1);
-            anther.position.copy(filamentEnd);
-            return anther;
-        })();
+        this.anther = new THREE.Mesh(
+            antherGeometry,
+            antherMaterial,
+        );
+        const filamentEnd = curve.getPoint(1);
+        this.anther.position.copy(filamentEnd);
         this.filament.add(this.anther);
     }
-
-    private growStart = THREE.Math.randFloat(0.3, 0.5);
-    private growEnd = THREE.Math.randFloat(this.growStart + 0.1, 0.80);
-
-    private growAntherStart = this.growEnd * THREE.Math.randFloat(0.25, 0.5);
-    private growAntherEnd = this.growAntherStart + THREE.Math.randFloat(0.05, 0.1);
 
     updateSelf(t: number) {
         if (season.type === "growing") {

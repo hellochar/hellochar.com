@@ -18,8 +18,6 @@ if (MAX_BRANCH_DEPTH === 2 && Math.random() < 0.2) {
 }
 
 export interface BranchingPattern {
-    // getComponentsFor(branch: BranchBone): Component[] | null;
-
     addBuds(branch: Branch): void;
 }
 
@@ -34,6 +32,7 @@ export class DefaultBranchingPattern implements BranchingPattern {
 
     public baseYRot = Math.random() * Math.PI * 2;
 
+    // Ratio of leaf whorls for every new child branch (e.g. 2 = grow half as many branches).
     public growthsPerBranch = 1;
 
     constructor() {
@@ -44,7 +43,6 @@ export class DefaultBranchingPattern implements BranchingPattern {
         }
         if (MAX_BRANCH_DEPTH === 1) {
             this.lengthPerGrowth /= 3;
-            // this.growthsPerBranch = 4;
         }
     }
 
@@ -74,7 +72,6 @@ export class DefaultBranchingPattern implements BranchingPattern {
                 components.push(leafWhorl);
 
                 const percentDist = length / branch.finalBranchLength;
-                // console.log(percentDist);
                 if (percentDist < 0.5 && newDepth < MAX_BRANCH_DEPTH && curGrowthCount % this.growthsPerBranch === 0) {
                     const newBranchLength = (1 - percentDist) * this.branchLengthScalar * branch.finalBranchLength;
                     if (newBranchLength >= 1) {

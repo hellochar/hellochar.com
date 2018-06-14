@@ -3,12 +3,12 @@ import * as THREE from "three";
 import { BranchingPattern, DefaultBranchingPattern } from "../branch/branchingPattern";
 import { Petal, Stamen, Tepal } from "../flower";
 import { Leaf } from "../leaf";
+import { Vein } from "../vein/vein";
 import { generatePetalGrowthParameters, generateRandomVeinedLeaf, generateTepalGrowthParameters, generateVeinGrowthParameters, VeinedLeaf } from "../vein/veinedLeaf";
 import { LeafTemplate } from "../veinMesh/leafTemplate";
 import { TextureGeneratorParameters } from "../veinMesh/textureGenerator";
 import { WhorlParameters } from "../whorl";
 import { BranchTemplate, DNA, GrowthParameters } from "./dna";
-import { Vein } from "../vein/vein";
 
 function randGreen(lumLow = 20, lumHigh = 30) {
     const hue = THREE.Math.randInt(105, 135);
@@ -108,7 +108,7 @@ function randomStrokeStyleFunction() {
             const stop = THREE.Math.randFloat(0.5, 1);
             return (vein: Vein) => {
                 const { r, g, b } = startColor;
-                let alpha = 1 - THREE.Math.smoothstep(vein.normalizedPosition.x - vein.leaf.root.normalizedPosition.x, 0, stop);
+                const alpha = 1 - THREE.Math.smoothstep(vein.normalizedPosition.x - vein.leaf.root.normalizedPosition.x, 0, stop);
                 // alpha *= alpha;
                 return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${alpha})`;
             }

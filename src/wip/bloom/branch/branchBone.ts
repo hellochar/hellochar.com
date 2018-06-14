@@ -1,10 +1,10 @@
 import * as THREE from "three";
 
+import { lerp } from "../../../math";
 import dna from "../dna";
+import { rotateMove } from "../physics";
 import { Branch, FlowerWhorlBranch } from "./branch";
 import { Bud } from "./bud";
-import { lerp } from "../../../math";
-import { rotateMove } from "../physics";
 
 // Makes a huge deal as to the final shape, since
 // the apex flower will be scaled by MAX_GROWTH_SCALE^(number of bones)
@@ -26,9 +26,8 @@ const QUATERNION_UP = new THREE.Quaternion();
  *
  * Each branch has a "growth percentage" in [0, 1] that determines how "done" this branch is.
  *
- * a) feed(n) - give this branch some amount of nutrients. There's some mapping from nutrients
- *    to growth percentage. The branch can choose to consume the nutrients, or feed it to its children in
- *    any distribution.
+ * Call feed(nutrients) on it. feed(nutrients) gives this branch some amount of nutrients. The
+ * branch can choose to consume the nutrients, or feed it to its children in any distribution.
  *
  * The BranchBone will update its THREE position/rotation/scale accordingly.
  */
@@ -44,26 +43,15 @@ export class BranchBone extends THREE.Bone {
         return this.growthPercentage;
     }
 
-    /**
-     * The thing growing out of this component, if it exists.
-     *
-     * undefined = hasn't reached growth event yet (initial state).
-     * null = reached growth state, and we're not growing anything.
-     * non-null = the component we're growing.
-     */
-    // private components: Component[] | null | undefined;
-
     private get isFullSized() {
         return this.growthPercentage >= 1;
     }
 
     /**
-     * Manually call pose after you've calculated the inverses of all these branches.
+     * You should call .updateView() after you've added these bones to a skeleton and .bind() it to a SkinnedMesh.
      */
     constructor(public index: number, public branch: Branch) {
         super(null as any);
-        // be careful - we can't shrink ourselves down until we've calculated the inverses in the skeleton.
-        // this.updateView();
     }
 
     private buds: Bud[] = [];
@@ -89,7 +77,7 @@ export class BranchBone extends THREE.Bone {
             this.rotation.z *= 0.1;
         }
         if (curveAmount > 0) {
-            // this is the same as getWorldQuaternion() but without eating the
+            // Get the world quaternion. This is the same as getWorldQuaternion() but without eating the
             // computeMatrixWorld (which will be computed each frame by .render() anyways) perf hit (which is ~30% of total traverse)
             // essentially we lag one frame behind, but that's no problem since we're
             // growing slowly anyways
@@ -100,7 +88,6 @@ export class BranchBone extends THREE.Bone {
         }
 
         // Model rocking back and forth while growing.
-        // don't do this once we hit ~80% nutrient.
         let rotateScalar = THREE.Math.mapLinear(this.growthPercentage * (1 - this.growthPercentage), 0, 0.25, 0, 1);
         rotateScalar = Math.sqrt(rotateScalar);
         if (rotateScalar > 0) {
@@ -133,11 +120,6 @@ export class BranchBone extends THREE.Bone {
 
         if (!oldFullSized) {
             this.grow(t);
-            // const worldPosition = new THREE.Vector3().setFromMatrixPosition(this.matrixWorld);
-            // if (worldPosition.y < 0.00) {
-            //     const offset = 0.00 - worldPosition.y;
-            //     rotateMove(this, new THREE.Vector3(0, 1, 0), 0, offset, 0);
-            // }
             this.updateView();
         } else {
             this.matrixAutoUpdate = false;

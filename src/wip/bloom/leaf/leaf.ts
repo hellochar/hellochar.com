@@ -71,24 +71,6 @@ export class Leaf extends Component {
         for (const bone of bones) {
             simulateVeinBoneGravity(bone, stiffness);
         }
-
-        // for (const boneUncast of this.lamina.skeleton.bones) {
-        //     // HACKHACK make this based off physics instead
-        //     const bone = boneUncast as VeinBone;
-        //     const skeleton = this.lamina.skeleton as VeinedLeafSkeleton;
-        //     // curl the leaves
-        //     let { x, y: z } = bone.vein.position;
-        //     x *= skeleton.downScalar;
-        //     z *= skeleton.downScalar;
-        //     const len = Math.sqrt(x * x + z * z);
-        //     bone.rotation.z = (0.003 * Math.sin(t / 2000) - Math.abs(z) * 0.5 + Math.abs(x) * 0.01) * len;
-
-        //     // TODO make the position integrate to a log(1+x) look properly
-        //     const t2 = Math.abs(z) * 40 - 6;
-        //     const pos = logistic(t2) * ( 1 - logistic(t2)) * 0.01;
-        //     bone.position.y = -pos;
-        //     // bone.rotation.y = 0.1 / (1 + Math.abs(z) * 10);
-        // }
     }
 
     static generate(template: LeafTemplate) {

@@ -41,7 +41,6 @@ export default class Tepal extends Component {
             this.mesh.rotation.z = rotZ;
             const sideBone = bones[bones.length - 1];
             sideBone.position.y = THREE.Math.mapLinear(openedAmount, 0, 1, 0, sideBoneEnd) + Math.sin(timeAlive / 4000) * 0.25;
-            // sideBone.position.y = mouse.y * 0;
             stiffness = 0.2;
         }
         if (season.type === "dying") {

@@ -9,17 +9,6 @@ export default class Gynoecium extends Component {
     }
 
     static generate() {
-        // const whorl = Whorl.generate({
-        //     num: 1,
-        //     startScale: 1,
-        //     endScale: 1,
-        //     startYRot: 0,
-        //     endYRot: 0,
-        //     startZRot: Math.PI / 2,
-        //     endZRot: Math.PI / 2,
-        //     generate: Carpel.generate,
-        //     isBilateral: false,
-        // });
         const whorl = new Whorl([Carpel.generate()]);
         return new Gynoecium(whorl);
     }
