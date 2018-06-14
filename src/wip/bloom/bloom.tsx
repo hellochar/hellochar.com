@@ -336,7 +336,7 @@ export class Bloom extends ISketch {
     }
 
     public newCameraController() {
-            // just focus on the bare tree at the end
+        // just focus on the bare tree at the end
         if (season.type === "dying" && season.percent > 0.8) {
             return new CameraFocusOnBoxController(this, this.componentBoundingBox, true);
         }
@@ -399,8 +399,5 @@ export class Bloom extends ISketch {
     public resize(width: number, height: number) {
         this.camera.aspect = 1 / this.aspectRatio;
         this.camera.updateProjectionMatrix();
-        this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
     }
 }
-
-export default Bloom;

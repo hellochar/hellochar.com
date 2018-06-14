@@ -86,4 +86,8 @@ export class BloomInstallation extends Bloom {
             }
         }
     }
+    public resize(width: number, height: number) {
+        super.resize(width, height);
+        this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+    }
 }
