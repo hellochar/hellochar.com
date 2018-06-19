@@ -7,11 +7,12 @@ const material = lazy(() => {
     const starTexture = new THREE.TextureLoader().load("/assets/sketches/line/star.png");
     starTexture.minFilter = THREE.NearestFilter;
     return new THREE.PointsMaterial({
-        size: 13,
+        size: 6,
         sizeAttenuation: false,
         map: starTexture,
-        opacity: 0.25,
+        opacity: 0.05,
         transparent: true,
+        blending: THREE.AdditiveBlending,
     });
 });
 

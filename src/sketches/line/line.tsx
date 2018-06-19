@@ -13,7 +13,7 @@ import { createAudioGroup } from "./audio";
 import { NUM_PARTICLES } from "./constants";
 import { Instructions } from "./instructions";
 import { initLeap } from "./leapMotion";
-import { IParticle, resetToOriginalPosition, stepParticles } from "./particle";
+import { IParticle, resetToOriginalPosition, stepParticlesForever } from "./particle";
 import { createParticlePoints } from "./particlePoints";
 import { computeStats } from "./particleStats";
 
@@ -96,6 +96,8 @@ export class LineSketch extends ISketch {
     public points!: THREE.Points;
     public controller!: Controller;
     public composer!: THREE.EffectComposer;
+    public simulator!: IterableIterator<void>;
+    private statsComputer = computeStats(null!, null!); // hackhack just to get the types for now
 
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);
@@ -107,11 +109,13 @@ export class LineSketch extends ISketch {
         });
 
         for (let i = 0; i < NUM_PARTICLES; i++) {
+            const now = Date.now();
             this.particles[i] = {
                 x: 0,
                 y: 0,
                 dx: 0,
                 dy: 0,
+                lastStep: now,
                 vertex: null,
             };
             resetToOriginalPosition(this.canvas, this.particles[i], i);
@@ -131,6 +135,9 @@ export class LineSketch extends ISketch {
 
         this.controller = initLeap(this);
         devlog(this.controller);
+
+        this.simulator = stepParticlesForever(this.canvas, this.particles, this.attractors);
+        this.statsComputer = computeStats(this.canvas, this.particles);
     }
 
     public animate(millisElapsed: number) {
@@ -144,7 +151,7 @@ export class LineSketch extends ISketch {
             attractor.mesh.scale.set(scale, scale, scale);
             if (attractor.power > 0 && attractor.power < 1400) {
                 // attractor.power += (100 - attractor.power) * 0.001;
-                attractor.power *= 1.005;
+                // attractor.power *= 1.005;
             }
         });
 
@@ -154,36 +161,16 @@ export class LineSketch extends ISketch {
             this.returnToStartPower *= 1.01;
         }
 
-        const nonzeroAttractors = this.attractors.filter((attractor) => attractor.power !== 0);
-
-        stepParticles(this.canvas, this.particles, nonzeroAttractors);
-        const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } =
-            computeStats(this.canvas, this.particles);
-
-        this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
-        if (normalizedEntropy !== 0) {
-            this.
-                // audioGroup.setFrequency(222 / normalizedEntropy);
-                audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
+        const now = Date.now();
+        let count = 0;
+        let dNow = Date.now();
+        while (dNow - now < 30) {
+            this.simulator.next(dNow);
+            count++;
+            dNow = Date.now();
         }
-
-        // const noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
-        const noiseFreq = 2000 * normalizedVarianceLength;
-        this.audioGroup.setNoiseFrequency(noiseFreq);
-
-        const groupedUpness = Math.sqrt(averageVel / varianceLength);
-        this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 5.);
-
-        const mouseDistanceToCenter = Math.sqrt(Math.pow(this.mouseX - averageX, 2) + Math.pow(this.mouseY - averageY, 2));
-        const normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(this.canvas.width * this.canvas.height);
-        // const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
-        const backgroundVolume = 1.00;
-        this.audioGroup.setBackgroundVolume(backgroundVolume);
-
+        this.updateStats();
         this.gravityShaderPass.uniforms.iGlobalTime.value = this.audioContext.currentTime / 1;
-        this.gravityShaderPass.uniforms.G.value = triangleWaveApprox(this.audioContext.currentTime / 5) * (groupedUpness + 0.50) * 15000;
-        this.gravityShaderPass.uniforms.iMouseFactor.value = (1 / 15) / (groupedUpness + 1);
-        // filter.uniforms['iMouse'].value = new THREE.Vector2(averageX, canvas.height - averageY);
 
         (this.points.geometry as THREE.Geometry).verticesNeedUpdate = true;
         this.composer.render();
@@ -192,6 +179,36 @@ export class LineSketch extends ISketch {
             this.instructionsEl.setGlobalFrame(this.globalFrame);
             const isLeapMotionControllerValid = this.controller.lastFrame.valid;
             this.instructionsEl.setLeapMotionControllerValid(isLeapMotionControllerValid);
+        }
+    }
+
+    private updateStats() {
+        const value = this.statsComputer.next().value;
+        if (value != null) {
+            const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } =
+                value;
+            this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
+            if (normalizedEntropy !== 0) {
+                this.
+                    // audioGroup.setFrequency(222 / normalizedEntropy);
+                    audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
+            }
+
+            // const noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
+            const noiseFreq = 2000 * normalizedVarianceLength;
+            this.audioGroup.setNoiseFrequency(noiseFreq);
+
+            const groupedUpness = Math.sqrt(averageVel / varianceLength);
+            this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 5.);
+
+            const mouseDistanceToCenter = Math.sqrt(Math.pow(this.mouseX - averageX, 2) + Math.pow(this.mouseY - averageY, 2));
+            const normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(this.canvas.width * this.canvas.height);
+            // const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
+            const backgroundVolume = 1.00;
+            this.audioGroup.setBackgroundVolume(backgroundVolume);
+
+            this.gravityShaderPass.uniforms.G.value = triangleWaveApprox(this.audioContext.currentTime / 5) * (groupedUpness + 0.50) * 15000;
+            this.gravityShaderPass.uniforms.iMouseFactor.value = (1 / 15) / (groupedUpness + 1);
         }
     }
 

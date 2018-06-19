@@ -1,75 +1,82 @@
 import { NUM_PARTICLES } from "./constants";
 import { IParticle } from "./particle";
 
-export function computeStats(canvas: HTMLCanvasElement, particles: IParticle[]) {
+export function* computeStats(canvas: HTMLCanvasElement, particles: IParticle[]) {
     let averageX = 0, averageY = 0, averageVel2 = 0;
     let varianceX2 = 0;
     let varianceY2 = 0;
-    // let varianceVel22 = 0;
     let entropy = 0;
     let numLeft = 0, numRight = 0;
 
-    for (let i = 0; i < NUM_PARTICLES; i++) {
-        const particle = particles[i];
-        averageX += particle.x;
-        averageY += particle.y;
-        averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
-    }
-    averageX /= NUM_PARTICLES;
-    averageY /= NUM_PARTICLES;
-    averageVel2 /= NUM_PARTICLES;
-
-    for (let i = 0; i < NUM_PARTICLES; i++) {
-        const particle = particles[i];
-        const dx2 = Math.pow(particle.x - averageX, 2),
-            dy2 = Math.pow(particle.y - averageY, 2);
-        varianceX2 += dx2;
-        varianceY2 += dy2;
-        // varianceVel22 += Math.pow(particle.dx * particle.dx + particle.dy * particle.dy - averageVel2, 2);
-        const length = Math.sqrt(dx2 + dy2);
-        if (length > 0) {
-            entropy += length * Math.log(length);
+    while (true) {
+        for (let i = 0; i < NUM_PARTICLES; i++) {
+            if (i % 10000 === 0) {
+                yield undefined;
+            }
+            const particle = particles[i];
+            averageX += particle.x;
+            averageY += particle.y;
+            averageVel2 += particle.dx * particle.dx + particle.dy * particle.dy;
         }
-        if (particle.x < averageX) {
-            numLeft++;
-        } else {
-            numRight++;
+        averageX /= NUM_PARTICLES;
+        averageY /= NUM_PARTICLES;
+        averageVel2 /= NUM_PARTICLES;
+
+        for (let i = 0; i < NUM_PARTICLES; i++) {
+            if (i % 10000 === 0) {
+                yield undefined;
+            }
+            const particle = particles[i];
+            const dx2 = Math.pow(particle.x - averageX, 2),
+                dy2 = Math.pow(particle.y - averageY, 2);
+            varianceX2 += dx2;
+            varianceY2 += dy2;
+            // varianceVel22 += Math.pow(particle.dx * particle.dx + particle.dy * particle.dy - averageVel2, 2);
+            const length = Math.sqrt(dx2 + dy2);
+            if (length > 0) {
+                entropy += length * Math.log(length);
+            }
+            if (particle.x < averageX) {
+                numLeft++;
+            } else {
+                numRight++;
+            }
         }
+        entropy /= NUM_PARTICLES;
+        varianceX2 /= NUM_PARTICLES;
+        varianceY2 /= NUM_PARTICLES;
+        // varianceVel22 /= NUM_PARTICLES;
+
+        const varianceX = Math.sqrt(varianceX2);
+        const varianceY = Math.sqrt(varianceY2);
+        // const varianceVel2 = Math.sqrt(varianceVel22);
+
+        const varianceLength = Math.sqrt(varianceX2 + varianceY2);
+        // const varianceVel = Math.sqrt(varianceVel2);
+        const averageVel = Math.sqrt(averageVel2);
+
+        // flatRatio = 1 -> perfectly circular
+        // flatRatio is high (possibly Infinity) -> extremely horizontally flat
+        // flatRatio is low (near 0) -> vertically thin
+        let flatRatio = varianceX / varianceY;
+        if (varianceY === 0) { flatRatio = 1; }
+
+        // in reset formation, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
+        // magicNumber is experimentally found to be 1.3938
+        // AKA varianceLength = 0.28866 * canvasWidth
+        const normalizedVarianceLength = varianceLength / (0.28866 * canvas.width);
+        const normalizedAverageVel = averageVel / (canvas.width);
+        const normalizedEntropy = entropy / (canvas.width * 1.383870349);
+
+        yield {
+            averageX,
+            averageY,
+            averageVel,
+            varianceLength,
+            flatRatio,
+            normalizedEntropy,
+            normalizedVarianceLength,
+            normalizedAverageVel,
+        };
     }
-    entropy /= NUM_PARTICLES;
-    varianceX2 /= NUM_PARTICLES;
-    varianceY2 /= NUM_PARTICLES;
-    // varianceVel22 /= NUM_PARTICLES;
-
-    const varianceX = Math.sqrt(varianceX2);
-    const varianceY = Math.sqrt(varianceY2);
-    // const varianceVel2 = Math.sqrt(varianceVel22);
-
-    const varianceLength = Math.sqrt(varianceX2 + varianceY2);
-    // const varianceVel = Math.sqrt(varianceVel2);
-    const averageVel = Math.sqrt(averageVel2);
-
-    // flatRatio = 1 -> perfectly circular
-    // flatRatio is high (possibly Infinity) -> extremely horizontally flat
-    // flatRatio is low (near 0) -> vertically thin
-    let flatRatio = varianceX / varianceY;
-    if (varianceY === 0) { flatRatio = 1; }
-
-    // in reset formation, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
-    // magicNumber is experimentally found to be 1.3938
-    // AKA varianceLength = 0.28866 * canvasWidth
-    const normalizedVarianceLength = varianceLength / (0.28866 * canvas.width);
-    const normalizedAverageVel = averageVel / (canvas.width);
-    const normalizedEntropy = entropy / (canvas.width * 1.383870349);
-
-    return {
-        averageX,
-        averageY,
-        averageVel,
-        varianceLength,
-        flatRatio,
-        normalizedEntropy,
-        normalizedVarianceLength,
-        normalizedAverageVel,
-    };
 }

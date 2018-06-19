@@ -43,7 +43,7 @@ export const GravityShader = {
         "    vec4 c = vec4(0.0);",
         "    vec4 outgoingColorFactor = vec4(0.96, 1.0, 1.0 / 0.96, 1.0);",
         "    vec4 incomingColorFactor = vec4(1.0 / 0.96, 1.0, 0.96, 1.0);",
-        "    for( float i = 1.0; i < 12.0; i += 1.0) {",
+        "    for( float i = 1.0; i < 1.0; i += 1.0) {",
         "       incomingP = incomingP - gravity(incomingP, attractionCenter, G);",
         "       outgoingP = outgoingP + gravity(outgoingP, attractionCenter, G);",
 
