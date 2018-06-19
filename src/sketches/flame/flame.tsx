@@ -9,6 +9,8 @@ import { map } from "../../math";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { FlamePointsMaterial } from "./flamePointsMaterial";
 
+const quality = screen.width > 480 ? "high" : "low";
+
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
     const numBranches = Math.ceil(1 + name.length % 5 + numWraps);
@@ -100,16 +102,6 @@ function stringHash(s: string) {
 let camera: THREE.PerspectiveCamera;
 let scene: THREE.Scene;
 let geometry: THREE.Geometry;
-// const material: THREE.PointsMaterial = new THREE.PointsMaterial({
-//     vertexColors: THREE.VertexColors,
-//     size: 0.008,
-//     transparent: true,
-//     opacity: 0.9,
-//     sizeAttenuation: true,
-//     blending: THREE.AdditiveBlending,
-//     depthTest: false,
-//     // alphaTest: 0.5,
-// });
 
 const material = new FlamePointsMaterial();
 
@@ -360,12 +352,31 @@ export class FlameSketch extends ISketch {
     }
 
     public animate() {
+        if (quality === "high") {
+            this.animateSuperPoint();
+        }
+
+        const cameraLength = camera.position.length();
+        compressor.ratio.setTargetAtTime(1 + 3 / cameraLength, this.audioContext.currentTime, 0.016);
+        this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
+
+        material.setFocalLength(
+            cameraLength * Math.pow(2, map(mousePosition.y, 0, this.renderer.domElement.height, 2, -2)),
+        );
+
+        controls.update();
+        // console.time("render");
+        this.renderer.render(scene, camera);
+        // console.timeEnd("render");
+    }
+
+    public animateSuperPoint() {
         const time = performance.now() / 3000;
         cX = 2 * sigmoid(6 * Math.sin(time)) - 1;
         const velocityVisitor = new VelocityTrackerVisitor();
         const varianceVisitor = new LengthVarianceTrackerVisitor();
         const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
-        superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), velocityVisitor, varianceVisitor, countVisitor);
+        superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), true, velocityVisitor, varianceVisitor, countVisitor);
         if (boundingSphere == null) {
             geometry.computeBoundingSphere();
             boundingSphere = geometry.boundingSphere;
@@ -409,19 +420,6 @@ export class FlameSketch extends ISketch {
             const target = (chord.gain.gain.value * 0.9 + 0.1 * (velocityFactor * count * count / 8) + 3e-5);
             chord.gain.gain.setTargetAtTime(target, chord.gain.context.currentTime, 0.016);
         }
-
-        const cameraLength = camera.position.length();
-        compressor.ratio.setTargetAtTime(1 + 3 / cameraLength, this.audioContext.currentTime, 0.016);
-        this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
-
-        material.setFocalLength(
-            cameraLength * Math.pow(2, map(mousePosition.y, 0, this.renderer.domElement.height, 2, -2)),
-        );
-
-        controls.update();
-        // console.time("render");
-        this.renderer.render(scene, camera);
-        // console.timeEnd("render");
     }
 
     public resize() {
@@ -472,5 +470,9 @@ export class FlameSketch extends ISketch {
         pointCloud = new THREE.Points(geometry, material);
         pointCloud.rotateX(-Math.PI / 2);
         scene.add(pointCloud);
+
+        if (quality === "low") {
+            superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), false);
+        }
     }
 }
