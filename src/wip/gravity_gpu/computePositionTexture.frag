@@ -1,6 +1,4 @@
 uniform float u_time;
-uniform vec2 resolution;
-uniform sampler2D positions;
 uniform vec2 u_mouse;
 
 void main() {
