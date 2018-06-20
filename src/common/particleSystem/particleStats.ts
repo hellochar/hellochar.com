@@ -1,13 +1,12 @@
-import { NUM_PARTICLES } from "./constants";
-import { IParticle } from "./particle";
+import { IParticle, ParticleSystem } from "./particleSystem";
 
-export function computeStats(canvas: HTMLCanvasElement, particles: IParticle[]) {
+export function computeStats(particleSystem: ParticleSystem, particles: IParticle[]) {
+    const { NUM_PARTICLES } = particleSystem.params;
     let averageX = 0, averageY = 0, averageVel2 = 0;
     let varianceX2 = 0;
     let varianceY2 = 0;
     // let varianceVel22 = 0;
     let entropy = 0;
-    let numLeft = 0, numRight = 0;
 
     for (let i = 0; i < NUM_PARTICLES; i++) {
         const particle = particles[i];
@@ -29,11 +28,6 @@ export function computeStats(canvas: HTMLCanvasElement, particles: IParticle[]) 
         const length = Math.sqrt(dx2 + dy2);
         if (length > 0) {
             entropy += length * Math.log(length);
-        }
-        if (particle.x < averageX) {
-            numLeft++;
-        } else {
-            numRight++;
         }
     }
     entropy /= NUM_PARTICLES;
@@ -58,9 +52,9 @@ export function computeStats(canvas: HTMLCanvasElement, particles: IParticle[]) 
     // in reset formation, the varianceLength = (sqrt(1/2) - 1/2) * magicNumber * canvasWidth
     // magicNumber is experimentally found to be 1.3938
     // AKA varianceLength = 0.28866 * canvasWidth
-    const normalizedVarianceLength = varianceLength / (0.28866 * canvas.width);
-    const normalizedAverageVel = averageVel / (canvas.width);
-    const normalizedEntropy = entropy / (canvas.width * 1.383870349);
+    const normalizedVarianceLength = varianceLength / (0.28866 * particleSystem.canvas.width);
+    const normalizedAverageVel = averageVel / (particleSystem.canvas.width);
+    const normalizedEntropy = entropy / (particleSystem.canvas.width * 1.383870349);
 
     return {
         averageX,

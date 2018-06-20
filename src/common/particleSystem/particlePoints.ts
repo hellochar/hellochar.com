@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import lazy from "../../common/lazy";
-import { IParticle } from "./particle";
+import { IParticle } from "./particleSystem";
 
 const material = lazy(() => {
     const starTexture = new THREE.TextureLoader().load("/assets/sketches/line/star.png");

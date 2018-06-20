@@ -6,16 +6,12 @@ import * as THREE from "three";
 import { parse } from "query-string";
 import devlog from "../../common/devlog";
 import { GravityShader } from "../../common/gravityShader";
+import { computeStats, createParticlePoints, IParticle, makeAttractor, ParticleSystem } from "../../common/particleSystem";
 import { map, triangleWaveApprox } from "../../math/index";
 import { ISketch, SketchAudioContext } from "../../sketch";
-import { makeAttractor } from "./attractor";
 import { createAudioGroup } from "./audio";
-import { NUM_PARTICLES } from "./constants";
 import { Instructions } from "./instructions";
 import { initLeap } from "./leapMotion";
-import { IParticle, resetToOriginalPosition, stepParticles } from "./particle";
-import { createParticlePoints } from "./particlePoints";
-import { computeStats } from "./particleStats";
 
 export class LineSketch extends ISketch {
     public events = {
@@ -97,6 +93,8 @@ export class LineSketch extends ISketch {
     public controller!: Controller;
     public composer!: THREE.EffectComposer;
 
+    public ps!: ParticleSystem;
+
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);
         this.resize(this.canvas.width, this.canvas.height);
@@ -106,7 +104,16 @@ export class LineSketch extends ISketch {
             this.scene.add(attractor.mesh);
         });
 
-        for (let i = 0; i < NUM_PARTICLES; i++) {
+        this.ps = new ParticleSystem(this.canvas, {
+            GRAVITY_CONSTANT: 280,
+            INERTIAL_DRAG_CONSTANT: 0.53913643334,
+            PULLING_DRAG_CONSTANT: 0.93075095702,
+            timeStep: 0.016 * 2,
+            NUM_PARTICLES: Number(parse(location.search).p) ||
+                // cheap mobile detection
+                (screen.width > 1024 ? 20000 : 5000),
+        });
+        for (let i = 0; i < this.ps.params.NUM_PARTICLES; i++) {
             this.particles[i] = {
                 x: 0,
                 y: 0,
@@ -114,7 +121,7 @@ export class LineSketch extends ISketch {
                 dy: 0,
                 vertex: null,
             };
-            resetToOriginalPosition(this.canvas, this.particles[i], i);
+            this.ps.resetToOriginalPosition(this.particles[i], i);
         }
         this.points = createParticlePoints(this.particles);
         this.scene.add(this.points);
@@ -156,9 +163,9 @@ export class LineSketch extends ISketch {
 
         const nonzeroAttractors = this.attractors.filter((attractor) => attractor.power !== 0);
 
-        stepParticles(this.canvas, this.particles, nonzeroAttractors);
+        this.ps.stepParticles(this.particles, nonzeroAttractors);
         const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } =
-            computeStats(this.canvas, this.particles);
+            computeStats(this.ps, this.particles);
 
         this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
         if (normalizedEntropy !== 0) {

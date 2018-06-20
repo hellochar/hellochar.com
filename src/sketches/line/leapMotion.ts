@@ -2,10 +2,9 @@ import * as Leap from "leapjs";
 import * as THREE from "three";
 
 import lazy from "../../common/lazy";
+import { Attractor, HandMesh } from "../../common/particleSystem";
 import { map } from "../../math/index";
-import { Attractor, HandMesh } from "./attractor";
 import { LineSketch } from "./line";
-// import { attractors, canvas, globalFrame, instructionsEl, mouseX, mouseY, scene, setMousePosition } from "./line";
 
 const boneGeometry = lazy(() => new THREE.SphereGeometry(10, 3, 3));
 const boneMaterial = lazy(() => new THREE.LineBasicMaterial({
