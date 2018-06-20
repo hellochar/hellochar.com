@@ -1,7 +1,8 @@
 import { IParticle, ParticleSystem } from "./particleSystem";
 
-export function computeStats(particleSystem: ParticleSystem, particles: IParticle[]) {
-    const { NUM_PARTICLES } = particleSystem.params;
+export function computeStats(particleSystem: ParticleSystem) {
+    const { particles } = particleSystem;
+    const NUM_PARTICLES = particles.length;
     let averageX = 0, averageY = 0, averageVel2 = 0;
     let varianceX2 = 0;
     let varianceY2 = 0;
@@ -56,12 +57,15 @@ export function computeStats(particleSystem: ParticleSystem, particles: IParticl
     const normalizedAverageVel = averageVel / (particleSystem.canvas.width);
     const normalizedEntropy = entropy / (particleSystem.canvas.width * 1.383870349);
 
+    const groupedUpness = Math.sqrt(averageVel / varianceLength);
+
     return {
         averageX,
         averageY,
         averageVel,
         varianceLength,
         flatRatio,
+        groupedUpness,
         normalizedEntropy,
         normalizedVarianceLength,
         normalizedAverageVel,

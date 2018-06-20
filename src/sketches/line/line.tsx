@@ -6,14 +6,16 @@ import * as THREE from "three";
 import { parse } from "query-string";
 import devlog from "../../common/devlog";
 import { GravityShader } from "../../common/gravityShader";
-import { computeStats, createParticlePoints, IParticle, makeAttractor, ParticleSystem } from "../../common/particleSystem";
-import { map, triangleWaveApprox } from "../../math/index";
-import { ISketch, SketchAudioContext } from "../../sketch";
+import lazy from "../../common/lazy";
+import { computeStats, createParticle, createParticlePoints, IParticle, makeAttractor, ParticleSystem } from "../../common/particleSystem";
+import { triangleWaveApprox } from "../../math/index";
+import { ISketch } from "../../sketch";
 import { createAudioGroup } from "./audio";
 import { Instructions } from "./instructions";
 import { initLeap } from "./leapMotion";
 
 export class LineSketch extends ISketch {
+
     public events = {
         touchstart: (event: JQuery.Event) => {
             // prevent emulated mouse events from occuring
@@ -104,26 +106,22 @@ export class LineSketch extends ISketch {
             this.scene.add(attractor.mesh);
         });
 
-        this.ps = new ParticleSystem(this.canvas, {
-            GRAVITY_CONSTANT: 280,
-            INERTIAL_DRAG_CONSTANT: 0.53913643334,
-            PULLING_DRAG_CONSTANT: 0.93075095702,
-            timeStep: 0.016 * 2,
-            NUM_PARTICLES: Number(parse(location.search).p) ||
-                // cheap mobile detection
-                (screen.width > 1024 ? 20000 : 5000),
-        });
-        for (let i = 0; i < this.ps.params.NUM_PARTICLES; i++) {
-            this.particles[i] = {
-                x: 0,
-                y: 0,
-                dx: 0,
-                dy: 0,
-                vertex: null,
-            };
-            this.ps.resetToOriginalPosition(this.particles[i], i);
+        const NUM_PARTICLES = Number(parse(location.search).p) ||
+            // cheap mobile detection
+            (screen.width > 1024 ? 20000 : 5000);
+        for (let i = 0; i < NUM_PARTICLES; i++) {
+            this.particles.push(createParticle(
+                i / NUM_PARTICLES * this.canvas.width,
+                this.canvas.height / 2 + ((i % 5) - 2) * 2,
+            ));
         }
-        this.points = createParticlePoints(this.particles);
+
+        this.ps = new ParticleSystem(
+            this.canvas,
+            this.particles,
+            PARTICLE_SYSTEM_PARAMS,
+        );
+        this.points = createParticlePoints(this.particles, material());
         this.scene.add(this.points);
 
         this.composer = new THREE.EffectComposer(this.renderer);
@@ -163,9 +161,9 @@ export class LineSketch extends ISketch {
 
         const nonzeroAttractors = this.attractors.filter((attractor) => attractor.power !== 0);
 
-        this.ps.stepParticles(this.particles, nonzeroAttractors);
-        const { averageX, averageY, averageVel, varianceLength, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } =
-            computeStats(this.ps, this.particles);
+        this.ps.stepParticles(nonzeroAttractors);
+        const { averageX, averageY, groupedUpness, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } =
+            computeStats(this.ps);
 
         this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
         if (normalizedEntropy !== 0) {
@@ -178,7 +176,6 @@ export class LineSketch extends ISketch {
         const noiseFreq = 2000 * normalizedVarianceLength;
         this.audioGroup.setNoiseFrequency(noiseFreq);
 
-        const groupedUpness = Math.sqrt(averageVel / varianceLength);
         this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 5.);
 
         const mouseDistanceToCenter = Math.sqrt(Math.pow(this.mouseX - averageX, 2) + Math.pow(this.mouseY - averageY, 2));
@@ -238,3 +235,24 @@ export class LineSketch extends ISketch {
         attractor.power = 0;
     }
 }
+
+const PARTICLE_SYSTEM_PARAMS = {
+    GRAVITY_CONSTANT: 280,
+    INERTIAL_DRAG_CONSTANT: 0.53913643334,
+    PULLING_DRAG_CONSTANT: 0.93075095702,
+    timeStep: 0.016 * 2,
+    STATIONARY_CONSTANT: 0.0,
+    constrainToBox: true,
+};
+
+const material = lazy(() => {
+    const starTexture = new THREE.TextureLoader().load("/assets/sketches/line/star.png");
+    starTexture.minFilter = THREE.NearestFilter;
+    return new THREE.PointsMaterial({
+        size: 13,
+        sizeAttenuation: false,
+        map: starTexture,
+        opacity: 0.25,
+        transparent: true,
+    });
+});
