@@ -1,8 +1,8 @@
-import * as $ from "jquery";
 import * as THREE from "three";
 
-import { lerp, map } from "../math";
-import { ISketch, SketchAudioContext } from "../sketch";
+import GPUComputationRenderer from "../../common/gpuComputationRenderer";
+import { map } from "../../math";
+import { ISketch } from "../../sketch";
 
 const FORCE_CONSTANT = 0.25;
 
@@ -175,7 +175,7 @@ let mousePressed = false;
 const mousePosition = new THREE.Vector2(0, 0);
 const lastMousePosition = new THREE.Vector2(0, 0);
 
-class Cymatics extends ISketch {
+export class Cymatics extends ISketch {
     public events = {
         mousedown: (event: JQuery.Event) => {
             if (event.which === 1) {
@@ -202,8 +202,9 @@ class Cymatics extends ISketch {
 
     public id = "cymatics";
 
+    public computation!: GPUComputationRenderer;
+
     public init() {
-        // renderer.autoClearColor = false;
         this.renderer.setClearColor(0xfcfcfc);
         this.renderer.clear();
         // camera = new THREE.PerspectiveCamera(60, renderer.domElement.width / renderer.domElement.height, 1, 400);
@@ -211,6 +212,10 @@ class Cymatics extends ISketch {
         const width = height / this.aspectRatio;
         camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 400);
         camera.position.z = 170;
+
+        this.computation = new GPUComputationRenderer(2048, 2048, this.renderer);
+        const initialTexture = this.computation.createTexture();
+        this.computation.addVariable("cell", computeCellShader, initialTexture);
 
         scene = new THREE.Scene();
 
@@ -288,5 +293,3 @@ class Cymatics extends ISketch {
         lastMousePosition.set(mousePosition.x, mousePosition.y);
     }
 }
-
-export default Cymatics;
