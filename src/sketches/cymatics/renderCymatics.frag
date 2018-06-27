@@ -16,18 +16,34 @@ vec3 hsv2rgb(vec3 c) {
   return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-vec2 grad(vec2 uv) {
-    return vec2(
-        (
-            texture2D(cellStateVariable, uv + vec2(cellOffset.s, 0.)).x - 
-            texture2D(cellStateVariable, uv - vec2(cellOffset.s, 0.)).x
-        ) / (2. * cellOffset.s),
+// vec2 grad(vec2 uv) {
+//     return vec2(
+//         (
+//             texture2D(cellStateVariable, uv + vec2(cellOffset.s, 0.)).x - 
+//             texture2D(cellStateVariable, uv - vec2(cellOffset.s, 0.)).x
+//         ) / (2. * cellOffset.s),
 
+//         (
+//             texture2D(cellStateVariable, uv + vec2(0., cellOffset.t)).x - 
+//             texture2D(cellStateVariable, uv - vec2(0., cellOffset.t)).x
+//         ) / (2. * cellOffset.t)
+//     );
+// }
+
+vec4 diffX(vec2 uv) {
+    return 
         (
-            texture2D(cellStateVariable, uv + vec2(0., cellOffset.t)).x - 
-            texture2D(cellStateVariable, uv - vec2(0., cellOffset.t)).x
-        ) / (2. * cellOffset.t)
-    );
+            texture2D(cellStateVariable, uv + vec2(cellOffset.s, 0.)) - 
+            texture2D(cellStateVariable, uv - vec2(cellOffset.s, 0.))
+        ) / (2. * cellOffset.s);
+}
+
+vec4 diffY(vec2 uv) {
+    return
+        (
+            texture2D(cellStateVariable, uv + vec2(0., cellOffset.t)) - 
+            texture2D(cellStateVariable, uv - vec2(0., cellOffset.t))
+        ) / (2. * cellOffset.t);
 }
 
 vec3 color(vec2 uv) {
@@ -36,12 +52,28 @@ vec3 color(vec2 uv) {
     float velocity = cellState.y;
     float accumulatedHeight = cellState.z;
 
-    // vec2 grad = grad(uv);
-    vec3 col;
+    vec4 dx = diffX(uv);
+    vec4 dy = diffY(uv);
+    vec2 gradY = vec2(dy.x, dy.x);
+    vec2 gradAccHeight = vec2(dx.z, dy.z);
+    vec3 normY = normalize(vec3(gradY, 1.));
+
+    float phong1 = pow(max(0., dot(normY, normalize(vec3(-1., -1., 3)))), 24.);
+    float phong2 = pow(max(0., dot(normY, normalize(vec3(-1., -1., -0.)))), 13.3);
     // col = hsv2rgb(vec3(height, 1. - clamp(abs(velocity), 0., 1.), clamp(1.0 - length(accumulatedHeight) / 10., 0., 1.)));
     // col = hsv2rgb(vec3(abs(accumulatedHeight), 1. - clamp(abs(velocity), 0., 1.), clamp(abs(height * 4.), 0., 1.)));
     // col = vec3(clamp(height * 14., -0.5, 0.5) + 0.5);
-    col = vec3(1.1 - length(grad(uv)) / 4.);
+    
+    float gradYFactor = clamp(1.1 - length(gradY) / 4., 0., 1.);
+    float gradAccFactor = log(length(gradAccHeight) / 10.) * 0.8;
+
+    vec3 col =
+        0.5 * vec3(4., 32., 55.) / 255. +
+        gradYFactor * vec3(41., 79., 109.) / 255. +
+        gradAccFactor * vec3(128., 51., 21.) / 255. +
+        phong1 * vec3(254., 253., 255.) / 255. * 2.1 +
+        phong2 * vec3(170., 89., 57.) / 255. * 0.4
+        ;
     return col;
 }
 

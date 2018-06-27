@@ -214,14 +214,14 @@ export class Cymatics extends ISketch {
     public init() {
         this.renderer.setClearColor(0xfcfcfc);
         this.renderer.clear();
-        this.computation = new GPUComputationRenderer(512, 512, this.renderer);
+        this.computation = new GPUComputationRenderer(1024, 1024, this.renderer);
         const initialTexture = this.computation.createTexture();
         this.cellStateVariable = this.computation.addVariable("cellStateVariable", COMPUTE_CELL_STATE, initialTexture);
         this.cellStateVariable.wrapS = THREE.MirroredRepeatWrapping;
         this.cellStateVariable.wrapT = THREE.MirroredRepeatWrapping;
         this.computation.setVariableDependencies(this.cellStateVariable, [this.cellStateVariable]);
         this.cellStateVariable.material.uniforms.iGlobalTime = { value: 0 };
-        this.cellStateVariable.material.uniforms.iMouse = { value: mousePosition };
+        this.cellStateVariable.material.uniforms.iMouse = { value: mousePosition.clone() };
         console.error(this.computation.init());
 
         // scene = new THREE.Scene();
@@ -239,22 +239,28 @@ export class Cymatics extends ISketch {
     }
 
     public modelTime = 0;
+    public numCycles = 1.002;
 
     public animate(dt: number) {
 
         // const wantedFrequency = 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
-        const numIterations = 40;
+        const numIterations = 80;
 
         // we want an integer number of cycles
         // const numCycles = console.log(wantedFrequency * numIterations / (Math.PI * 2));
         // const numCycles = 1.00 + mousePosition.x * 0.03;
-        let numCycles = 1.002;
+        // let numCycles = 1.002;
         if (mousePressed) {
-            numCycles *= 2;
+            this.numCycles += 0.001;
+            // numCycles *= 2;
+        } else {
+            this.numCycles = this.numCycles * 0.5 + 1.002 * 0.5;
         }
 
-        const wantedFrequency = numCycles * Math.PI * 2 / numIterations;
-        this.cellStateVariable.material.uniforms.iMouse.value.copy(mousePosition);
+        const wantedFrequency = this.numCycles * Math.PI * 2 / numIterations;
+        this.cellStateVariable.material.uniforms.iMouse.value.lerp(mousePosition, 0.01);
+
+        // const iterations = THREE.Math.smoothstep(this.frameCount, 0, 100) * numIterations;
 
         // so, i want to sample this at the right times.
         for (let i = 0; i < numIterations; i++) {

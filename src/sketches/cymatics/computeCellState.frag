@@ -53,10 +53,15 @@ void main() {
     accumulatedHeight *= 0.99;
     accumulatedHeight += height;
 
-    vec2 center = vec2(0.5) + iMouse * 0.15;
-    if (length(v_uv - center) < length(uvOffset) * 1.) {
+    float vignetteAmount = clamp(iGlobalTime * 0.001 - length(v_uv - vec2(0.5)), 0., 1.);
+    height *= vignetteAmount;
+
+    vec2 center = vec2(0.5) + iMouse * 0.10;
+    if (length(v_uv - center) < length(uvOffset) * 3.) {
+        float amount = 1. / (1. + pow(length(v_uv - center) / length(uvOffset), 12.));
     // if (length(v_uv - (iMouse + vec2(1.)) / 2.) < length(uvOffset) * 1.) {
-        height = sin(iGlobalTime);
+        // height = sin(iGlobalTime);
+        height = mix(height, sin(iGlobalTime), amount);
     }
 
     vec4 newCellState = vec4(height, velocity, accumulatedHeight, cellState.w);
