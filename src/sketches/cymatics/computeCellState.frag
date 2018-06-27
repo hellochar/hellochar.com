@@ -33,13 +33,13 @@ void main() {
 
     float force = 0.;
     force += forceContribution(height, v_uv + vec2(-uvOffset.s, -uvOffset.t));
-    force += forceContribution(height, v_uv + vec2(-uvOffset.s, 0.));
+    // force += forceContribution(height, v_uv + vec2(-uvOffset.s, 0.));
     force += forceContribution(height, v_uv + vec2(-uvOffset.s, +uvOffset.t));
-    force += forceContribution(height, v_uv + vec2(0., -uvOffset.t));
-    force += forceContribution(height, v_uv + vec2(0., 0.));
-    force += forceContribution(height, v_uv + vec2(0., +uvOffset.t));
+    // force += forceContribution(height, v_uv + vec2(0., -uvOffset.t));
+    // force += forceContribution(height, v_uv + vec2(0., 0.));
+    // force += forceContribution(height, v_uv + vec2(0., +uvOffset.t));
     force += forceContribution(height, v_uv + vec2(+uvOffset.s, -uvOffset.t));
-    force += forceContribution(height, v_uv + vec2(+uvOffset.s, 0.));
+    // force += forceContribution(height, v_uv + vec2(+uvOffset.s, 0.));
     force += forceContribution(height, v_uv + vec2(+uvOffset.s, +uvOffset.t));
     force *= FORCE_CONSTANT;
 
@@ -53,7 +53,7 @@ void main() {
     accumulatedHeight *= 0.99;
     accumulatedHeight += height;
 
-    float vignetteAmount = clamp(iGlobalTime * 0.001 - length(v_uv - vec2(0.5)), 0., 1.);
+    float vignetteAmount = clamp(iGlobalTime * 0.0016 - length(v_uv - vec2(0.5)), 0., 1.);
     height *= vignetteAmount;
 
     vec2 center = vec2(0.5) + iMouse * 0.10;
