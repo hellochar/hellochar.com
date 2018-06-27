@@ -1,8 +1,11 @@
 import * as THREE from "three";
 
-import GPUComputationRenderer from "../../common/gpuComputationRenderer";
+import GPUComputationRenderer, { GPUComputationRendererVariable } from "../../common/gpuComputationRenderer";
 import { map } from "../../math";
 import { ISketch } from "../../sketch";
+import { RenderCymaticsShader } from "./renderCymaticsShader";
+
+const COMPUTE_CELL_STATE = require("./computeCellState.frag");
 
 const FORCE_CONSTANT = 0.25;
 
@@ -204,92 +207,69 @@ export class Cymatics extends ISketch {
 
     public computation!: GPUComputationRenderer;
 
+    public cellStateVariable!: GPUComputationRendererVariable;
+    public renderCymaticsPass!: THREE.ShaderPass;
+    public composer!: THREE.EffectComposer;
+
     public init() {
         this.renderer.setClearColor(0xfcfcfc);
         this.renderer.clear();
-        // camera = new THREE.PerspectiveCamera(60, renderer.domElement.width / renderer.domElement.height, 1, 400);
-        const height = 200;
-        const width = height / this.aspectRatio;
-        camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 400);
-        camera.position.z = 170;
-
-        this.computation = new GPUComputationRenderer(2048, 2048, this.renderer);
+        this.computation = new GPUComputationRenderer(512, 512, this.renderer);
         const initialTexture = this.computation.createTexture();
-        this.computation.addVariable("cell", computeCellShader, initialTexture);
+        this.cellStateVariable = this.computation.addVariable("cellStateVariable", COMPUTE_CELL_STATE, initialTexture);
+        this.cellStateVariable.wrapS = THREE.MirroredRepeatWrapping;
+        this.cellStateVariable.wrapT = THREE.MirroredRepeatWrapping;
+        this.computation.setVariableDependencies(this.cellStateVariable, [this.cellStateVariable]);
+        this.cellStateVariable.material.uniforms.iGlobalTime = { value: 0 };
+        this.cellStateVariable.material.uniforms.iMouse = { value: mousePosition };
+        console.error(this.computation.init());
 
-        scene = new THREE.Scene();
+        // scene = new THREE.Scene();
+        // camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, 1);
+        // camera.position.z = 0.5;
+        // camera.lookAt(new THREE.Vector3());
+        // scene.add(renderTexture);
 
-        grid = new Grid(Math.ceil(width), height + 1);
-        grid.cells[Math.floor(grid.width / 2)][Math.floor(grid.height / 2)].positionFunction = (() => {
-            let t = 0;
-            return () => {
-                // t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -1, 1.6515));
-                t += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
-                return 20 * Math.sin(t);
-            };
-        })();
-
-        geometry = new THREE.Geometry();
-        grid.cells.forEach((col) => {
-            col.forEach((cell) => {
-                geometry.vertices.push(cell.position);
-                geometry.colors.push(cell.color);
-            });
-        });
-        material = new THREE.PointsMaterial({
-            size: this.renderer.domElement.height / height,
-            sizeAttenuation: false,
-            vertexColors: THREE.VertexColors,
-        });
-        pointCloud = new THREE.Points(geometry, material);
-        pointCloud.position.set(-grid.width / 2, -grid.height / 2, 0);
-        scene.add(pointCloud);
-
-        raycaster = new THREE.Raycaster();
-        (raycaster.params as any).PointCloud.threshold = 1;
+        this.composer = new THREE.EffectComposer(this.renderer);
+        this.renderCymaticsPass = new THREE.ShaderPass(RenderCymaticsShader);
+        this.renderCymaticsPass.renderToScreen = true;
+        this.renderCymaticsPass.uniforms.resolution.value.set(this.canvas.width, this.canvas.height);
+        this.renderCymaticsPass.uniforms.cellStateResolution.value.set(this.computation.sizeX, this.computation.sizeY);
+        this.composer.addPass(this.renderCymaticsPass);
     }
 
+    public modelTime = 0;
+
     public animate(dt: number) {
+
+        // const wantedFrequency = 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
+        const numIterations = 40;
+
+        // we want an integer number of cycles
+        // const numCycles = console.log(wantedFrequency * numIterations / (Math.PI * 2));
+        // const numCycles = 1.00 + mousePosition.x * 0.03;
+        let numCycles = 1.002;
         if (mousePressed) {
-            const gridStart = new THREE.Vector2();
-            const gridEnd = new THREE.Vector2();
-            // raycast to find droplet location
-            raycaster.setFromCamera(mousePosition, camera);
-            raycaster.intersectObject(pointCloud).forEach((intersection) => {
-                const { index } = intersection;
-                const x = Math.floor(index / grid.height);
-                const y = index % grid.height;
-
-                gridStart.set(x, y);
-            });
-
-            raycaster.setFromCamera(lastMousePosition, camera);
-            raycaster.intersectObject(pointCloud).forEach((intersection) => {
-                const { index } = intersection;
-                const x = Math.floor(index / grid.height);
-                const y = index % grid.height;
-
-                gridEnd.set(x, y);
-            });
-
-            const dist = gridStart.distanceTo(gridEnd);
-            for (let i = 0; i <= dist; i++) {
-                const lerped = new THREE.Vector2(gridStart.x, gridStart.y);
-                if (dist > 0) {
-                    lerped.lerp(gridEnd, i / dist);
-                }
-                const {x, y} = lerped.floor();
-
-                const cell = grid.cells[x][y];
-                cell.freeze();
-            }
+            numCycles *= 2;
         }
 
-        grid.step();
+        const wantedFrequency = numCycles * Math.PI * 2 / numIterations;
+        this.cellStateVariable.material.uniforms.iMouse.value.copy(mousePosition);
 
-        geometry.colorsNeedUpdate = true;
-        camera.lookAt(new THREE.Vector3(0, 0, 0));
-        this.renderer.render(scene, camera);
-        lastMousePosition.set(mousePosition.x, mousePosition.y);
+        // so, i want to sample this at the right times.
+        for (let i = 0; i < numIterations; i++) {
+            this.cellStateVariable.material.uniforms.iGlobalTime.value = this.modelTime; // performance.now() / 1000; // this.timeElapsed / 1000;
+            this.computation.compute();
+            this.modelTime += wantedFrequency;
+            // this.modelTime += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, 1.6, 3.6515));
+
+            // this.modelTime += 1;
+        }
+        this.renderCymaticsPass.uniforms.cellStateVariable.value = this.computation.getCurrentRenderTarget(this.cellStateVariable).texture;
+        this.composer.render();
+    }
+
+    resize(width: number, height: number) {
+        this.renderCymaticsPass.uniforms.resolution.value.set(width, height);
     }
 }

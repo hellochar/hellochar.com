@@ -9,7 +9,7 @@ declare module 'three' {
 
         setSize(width: number, height: number): void;
 
-        render(renderer: THREE.Renderer, writeBuffer: any, readBuffer: any, delta: number, maskActive: boolean): void;
+        render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget, delta: number, maskActive: boolean): void;
     }
 
     interface BokehPassParameters {
