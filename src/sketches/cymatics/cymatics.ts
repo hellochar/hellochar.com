@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import GPUComputationRenderer, { GPUComputationRendererVariable } from "../../common/gpuComputationRenderer";
-import { map } from "../../math";
+import { map, mirroredRepeat } from "../../math";
 import { ISketch } from "../../sketch";
 import { RenderCymaticsShader } from "./renderCymaticsShader";
 
@@ -14,6 +14,7 @@ const lastMousePosition = new THREE.Vector2(0, 0);
 const QUALITY = screen.width > 480 ? "high" : "low";
 
 export class Cymatics extends ISketch {
+    public jitter = 0;
     public events = {
         mousedown: (event: JQuery.Event) => {
             if (event.which === 1) {
@@ -21,6 +22,7 @@ export class Cymatics extends ISketch {
                 const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
                 mousePosition.set(mouseX / this.canvas.width * 2 - 1, (1 - mouseY / this.canvas.height) * 2 - 1);
                 mousePressed = true;
+                this.jitter += 30;
             }
         },
 
@@ -62,7 +64,8 @@ export class Cymatics extends ISketch {
         this.cellStateVariable.wrapT = THREE.MirroredRepeatWrapping;
         this.computation.setVariableDependencies(this.cellStateVariable, [this.cellStateVariable]);
         this.cellStateVariable.material.uniforms.iGlobalTime = { value: 0 };
-        this.cellStateVariable.material.uniforms.iMouse = { value: mousePosition.clone() };
+        // this.cellStateVariable.material.uniforms.iMouse = { value: mousePosition.clone() };
+        this.cellStateVariable.material.uniforms.center = { value: new THREE.Vector2(0.5, 0.5) };
         console.error(this.computation.init());
 
         // scene = new THREE.Scene();
@@ -92,14 +95,37 @@ export class Cymatics extends ISketch {
         // const numCycles = 1.00 + mousePosition.x * 0.03;
         // let numCycles = 1.002;
         if (mousePressed) {
-            this.numCycles *= 1.001;
+            this.numCycles += .001;
             // numCycles *= 2;
         } else {
-            this.numCycles = this.numCycles * 0.5 + 1.002 * 0.5;
+            this.numCycles = this.numCycles * 0.95 + 1.002 * 0.05;
         }
 
         const wantedFrequency = this.numCycles * Math.PI * 2 / numIterations;
-        this.cellStateVariable.material.uniforms.iMouse.value.lerp(mousePosition, 0.01);
+        // const offset = mousePosition.clone().sub(this.cellStateVariable.material.uniforms.iMouse.value);
+        // if (offset.length() > 0.001) {
+        //     offset.setLength(0.001);
+        // }
+        const wantedCenter = new THREE.Vector2();
+
+        // mimic code from renderCymatics.frag
+        const aspectRatioFrag = 1 / this.aspectRatio;
+        // widescreen; split the window into two halves
+        if (aspectRatioFrag > 1.0) {
+            const screenCoord = mousePosition.clone().multiplyScalar(0.5);
+            const normCoord = screenCoord.multiply(new THREE.Vector2(aspectRatioFrag, 1));
+            const uv = normCoord.add(new THREE.Vector2(1, 0.5));
+            wantedCenter.x = mirroredRepeat(uv.x);
+            wantedCenter.y = mirroredRepeat(uv.y);
+        } else {
+            const screenCoord = mousePosition.clone().multiplyScalar(0.5);
+            const normCoord = screenCoord.multiply(new THREE.Vector2(1, 1 / aspectRatioFrag));
+            const uv = normCoord.add(new THREE.Vector2(0.5, 1.0));
+            wantedCenter.x = mirroredRepeat(uv.x);
+            wantedCenter.y = mirroredRepeat(uv.y);
+        }
+        this.cellStateVariable.material.uniforms.center.value.lerp(wantedCenter, 0.01);
+        // this.cellStateVariable.material.uniforms.iMouse.value.add(offset);
 
         // const iterations = THREE.Math.smoothstep(this.frameCount, 0, 100) * numIterations;
 
@@ -107,13 +133,15 @@ export class Cymatics extends ISketch {
         for (let i = 0; i < numIterations; i++) {
             this.cellStateVariable.material.uniforms.iGlobalTime.value = this.modelTime; // performance.now() / 1000; // this.timeElapsed / 1000;
             this.computation.compute();
-            this.modelTime += wantedFrequency;
+            this.modelTime += wantedFrequency / (1.0 + this.jitter / 1.);
             // this.modelTime += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, 1.6, 3.6515));
 
             // this.modelTime += 1;
         }
         this.renderCymaticsPass.uniforms.cellStateVariable.value = this.computation.getCurrentRenderTarget(this.cellStateVariable).texture;
         this.composer.render();
+
+        this.jitter *= 0.95;
     }
 
     resize(width: number, height: number) {

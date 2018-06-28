@@ -10,7 +10,8 @@
 // additionally, we get everything from Three's WebGLProgram: https://threejs.org/docs/#api/renderers/webgl/WebGLProgram
 
 uniform float iGlobalTime;
-uniform vec2 iMouse;
+// uniform vec2 iMouse;
+uniform vec2 center;
 
 #define FORCE_CONSTANT 0.25 
 
@@ -50,19 +51,19 @@ void main() {
     height += velocity;
     height *= 0.998;
 
-    accumulatedHeight *= 0.99;
-    accumulatedHeight += height;
-
     float vignetteAmount = clamp(iGlobalTime * 0.0016 - length(v_uv - vec2(0.5)), 0., 1.);
     height *= vignetteAmount;
 
-    vec2 center = vec2(0.5) + iMouse * 0.10;
+    // vec2 center = vec2(0.5) + iMouse * 0.50 * vec2(2., 1.);
     if (length(v_uv - center) < length(uvOffset) * 3.) {
-        float amount = 1. / (1. + pow(length(v_uv - center) / length(uvOffset), 12.));
+        float amount = clamp(1. / (1. + pow(length(v_uv - center) / length(uvOffset), 2.)), 0., 1.);
     // if (length(v_uv - (iMouse + vec2(1.)) / 2.) < length(uvOffset) * 1.) {
         // height = sin(iGlobalTime);
         height = mix(height, sin(iGlobalTime), amount);
     }
+
+    accumulatedHeight *= 0.999;
+    accumulatedHeight += height;
 
     vec4 newCellState = vec4(height, velocity, accumulatedHeight, cellState.w);
     gl_FragColor = newCellState;

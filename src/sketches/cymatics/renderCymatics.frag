@@ -93,12 +93,12 @@ void main() {
     vec3 cymaticsColor;
     if (aspectRatio > 1.0) {
         normCoord = screenCoord * vec2(aspectRatio, 1.);
-        uv = normCoord + vec2(0.5);
-        cymaticsColor = color(uv + vec2(0.5, 0.));
+        uv = normCoord + vec2(1.0, 0.5);
+        cymaticsColor = color(uv);
     } else {
         normCoord = screenCoord * vec2(1., 1. / aspectRatio);
-        uv = normCoord + vec2(0.5);
-        cymaticsColor = color(uv + vec2(0., 0.5));
+        uv = normCoord + vec2(0.5, 1.0);
+        cymaticsColor = color(uv);
     }
 
     // float vignetteAmount = pow(smoothstep(0., 0.5, length(normCoord)), 25.0);

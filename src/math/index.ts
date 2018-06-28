@@ -14,6 +14,16 @@ export function triangleWaveApprox(t: number) {
     return 8 / (Math.PI * Math.PI) * (Math.sin(t) - (1 / 9) * Math.sin(3 * t) + (1 / 25) * Math.sin(5 * t));
 }
 
+// mod account for negatives
+export function mod(t: number, m: number) {
+    return ((t % m) + m) % m;
+}
+
+// perfect triangle wave that goes from [0, 1, 0] in x = [0, 1, 2]
+export function mirroredRepeat(x: number) {
+  return (1. - (Math.abs(mod(x * 2., 4.) - 2.) - 1.)) / 2.;
+}
+
 export function logistic(x: number) {
     if (x < -6) {
         return 0;
