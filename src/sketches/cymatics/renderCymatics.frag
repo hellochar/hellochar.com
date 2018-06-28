@@ -33,16 +33,16 @@ vec3 hsv2rgb(vec3 c) {
 vec4 diffX(vec2 uv) {
     return 
         (
-            texture2D(cellStateVariable, uv + vec2(cellOffset.s, 0.)) - 
-            texture2D(cellStateVariable, uv - vec2(cellOffset.s, 0.))
+            abs(texture2D(cellStateVariable, uv + vec2(cellOffset.s, 0.))) - 
+            abs(texture2D(cellStateVariable, uv - vec2(cellOffset.s, 0.)))
         ) / (2. * cellOffset.s);
 }
 
 vec4 diffY(vec2 uv) {
     return
         (
-            texture2D(cellStateVariable, uv + vec2(0., cellOffset.t)) - 
-            texture2D(cellStateVariable, uv - vec2(0., cellOffset.t))
+            abs(texture2D(cellStateVariable, uv + vec2(0., cellOffset.t))) - 
+            abs(texture2D(cellStateVariable, uv - vec2(0., cellOffset.t)))
         ) / (2. * cellOffset.t);
 }
 
@@ -54,27 +54,28 @@ vec3 color(vec2 uv) {
 
     vec4 dx = diffX(uv);
     vec4 dy = diffY(uv);
-    vec2 gradY = vec2(dy.x, dy.x);
+    // vec2 gradY = vec2(dy.x, dy.x);
+    vec2 gradY = vec2(dy.z, dy.z);
     vec2 gradAccHeight = vec2(dx.z, dy.z);
     vec3 normY = normalize(vec3(gradY, 1.));
 
-    float phong1 = pow(max(0., dot(normY, normalize(vec3(-1., -1., 2.6)))), 9.);
-    float phong2 = pow(max(0., dot(normY, normalize(vec3(-1., -1., -0.)))), 13.3);
-    // col = hsv2rgb(vec3(height, 1. - clamp(abs(velocity), 0., 1.), clamp(1.0 - length(accumulatedHeight) / 10., 0., 1.)));
-    // col = hsv2rgb(vec3(abs(accumulatedHeight), 1. - clamp(abs(velocity), 0., 1.), clamp(abs(height * 4.), 0., 1.)));
-    // col = vec3(clamp(height * 14., -0.5, 0.5) + 0.5);
-    
-    float gradYFactor = clamp(1.1 - length(gradY) / 4., 0., 1.);
-    float gradAccFactor = 1. - log(1. + length(gradAccHeight) / 10.) * 0.8;
+    vec3 norm = normalize(vec3(dx.x, dy.x, 1.));
+    // vec3 normY = normalize(vec3(gradAccHeight, 1.));
 
-    vec3 col =
-        0.5 * vec3(4., 32., 55.) / 255. +
-        gradYFactor * vec3(41., 79., 109.) / 255. * 2.2 +
-        gradAccFactor * vec3(128., 51., 21.) / 255. * 1.0 +
-        phong1 * vec3(254., 253., 255.) / 255. * 2.0 +
-        phong2 * vec3(170., 89., 57.) / 255. * 0.4
-        ;
-    return col;
+    float phong1 = pow(max(0., dot(norm, normalize(vec3(-1., -1., 0.3)))), 30.) * 0.6;
+    float phong2 = pow(max(0., dot(norm, normalize(vec3(-0.7, -1., 0.4)))), 12.) * 0.3;
+    
+    float gradYFactor = clamp(1.1 - length(gradY) / 9., 0., 1.);
+    float gradAccFactor = length(gradAccHeight) / 100.;
+    float heightFactor = abs(height) * 3.;
+
+    vec3 col = vec3(4., 32., 55.);
+    // col = mix(col, vec3(235., 89., 56.), gradAccFactor);
+    col = mix(col, vec3(235., 89., 56.), heightFactor);
+    // col += vec3(48., 161., 184.) * gradYFactor;
+    col += phong1 * vec3(254., 253., 255.);
+    col += phong2 * vec3(170., 89., 57.);
+    return col / 255.;
 }
 
 float udRoundBox( vec2 uv, vec2 boxDimensions, float radius )

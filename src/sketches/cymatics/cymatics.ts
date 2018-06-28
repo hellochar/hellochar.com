@@ -13,6 +13,9 @@ const lastMousePosition = new THREE.Vector2(0, 0);
 
 const QUALITY = screen.width > 480 ? "high" : "low";
 
+// an integer makes perfect standing waves. the 0.002 means that the wave will oscillate very slightly per frame; 500 frames per oscillation period
+const DEFAULT_NUM_CYCLES = 1.002;
+
 export class Cymatics extends ISketch {
     public jitter = 0;
     public events = {
@@ -25,7 +28,7 @@ export class Cymatics extends ISketch {
 
             this.setMouse(touchX, touchY);
             mousePressed = true;
-            this.jitter += 30;
+            this.jitter += 1;
         },
 
         touchmove: (event: JQuery.Event) => {
@@ -46,7 +49,7 @@ export class Cymatics extends ISketch {
                 const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
                 this.setMouse(mouseX, mouseY);
                 mousePressed = true;
-                this.jitter += 30;
+                this.jitter += 1;
             }
         },
 
@@ -91,6 +94,7 @@ export class Cymatics extends ISketch {
         this.cellStateVariable.material.uniforms.iGlobalTime = { value: 0 };
         // this.cellStateVariable.material.uniforms.iMouse = { value: mousePosition.clone() };
         this.cellStateVariable.material.uniforms.center = { value: new THREE.Vector2(0.5, 0.5) };
+        this.cellStateVariable.material.uniforms.growAmount = { value: 0 };
         console.error(this.computation.init());
 
         // scene = new THREE.Scene();
@@ -105,25 +109,36 @@ export class Cymatics extends ISketch {
         this.renderCymaticsPass.uniforms.resolution.value.set(this.canvas.width, this.canvas.height);
         this.renderCymaticsPass.uniforms.cellStateResolution.value.set(this.computation.sizeX, this.computation.sizeY);
         this.composer.addPass(this.renderCymaticsPass);
+        this.initAudio();
+    }
+
+    public initAudio() {
     }
 
     public modelTime = 0;
-    public numCycles = 1.002;
+    public numCycles = DEFAULT_NUM_CYCLES;
+    public get growAmount() {
+        return this.cellStateVariable.material.uniforms.growAmount.value;
+    }
+
+    public set growAmount(t: number) {
+        this.cellStateVariable.material.uniforms.growAmount.value = t;
+    }
 
     public animate(dt: number) {
-
-        // const wantedFrequency = 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, -3, 1.6515));
         const numIterations = QUALITY === "high" ? 40 : 20;
 
-        // we want an integer number of cycles
-        // const numCycles = console.log(wantedFrequency * numIterations / (Math.PI * 2));
-        // const numCycles = 1.00 + mousePosition.x * 0.03;
-        // let numCycles = 1.002;
         if (mousePressed) {
-            this.numCycles += .001;
+            this.numCycles += .0003;
             // numCycles *= 2;
+            if (this.growAmount < 1.0) {
+                this.growAmount = 1.0;
+            }
+            this.growAmount = this.growAmount * 0.99 + 5.0 * 0.01;
         } else {
-            this.numCycles = this.numCycles * 0.95 + 1.002 * 0.05;
+            this.growAmount = this.growAmount * 0.995 + 0.4 * 0.005;
+            // default to an integer number of cycles
+            this.numCycles = this.numCycles * 0.95 + DEFAULT_NUM_CYCLES * 0.05;
         }
 
         const wantedFrequency = this.numCycles * Math.PI * 2 / numIterations;
@@ -131,7 +146,7 @@ export class Cymatics extends ISketch {
         // if (offset.length() > 0.001) {
         //     offset.setLength(0.001);
         // }
-        const wantedCenter = new THREE.Vector2();
+        const wantedCenter = new THREE.Vector2(0.5, 0.5);
 
         // mimic code from renderCymatics.frag
         const aspectRatioFrag = 1 / this.aspectRatio;
@@ -158,7 +173,7 @@ export class Cymatics extends ISketch {
         for (let i = 0; i < numIterations; i++) {
             this.cellStateVariable.material.uniforms.iGlobalTime.value = this.modelTime; // performance.now() / 1000; // this.timeElapsed / 1000;
             this.computation.compute();
-            this.modelTime += wantedFrequency / (1.0 + this.jitter / 2.);
+            this.modelTime += wantedFrequency / (1.0 + this.jitter * 3);
             // this.modelTime += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, 1.6, 3.6515));
 
             // this.modelTime += 1;
@@ -166,7 +181,7 @@ export class Cymatics extends ISketch {
         this.renderCymaticsPass.uniforms.cellStateVariable.value = this.computation.getCurrentRenderTarget(this.cellStateVariable).texture;
         this.composer.render();
 
-        this.jitter *= 0.9;
+        this.jitter *= 0.95;
     }
 
     resize(width: number, height: number) {

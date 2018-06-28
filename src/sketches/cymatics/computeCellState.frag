@@ -12,6 +12,7 @@
 uniform float iGlobalTime;
 // uniform vec2 iMouse;
 uniform vec2 center;
+uniform float growAmount;
 
 #define FORCE_CONSTANT 0.25 
 
@@ -49,9 +50,9 @@ void main() {
     velocity *= 0.99818;
 
     height += velocity;
-    height *= 0.998;
+    height *= 0.9999;
 
-    float vignetteAmount = clamp(iGlobalTime * 0.0016 - length(v_uv - vec2(0.5)), 0., 1.);
+    float vignetteAmount = clamp(growAmount + min(0.5, iGlobalTime * 0.0016) - pow(length(v_uv - center), 2.), 0., 1.);
     height *= vignetteAmount;
 
     // vec2 center = vec2(0.5) + iMouse * 0.50 * vec2(2., 1.);
