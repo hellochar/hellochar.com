@@ -16,11 +16,35 @@ const QUALITY = screen.width > 480 ? "high" : "low";
 export class Cymatics extends ISketch {
     public jitter = 0;
     public events = {
+        touchstart: (event: JQuery.Event) => {
+            // prevent emulated mouse events from occuring
+            event.preventDefault();
+            const touch = (event.originalEvent as TouchEvent).touches[0];
+            const touchX = touch.pageX;
+            const touchY = touch.pageY;
+
+            this.setMouse(touchX, touchY);
+            mousePressed = true;
+            this.jitter += 30;
+        },
+
+        touchmove: (event: JQuery.Event) => {
+            const touch = (event.originalEvent as TouchEvent).touches[0];
+            const touchX = touch.pageX;
+            const touchY = touch.pageY;
+
+            this.setMouse(touchX, touchY);
+        },
+
+        touchend: (event: JQuery.Event) => {
+            mousePressed = false;
+        },
+
         mousedown: (event: JQuery.Event) => {
             if (event.which === 1) {
                 const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
                 const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-                mousePosition.set(mouseX / this.canvas.width * 2 - 1, (1 - mouseY / this.canvas.height) * 2 - 1);
+                this.setMouse(mouseX, mouseY);
                 mousePressed = true;
                 this.jitter += 30;
             }
@@ -29,16 +53,17 @@ export class Cymatics extends ISketch {
         mousemove: (event: JQuery.Event) => {
             const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
             const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-            mousePosition.set(mouseX / this.canvas.width * 2 - 1, (1 - mouseY / this.canvas.height) * 2 - 1);
+            this.setMouse(mouseX, mouseY);
         },
 
         mouseup: (event: JQuery.Event) => {
-            if (event.which === 1) {
-                mousePressed = false;
-            }
+            mousePressed = false;
         },
-
     };
+
+    setMouse(pixelX: number, pixelY: number) {
+        mousePosition.set(pixelX / this.canvas.width * 2 - 1, (1 - pixelY / this.canvas.height) * 2 - 1);
+    }
 
     public id = "cymatics";
 
@@ -133,7 +158,7 @@ export class Cymatics extends ISketch {
         for (let i = 0; i < numIterations; i++) {
             this.cellStateVariable.material.uniforms.iGlobalTime.value = this.modelTime; // performance.now() / 1000; // this.timeElapsed / 1000;
             this.computation.compute();
-            this.modelTime += wantedFrequency / (1.0 + this.jitter / 1.);
+            this.modelTime += wantedFrequency / (1.0 + this.jitter / 2.);
             // this.modelTime += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, 1.6, 3.6515));
 
             // this.modelTime += 1;
@@ -141,7 +166,7 @@ export class Cymatics extends ISketch {
         this.renderCymaticsPass.uniforms.cellStateVariable.value = this.computation.getCurrentRenderTarget(this.cellStateVariable).texture;
         this.composer.render();
 
-        this.jitter *= 0.95;
+        this.jitter *= 0.9;
     }
 
     resize(width: number, height: number) {
