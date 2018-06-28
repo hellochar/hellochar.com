@@ -3,6 +3,7 @@ import * as THREE from "three";
 import GPUComputationRenderer, { GPUComputationRendererVariable } from "../../common/gpuComputationRenderer";
 import { map, mirroredRepeat } from "../../math";
 import { ISketch } from "../../sketch";
+import { CymaticsAudio } from "./audio";
 import { RenderCymaticsShader } from "./renderCymaticsShader";
 
 const COMPUTE_CELL_STATE = require("./computeCellState.frag");
@@ -16,8 +17,10 @@ const QUALITY = screen.width > 480 ? "high" : "low";
 // an integer makes perfect standing waves. the 0.002 means that the wave will oscillate very slightly per frame; 500 frames per oscillation period
 const DEFAULT_NUM_CYCLES = 1.002;
 
+const GROW_AMOUNT_MIN = 0.4;
+
 export class Cymatics extends ISketch {
-    public jitter = 0;
+    public slowDownAmount = 0;
     public events = {
         touchstart: (event: JQuery.Event) => {
             // prevent emulated mouse events from occuring
@@ -25,17 +28,13 @@ export class Cymatics extends ISketch {
             const touch = (event.originalEvent as TouchEvent).touches[0];
             const touchX = touch.pageX;
             const touchY = touch.pageY;
-
-            this.setMouse(touchX, touchY);
-            mousePressed = true;
-            this.jitter += 1;
+            this.startInteraction(touchX, touchY);
         },
 
         touchmove: (event: JQuery.Event) => {
             const touch = (event.originalEvent as TouchEvent).touches[0];
             const touchX = touch.pageX;
             const touchY = touch.pageY;
-
             this.setMouse(touchX, touchY);
         },
 
@@ -47,9 +46,7 @@ export class Cymatics extends ISketch {
             if (event.which === 1) {
                 const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
                 const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
-                this.setMouse(mouseX, mouseY);
-                mousePressed = true;
-                this.jitter += 1;
+                this.startInteraction(mouseX, mouseY);
             }
         },
 
@@ -64,6 +61,13 @@ export class Cymatics extends ISketch {
         },
     };
 
+    startInteraction(pixelX: number, pixelY: number) {
+        this.setMouse(pixelX, pixelY);
+        mousePressed = true;
+        this.slowDownAmount += 1;
+        this.audio.triggerJitter();
+    }
+
     setMouse(pixelX: number, pixelY: number) {
         mousePosition.set(pixelX / this.canvas.width * 2 - 1, (1 - pixelY / this.canvas.height) * 2 - 1);
     }
@@ -75,6 +79,7 @@ export class Cymatics extends ISketch {
     public cellStateVariable!: GPUComputationRendererVariable;
     public renderCymaticsPass!: THREE.ShaderPass;
     public composer!: THREE.EffectComposer;
+    public audio!: CymaticsAudio;
 
     public init() {
         this.renderer.setClearColor(0xfcfcfc);
@@ -94,14 +99,12 @@ export class Cymatics extends ISketch {
         this.cellStateVariable.material.uniforms.iGlobalTime = { value: 0 };
         // this.cellStateVariable.material.uniforms.iMouse = { value: mousePosition.clone() };
         this.cellStateVariable.material.uniforms.center = { value: new THREE.Vector2(0.5, 0.5) };
-        this.cellStateVariable.material.uniforms.growAmount = { value: 0 };
-        console.error(this.computation.init());
-
-        // scene = new THREE.Scene();
-        // camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, 1);
-        // camera.position.z = 0.5;
-        // camera.lookAt(new THREE.Vector3());
-        // scene.add(renderTexture);
+        this.cellStateVariable.material.uniforms.growAmount = { value: GROW_AMOUNT_MIN };
+        const computationInitError = this.computation.init();
+        if (computationInitError != null) {
+            console.error(computationInitError);
+            throw computationInitError;
+        }
 
         this.composer = new THREE.EffectComposer(this.renderer);
         this.renderCymaticsPass = new THREE.ShaderPass(RenderCymaticsShader);
@@ -109,13 +112,10 @@ export class Cymatics extends ISketch {
         this.renderCymaticsPass.uniforms.resolution.value.set(this.canvas.width, this.canvas.height);
         this.renderCymaticsPass.uniforms.cellStateResolution.value.set(this.computation.sizeX, this.computation.sizeY);
         this.composer.addPass(this.renderCymaticsPass);
-        this.initAudio();
+        this.audio = new CymaticsAudio(this.audioContext);
     }
 
-    public initAudio() {
-    }
-
-    public modelTime = 0;
+    public simulationTime = 0;
     public numCycles = DEFAULT_NUM_CYCLES;
     public get growAmount() {
         return this.cellStateVariable.material.uniforms.growAmount.value;
@@ -126,62 +126,64 @@ export class Cymatics extends ISketch {
     }
 
     public animate(dt: number) {
-        const numIterations = QUALITY === "high" ? 40 : 20;
-
         if (mousePressed) {
             this.numCycles += .0003;
             // numCycles *= 2;
-            if (this.growAmount < 1.0) {
-                this.growAmount = 1.0;
+            if (this.growAmount < 0.8) {
+                this.growAmount = 0.8;
             }
+            // target grow amount of 5, so if user holds the mouse we have some buffer time when it fills up the screen
             this.growAmount = this.growAmount * 0.99 + 5.0 * 0.01;
         } else {
-            this.growAmount = this.growAmount * 0.995 + 0.4 * 0.005;
-            // default to an integer number of cycles
+            this.growAmount = this.growAmount * 0.995 + GROW_AMOUNT_MIN * 0.005;
             this.numCycles = this.numCycles * 0.95 + DEFAULT_NUM_CYCLES * 0.05;
         }
-
-        const wantedFrequency = this.numCycles * Math.PI * 2 / numIterations;
-        // const offset = mousePosition.clone().sub(this.cellStateVariable.material.uniforms.iMouse.value);
-        // if (offset.length() > 0.001) {
-        //     offset.setLength(0.001);
-        // }
         const wantedCenter = new THREE.Vector2(0.5, 0.5);
 
         // mimic code from renderCymatics.frag
         const aspectRatioFrag = 1 / this.aspectRatio;
-        // widescreen; split the window into two halves
         if (aspectRatioFrag > 1.0) {
+            // widescreen; split the window into left/right halves
             const screenCoord = mousePosition.clone().multiplyScalar(0.5);
             const normCoord = screenCoord.multiply(new THREE.Vector2(aspectRatioFrag, 1));
             const uv = normCoord.add(new THREE.Vector2(1, 0.5));
             wantedCenter.x = mirroredRepeat(uv.x);
             wantedCenter.y = mirroredRepeat(uv.y);
         } else {
+            // tallscreen; split the window into top/bottom
             const screenCoord = mousePosition.clone().multiplyScalar(0.5);
             const normCoord = screenCoord.multiply(new THREE.Vector2(1, 1 / aspectRatioFrag));
             const uv = normCoord.add(new THREE.Vector2(0.5, 1.0));
             wantedCenter.x = mirroredRepeat(uv.x);
             wantedCenter.y = mirroredRepeat(uv.y);
         }
-        this.cellStateVariable.material.uniforms.center.value.lerp(wantedCenter, 0.01);
-        // this.cellStateVariable.material.uniforms.iMouse.value.add(offset);
+        const lerpAlpha = 0.01;
 
-        // const iterations = THREE.Math.smoothstep(this.frameCount, 0, 100) * numIterations;
+        // how fast the center's moving; max is about 0.06
+        const centerSpeed = wantedCenter.distanceTo(this.cellStateVariable.material.uniforms.center.value) * lerpAlpha;
+        this.cellStateVariable.material.uniforms.center.value.lerp(wantedCenter, lerpAlpha);
 
-        // so, i want to sample this at the right times.
+        // grows louder as there's more growAmount, and also when it moves faster
+        const volume = THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.05, 1)
+                     + THREE.Math.mapLinear(centerSpeed, 0, 0.005, 0., 1) * THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.25, 1.);
+        this.audio.setBlubVolume(volume);
+        // play slowly when there's no movement, play faster when there's a lot of movement
+        const playbackRate = Math.pow(2, THREE.Math.mapLinear(centerSpeed, 0, 0.005, -1, 1.5));
+        this.audio.setBlubPlaybackRate(playbackRate);
+        // console.log("playback:", playbackRate.toFixed(2), "volume:", volume.toFixed(2));
+
+        const numIterations = QUALITY === "high" ? 40 : 20;
+        const wantedSimulationDt = this.numCycles * Math.PI * 2 / numIterations;
         for (let i = 0; i < numIterations; i++) {
-            this.cellStateVariable.material.uniforms.iGlobalTime.value = this.modelTime; // performance.now() / 1000; // this.timeElapsed / 1000;
+            this.cellStateVariable.material.uniforms.iGlobalTime.value = this.simulationTime;
             this.computation.compute();
-            this.modelTime += wantedFrequency / (1.0 + this.jitter * 3);
-            // this.modelTime += 0.20 * Math.pow(2, map(mousePosition.x, -1, 1, 1.6, 3.6515));
-
-            // this.modelTime += 1;
+            this.simulationTime += wantedSimulationDt / (1.0 + this.slowDownAmount * 3);
         }
+
         this.renderCymaticsPass.uniforms.cellStateVariable.value = this.computation.getCurrentRenderTarget(this.cellStateVariable).texture;
         this.composer.render();
 
-        this.jitter *= 0.95;
+        this.slowDownAmount *= 0.95;
     }
 
     resize(width: number, height: number) {

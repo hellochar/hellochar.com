@@ -60,7 +60,7 @@ void main() {
         float amount = clamp(1. / (1. + pow(length(v_uv - center) / length(uvOffset), 2.)), 0., 1.);
     // if (length(v_uv - (iMouse + vec2(1.)) / 2.) < length(uvOffset) * 1.) {
         // height = sin(iGlobalTime);
-        height = mix(height, sin(iGlobalTime), amount);
+        height = mix(height, 2. * sin(iGlobalTime), amount);
     }
 
     accumulatedHeight *= 0.999;
