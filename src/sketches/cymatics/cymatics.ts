@@ -164,20 +164,25 @@ export class Cymatics extends ISketch {
         this.cellStateVariable.material.uniforms.center.value.lerp(wantedCenter, lerpAlpha);
 
         // grows louder as there's more growAmount, and also when it moves faster
-        const volume = THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.05, 1)
-                     + THREE.Math.mapLinear(centerSpeed, 0, 0.005, 0., 1) * THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.25, 1.);
-        this.audio.setBlubVolume(volume);
+        const blubVolume = Math.pow(THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.05, 1), 2) * 0.6
+                    + Math.abs(this.numCycles - DEFAULT_NUM_CYCLES)
+                    + THREE.Math.mapLinear(centerSpeed, 0, 0.005, 0, 1) * THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.05, 0.4);
+        this.audio.setBlubVolume(blubVolume);
         // play slowly when there's no movement, play faster when there's a lot of movement
-        const playbackRate = Math.pow(2, THREE.Math.mapLinear(centerSpeed, 0, 0.005, -1, 1.5));
+        const playbackRate = Math.pow(2, THREE.Math.mapLinear(centerSpeed, 0, 0.005, -1, 1.5)) + THREE.Math.mapLinear(this.numCycles, DEFAULT_NUM_CYCLES, 2, 0., 4.);
         this.audio.setBlubPlaybackRate(playbackRate);
         // console.log("playback:", playbackRate.toFixed(2), "volume:", volume.toFixed(2));
 
+        this.audio.setOscVolume(THREE.Math.smoothstep(this.numCycles, DEFAULT_NUM_CYCLES, 1.10) * 0.5);
+        const cycles = this.numCycles / (1 + this.slowDownAmount * 3);
+        this.audio.setOscFrequencyScalar(cycles);
+
         const numIterations = QUALITY === "high" ? 40 : 20;
-        const wantedSimulationDt = this.numCycles * Math.PI * 2 / numIterations;
+        const wantedSimulationDt = cycles * Math.PI * 2 / numIterations;
         for (let i = 0; i < numIterations; i++) {
             this.cellStateVariable.material.uniforms.iGlobalTime.value = this.simulationTime;
             this.computation.compute();
-            this.simulationTime += wantedSimulationDt / (1.0 + this.slowDownAmount * 3);
+            this.simulationTime += wantedSimulationDt;
         }
 
         this.renderCymaticsPass.uniforms.cellStateVariable.value = this.computation.getCurrentRenderTarget(this.cellStateVariable).texture;
