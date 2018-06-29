@@ -68,7 +68,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 { this.renderHighlight("Line", "/assets/images/gravity4_cropped.jpg") }
                 { this.renderHighlight("Dots", "/assets/images/dots2.jpg") }
                 { this.renderHighlight("Waves", "/assets/images/waves2.jpg") }
-                { this.renderHighlight("Cymatics", "/assets/images/cymatics1.jpg") }
+                { this.renderHighlight("Cymatics", "/assets/images/cymatics5_cropped.jpg") }
             </section>
         );
     }
