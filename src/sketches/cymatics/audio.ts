@@ -8,16 +8,24 @@ interface OscillatorWithGain extends OscillatorNode {
     gain: GainNode;
 }
 
+function makeAudioSrcs(fileName: string) {
+    return [
+        `/assets/audio/cymatics/${fileName}.webm`,
+        `/assets/audio/cymatics/${fileName}.mp3`,
+        `/assets/audio/cymatics/${fileName}.wav`,
+    ];
+}
+
 export class CymaticsAudio {
     private kick = new Howl({
-        src: ["/assets/audio/cymatics/kick.wav"],
+        src: makeAudioSrcs("kick"),
         volume: 0.80,
     });
     private risingBass = new Howl({
-        src: ["/assets/audio/cymatics/risingbass.wav"],
+        src: makeAudioSrcs("risingbass"),
     });
     private blub = new Howl({
-        src: ["/assets/audio/cymatics/blub.wav"],
+        src: makeAudioSrcs("blub"),
         volume: 0,
         autoplay: true,
         loop: true,
