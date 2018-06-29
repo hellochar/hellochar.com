@@ -9,6 +9,8 @@ uniform vec2 resolution;
 // z = accumulated height
 uniform sampler2D cellStateVariable;
 
+uniform float skewIntensity;
+
 // https://github.com/hughsk/glsl-hsv2rgb/blob/master/index.glsl
 vec3 hsv2rgb(vec3 c) {
   vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -71,11 +73,14 @@ vec3 color(vec2 uv) {
 
     vec3 col = vec3(4., 32., 55.);
     // col = mix(col, vec3(235., 89., 56.), gradAccFactor);
-    col = mix(col, vec3(235., 89., 56.), heightFactor);
+    vec3 baseRed = vec3(235., 89., 56.);
+    // vec3 bodyColor = mix(baseRed, hsv2rgb(vec3(mod(accumulatedHeight / 10., 1.), 1., 0.5 + skewIntensity * 0.25)) * 255., skewIntensity);
+    vec3 bodyColor = mix(baseRed, vec3(255.), skewIntensity);
+    col = mix(col, bodyColor, heightFactor);
     // col += vec3(48., 161., 184.) * gradYFactor;
     col += phong1 * vec3(254., 253., 255.);
     col += phong2 * vec3(170., 89., 57.);
-    return col / 255.;
+    return clamp(col / 255., vec3(0.), vec3(1.));
 }
 
 float udRoundBox( vec2 uv, vec2 boxDimensions, float radius )

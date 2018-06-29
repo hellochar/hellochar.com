@@ -21,6 +21,7 @@ export class AudioClip {
         this.element.autoplay = autoplay;
         this.element.loop = loop;
         this.element.volume = volume;
+        this.element.preload = "auto";
         for (const srcUrl of srcs) {
             const extension = srcUrl.substring(srcUrl.length - 3);
             const source = document.createElement("source");

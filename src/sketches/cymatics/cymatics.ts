@@ -127,7 +127,7 @@ export class Cymatics extends ISketch {
 
     public animate(dt: number) {
         if (mousePressed) {
-            this.numCycles += .0003;
+            this.numCycles += .0003 + (this.numCycles - DEFAULT_NUM_CYCLES) * 0.0008;
             // numCycles *= 2;
             if (this.growAmount < 0.8) {
                 this.growAmount = 0.8;
@@ -163,17 +163,20 @@ export class Cymatics extends ISketch {
         const centerSpeed = wantedCenter.distanceTo(this.cellStateVariable.material.uniforms.center.value) * lerpAlpha;
         this.cellStateVariable.material.uniforms.center.value.lerp(wantedCenter, lerpAlpha);
 
+        const skewIntensity = Math.pow(Math.max(0, (this.numCycles - DEFAULT_NUM_CYCLES) / 2. - 0.5), 2);
+
         // grows louder as there's more growAmount, and also when it moves faster
-        const blubVolume = Math.pow(THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.05, 1), 2) * 0.6
-                    + Math.abs(this.numCycles - DEFAULT_NUM_CYCLES)
-                    + THREE.Math.mapLinear(centerSpeed, 0, 0.005, 0, 1) * THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.05, 0.4);
+        const blubVolume = THREE.Math.clamp(Math.pow(THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.05, 1), 2), 0, 1) * 0.5
+                    + Math.abs(this.numCycles - DEFAULT_NUM_CYCLES) * 0.25
+                    - skewIntensity
+                    + THREE.Math.mapLinear(centerSpeed, 0, 0.005, 0, 1) * THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.12, 1) * 0.4;
         this.audio.setBlubVolume(blubVolume);
         // play slowly when there's no movement, play faster when there's a lot of movement
         const playbackRate = Math.pow(2, THREE.Math.mapLinear(centerSpeed, 0, 0.005, -0.25, 1.5)) + THREE.Math.mapLinear(this.numCycles, DEFAULT_NUM_CYCLES, 2, 0., 4.);
         this.audio.setBlubPlaybackRate(playbackRate);
         // console.log("playback:", playbackRate.toFixed(2), "volume:", volume.toFixed(2));
 
-        this.audio.setOscVolume(THREE.Math.smoothstep(this.numCycles, DEFAULT_NUM_CYCLES, 1.10) * 0.5);
+        this.audio.setOscVolume(THREE.Math.clamp(THREE.Math.smoothstep(this.numCycles, DEFAULT_NUM_CYCLES, 1.10) * 0.5, 0, 1));
         const cycles = this.numCycles / (1 + this.slowDownAmount * 3);
         this.audio.setOscFrequencyScalar(cycles);
 
@@ -185,6 +188,7 @@ export class Cymatics extends ISketch {
             this.simulationTime += wantedSimulationDt;
         }
 
+        this.renderCymaticsPass.uniforms.skewIntensity.value = skewIntensity;
         this.renderCymaticsPass.uniforms.cellStateVariable.value = this.computation.getCurrentRenderTarget(this.cellStateVariable).texture;
         this.composer.render();
 

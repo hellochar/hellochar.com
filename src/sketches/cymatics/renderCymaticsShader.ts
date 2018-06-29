@@ -5,6 +5,7 @@ export const RenderCymaticsShader: THREE.Shader = {
         cellStateResolution: { value: new THREE.Vector2() },
         cellStateVariable: { value: null },
         resolution: { value: new THREE.Vector2() },
+        skewIntensity: { value: 0 },
         // only needed cuz we're using renderpass; not actually used
         tDiffuse: { value: null },
     },
