@@ -16,8 +16,9 @@ const QUALITY = screen.width > 480 ? "high" : "low";
 
 // an integer makes perfect standing waves. the 0.002 means that the wave will oscillate very slightly per frame; 500 frames per oscillation period
 const DEFAULT_NUM_CYCLES = 1.002;
+// const DEFAULT_NUM_CYCLES = 0.502;
 
-const GROW_AMOUNT_MIN = 0.4;
+const GROW_AMOUNT_MIN = 0.2;
 
 export class Cymatics extends ISketch {
     public slowDownAmount = 0;
@@ -129,11 +130,11 @@ export class Cymatics extends ISketch {
         if (mousePressed) {
             this.numCycles += .0003 + (this.numCycles - DEFAULT_NUM_CYCLES) * 0.0008;
             // numCycles *= 2;
-            if (this.growAmount < 0.8) {
-                this.growAmount = 0.8;
+            if (this.growAmount < 0.6) {
+                this.growAmount = 0.6;
             }
             // target grow amount of 5, so if user holds the mouse we have some buffer time when it fills up the screen
-            this.growAmount = this.growAmount * 0.99 + 5.0 * 0.01;
+            this.growAmount = this.growAmount * 0.99 + 7.5 * 0.01;
         } else {
             this.growAmount = this.growAmount * 0.995 + GROW_AMOUNT_MIN * 0.005;
             this.numCycles = this.numCycles * 0.95 + DEFAULT_NUM_CYCLES * 0.05;
@@ -176,9 +177,10 @@ export class Cymatics extends ISketch {
         this.audio.setBlubPlaybackRate(playbackRate);
         // console.log("playback:", playbackRate.toFixed(2), "volume:", volume.toFixed(2));
 
-        this.audio.setOscVolume(THREE.Math.clamp(THREE.Math.smoothstep(this.numCycles, DEFAULT_NUM_CYCLES, 1.10) * 0.5, 0, 1));
-        const cycles = this.numCycles / (1 + this.slowDownAmount * 3);
-        this.audio.setOscFrequencyScalar(cycles);
+        this.audio.setOscVolume(THREE.Math.clamp(THREE.Math.smoothstep(this.numCycles, DEFAULT_NUM_CYCLES, DEFAULT_NUM_CYCLES * 1.1) * 0.5, 0, 1));
+        const cycles = (this.numCycles) / (1 + this.slowDownAmount * 3);
+        const frequencyScalar = cycles / DEFAULT_NUM_CYCLES;
+        this.audio.setOscFrequencyScalar(frequencyScalar);
 
         const numIterations = QUALITY === "high" ? 40 : 20;
         const wantedSimulationDt = cycles * Math.PI * 2 / numIterations;

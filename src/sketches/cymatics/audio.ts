@@ -125,7 +125,7 @@ export class CymaticsAudio {
     }
 
     setOscVolume(v: number) {
-        this.oscGain.gain.exponentialRampToValueAtTime(THREE.Math.clamp(v, 1e-10, 1), this.audio.currentTime + 0.016);
+        this.oscGain.gain.exponentialRampToValueAtTime(THREE.Math.clamp(v * 0.5, 1e-10, 1), this.audio.currentTime + 0.016);
     }
 
     setOscFrequencyScalar(freqScalar: number) {
@@ -134,8 +134,8 @@ export class CymaticsAudio {
         this.oscUnison.frequency.exponentialRampToValueAtTime(freq, this.audio.currentTime + 0.016);
         this.oscFifth.frequency.exponentialRampToValueAtTime(freq * Math.pow(2, 7 / 12), this.audio.currentTime + 0.016);
         this.oscSub.frequency.exponentialRampToValueAtTime(freq / 2, this.audio.currentTime + 0.016);
-        this.oscHigh4.frequency.exponentialRampToValueAtTime(freq * Math.pow(2, 4) + 204, this.audio.currentTime + 0.016);
-        this.oscHigh4Second.frequency.exponentialRampToValueAtTime(freq * freqScalar * Math.pow(2, 4 + 1 / 12) + 209, this.audio.currentTime + 0.016);
+        this.oscHigh4.frequency.exponentialRampToValueAtTime(freq * Math.pow(2, 4) + 4, this.audio.currentTime + 0.016);
+        this.oscHigh4Second.frequency.exponentialRampToValueAtTime(freq * freqScalar * Math.pow(2, 4 + 1 / 12) + 9, this.audio.currentTime + 0.016);
         this.lfo.frequency.exponentialRampToValueAtTime((freqScalar - 1) * 100 + 1e-10, this.audio.currentTime + 0.016);
 
         this.whiteNoiseGain.gain.setTargetAtTime(THREE.Math.clamp((freqScalar - 1.002) * 20, 0, 1), this.audio.currentTime + 0.016, 0.016 / 3);
@@ -143,4 +143,4 @@ export class CymaticsAudio {
     }
 }
 
-const OSC_FREQ_BASE = 176;
+const OSC_FREQ_BASE = 126;

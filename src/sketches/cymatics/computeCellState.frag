@@ -14,7 +14,7 @@ uniform float iGlobalTime;
 uniform vec2 center;
 uniform float growAmount;
 
-#define FORCE_CONSTANT 0.25 
+#define FORCE_CONSTANT 0.25
 
 const vec2 uvOffset = (1. / resolution);
 
@@ -33,6 +33,8 @@ void main() {
     float velocity = cellState.y;
     float accumulatedHeight = cellState.z;
 
+    float aliveAmount = clamp(growAmount + min(0.2, iGlobalTime * 0.0016) - length(v_uv - center), 0., 1.);
+
     float force = 0.;
     force += forceContribution(height, v_uv + vec2(-uvOffset.s, -uvOffset.t));
     // force += forceContribution(height, v_uv + vec2(-uvOffset.s, 0.));
@@ -45,6 +47,9 @@ void main() {
     force += forceContribution(height, v_uv + vec2(+uvOffset.s, +uvOffset.t));
     force *= FORCE_CONSTANT;
 
+    // THIS SHIT MAKES IT GO CRAZY and leave a slime trail! looks really cool
+    // force *= aliveAmount;
+
     velocity += force;
     // velocity *= 0.98718;
     velocity *= 0.99818;
@@ -52,11 +57,11 @@ void main() {
     height += velocity;
     height *= 0.9999;
 
-    float vignetteAmount = clamp(growAmount + min(0.5, iGlobalTime * 0.0016) - pow(length(v_uv - center), 2.), 0., 1.);
-    height *= vignetteAmount;
+    // height *= aliveAmount;
+    velocity *= aliveAmount;
 
     // vec2 center = vec2(0.5) + iMouse * 0.50 * vec2(2., 1.);
-    if (length(v_uv - center) < length(uvOffset) * 3.) {
+    if (length(v_uv - center) < length(uvOffset) * 2.) {
         float amount = clamp(1. / (1. + pow(length(v_uv - center) / length(uvOffset), 2.)), 0., 1.);
     // if (length(v_uv - (iMouse + vec2(1.)) / 2.) < length(uvOffset) * 1.) {
         // height = sin(iGlobalTime);
