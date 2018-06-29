@@ -169,7 +169,7 @@ export class Cymatics extends ISketch {
                     + THREE.Math.mapLinear(centerSpeed, 0, 0.005, 0, 1) * THREE.Math.mapLinear(this.growAmount, GROW_AMOUNT_MIN, 1.0, 0.05, 0.4);
         this.audio.setBlubVolume(blubVolume);
         // play slowly when there's no movement, play faster when there's a lot of movement
-        const playbackRate = Math.pow(2, THREE.Math.mapLinear(centerSpeed, 0, 0.005, -1, 1.5)) + THREE.Math.mapLinear(this.numCycles, DEFAULT_NUM_CYCLES, 2, 0., 4.);
+        const playbackRate = Math.pow(2, THREE.Math.mapLinear(centerSpeed, 0, 0.005, -0.25, 1.5)) + THREE.Math.mapLinear(this.numCycles, DEFAULT_NUM_CYCLES, 2, 0., 4.);
         this.audio.setBlubPlaybackRate(playbackRate);
         // console.log("playback:", playbackRate.toFixed(2), "volume:", volume.toFixed(2));
 

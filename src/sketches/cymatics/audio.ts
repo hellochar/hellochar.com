@@ -1,7 +1,6 @@
-import { Howl } from "howler";
 import * as THREE from "three";
 
-import { createWhiteNoise } from "../../audio/noise";
+import { AudioClip, createWhiteNoise } from "../../audio";
 import { SketchAudioContext } from "../../sketch";
 
 interface OscillatorWithGain extends OscillatorNode {
@@ -17,19 +16,9 @@ function makeAudioSrcs(fileName: string) {
 }
 
 export class CymaticsAudio {
-    private kick = new Howl({
-        src: makeAudioSrcs("kick"),
-        volume: 0.80,
-    });
-    private risingBass = new Howl({
-        src: makeAudioSrcs("risingbass"),
-    });
-    private blub = new Howl({
-        src: makeAudioSrcs("blub"),
-        volume: 0,
-        autoplay: true,
-        loop: true,
-    });
+    private kick: AudioClip;
+    private risingBass: AudioClip;
+    private blub: AudioClip;
 
     private oscBase: OscillatorWithGain;
     private oscUnison: OscillatorWithGain;
@@ -43,8 +32,29 @@ export class CymaticsAudio {
     private lfo: OscillatorWithGain;
     private lfoGain: GainNode;
     private oscGain: GainNode;
-
     constructor(public audio: SketchAudioContext) {
+        this.kick = new AudioClip({
+            context: audio,
+            srcs: makeAudioSrcs("kick"),
+            volume: 0.8,
+        });
+        this.kick.getNode().connect(audio.gain);
+
+        this.risingBass = new AudioClip({
+            context: audio,
+            srcs: makeAudioSrcs("risingbass"),
+        });
+        this.risingBass.getNode().connect(audio.gain);
+
+        this.blub = new AudioClip({
+            context: audio,
+            srcs: makeAudioSrcs("blub"),
+            volume: 0,
+            autoplay: true,
+            loop: true,
+        });
+        this.blub.getNode().connect(audio.gain);
+
         this.oscBase = this.makeOsc(1);
         this.oscUnison = this.makeOsc(0.5);
         this.oscFifth = this.makeOsc(0.5);
@@ -107,11 +117,11 @@ export class CymaticsAudio {
     }
 
     setBlubVolume(v: number) {
-        this.blub.volume(THREE.Math.clamp(v, 0, 1));
+        this.blub.volume = THREE.Math.clamp(v, 0, 1);
     }
 
     setBlubPlaybackRate(r: number) {
-        this.blub.rate(THREE.Math.clamp(r, 0.5, 4));
+        this.blub.playbackRate = THREE.Math.clamp(r, 0.5, 4);
     }
 
     setOscVolume(v: number) {

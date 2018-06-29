@@ -1,19 +1,19 @@
-import * as $ from "jquery";
-
+import { AudioClip } from "../../audio";
 import { SketchAudioContext } from "../../sketch";
 
 export function createAudioGroup(ctx: SketchAudioContext) {
-    const backgroundAudio = $("<audio autoplay loop>")
-        .append('<source src="/assets/sketches/line/line_background.ogg" type="audio/ogg">')
-        .append('<source src="/assets/sketches/line/line_background.mp3" type="audio/mp3">') as JQuery<HTMLMediaElement>;
+    const backgroundAudio = new AudioClip({
+        context: ctx,
+        srcs: [
+            "/assets/sketches/line/line_background.mp3",
+            "/assets/sketches/line/line_background.ogg",
+        ],
+        autoplay: true,
+        loop: true,
+        volume: 0.5,
+    });
 
-    const sourceNode = ctx.createMediaElementSource(backgroundAudio[0]);
-    $("body").append(backgroundAudio);
-
-    const backgroundAudioGain = ctx.createGain();
-    backgroundAudioGain.gain.setValueAtTime(0.5, 0);
-    sourceNode.connect(backgroundAudioGain);
-    backgroundAudioGain.connect(ctx.gain);
+    backgroundAudio.getNode().connect(ctx.gain);
 
     // white noise
     const noise = (() => {
@@ -221,7 +221,7 @@ export function createAudioGroup(ctx: SketchAudioContext) {
             chordHigh.gain.setTargetAtTime(volume / 30, ctx.currentTime, 0.016);
         },
         setBackgroundVolume(volume: number) {
-            backgroundAudioGain.gain.setTargetAtTime(volume, ctx.currentTime, 0.016);
+            backgroundAudio.volume = volume;
         },
     };
 }
