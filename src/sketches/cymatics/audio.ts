@@ -36,7 +36,7 @@ export class CymaticsAudio {
         this.kick = new AudioClip({
             context: audio,
             srcs: makeAudioSrcs("kick"),
-            volume: 0.8,
+            volume: 0.6,
         });
         this.kick.getNode().connect(audio.gain);
 
@@ -117,7 +117,7 @@ export class CymaticsAudio {
     }
 
     setBlubVolume(v: number) {
-        this.blub.volume = THREE.Math.clamp(v, 0, 1);
+        this.blub.volume = THREE.Math.clamp(v * 0.8, 0, 1);
     }
 
     setBlubPlaybackRate(r: number) {

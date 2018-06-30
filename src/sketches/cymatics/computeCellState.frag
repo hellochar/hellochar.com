@@ -57,7 +57,7 @@ void main() {
     height += velocity;
     height *= 0.9999;
 
-    // height *= aliveAmount;
+    height *= aliveAmount;
     velocity *= aliveAmount;
 
     // vec2 center = vec2(0.5) + iMouse * 0.50 * vec2(2., 1.);
