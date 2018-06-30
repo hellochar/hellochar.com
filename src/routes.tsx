@@ -1,9 +1,9 @@
 import * as React from "react";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
+import { Route, Switch } from "react-router-dom";
 
 import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
-import { ISketch } from "./sketch";
+import { TitleMaker } from "./routes/titleMaker";
 import sketches = require("./sketches");
 import wipSketches = require("./wip");
 
@@ -70,6 +70,7 @@ export const Routes = () => (
         <Route path="/slides/divecc" component={SlidesDiveCC} />
         <Route path="/slides/ccse" component={SlidesProgrammerCC} />
         <Route path="/wip" component={WipListing} />
+        <Route path="/admin/titleMaker" component={TitleMaker} />
         <Route path="/" component={HomePage} />
     </Switch>
 );

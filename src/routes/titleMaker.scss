@@ -1,0 +1,28 @@
+#titleMaker {
+    width: 1280px;
+    height: 720px;
+    margin: auto;
+    border: 1px solid black;
+    background: $light-gray5;
+
+    .titleMaker-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .titleMaker-title {
+        font-style: italic;
+        font-size: 5em;
+        display: inline-block;
+        margin: 10% auto 0 auto;
+        color: $dark-gray3;
+        text-decoration: underline;
+    }
+
+    // .titleMaker-line {
+    //     width: 50%;
+    //     height: 1px;
+    //     margin: 20px auto 0 auto;
+    //     border-top: 2px solid $dark-gray3;
+    // }
+}

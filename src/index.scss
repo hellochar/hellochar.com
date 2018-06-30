@@ -1,16 +1,10 @@
-$black: #10161A;
-$white: #ffffff;
-$dark-gray1: #182026;
-$gray1: #5C7080;
-$gray3: #8A9BA8;
-$gray5: #BFCCD6;
-$light-gray1: #CED9E0;
-
 $palatino-family: Palatino, Palatino Linotype, Palatino LT STD, Book Antiqua, serif; 
 $georgia-family: Georgia,Cambria,"Times New Roman",Times,serif;
 $arial-family: Arial, Helvetica Neue, Helvetica, sans-serif;
 
 @import "~normalize.css/";
+
+@import "./colors";
 
 @import "./routes/index";
 @import "./sketchComponent";
