@@ -33,7 +33,7 @@ void main() {
     float velocity = cellState.y;
     float accumulatedHeight = cellState.z;
 
-    float aliveAmount = clamp(growAmount + min(0.2, iGlobalTime * 0.0016) - length(v_uv - center), 0., 1.);
+    float aliveAmount = clamp(growAmount + min(0.8, (iGlobalTime - 500.) / 500.) - length(v_uv - center), 0., 1.);
 
     float force = 0.;
     force += forceContribution(height, v_uv + vec2(-uvOffset.s, -uvOffset.t));
@@ -57,9 +57,6 @@ void main() {
     height += velocity;
     height *= 0.9999;
 
-    height *= aliveAmount;
-    velocity *= aliveAmount;
-
     // vec2 center = vec2(0.5) + iMouse * 0.50 * vec2(2., 1.);
     if (length(v_uv - center) < length(uvOffset) * 2.) {
         float amount = clamp(1. / (1. + pow(length(v_uv - center) / length(uvOffset), 2.)), 0., 1.);
@@ -67,6 +64,9 @@ void main() {
         // height = sin(iGlobalTime);
         height = mix(height, 2. * sin(iGlobalTime), amount);
     }
+
+    height *= aliveAmount;
+    velocity *= aliveAmount;
 
     accumulatedHeight *= 0.999;
     accumulatedHeight += height;

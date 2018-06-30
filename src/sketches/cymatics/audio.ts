@@ -125,21 +125,21 @@ export class CymaticsAudio {
     }
 
     setOscVolume(v: number) {
-        this.oscGain.gain.exponentialRampToValueAtTime(THREE.Math.clamp(v * 0.5, 1e-10, 1), this.audio.currentTime + 0.016);
+        this.oscGain.gain.setTargetAtTime(THREE.Math.clamp(v * 0.5, 1e-10, 1), this.audio.currentTime + 0.016, 0.016 / 3);
     }
 
     setOscFrequencyScalar(freqScalar: number) {
         const freq = OSC_FREQ_BASE * freqScalar;
 
-        this.oscUnison.frequency.exponentialRampToValueAtTime(freq, this.audio.currentTime + 0.016);
-        this.oscFifth.frequency.exponentialRampToValueAtTime(freq * Math.pow(2, 7 / 12), this.audio.currentTime + 0.016);
-        this.oscSub.frequency.exponentialRampToValueAtTime(freq / 2, this.audio.currentTime + 0.016);
-        this.oscHigh4.frequency.exponentialRampToValueAtTime(freq * Math.pow(2, 4) + 4, this.audio.currentTime + 0.016);
-        this.oscHigh4Second.frequency.exponentialRampToValueAtTime(freq * freqScalar * Math.pow(2, 4 + 1 / 12) + 9, this.audio.currentTime + 0.016);
-        this.lfo.frequency.exponentialRampToValueAtTime((freqScalar - 1) * 100 + 1e-10, this.audio.currentTime + 0.016);
+        this.oscUnison.frequency.setTargetAtTime(freq, this.audio.currentTime + 0.016, 0.016 / 3);
+        this.oscFifth.frequency.setTargetAtTime(freq * Math.pow(2, 7 / 12), this.audio.currentTime + 0.016, 0.016 / 3);
+        this.oscSub.frequency.setTargetAtTime(freq / 2, this.audio.currentTime + 0.016, 0.016 / 3);
+        this.oscHigh4.frequency.setTargetAtTime(freq * Math.pow(2, 4) + 4, this.audio.currentTime + 0.016, 0.016 / 3);
+        this.oscHigh4Second.frequency.setTargetAtTime(freq * freqScalar * Math.pow(2, 4 + 1 / 12) + 9, this.audio.currentTime + 0.016, 0.016 / 3);
+        this.lfo.frequency.setTargetAtTime((freqScalar - 1) * 100 + 1e-10, this.audio.currentTime + 0.016, 0.016 / 3);
 
         this.whiteNoiseGain.gain.setTargetAtTime(THREE.Math.clamp((freqScalar - 1.002) * 20, 0, 1), this.audio.currentTime + 0.016, 0.016 / 3);
-        this.whiteNoiseFilter.frequency.exponentialRampToValueAtTime(1500 * (1 + freqScalar * freqScalar), this.audio.currentTime + 0.016);
+        this.whiteNoiseFilter.frequency.setTargetAtTime(1500 * (1 + freqScalar * freqScalar), this.audio.currentTime + 0.016, 0.016 / 3);
     }
 }
 

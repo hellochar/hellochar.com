@@ -18,7 +18,7 @@ const QUALITY = screen.width > 480 ? "high" : "low";
 const DEFAULT_NUM_CYCLES = 1.002;
 // const DEFAULT_NUM_CYCLES = 0.502;
 
-const GROW_AMOUNT_MIN = 0.2;
+const GROW_AMOUNT_MIN = 0.0;
 
 export class Cymatics extends ISketch {
     public slowDownAmount = 0;
@@ -130,8 +130,8 @@ export class Cymatics extends ISketch {
         if (mousePressed) {
             this.numCycles += .0003 + (this.numCycles - DEFAULT_NUM_CYCLES) * 0.0008;
             // numCycles *= 2;
-            if (this.growAmount < 0.6) {
-                this.growAmount = 0.6;
+            if (this.growAmount < 0.5) {
+                this.growAmount = 0.5;
             }
             // target grow amount of 5, so if user holds the mouse we have some buffer time when it fills up the screen
             this.growAmount = this.growAmount * 0.99 + 7.5 * 0.01;

@@ -23,7 +23,7 @@ export class AudioClip {
         this.element.volume = volume;
         this.element.preload = "auto";
         for (const srcUrl of srcs) {
-            const extension = srcUrl.substring(srcUrl.length - 3);
+            const extension = srcUrl.split(".").pop();
             const source = document.createElement("source");
             source.src = srcUrl;
             source.type = `audio/${extension}`;
