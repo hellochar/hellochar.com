@@ -38,6 +38,7 @@
     "cross-env": "^5.2.0",
     "css-loader": "^0.28.4",
     "delaunator": "^2.0.0",
+    "es6-shim": "^0.35.3",
     "exports-loader": "^0.6.4",
     "express": "~4.9.0",
     "html-webpack-inline-source-plugin": "^0.0.10",

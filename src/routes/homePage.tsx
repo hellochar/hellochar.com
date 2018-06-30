@@ -86,7 +86,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     and physical simulations. I also care about UI, teaching, contributing to the broader
                     creative code community, music, and video games.
                 </p>
-                <LazyLoad once>
+                <LazyLoad height={500} offset={200} once>
                     <img className="self" src="/assets/images/self_800x500.jpg" />
                 </LazyLoad>
                 <p>
@@ -162,7 +162,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <figcaption>
                     <Link className="work-highlight-name" to={linkUrl}>{name}</Link>
                 </figcaption>
-                <LazyLoad height="500px" once>
+                <LazyLoad height={500} offset={200} once>
                     <Link to={linkUrl}><img className="full-width" src={imageUrl} /></Link>
                 </LazyLoad>
             </figure>
