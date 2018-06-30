@@ -117,7 +117,7 @@ export class CymaticsAudio {
     }
 
     setBlubVolume(v: number) {
-        this.blub.volume = THREE.Math.clamp(v * 0.8, 0, 1);
+        this.blub.volume = THREE.Math.clamp(v * 0.7, 0, 1);
     }
 
     setBlubPlaybackRate(r: number) {
@@ -125,7 +125,7 @@ export class CymaticsAudio {
     }
 
     setOscVolume(v: number) {
-        this.oscGain.gain.setTargetAtTime(THREE.Math.clamp(v * 0.5, 1e-10, 1), this.audio.currentTime + 0.016, 0.016 / 3);
+        this.oscGain.gain.setTargetAtTime(THREE.Math.clamp(v * 0.75, 1e-10, 1), this.audio.currentTime + 0.016, 0.016 / 3);
     }
 
     setOscFrequencyScalar(freqScalar: number) {
