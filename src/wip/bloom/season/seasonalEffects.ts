@@ -1,8 +1,11 @@
-import { season } from ".";
-import Bloom from "..";
+import * as THREE from "three";
+
+import { Bloom } from "../bloom";
 import { Branch } from "../components/branch";
 import { Bud } from "../components/branch/bud";
 import { Component } from "../components/component";
+import dna from "../dna";
+import { season } from "./season";
 
 export interface SeasonalEffect {
     update(): void;
@@ -28,7 +31,11 @@ export class FloweringSeasonalEffect implements SeasonalEffect {
 
 export class DyingSeasonalEffect implements SeasonalEffect {
     private deathSchedules: Map<Component, number> = new Map();
+    private originalColor: THREE.Color;
+    private targetColor = new THREE.Color("brown");
+
     constructor(public bloom: Bloom) {
+        this.originalColor = dna.branchTemplate.material.color.clone();
 
         // fill in death schedules
         this.bloom.component!.traverse((obj) => {
@@ -61,5 +68,8 @@ export class DyingSeasonalEffect implements SeasonalEffect {
                 // }
             }
         }
+        const wantedBranchColor = this.originalColor.clone().lerp(this.targetColor, percent);
+        dna.branchTemplate.material.color = wantedBranchColor;
+        dna.branchTemplate.material.needsUpdate = true;
     }
 }

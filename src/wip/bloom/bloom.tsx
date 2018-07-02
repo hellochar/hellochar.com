@@ -71,6 +71,10 @@ export class Bloom extends ISketch {
         )[0];
         const source = ctx.createMediaElementSource(this.audio);
         this.gain = ctx.createGain();
+
+        this.gain.gain.setValueAtTime(0.0001, this.audioContext.currentTime);
+        this.gain.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + 5);
+
         source.connect(this.gain);
         this.gain.connect(ctx.gain);
     }
@@ -168,11 +172,14 @@ export class Bloom extends ISketch {
         } catch {}
 
         try {
-            this.updateCamera();
+            const numCameraUpdates = Math.ceil(ms / 17);
+            for (let i = 0; i < numCameraUpdates; i++) {
+                this.updateCamera();
+            }
         } catch {}
 
         try {
-            this.updateDyingObjects();
+            this.updateDyingObjects(ms);
         } catch {}
 
         if (this.r2 != null) {
@@ -208,15 +215,15 @@ export class Bloom extends ISketch {
         const currentTime = this.audio.currentTime;
         if (currentTime < flowerTime) {
             season.type = "growing";
-            season.percent = currentTime / flowerTime;
+            season.percent = THREE.Math.clamp(currentTime / flowerTime, 0, 1);
         } else if (currentTime < dieTime) {
             season.type = "flowering";
-            season.percent = (currentTime - flowerTime) / (dieTime - flowerTime);
+            season.percent = THREE.Math.clamp((currentTime - flowerTime) / (dieTime - flowerTime), 0, 1);
         } else {
             season.type = "dying";
-            season.percent = (currentTime - dieTime) / (restartTime - dieTime);
+            season.percent = THREE.Math.clamp((currentTime - dieTime) / (restartTime - dieTime), 0, 1);
         }
-        const timeOfDay = Math.min(currentTime / restartTime, 1);
+        const timeOfDay = THREE.Math.clamp(Math.min(currentTime / restartTime, 1), 0, 1);
         this.scene.setTimeOfDay(timeOfDay);
     }
 
@@ -230,10 +237,10 @@ export class Bloom extends ISketch {
         this.seasonalEffect.update();
     }
 
-    public updateDyingObjects() {
+    public updateDyingObjects(ms: number) {
         const toDelete: Set<DyingObject> = new Set();
         for (const obj of this.dyingObjects) {
-            obj.update();
+            obj.update(ms);
             if (obj.parent == null) {
                 toDelete.add(obj);
             }

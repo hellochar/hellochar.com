@@ -23,7 +23,7 @@ export interface BranchingPattern {
 
 export class DefaultBranchingPattern implements BranchingPattern {
     public branchLengthScalar = THREE.Math.randFloat(0.7, 0.9);
-    public branchRotationZ = THREE.Math.mapLinear(Math.random() * Math.random(), 0, 1, Math.PI / 2, Math.PI / 8);
+    public branchRotationZ = THREE.Math.mapLinear(Math.random(), 0, 1, Math.PI / 2, Math.PI / 8);
 
     // this *dramatically* changes growth
     public lengthPerGrowth = THREE.Math.randFloat(0.95, 1.05);

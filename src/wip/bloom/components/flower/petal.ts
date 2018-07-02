@@ -11,8 +11,8 @@ const bone1Stiffness = bone0Stiffness * Math.pow(10, THREE.Math.randFloat(-1, -2
 const sideBoneMax = Math.random() * Math.random();
 
 const scaleTimer = THREE.Math.randFloat(0.45, 0.55);
-const rotStart = THREE.Math.randFloat(0, 0.25);
-const rotDuration = THREE.Math.randFloat(0.55, 0.75);
+const rotStart = THREE.Math.randFloat(0.15, 0.25);
+const rotDuration = THREE.Math.randFloat(0.25, 0.50);
 
 export default class Petal extends Component {
     public mesh: THREE.SkinnedMesh;

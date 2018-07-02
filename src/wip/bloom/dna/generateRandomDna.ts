@@ -184,9 +184,9 @@ export function randomTepalTemplate(color: THREE.Color, envMap: THREE.CubeTextur
 
 export function randomWhorlParametersLeaf(leafTemplate: LeafTemplate): WhorlParameters<Leaf> {
     const zRot = THREE.Math.randFloat(Math.PI / 12, Math.PI / 3);
-    const endYRot = Math.random() < 0.5 ? Math.PI * 2 : Math.PI;
+    const endYRot = Math.PI * 2;
     const scale = THREE.Math.randFloat(0.5, 1);
-    const isBilateral = Math.random() < 0.5;
+    const isBilateral = false;
     return {
         num: THREE.Math.randInt(1, 3),
         startZRot: zRot,
@@ -278,9 +278,9 @@ export function randomBranchingPattern(): BranchingPattern {
 }
 
 export function randomGrowthParameters(): GrowthParameters {
-    const zCurlFactor = Math.random() < 0.2 ? THREE.Math.randFloat(0.5, 1) : 0;
+    const zCurlFactor = Math.random() < 0.2 ? 0.2 : 0;
 
-    let boneCurveUpwardsFactor = 0.0001 * Math.pow(2, THREE.Math.randFloat(-1, 2));
+    let boneCurveUpwardsFactor = 0.0020 * Math.pow(2, THREE.Math.randFloat(-1, 2));
     if (zCurlFactor > 0) {
         boneCurveUpwardsFactor *= 3;
     }

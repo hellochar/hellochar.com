@@ -20,20 +20,21 @@ export class DyingObject extends THREE.Object3D {
         }
     }
 
-    update() {
-        this.velocity.y -= 0.00005;
+    update(ms: number) {
+        const dt = ms / 16.66666;
+        this.velocity.y -= 0.00005 * dt;
 
         if (this.position.y <= 0.01) {
             this.position.y = 0.01;
             this.velocity.setScalar(0);
         } else {
-            this.velocity.x += (Math.random() - 0.5) * 2 * 0.0002;
-            this.velocity.z += (Math.random() - 0.5) * 2 * 0.0002;
+            this.velocity.x += (Math.random() - 0.5) * 2 * 0.0002 * dt;
+            this.velocity.z += (Math.random() - 0.5) * 2 * 0.0002 * dt;
             this.position.add(this.velocity);
 
-            this.rotateX(0.01);
-            this.rotateY(0.02);
-            this.rotateZ(0.005);
+            this.rotateX(0.01 * dt);
+            this.rotateY(0.02 * dt);
+            this.rotateZ(0.005 * dt);
         }
 
         if (this.scale.lengthSq() > 0.01 * 0.01) {
