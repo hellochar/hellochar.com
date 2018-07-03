@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import GPUComputationRenderer, { GPUComputationRendererVariable } from "../../common/gpuComputationRenderer";
 import { map, mirroredRepeat } from "../../math";
+import { QUALITY } from "../../quality";
 import { ISketch } from "../../sketch";
 import { CymaticsAudio } from "./audio";
 import { RenderCymaticsShader } from "./renderCymaticsShader";
@@ -11,8 +12,6 @@ const COMPUTE_CELL_STATE = require("./computeCellState.frag");
 let mousePressed = false;
 const mousePosition = new THREE.Vector2(0, 0);
 const lastMousePosition = new THREE.Vector2(0, 0);
-
-const QUALITY = screen.width > 480 ? "high" : "low";
 
 // an integer makes perfect standing waves. the 0.002 means that the wave will oscillate very slightly per frame; 500 frames per oscillation period
 const DEFAULT_NUM_CYCLES = 1.002;

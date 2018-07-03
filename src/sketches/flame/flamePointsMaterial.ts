@@ -44,6 +44,8 @@ export class FlamePointsMaterial extends THREE.ShaderMaterial {
     }
 }
 
+// copied from https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderLib/points_vert.glsl
+// modified to change gl_PointSize based on out-of-focusedness
 const vertexShader = `
 uniform float size;
 uniform float scale;
@@ -82,6 +84,8 @@ void main() {
 }
 `;
 
+// copied from https://github.com/mrdoob/three.js/blob/r88/src/renderers/shaders/ShaderLib/points_frag.glsl
+// modified to reduce opacity based on out-of-focusedness
 const fragmentShader = `
 uniform vec3 diffuse;
 uniform float opacity;

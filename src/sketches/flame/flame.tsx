@@ -6,10 +6,9 @@ import * as THREE from "three";
 import { createWhiteNoise } from "../../audio/noise";
 import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, VARIATIONS, VelocityTrackerVisitor } from "../../common/flame";
 import { map } from "../../math";
+import { QUALITY } from "../../quality";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { FlamePointsMaterial } from "./flamePointsMaterial";
-
-const quality = screen.width > 480 ? "high" : "low";
 
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
@@ -352,7 +351,7 @@ export class FlameSketch extends ISketch {
     }
 
     public animate() {
-        if (quality === "high") {
+        if (QUALITY === "high") {
             this.animateSuperPoint();
         }
 
@@ -471,7 +470,7 @@ export class FlameSketch extends ISketch {
         pointCloud.rotateX(-Math.PI / 2);
         scene.add(pointCloud);
 
-        if (quality === "low") {
+        if (QUALITY === "low") {
             superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), false);
         }
     }

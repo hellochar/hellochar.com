@@ -1,91 +1,69 @@
-import * as React from "react";
 import * as THREE from "three";
 
-import Worker = require('worker-loader!./worker');
+// import Worker = require('worker-loader!./worker');
+import { DataTexture, Texture, Vector2 } from "three";
 import { ExplodeShader } from "../../common/explodeShader";
-import { ISketch, SketchAudioContext } from "../../sketch";
+import GPUComputationRenderer, { GPUComputationRendererVariable } from "../../common/gpuComputationRenderer";
+import { QUALITY } from "../../quality";
+import { ISketch } from "../../sketch";
 import WebcamBackgroundSubtractor from "../webcamBackgroundSubtractor";
-import { NUM_PARTICLES, NUM_WORKERS, VIDEO_HEIGHT, VIDEO_WIDTH } from "./constants";
-import { IForegroundUpdateMessage, IPositionColorUpdateResponse } from "./interfaces";
+import { DontMovePoints } from "./dontMovePoints";
 
-let now: number = 0;
+const COMPUTE_PARTICLE_STATE = require("./computeParticleState.frag");
+
+export const VIDEO_WIDTH = 256;
+export const VIDEO_HEIGHT = 128;
+
 class DontMove extends ISketch {
     public scene = new THREE.Scene();
     private camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000);
     public filter = new THREE.ShaderPass(ExplodeShader);
     public composer!: THREE.EffectComposer;
 
-    private POINTS_MATERIAL = new THREE.PointsMaterial({
-        vertexColors: THREE.VertexColors,
-        transparent: true,
-        opacity: 0.25,
-        size: 2,
-    });
-
-    private workers: Worker[] = [];
+    public computation!: GPUComputationRenderer;
+    public particleStateVariable!: GPUComputationRendererVariable;
+    public points!: DontMovePoints;
 
     public backgroundSubtractor = new WebcamBackgroundSubtractor(VIDEO_WIDTH, VIDEO_HEIGHT);
 
     public init() {
-        this.initWorkers();
-        this.initBackgroundSubtractor();
-        this.setupCamera();
-        this.setupParticles();
+        this.backgroundSubtractor.init();
         this.composer = new THREE.EffectComposer(this.renderer);
         this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
         this.filter.uniforms.iResolution.value = this.resolution;
-        this.filter.renderToScreen = true;
-        this.composer.addPass(this.filter);
-    }
+        // this.filter.renderToScreen = true;
+        // this.composer.addPass(this.filter);
+        this.composer.passes[this.composer.passes.length - 1].renderToScreen = true;
 
-    private initWorkers() {
-        for (let i = 0; i < NUM_WORKERS; i++) {
-            const worker = new Worker();
-            this.workers.push(worker);
+        const sideLength = QUALITY === "high" ? 1024 : 256;
+        this.computation = new GPUComputationRenderer(sideLength, sideLength, this.renderer);
+        const initialValueTexture = this.computation.createTexture();
+        this.particleStateVariable = this.computation.addVariable("particleState", COMPUTE_PARTICLE_STATE, initialValueTexture);
+        this.computation.setVariableDependencies( this.particleStateVariable, [ this.particleStateVariable ]);
+        this.particleStateVariable.minFilter = THREE.LinearFilter;
+        this.particleStateVariable.magFilter = THREE.LinearFilter;
+        this.particleStateVariable.material.uniforms.iGlobalTime = { value: 0 };
+        this.particleStateVariable.material.uniforms.boundsMin = { value: new Vector2(-0.5, -0.5) };
+        this.particleStateVariable.material.uniforms.boundsMax = { value: new Vector2(0.5, 0.5) };
+        const zeroData: Uint8Array = new Uint8Array(VIDEO_WIDTH * VIDEO_HEIGHT);
+        const texture = new DataTexture(zeroData, VIDEO_WIDTH, VIDEO_HEIGHT, THREE.LuminanceFormat);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        this.particleStateVariable.material.uniforms.foreground = { value: texture };
+
+        this.particleStateVariable.material.defines.VIDEO_WIDTH = VIDEO_WIDTH;
+        this.particleStateVariable.material.defines.VIDEO_HEIGHT = VIDEO_HEIGHT;
+        const err = this.computation.init();
+        if (err) {
+            console.error(err);
         }
-    }
-
-    private initBackgroundSubtractor() {
-        this.backgroundSubtractor.init();
-    }
-
-    public particleBufferGeometry = new THREE.BufferGeometry();
-    public particlePoints!: THREE.Points;
-    public setupParticles() {
-        // filler for now
-        const positions = new Float32Array(NUM_PARTICLES * 3);
-        const colors = new Float32Array(NUM_PARTICLES * 3);
-        const positionAttribute = new THREE.BufferAttribute(positions, 3);
-        // positionAttribute.setDynamic(true);
-        const colorAttribute = new THREE.BufferAttribute(colors, 3);
-        // colorAttribute.setDynamic(true);
-
-        this.particleBufferGeometry.addAttribute("position", positionAttribute);
-        this.particleBufferGeometry.addAttribute("color", colorAttribute);
-
-        this.workers.forEach((worker, idx) => {
-            worker.addEventListener("message", (e) => {
-                // console.log("main received");
-                const response: IPositionColorUpdateResponse = e.data;
-                if (response.type === "positionColorUpdate") {
-                    const startIndex = idx / NUM_WORKERS * NUM_PARTICLES;
-                    console.time(`received update on ${startIndex}, ${response.positions.length}`);
-                    positions.set(response.positions, startIndex);
-                    colors.set(response.colors, startIndex);
-                    console.timeEnd(`received update on ${startIndex}, ${response.positions.length}`);
-                    // positionAttribute.setArray(response.positions);
-                    // colorAttribute.setArray(response.colors);
-                    positionAttribute.needsUpdate = true;
-                    colorAttribute.needsUpdate = true;
-                }
-            });
-        });
-
-        this.particlePoints = new THREE.Points(
-            this.particleBufferGeometry,
-            this.POINTS_MATERIAL,
-        );
-        this.scene.add(this.particlePoints);
+        const opacity = QUALITY === "high" ? 0.2 : 0.1;
+        const pointSize = QUALITY === "high" ? 2 : 5;
+        // this.points = new DontMovePoints(sideLength, opacity, pointSize * 0.1);
+        this.points = new DontMovePoints(sideLength, 1, 0.2);
+        this.points.material.uniforms.foreground.value = texture;
+        this.scene.add(this.points);
+        this.setupCamera();
     }
 
     public setupCamera() {
@@ -104,10 +82,13 @@ class DontMove extends ISketch {
             height = 1 * elementHeight / elementWidth;
         }
         this.camera.left = -width / 2;
-        this.camera.top = height / 2;
         this.camera.bottom = -height / 2;
         this.camera.right = width / 2;
+        this.camera.top = height / 2;
         this.camera.updateProjectionMatrix();
+
+        this.particleStateVariable.material.uniforms.boundsMin.value.set(this.camera.left, this.camera.bottom);
+        this.particleStateVariable.material.uniforms.boundsMax.value.set(this.camera.right, this.camera.top);
     }
 
     get aspectRatio() {
@@ -115,31 +96,24 @@ class DontMove extends ISketch {
     }
 
     public animate() {
-        now = performance.now();
         const fgmask = this.backgroundSubtractor.update();
         if (fgmask != null) {
-            const fgmaskData = fgmask.data.slice();
-
-            this.workers.forEach((worker, idx) => {
-                const message: IForegroundUpdateMessage = {
-                    camera: {
-                        left: this.camera.left,
-                        right: this.camera.right,
-                        top: this.camera.top,
-                        bottom: this.camera.bottom,
-                    },
-                    fgmaskData,
-                    // fgmaskData: fgmaskData.toString(),
-                    now,
-                    type: "foregroundUpdate",
-                };
-                worker.postMessage(message);
-            });
+            // const fgmaskData = fgmask.data.slice();
+            const texture = this.particleStateVariable.material.uniforms.foreground.value as DataTexture;
+            texture.image.data.set(fgmask.data);
+            texture.needsUpdate = true;
+            // this.particleStateVariable.material.uniforms.foreground.value.image.data = fgmask.data;
+        }
+        if (this.timeElapsed > 3000) {
+            this.particleStateVariable.material.uniforms.iGlobalTime.value = (this.timeElapsed - 3000.) / 1000.;
+            this.computation.compute();
+            this.points.material.uniforms.stateVariable.value = this.computation.getCurrentRenderTarget(this.particleStateVariable).texture;
         }
 
-        const t = now / 10000;
+        const t = this.timeElapsed / 10000;
         this.filter.uniforms.iMouse.value = new THREE.Vector2(Math.sin(t) / 2, Math.cos(t) / 2);
-        this.composer.render();
+        // this.composer.render();
+        this.renderer.render(this.scene, this.camera);
     }
 }
 
