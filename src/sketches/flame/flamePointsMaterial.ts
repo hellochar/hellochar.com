@@ -67,8 +67,8 @@ void main() {
 	#include <project_vertex>
 
     float dist = -mvPosition.z;
-    float originalSize = 2.;
-    float outOfFocusAmount = abs(dist - focalLength) / focalLength * 3.;
+    float originalSize = 1.0;
+    float outOfFocusAmount = pow(abs(dist - focalLength) / focalLength, 2.) * 3.;
     float unfocusedSize = originalSize * (1. + outOfFocusAmount);
 
     gl_PointSize = unfocusedSize * ( scale / - mvPosition.z );

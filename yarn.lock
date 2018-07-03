@@ -87,6 +87,10 @@
   dependencies:
     "@types/webvr-api" "*"
 
+"@types/webmidi@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@types/webmidi/-/webmidi-2.0.2.tgz#0466cf747aaed2b914a1e2564635bbda217cb256"
+
 "@types/webpack-env@^1.13.5":
   version "1.13.5"
   resolved "https://registry.yarnpkg.com/@types/webpack-env/-/webpack-env-1.13.5.tgz#ca854e9fbdbcdf45d7376882875f28e2c60593f8"

@@ -5,10 +5,13 @@ import * as THREE from "three";
 
 import { createWhiteNoise } from "../../audio/noise";
 import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, VARIATIONS, VelocityTrackerVisitor } from "../../common/flame";
+import { ButtonPressEvent, KnobTwistEvent, NovationLaunchControl } from "../../common/novationLaunchControl";
 import { map } from "../../math";
 import { QUALITY } from "../../quality";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import { FlamePointsMaterial } from "./flamePointsMaterial";
+
+import { words } from "./commonWords";
 
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
@@ -43,11 +46,19 @@ function randomBranch(idx: number, substring: string, numBranches: number, numWr
         next();
         return gen / GEN_DIVISOR;
     };
+    const tempP = new THREE.Vector3();
     const affineBase = objectValueByIndex(AFFINES, gen);
     const affine = (point: THREE.Vector3) => {
         affineBase(point);
         point.x += cX / 5;
         point.y += cY / 5;
+        point.x *= sX;
+        point.y *= sY;
+        point.x += point.y * skewX;
+        point.y += point.x * skewY;
+        tempP.copy(point);
+        tempP.normalize();
+        point.lerp(tempP, normAmount);
     };
     let variation = newVariation();
 
@@ -112,7 +123,9 @@ let globalBranches: Branch[];
 let superPoint: SuperPoint;
 
 let cX = 0, cY = 0;
-const jumpiness = 3;
+let sX = 1, sY = 1;
+const skewX = 0, skewY = 0;
+let normAmount = 0;
 
 const nameFromSearch = parse(location.search).name;
 
@@ -298,16 +311,19 @@ let audioHasChord = false;
 let oscLowGate = 0;
 let oscHighGate = 0;
 
-class FlameNameInput extends React.Component<{ onInput: (newName: string) => void }, {}> {
+class FlameNameInput extends React.Component<{ onInput: (newName: string) => void, value: string }, {}> {
     public render() {
         return (
             <div className="flame-input">
-                <input
+                {/* <input
+                    style={{display: "none !important"}}
+                    type="text"
                     defaultValue={nameFromSearch}
+                    value={this.props.value}
                     placeholder="Han"
                     maxLength={20}
                     onInput={this.handleInput}
-                />
+                /> */}
             </div>
         );
     }
@@ -320,7 +336,8 @@ class FlameNameInput extends React.Component<{ onInput: (newName: string) => voi
 }
 
 export class FlameSketch extends ISketch {
-    public elements = [<FlameNameInput key="input" onInput={(name) => this.updateName(name)} />];
+    public name = nameFromSearch || "Flame";
+    public elements = [<FlameNameInput key="input" onInput={(name) => this.updateName(name)} value={this.name} />];
     public id = "flame";
     public events = {
         dblclick,
@@ -348,7 +365,66 @@ export class FlameSketch extends ISketch {
         controls.enablePan = false;
 
         this.updateName(nameFromSearch);
+
+        this.initMidi();
+
+        // scene.add(new THREE.AxesHelper(1));
     }
+
+    private midi!: NovationLaunchControl;
+    async initMidi() {
+        this.midi = new NovationLaunchControl(this.handleButtonPress, this.handleKnobTwist);
+        this.midi.start();
+    }
+    private handleButtonPress = (evt: ButtonPressEvent) => {
+        if (evt.button === 1 && evt.pressed) {
+            let randomName = "";
+            const len = THREE.Math.randInt(1, 3);
+            for (let i = 0; i < len; i++) {
+                const word = words[THREE.Math.randInt(0, words.length - 1)];
+                randomName += word.charAt(0).toUpperCase() + word.slice(1);
+            }
+            this.updateName(randomName);
+        }
+    };
+
+    private handleKnobTwist = (evt: KnobTwistEvent) => {
+        if (evt.knob === 1) {
+            cX = Math.pow(THREE.Math.mapLinear(evt.value, 0, 1, -4, 4), 3);
+        }
+        if (evt.knob === 2) {
+            cY = Math.pow(THREE.Math.mapLinear(evt.value, 0, 1, -4, 4), 3);
+        }
+        if (evt.knob === 3) {
+            sX = Math.pow(2, THREE.Math.mapLinear(evt.value, 0, 1, -3, 3));
+        }
+        if (evt.knob === 4) {
+            normAmount = (evt.value - 0.5) * 1.;
+        }
+        if (evt.knob === 9) {
+            // polar angle
+            const length = new THREE.Vector2(camera.position.x, camera.position.z).length();
+            const newAngle = evt.value * Math.PI * 2;
+            camera.position.x = Math.cos(newAngle) * length;
+            camera.position.z = Math.sin(newAngle) * length;
+        }
+        if (evt.knob === 10) {
+            // up/down
+            const length = camera.position.length();
+            const newAngle = (evt.value - 0.5) * Math.PI;
+            camera.position.y = Math.sin(newAngle) * length;
+        }
+        if (evt.knob === 11) {
+            // zoom
+            const newLength = Math.pow(10, THREE.Math.mapLinear(1 - evt.value, 0, 1, -1, 1));
+            camera.position.setLength(newLength);
+        }
+        if (evt.knob === 12) {
+            this.focalLengthScalar = Math.pow(2, map(evt.value, 0, 1, 1, -1));
+        }
+    };
+
+    private focalLengthScalar = 1;
 
     public animate() {
         if (QUALITY === "high") {
@@ -356,12 +432,15 @@ export class FlameSketch extends ISketch {
         }
 
         const cameraLength = camera.position.length();
-        compressor.ratio.setTargetAtTime(1 + 3 / cameraLength, this.audioContext.currentTime, 0.016);
-        this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
+        compressor.ratio.setTargetAtTime(1 + 0.2 / (1. + cameraLength), this.audioContext.currentTime, 0.016);
+        this.audioContext.gain.gain.setTargetAtTime((0.5 / (1. + cameraLength)) + 0.5, this.audioContext.currentTime, 0.016);
 
-        material.setFocalLength(
-            cameraLength * Math.pow(2, map(mousePosition.y, 0, this.renderer.domElement.height, 2, -2)),
-        );
+        // material.setFocalLength(
+        //     cameraLength * Math.pow(2, map(mousePosition.y, 0, this.renderer.domElement.height, 2, -2)),
+        // );
+
+        // set focal length
+        material.setFocalLength( camera.position.length() * this.focalLengthScalar);
 
         controls.update();
         // console.time("render");
@@ -370,12 +449,12 @@ export class FlameSketch extends ISketch {
     }
 
     public animateSuperPoint() {
-        const time = performance.now() / 3000;
-        cX = 2 * sigmoid(6 * Math.sin(time)) - 1;
+        // const time = performance.now() / 3000;
+        // cX = 2 * sigmoid(6 * Math.sin(time)) - 1;
         const velocityVisitor = new VelocityTrackerVisitor();
         const varianceVisitor = new LengthVarianceTrackerVisitor();
         const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
-        superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), true, velocityVisitor, varianceVisitor, countVisitor);
+        superPoint.recalculate(3, 3, 3, computeDepth(), true, velocityVisitor, varianceVisitor, countVisitor);
         if (boundingSphere == null) {
             geometry.computeBoundingSphere();
             boundingSphere = geometry.boundingSphere;
@@ -391,9 +470,9 @@ export class FlameSketch extends ISketch {
         // anything above 3 is really dense, hard to see
         const density = countDensity / count;
 
-        const velocityFactor = Math.min(velocity * noiseGainScale, 0.3);
+        const velocityFactor = Math.min(velocity * noiseGainScale, 0.1);
         if (audioHasNoise) {
-            const noiseAmplitude = 2 / (1 + density * density);
+            const noiseAmplitude = 1 / (1 + density * density);
             // smooth out density random noise
             const target = noiseGain.gain.value * 0.9 + 0.1 * (velocityFactor * noiseAmplitude + 1e-4);
             noiseGain.gain.setTargetAtTime(target, noiseGain.context.currentTime, 0.016);
@@ -427,6 +506,7 @@ export class FlameSketch extends ISketch {
     }
 
     public updateName(name: string = "Han") {
+        this.name = name;
         this.audioContext.gain.gain.setValueAtTime(0, 0);
         const { origin, pathname } = window.location;
         const newUrl = `${origin}${pathname}?name=${name}`;
@@ -446,10 +526,14 @@ export class FlameSketch extends ISketch {
         baseFifthBias = (hash3 % 3) / 3;
 
         // basically boolean randoms; we don't want mod 2 cuz the hashes are related to each other at that small level
-        audioHasNoise = (hash3 % 100) >= 50;
+        // audioHasNoise = (hash3 % 100) >= 50;
         oscLowGate = (hash2 * hash3 % 96) < 48 ? 0 : 1;
         oscHighGate = (hash3 * hash3 % 4000) < 2000 ? 0 : 1;
-        audioHasChord = (hash + hash2 + hash3) % 44 >= 22;
+        // audioHasChord = (hash + hash2 + hash3) % 44 >= 22;
+        audioHasChord = true;
+        audioHasNoise = true;
+        // oscLowGate = true;
+        // oscHighGate = true;
 
         cY = map(hashNorm, 0, 1, -2.5, 2.5);
         globalBranches = randomBranches(name);
@@ -471,7 +555,7 @@ export class FlameSketch extends ISketch {
         scene.add(pointCloud);
 
         if (QUALITY === "low") {
-            superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), false);
+            superPoint.recalculate(3, 3, 3, computeDepth(), false);
         }
     }
 }

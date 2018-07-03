@@ -48,7 +48,7 @@ export class SuperPoint {
             if (shouldLerp) {
                 tempPoint.copy(this.point);
                 applyBranch(branch, tempPoint, tempColor);
-                child.point.lerp(tempPoint, 0.5);
+                child.point.lerp(tempPoint, 0.8);
             } else {
                 child.point.copy(this.point);
                 applyBranch(branch, child.point, tempColor);
