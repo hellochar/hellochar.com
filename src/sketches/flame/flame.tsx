@@ -10,6 +10,9 @@ import { ISketch, SketchAudioContext } from "../../sketch";
 import { FlamePointsMaterial } from "./flamePointsMaterial";
 
 const quality = screen.width > 480 ? "high" : "low";
+let cDx = 0, cDy = 0;
+// let drag = 1.0;
+// let deltaDrag = 0;
 
 function randomBranches(name: string) {
     const numWraps = Math.floor(name.length / 5);
@@ -47,8 +50,12 @@ function randomBranch(idx: number, substring: string, numBranches: number, numWr
     const affineBase = objectValueByIndex(AFFINES, gen);
     const affine = (point: THREE.Vector3) => {
         affineBase(point);
-        point.x += cX / 5;
-        point.y += cY / 5;
+        point.x += cX / 5 + cDx;
+        point.y += cY / 5 + cDy;
+
+        // point.x *= drag;
+        // point.y *= drag;
+        // point.z *= drag;
     };
     let variation = newVariation();
 
@@ -210,19 +217,55 @@ function initAudio(context: SketchAudioContext) {
 
         // 0 = full major, 1 = full minor
         let minorBias = 0;
-        let rootFreq = 0;
+        const rootFreq = 120;
         let fifthBias = 0;
+        let baseScaleDegree = 0;
+        let isMajor = true;
+
+        const MAJOR_SCALE = [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11,
+        ];
+
+        const MINOR_SCALE = [
+            0,
+            2,
+            3,
+            5,
+            7,
+            8,
+            10,
+        ];
+
+        function getSemitoneNumber(scaleIndex: number) {
+            const scale = isMajor ? MAJOR_SCALE : MINOR_SCALE;
+            const octave = Math.floor(scaleIndex / scale.length);
+            const pitchClass = scaleIndex % scale.length;
+            const semitoneNumber = octave * 12 + scale[pitchClass];
+            return semitoneNumber;
+        }
+
+        function getFreq(semitoneNumber: number) {
+            return rootFreq * Math.pow(2, semitoneNumber / 12);
+        }
 
         function recompute() {
-            root.frequency.setValueAtTime(rootFreq, 0);
-            const thirdScaleNote = 4 - minorBias;
-            const thirdFreqScale = Math.pow(2, thirdScaleNote / 12);
-            third.frequency.setValueAtTime(rootFreq * thirdFreqScale, 0);
-            const fifthScaleNote = 7 + fifthBias;
-            const fifthFreqScale = Math.pow(2, fifthScaleNote / 12);
-            fifth.frequency.setValueAtTime(rootFreq * fifthFreqScale, 0);
-            sub.frequency.setValueAtTime(rootFreq / 2, 0);
-            sub2.frequency.setValueAtTime(rootFreq / 4, 0);
+            const rootSemitone = getSemitoneNumber(baseScaleDegree + 0);
+            root.frequency.setValueAtTime(getFreq(rootSemitone), 0);
+
+            const thirdSemitone = getSemitoneNumber(baseScaleDegree + 3) - minorBias;
+            third.frequency.setValueAtTime(getFreq(thirdSemitone), 0);
+
+            const fifthSemitone = getSemitoneNumber(baseScaleDegree + 5) + fifthBias;
+            fifth.frequency.setValueAtTime(getFreq(fifthSemitone), 0);
+
+            sub.frequency.setValueAtTime(getFreq(rootSemitone) / 2, 0);
+            sub2.frequency.setValueAtTime(getFreq(rootSemitone) / 4, 0);
         }
 
         return {
@@ -230,16 +273,20 @@ function initAudio(context: SketchAudioContext) {
             third,
             fifth,
             gain,
-            setFrequency: (f: number) => {
-                rootFreq = f;
+            setIsMajor: (major: boolean) => {
+                isMajor = major;
+                recompute();
+            },
+            setScaleDegree: (sd: number) => {
+                baseScaleDegree = Math.round(sd);
                 recompute();
             },
             setMinorBias: (mB: number) => {
-                minorBias = mB;
+                minorBias = Math.round(mB);
                 recompute();
             },
             setFifthBias: (fB: number) => {
-                fifthBias = fB;
+                fifthBias = Math.round(fB);
                 recompute();
             },
         };
@@ -249,7 +296,7 @@ function initAudio(context: SketchAudioContext) {
     compressor.connect(context.gain);
 }
 
-let boundingSphere: THREE.Sphere | null;
+// let boundingSphere: THREE.Sphere | null;
 
 function sigmoid(x: number) {
     if (x > 10) {
@@ -278,6 +325,7 @@ function computeDepth() {
 function mousemove(event: JQuery.Event) {
     const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
     const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+
     mousePosition.x = mouseX;
     mousePosition.y = mouseY;
 }
@@ -357,12 +405,13 @@ export class FlameSketch extends ISketch {
         }
 
         const cameraLength = camera.position.length();
-        compressor.ratio.setTargetAtTime(1 + 3 / cameraLength, this.audioContext.currentTime, 0.016);
-        this.audioContext.gain.gain.setTargetAtTime((2.5 / cameraLength) + 0.05, this.audioContext.currentTime, 0.016);
+        compressor.ratio.setTargetAtTime(1 + 0.5 / (1. + cameraLength), this.audioContext.currentTime, 0.016);
+        this.audioContext.gain.gain.setTargetAtTime((1.0 / (1. + cameraLength)) + 0.5, this.audioContext.currentTime, 0.016);
 
-        material.setFocalLength(
-            cameraLength * Math.pow(2, map(mousePosition.y, 0, this.renderer.domElement.height, 2, -2)),
-        );
+        material.setFocalLength( cameraLength );
+
+        cDx = THREE.Math.mapLinear(mousePosition.x, 0, this.canvas.width, -1, 1);
+        cDy = THREE.Math.mapLinear(mousePosition.y, 0, this.canvas.width, -1, 1);
 
         controls.update();
         // console.time("render");
@@ -377,11 +426,23 @@ export class FlameSketch extends ISketch {
         const varianceVisitor = new LengthVarianceTrackerVisitor();
         const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
         superPoint.recalculate(jumpiness, jumpiness, jumpiness, computeDepth(), true, velocityVisitor, varianceVisitor, countVisitor);
-        if (boundingSphere == null) {
-            geometry.computeBoundingSphere();
-            boundingSphere = geometry.boundingSphere;
-        }
 
+        // for ( let i = 0; i < 1; i++) {
+        //     this.stepDrag(1);
+        // }
+
+        // if (boundingSphere == null) {
+        //     geometry.computeBoundingSphere();
+        //     boundingSphere = geometry.boundingSphere;
+        // }
+        this.updateAudio(velocityVisitor, varianceVisitor, countVisitor);
+    }
+
+    public updateAudio(
+        velocityVisitor: VelocityTrackerVisitor,
+        varianceVisitor: LengthVarianceTrackerVisitor,
+        countVisitor: BoxCountVisitor,
+    ) {
         const velocity = velocityVisitor.computeVelocity();
         const variance = varianceVisitor.computeVariance();
         const [count, countDensity] = countVisitor.computeCountAndCountDensity();
@@ -392,33 +453,37 @@ export class FlameSketch extends ISketch {
         // anything above 3 is really dense, hard to see
         const density = countDensity / count;
 
-        const velocityFactor = Math.min(velocity * noiseGainScale, 0.3);
+        const velocityFactor = Math.min(velocity * noiseGainScale, 0.06);
         if (audioHasNoise) {
             const noiseAmplitude = 2 / (1 + density * density);
             // smooth out density random noise
-            const target = noiseGain.gain.value * 0.9 + 0.1 * (velocityFactor * noiseAmplitude + 1e-4);
+            const target = noiseGain.gain.value * 0.5 + 0.5 * (velocityFactor * noiseAmplitude + 1e-5);
             noiseGain.gain.setTargetAtTime(target, noiseGain.context.currentTime, 0.016);
         }
 
         const newOscGain = oscGain.gain.value * 0.9 + 0.1 * Math.max(0, Math.min(velocity * velocity * 2000, 0.6) - 0.01);
         oscGain.gain.setTargetAtTime(newOscGain, oscGain.context.currentTime, 0.016);
 
-        const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
-        oscLow.frequency.setTargetAtTime(newOscFreq * oscLowGate, oscLow.context.currentTime, 0.016);
+        // const newOscFreq = oscLow.frequency.value * 0.8 + 0.2 * (100 + baseLowFrequency * Math.pow(2, Math.log(1 + variance)));
+        // oscLow.frequency.setTargetAtTime(newOscFreq * oscLowGate, oscLow.context.currentTime, 0.016);
 
-        const velocitySq = map(velocity * velocity, 1e-8, 0.005, -10, 10);
-        oscHigh.frequency.setTargetAtTime(
-            Math.min(map(sigmoid(velocitySq), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate,
-            oscHigh.context.currentTime,
-            0.016,
-        );
+        // const velocitySq = map(velocity * velocity, 1e-8, 0.005, -10, 10);
+        // oscHigh.frequency.setTargetAtTime(
+        //     Math.min(map(sigmoid(velocitySq), 0, 1, baseFrequency, baseFrequency * 5), 20000) * oscHighGate,
+        //     oscHigh.context.currentTime,
+        //     0.016,
+        // );
 
         if (audioHasChord) {
-            chord.setFrequency(100 + 100 * boundingSphere.radius);
-            chord.setMinorBias(baseThirdBias + velocity * 100 + sigmoid(variance - 3) * 4);
-            chord.setFifthBias(baseFifthBias + countDensity / 3);
-            const target = (chord.gain.gain.value * 0.9 + 0.1 * (velocityFactor * count * count / 8) + 3e-5);
+            const baseOffset = THREE.Math.clamp(Math.floor(map(density, 1.0, 3, 0, 24)), 0, 48);
+            chord.setScaleDegree(baseOffset);
+            // chord.setMinorBias(velocity * 2 + sigmoid(variance - 3) * 4);
+            // chord.setFifthBias(countDensity / 5);
+            // console.log(velocity, variance, countDensity, "third:", velocity * 2 + sigmoid(variance - 3) * 4, "fifth", countDensity / 5);
+            const target = (chord.gain.gain.value * 0.9 + 0.1 * (velocityFactor * count * count / 8 + 0.0001));
             chord.gain.gain.setTargetAtTime(target, chord.gain.context.currentTime, 0.016);
+        } else {
+            chord.gain.gain.setTargetAtTime(0, chord.gain.context.currentTime, 0.016);
         }
     }
 
@@ -433,7 +498,7 @@ export class FlameSketch extends ISketch {
         const newUrl = `${origin}${pathname}?name=${name}`;
         window.history.replaceState({}, null!, newUrl);
         // jumpiness = 30;
-        boundingSphere = null;
+        // boundingSphere = null;
         const hash = stringHash(name);
         const hashNorm = (hash % 1024) / 1024;
         baseFrequency = map((hash % 2048) / 2048, 0, 1, 10, 6000);
@@ -442,15 +507,16 @@ export class FlameSketch extends ISketch {
         const hash3 = hash2 * hash2 + hash2 * 31 + 9;
         filter.Q.setValueAtTime(map((hash3 % 2e12) / 2e12, 0, 1, 5, 8), 0);
         baseLowFrequency = map((hash3 % 10) / 10, 0, 1, 10, 20);
-        noiseGainScale = map((hash2 * hash3 % 100) / 100, 0, 1, 3, 6);
+        noiseGainScale = map((hash2 * hash3 % 100) / 100, 0, 1, 0.5, 1);
         baseThirdBias = (hash2 % 4) / 4;
         baseFifthBias = (hash3 % 3) / 3;
+        chord.setIsMajor = hash2 % 2 === 0;
 
         // basically boolean randoms; we don't want mod 2 cuz the hashes are related to each other at that small level
         audioHasNoise = (hash3 % 100) >= 50;
         oscLowGate = (hash2 * hash3 % 96) < 48 ? 0 : 1;
         oscHighGate = (hash3 * hash3 % 4000) < 2000 ? 0 : 1;
-        audioHasChord = (hash + hash2 + hash3) % 44 >= 22;
+        audioHasChord = true;
 
         cY = map(hashNorm, 0, 1, -2.5, 2.5);
         globalBranches = randomBranches(name);
