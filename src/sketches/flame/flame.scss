@@ -4,7 +4,7 @@
         margin: auto auto 0 auto;
         width: 33%;
         position: relative;
-        bottom: 20%;
+        bottom: 25%;
 
         input {
             background: 0;
@@ -24,9 +24,10 @@
         }
 
         .ad {
-            color: white;
+            color: $light-gray1;
             width: 100%;
-            margin-top: 20%;
+            margin-top: 12px;
+            font-size: 12px;
         }
     }
 }

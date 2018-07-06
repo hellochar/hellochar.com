@@ -361,7 +361,7 @@ class FlameNameInput extends React.Component<{ onInput: (newName: string) => voi
         return (
             <div className="flame-input">
                 <input value={this.state.value} />
-                <div className="ad">View on your phone - www.hellochar.com/flame</div>
+                <div className="ad">Visit on your phone - www.hellochar.com/flame</div>
                 {/* <input
                     style={{display: "none !important"}}
                     type="text"
@@ -430,7 +430,7 @@ export class FlameSketch extends ISketch {
         3: "Love",
         4: "Burning Man",
         5: "2018",
-        6: "Magic",
+        6: "Magical",
         7: "Celebration",
     };
     private handleButtonPress = (evt: ButtonPressEvent) => {
@@ -459,7 +459,7 @@ export class FlameSketch extends ISketch {
             sX = Math.pow(4, THREE.Math.mapLinear(evt.value, 0, 1, 0, 2));
         }
         if (evt.knob === 12) {
-            dragBase = THREE.Math.mapLinear(evt.value, 0, 1, 0.05, 1.05);
+            dragBase = THREE.Math.mapLinear(evt.value, 0, 1, 0.001, 1.05);
         }
         if (evt.knob === 13) {
             // wobble
@@ -493,10 +493,10 @@ export class FlameSketch extends ISketch {
             const velocityVisitor = new VelocityTrackerVisitor();
             const varianceVisitor = new LengthVarianceTrackerVisitor();
             const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
-            this.dragTime += 16 / 1000 * map(danceAmount * danceAmount, 0, 1, 1, 6.5);
+            this.dragTime += 16 / 1000 * map(danceAmount * danceAmount, 0, 1, 12.5, 1.3);
             drag = dragBase * map(Math.sin(this.dragTime), -1, 1,
-                map(danceAmount * danceAmount, 0, 1, 1, 0.9),
-                map(danceAmount * danceAmount, 0, 1, 1, 1.1),
+                map(danceAmount, 0, 1, 1, 0.8),
+                map(danceAmount, 0, 1, 1, 1 / 0.8),
             );
             superPoint.recalculate(3, 3, 3, computeDepth(), lerpAmount, velocityVisitor, varianceVisitor, countVisitor);
             this.updateAudio(velocityVisitor, varianceVisitor, countVisitor);
