@@ -23,7 +23,7 @@ export class SuperPoint {
         rootGeometry.colors.push(color);
     }
 
-    public updateSubtree(depth: number, shouldLerp: boolean, ...visitors: UpdateVisitor[]) {
+    public updateSubtree(depth: number, lerpAmount: number, ...visitors: UpdateVisitor[]) {
         if (depth === 0) { return; }
 
         if (this.children === undefined) {
@@ -45,10 +45,10 @@ export class SuperPoint {
             child.lastPoint.copy(child.point);
 
             tempColor.copy(this.color);
-            if (shouldLerp) {
+            if (lerpAmount < 1) {
                 tempPoint.copy(this.point);
                 applyBranch(branch, tempPoint, tempColor);
-                child.point.lerp(tempPoint, 0.8);
+                child.point.lerp(tempPoint, lerpAmount);
             } else {
                 child.point.copy(this.point);
                 applyBranch(branch, child.point, tempColor);
@@ -56,9 +56,9 @@ export class SuperPoint {
             child.color.lerp(tempColor, 0.75);
 
             // take far away points and move them into the center again to keep points from getting too out of hand
-            if (child.point.lengthSq() > 50 * 50) {
-                VARIATIONS.Spherical(child.point);
-            }
+            // if (child.point.lengthSq() > 50 * 50) {
+            //     VARIATIONS.Spherical(child.point);
+            // }
 
             if (SuperPoint.globalSubtreeIterationIndex % 307 === 0) {
                 for (const v of visitors) {
@@ -66,7 +66,7 @@ export class SuperPoint {
                 }
             }
 
-            child.updateSubtree(depth - 1, shouldLerp, ...visitors);
+            child.updateSubtree(depth - 1, lerpAmount, ...visitors);
         }
     }
 
@@ -75,12 +75,12 @@ export class SuperPoint {
         initialY: number,
         initialZ: number,
         depth: number,
-        shouldLerp: boolean,
+        lerpAmount: number,
         ...visitors: UpdateVisitor[]) {
         SuperPoint.globalSubtreeIterationIndex = 0;
         this.point.set(initialX, initialY, initialZ);
         // console.time("updateSubtree");
-        this.updateSubtree(depth, shouldLerp, ...visitors);
+        this.updateSubtree(depth, lerpAmount, ...visitors);
         // console.timeEnd("updateSubtree");
         this.rootGeometry.verticesNeedUpdate = true;
     }

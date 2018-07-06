@@ -5,7 +5,7 @@ import * as THREE from "three";
 
 import { createWhiteNoise } from "../../audio/noise";
 import { AFFINES, BoxCountVisitor, Branch, createInterpolatedVariation, createRouterVariation, LengthVarianceTrackerVisitor, SuperPoint, VARIATIONS, VelocityTrackerVisitor } from "../../common/flame";
-import { ButtonPressEvent, KnobTwistEvent, NovationLaunchControl } from "../../common/novationLaunchControl";
+import { ButtonPressEvent, KnobTwistEvent, NovationLaunchControl, Button } from "../../common/novationLaunchControl";
 import { map } from "../../math";
 import { QUALITY } from "../../quality";
 import { ISketch, SketchAudioContext } from "../../sketch";
@@ -48,17 +48,16 @@ function randomBranch(idx: number, substring: string, numBranches: number, numWr
     };
     const tempP = new THREE.Vector3();
     const affineBase = objectValueByIndex(AFFINES, gen);
+    const prev = new THREE.Vector3();
     const affine = (point: THREE.Vector3) => {
+        prev.copy(point);
         affineBase(point);
-        point.x += cX / 5;
-        point.y += cY / 5;
+        point.x += cX;
+        point.y += cY;
         point.x *= sX;
-        point.y *= sY;
-        point.x += point.y * skewX;
-        point.y += point.x * skewY;
-        tempP.copy(point);
-        tempP.normalize();
-        point.lerp(tempP, normAmount);
+        point.x *= drag;
+        point.y *= drag;
+        point.z *= drag;
     };
     let variation = newVariation();
 
@@ -123,9 +122,11 @@ let globalBranches: Branch[];
 let superPoint: SuperPoint;
 
 let cX = 0, cY = 0;
-let sX = 1, sY = 1;
-const skewX = 0, skewY = 0;
-let normAmount = 0;
+let sX = 1;
+let drag = 1;
+let dragBase = 1;
+const lerpAmount = 0.9;
+let danceAmount = 0;
 
 const nameFromSearch = parse(location.search).name;
 
@@ -351,10 +352,16 @@ let audioHasChord = false;
 let oscLowGate = 0;
 let oscHighGate = 0;
 
-class FlameNameInput extends React.Component<{ onInput: (newName: string) => void, value: string }, {}> {
+class FlameNameInput extends React.Component<{ onInput: (newName: string) => void }, {value: string}> {
+    state = {
+        value: nameFromSearch,
+    };
+
     public render() {
         return (
             <div className="flame-input">
+                <input value={this.state.value} />
+                <div className="ad">View on your phone - www.hellochar.com/flame</div>
                 {/* <input
                     style={{display: "none !important"}}
                     type="text"
@@ -377,13 +384,14 @@ class FlameNameInput extends React.Component<{ onInput: (newName: string) => voi
 
 export class FlameSketch extends ISketch {
     public name = nameFromSearch || "Flame";
-    public elements = [<FlameNameInput key="input" onInput={(name) => this.updateName(name)} value={this.name} />];
+    public elements = [<FlameNameInput key="input" onInput={(name) => this.updateName(name)} ref={(input) => this.nameInput = input} />];
     public id = "flame";
     public events = {
         dblclick,
         mousemove,
         mousedown,
     };
+    public nameInput: FlameNameInput | null = null;
 
     public init() {
         initAudio(this.audioContext);
@@ -416,8 +424,20 @@ export class FlameSketch extends ISketch {
         this.midi = new NovationLaunchControl(this.handleButtonPress, this.handleKnobTwist);
         this.midi.start();
     }
+    private mapping: { [button: number]: string } = {
+        1: "San Francisco",
+        2: "Infinite",
+        3: "Love",
+        4: "Burning Man",
+        5: "2018",
+        6: "Magic",
+        7: "Celebration",
+    };
     private handleButtonPress = (evt: ButtonPressEvent) => {
-        if (evt.button === 1 && evt.pressed) {
+        if (this.mapping[evt.button] && evt.pressed) {
+            this.updateName(this.mapping[evt.button]);
+        }
+        if (evt.button === 8 && evt.pressed) {
             let randomName = "";
             const len = THREE.Math.randInt(1, 3);
             for (let i = 0; i < len; i++) {
@@ -429,49 +449,56 @@ export class FlameSketch extends ISketch {
     };
 
     private handleKnobTwist = (evt: KnobTwistEvent) => {
-        if (evt.knob === 1) {
-            cX = Math.pow(THREE.Math.mapLinear(evt.value, 0, 1, -4, 4), 3);
-        }
-        if (evt.knob === 2) {
-            cY = Math.pow(THREE.Math.mapLinear(evt.value, 0, 1, -4, 4), 3);
-        }
-        if (evt.knob === 3) {
-            sX = Math.pow(2, THREE.Math.mapLinear(evt.value, 0, 1, -3, 3));
-        }
-        if (evt.knob === 4) {
-            normAmount = (evt.value - 0.5) * 1.;
-        }
         if (evt.knob === 9) {
+            cX = THREE.Math.mapLinear(evt.value, 0, 1, -1, 1);
+        }
+        if (evt.knob === 10) {
+            cY = THREE.Math.mapLinear(evt.value, 0, 1, -1, 1);
+        }
+        if (evt.knob === 11) {
+            sX = Math.pow(4, THREE.Math.mapLinear(evt.value, 0, 1, 0, 2));
+        }
+        if (evt.knob === 12) {
+            dragBase = THREE.Math.mapLinear(evt.value, 0, 1, 0.05, 1.05);
+        }
+        if (evt.knob === 13) {
+            // wobble
+            danceAmount = evt.value;
+        }
+        if (evt.knob === 14) {
             // polar angle
             const length = new THREE.Vector2(camera.position.x, camera.position.z).length();
             const newAngle = evt.value * Math.PI * 2;
             camera.position.x = Math.cos(newAngle) * length;
             camera.position.z = Math.sin(newAngle) * length;
         }
-        if (evt.knob === 10) {
+        if (evt.knob === 15) {
             // up/down
             const length = camera.position.length();
             const newAngle = (evt.value - 0.5) * Math.PI;
             camera.position.y = Math.sin(newAngle) * length;
         }
-        if (evt.knob === 11) {
+        if (evt.knob === 16) {
             // zoom
             const newLength = Math.pow(10, THREE.Math.mapLinear(1 - evt.value, 0, 1, -1, 1));
             camera.position.setLength(newLength);
         }
-        if (evt.knob === 12) {
-            this.focalLengthScalar = Math.pow(2, map(evt.value, 0, 1, 1, -1));
-        }
     };
 
-    private focalLengthScalar = 1;
+    private focalLengthScalar = 3;
+    private dragTime = 0;
 
     public animate() {
         if (QUALITY === "high") {
             const velocityVisitor = new VelocityTrackerVisitor();
             const varianceVisitor = new LengthVarianceTrackerVisitor();
             const countVisitor = new BoxCountVisitor([1, 0.1, 0.01, 0.001]);
-            superPoint.recalculate(3, 3, 3, computeDepth(), false, velocityVisitor, varianceVisitor, countVisitor);
+            this.dragTime += 16 / 1000 * map(danceAmount * danceAmount, 0, 1, 1, 6.5);
+            drag = dragBase * map(Math.sin(this.dragTime), -1, 1,
+                map(danceAmount * danceAmount, 0, 1, 1, 0.9),
+                map(danceAmount * danceAmount, 0, 1, 1, 1.1),
+            );
+            superPoint.recalculate(3, 3, 3, computeDepth(), lerpAmount, velocityVisitor, varianceVisitor, countVisitor);
             this.updateAudio(velocityVisitor, varianceVisitor, countVisitor);
         }
 
@@ -553,6 +580,7 @@ export class FlameSketch extends ISketch {
 
     public updateName(name: string = "Han") {
         this.name = name;
+        this.nameInput!.setState({value: name});
         this.audioContext.gain.gain.setValueAtTime(0, 0);
         const { origin, pathname } = window.location;
         const newUrl = `${origin}${pathname}?name=${name}`;
@@ -582,7 +610,7 @@ export class FlameSketch extends ISketch {
         // oscLowGate = true;
         // oscHighGate = true;
 
-        cY = map(hashNorm, 0, 1, -2.5, 2.5);
+        // cY = map(hashNorm, 0, 1, -2.5, 2.5);
         globalBranches = randomBranches(name);
 
         geometry = new THREE.Geometry();
@@ -602,7 +630,7 @@ export class FlameSketch extends ISketch {
         scene.add(pointCloud);
 
         if (QUALITY === "low") {
-            superPoint.recalculate(3, 3, 3, computeDepth(), false);
+            superPoint.recalculate(3, 3, 3, computeDepth(), 1);
         }
     }
 }
