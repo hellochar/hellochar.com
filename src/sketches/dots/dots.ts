@@ -7,6 +7,7 @@ import lazy from "../../common/lazy";
 import { computeStats, createParticle, createParticlePoints, IParticle, makeAttractor, ParticleSystem, ParticleSystemParameters } from "../../common/particleSystem";
 import { ISketch } from "../../sketch";
 import { createAudioGroup } from "./audio";
+import { Body, KinectManager } from "./kinectManager";
 
 const params: ParticleSystemParameters = {
     timeStep: 0.016 * 3,
@@ -104,7 +105,7 @@ class Dots extends ISketch {
     public pointCloud!: THREE.Points;
     public scene = new THREE.Scene();
     public ps!: ParticleSystem;
-
+    public manager!: KinectManager;
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);
 
@@ -129,7 +130,21 @@ class Dots extends ISketch {
         this.shader.uniforms.iResolution.value = this.resolution;
         this.shader.renderToScreen = true;
         this.composer.addPass(this.shader);
+
+        this.initKinectManager();
     }
+
+    private initKinectManager() {
+        this.manager = new KinectManager(this.handleKinectUpdate);
+    }
+
+    private handleKinectUpdate = (bodies: Body[]) => {
+        if (bodies[0] != null) {
+            createAttractor(bodies[0].position.x * this.canvas.width, bodies[0].position.y * this.canvas.height);
+        } else {
+            removeAttractor();
+        }
+    };
 
     public animate(millisElapsed: number) {
         const nonzeroAttractors = attractor.power > 0 ? [attractor] : [];

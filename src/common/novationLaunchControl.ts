@@ -6,7 +6,7 @@ export class NovationLaunchControl {
     ) {}
 
     async start() {
-        const access = await navigator.requestMIDIAccess();
+        const access = await (navigator as any).requestMIDIAccess();
         // console.log(access);
 
         const inputs = access.inputs;
@@ -17,7 +17,7 @@ export class NovationLaunchControl {
         }
     }
 
-    private handleMidiMessage = (midiMessage: WebMidi.MIDIMessageEvent) => {
+    private handleMidiMessage = (midiMessage: any /*WebMidi.MIDIMessageEvent*/) => {
         const COMMAND_KNOB = 184;
         const COMMAND_NOTEON = 152;
         const COMMAND_NOTEOFF = 136;

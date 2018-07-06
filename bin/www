@@ -1,6 +1,30 @@
 #!/usr/bin/env node
 var app = require('../app');
+var osc = require('node-osc');
+
+var io;
+
+var oscServer = new osc.Server(12000, '0.0.0.0');
+oscServer.on("message", function (msg, rinfo) {
+  console.log(msg);
+  io.sockets.emit('update', msg);
+  // const name = msg[2][1];
+  // const value = msg[2][2];
+
+  // if (name != "/channel") {
+  //   console.log("emitting", name, " ", value);
+  //   io.emit("message", {
+  //     name: name,
+  //     value: value
+  //   });
+  // }
+});
 
 var server = app.listen(app.get('port'), function() {
   console.log('Express server listening on port ' + server.address().port);
 });
+io = require('socket.io')(server);
+
+// var server = app.listen(app.get('port'), function() {
+//   console.log('Express server listening on port ' + server.address().port);
+// });
