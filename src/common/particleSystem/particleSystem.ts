@@ -38,7 +38,7 @@ export interface ParticleSystemParameters {
     constrainToBox: boolean;
 }
 
-const MUSIC_FACTOR = parse(location.search).musicFactor || 100;
+const MUSIC_FACTOR = parse(location.search).musicFactor || 50;
 const ACTIVATION_FACTOR = parse(location.search).activationFactor || 3.3;
 const ACTIVATION_SPEED = parse(location.search).activationSpeed || 0.001;
 const BLOB_AMOUNT = parse(location.search).blobAmount || 25;
@@ -181,7 +181,7 @@ export class ParticleSystem {
             particle.vertex!.x = particle.x + ox * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
             particle.vertex!.y = particle.y + oy * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
             const skew = frequencyArray && THREE.Math.mapLinear(frequencyArray[15], 0, 255, -1, 1) || 1;
-            particle.vertex!.x += Math.sin(particle.x / 20 + particle.y / 100 * skew + t / 200 + (t / 1000 * (1 + particle.y / canvas.height * 5)) / 500) * 10;
+            particle.vertex!.x += Math.sin(particle.x / 20 + particle.y / 120 * skew + t / 200 + (t / 1000 * (1 + particle.y / canvas.height * 5)) / 500) * 10;
 
             // particle.color.r = maxActivation * 10;
             // particle.color.g = maxActivation * 10;

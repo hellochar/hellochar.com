@@ -206,15 +206,15 @@ class Dots extends ISketch {
         // this.audioGroup.setFrequency(111 / normalizedVarianceLength);
         // this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
-        this.shader.uniforms.iMouse.value = new THREE.Vector2(mouseX / this.canvas.width, (this.canvas.height - mouseY) / this.canvas.height);
+        // this.shader.uniforms.iMouse.value = new THREE.Vector2(mouseX / this.canvas.width, (this.canvas.height - mouseY) / this.canvas.height);
+        this.shader.uniforms.iMouse.value = new THREE.Vector2(0.25, 0.25);
         if (this.frequencyArray) {
-            const lowVolumes = this.frequencyArray[5];
-            // for (let i = 10; i < 30; i++) {
-            //     lowVolumes += this.frequencyArray[i];
-            // }
-            // lowVolumes /= (30 - 10);
-            // console.log(lowVolumes);
-            // this.shader.uniforms.shrinkFactor.value = ;
+            // const lowVolumes = this.frequencyArray[5];
+            let lowVolumes = 0;
+            for (let i = 10; i < 30; i++) {
+                lowVolumes += this.frequencyArray[i];
+            }
+            lowVolumes /= (30 - 10);
             this.shader.uniforms.scalar.value = THREE.Math.mapLinear(lowVolumes, 0, 128, 0.1, 1);
         }
 
