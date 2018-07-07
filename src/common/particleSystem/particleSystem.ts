@@ -88,7 +88,7 @@ export class ParticleSystem {
                 forceX += attractor.power * sizeScaledGravityConstant * dx / lengthPow;
                 forceY += attractor.power * sizeScaledGravityConstant * dy / lengthPow;
 
-                const targetActivation = 0.5 + 3.5 * (1 - THREE.Math.smoothstep(length, 20, 100));
+                const targetActivation = 0.5 + 30.5 * (1 - THREE.Math.smoothstep(length, 20, 100));
                 particle.activation = particle.activation * 0.99 + 0.01 * targetActivation;
 
                 // particle.dx += forceX * timeStep;

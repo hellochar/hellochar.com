@@ -12,8 +12,8 @@ import { Body, KinectManager } from "./kinectManager";
 const params: ParticleSystemParameters = {
     timeStep: 0.016 * 3,
     GRAVITY_CONSTANT: 100,
-    PULLING_DRAG_CONSTANT: 0.639,
-    INERTIAL_DRAG_CONSTANT: 0.639,
+    PULLING_DRAG_CONSTANT: 0.5,
+    INERTIAL_DRAG_CONSTANT: 0.5,
     STATIONARY_CONSTANT: 0.02,
     constrainToBox: false,
     lengthPower: 1,
