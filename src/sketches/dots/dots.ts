@@ -111,7 +111,7 @@ class Dots extends ISketch {
             const microphone = this.audioContext.createMediaStreamSource(stream);
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 1024;
-            this.analyser.smoothingTimeConstant = 0.2;
+            this.analyser.smoothingTimeConstant = 0.016;
             // this.analyser.maxDecibels
 
             microphone.connect(this.analyser);
@@ -172,7 +172,6 @@ class Dots extends ISketch {
                         const dy = joint.y - prevJoint.y;
                         const speed2 = dx * dx + dy * dy;
                         power += Math.sqrt(speed2) * 10;
-                        // console.log(speed2);
                     }
                     attractors.push(makeAttractor(joint.x * this.canvas.width, joint.y * this.canvas.height, power));
                 }
@@ -206,9 +205,9 @@ class Dots extends ISketch {
                 lowVolumes += this.frequencyArray[i];
             }
             lowVolumes /= (30 - 10);
-            console.log(lowVolumes);
+            // console.log(lowVolumes);
             // this.shader.uniforms.shrinkFactor.value = ;
-            this.shader.uniforms.scalar.value = THREE.Math.mapLinear(lowVolumes, 0, 128, 0.5, 1);
+            this.shader.uniforms.scalar.value = THREE.Math.mapLinear(lowVolumes, 0, 128, 0.1, 1);
         }
 
         (this.pointCloud.geometry as THREE.Geometry).verticesNeedUpdate = true;

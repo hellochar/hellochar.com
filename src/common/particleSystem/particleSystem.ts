@@ -70,16 +70,17 @@ export class ParticleSystem {
             constrainToBox,
         } = params;
 
-        const freqBandMin = 35;
+        // const freqBandMin = 35;
 
         let energy = 0;
         if (frequencyArray) {
-            for (let i = 20; i < freqBandMin; i++) {
+            for (let i = 20; i < 100; i++) {
                 energy += frequencyArray[i];
             }
-            energy /= (freqBandMin - 20);
+            energy /= (100 - 20);
             energy /= 255;
         }
+        console.log(energy);
 
         const hasAttractors = nonzeroAttractors.length > 0;
         const dragConstant = hasAttractors ? BAKED_PULLING_DRAG_CONSTANT : BAKED_INERTIAL_DRAG_CONSTANT;
@@ -126,13 +127,13 @@ export class ParticleSystem {
             particle.y += particle.dy * timeStep;
 
             // drop the first 50 fft readings since they're very noisy
-            const freqValue = (frequencyArray && frequencyArray[
-                THREE.Math.clamp(
-                    Math.floor(THREE.Math.mapLinear(Math.abs(particle.y - canvas.height / 2), 0, canvas.height / 2, freqBandMin, frequencyArray.length)),
-                    freqBandMin,
-                    frequencyArray.length,
-                )
-            ]) || 1;
+            // const freqValue = (frequencyArray && frequencyArray[
+            //     THREE.Math.clamp(
+            //         Math.floor(THREE.Math.mapLinear(Math.abs(particle.y - canvas.height / 2), 0, canvas.height / 2, freqBandMin, frequencyArray.length)),
+            //         freqBandMin,
+            //         frequencyArray.length,
+            //     )
+            // ]) || 1;
 
             // particle.originalX += 1 * energy;
             // particle.x += 1 * energy;
@@ -157,8 +158,8 @@ export class ParticleSystem {
             const oy = (particle.y - canvas.height / 2) / 200;
             // particle.vertex!.x = particle.x + ox * energy;
             // particle.vertex!.y = particle.y + oy * energy;
-            particle.vertex!.x = particle.x + ox * (maxActivation + energy * 5);
-            particle.vertex!.y = particle.y + oy * (maxActivation + energy * 5);
+            particle.vertex!.x = particle.x + ox * (maxActivation - energy * 500);
+            particle.vertex!.y = particle.y + oy * (maxActivation - energy * 500);
             // particle.vertex!.z = particle.activation;
         }
     }
