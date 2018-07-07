@@ -14,7 +14,7 @@ const params: ParticleSystemParameters = {
     GRAVITY_CONSTANT: 100,
     PULLING_DRAG_CONSTANT: 0.5,
     INERTIAL_DRAG_CONSTANT: 0.5,
-    STATIONARY_CONSTANT: 0.02,
+    STATIONARY_CONSTANT: 0.2,
     constrainToBox: false,
 };
 
@@ -104,8 +104,21 @@ class Dots extends ISketch {
     public scene = new THREE.Scene();
     public ps!: ParticleSystem;
     public manager!: KinectManager;
+    private analyser?: AnalyserNode;
+    private frequencyArray?: Uint8Array;
     public init() {
+        const soundAllowed = (stream: MediaStream) => {
+            const microphone = this.audioContext.createMediaStreamSource(stream);
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 1024;
+            this.analyser.smoothingTimeConstant = 0.2;
+            // this.analyser.maxDecibels
+
+            microphone.connect(this.analyser);
+            this.frequencyArray = new Uint8Array(this.analyser.frequencyBinCount);
+        }
         // this.audioGroup = createAudioGroup(this.audioContext);
+        navigator.getUserMedia({ audio: true }, soundAllowed, (e) => console.error(e));
 
         this.camera = new THREE.OrthographicCamera(0, this.canvas.width, 0, this.canvas.height, 1, 1000);
         this.camera.position.z = 500;
@@ -173,7 +186,10 @@ class Dots extends ISketch {
     };
 
     public animate(millisElapsed: number) {
-        this.ps.stepParticles(attractors);
+        if (this.analyser) {
+            this.analyser.getByteFrequencyData(this.frequencyArray!);
+        }
+        this.ps.stepParticles(attractors, this.analyser, this.frequencyArray);
         // if (this.frameCount % 1000 === 0) {
         //     console.log(this.record);
         // }
@@ -184,6 +200,16 @@ class Dots extends ISketch {
         // this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
         this.shader.uniforms.iMouse.value = new THREE.Vector2(mouseX / this.canvas.width, (this.canvas.height - mouseY) / this.canvas.height);
+        if (this.frequencyArray) {
+            let lowVolumes = 0;
+            for (let i = 10; i < 30; i++) {
+                lowVolumes += this.frequencyArray[i];
+            }
+            lowVolumes /= (30 - 10);
+            console.log(lowVolumes);
+            // this.shader.uniforms.shrinkFactor.value = ;
+            this.shader.uniforms.scalar.value = THREE.Math.mapLinear(lowVolumes, 0, 128, 0.5, 1);
+        }
 
         (this.pointCloud.geometry as THREE.Geometry).verticesNeedUpdate = true;
         this.composer.render();

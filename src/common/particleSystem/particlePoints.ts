@@ -9,6 +9,7 @@ export function createParticlePoints(particles: IParticle[], material: THREE.Poi
         const particle = particles[i];
         const vertex = new THREE.Vector3(particle.x, particle.y, 0);
         geometry.vertices.push(vertex);
+        // geometry.colors.push(particle.color);
         particles[i].vertex = vertex;
     }
     const pointCloud = new THREE.Points(geometry, material);
