@@ -1,3 +1,4 @@
+import THREE = require("three");
 import { Attractor } from "./attractor";
 
 export interface IParticle {
@@ -7,6 +8,7 @@ export interface IParticle {
     y: number;
     dx: number;
     dy: number;
+    activation: number;
     vertex: THREE.Vertex | null;
 }
 
@@ -18,6 +20,7 @@ export function createParticle(originalX: number, originalY: number): IParticle 
         originalY,
         x: originalX,
         y: originalY,
+        activation: 0,
         vertex: null!,
     };
 }
@@ -62,7 +65,7 @@ export class ParticleSystem {
         } = this;
 
         const {
-            timeStep,
+            timeStep: timeStepBase,
             STATIONARY_CONSTANT,
             GRAVITY_CONSTANT,
             constrainToBox,
@@ -74,28 +77,33 @@ export class ParticleSystem {
         const sizeScaledGravityConstant = GRAVITY_CONSTANT * Math.min(Math.pow(2, canvas.width / 836 - 1), 1);
         for (const particle of particles) {
 
+            let forceX = 0, forceY = 0;
+
             for (let j = 0; j < nonzeroAttractors.length; j++) {
                 const attractor = nonzeroAttractors[j];
                 const dx = attractor.x - particle.x;
                 const dy = attractor.y - particle.y;
                 const length = Math.sqrt(dx * dx + dy * dy);
                 const lengthPow = Math.pow(length, lengthPower);
-                const forceX = attractor.power * sizeScaledGravityConstant * dx / lengthPow;
-                const forceY = attractor.power * sizeScaledGravityConstant * dy / lengthPow;
+                forceX += attractor.power * sizeScaledGravityConstant * dx / lengthPow;
+                forceY += attractor.power * sizeScaledGravityConstant * dy / lengthPow;
 
-                particle.dx += forceX * timeStep;
-                particle.dy += forceY * timeStep;
+                const targetActivation = 0.5 + 3.5 * (1 - THREE.Math.smoothstep(length, 20, 100));
+                particle.activation = particle.activation * 0.99 + 0.01 * targetActivation;
+
+                // particle.dx += forceX * timeStep;
+                // particle.dy += forceY * timeStep;
             }
 
             if (STATIONARY_CONSTANT > 0) {
                 const dx = particle.originalX - particle.x;
                 const dy = particle.originalY - particle.y;
                 const length2 = Math.sqrt(dx * dx + dy * dy);
-                const forceX = STATIONARY_CONSTANT * dx * length2;
-                const forceY = STATIONARY_CONSTANT * dy * length2;
+                forceX += STATIONARY_CONSTANT * dx * length2;
+                forceY += STATIONARY_CONSTANT * dy * length2;
 
-                particle.dx += forceX * timeStep;
-                particle.dy += forceY * timeStep;
+                // particle.dx += forceX * timeStep;
+                // particle.dy += forceY * timeStep;
 
                 // if (!hasAttractors) {
                 //     particle.originalX -= dx * 0.05;
@@ -103,8 +111,9 @@ export class ParticleSystem {
                 // }
             }
 
-            particle.dx *= dragConstant;
-            particle.dy *= dragConstant;
+            const timeStep = timeStepBase * particle.activation;
+            particle.dx = (particle.dx + forceX * timeStep) * dragConstant;
+            particle.dy = (particle.dy + forceY * timeStep) * dragConstant;
 
             particle.x += particle.dx * timeStep;
             particle.y += particle.dy * timeStep;
@@ -118,6 +127,7 @@ export class ParticleSystem {
 
             particle.vertex!.x = particle.x;
             particle.vertex!.y = particle.y;
+            // particle.vertex!.z = particle.activation;
         }
     }
 }
