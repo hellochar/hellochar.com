@@ -16,6 +16,8 @@ const attractorMaterialSolid = lazy(() => new THREE.MeshBasicMaterial({
 export interface Attractor {
     x: number;
     y: number;
+    dx?: number;
+    dy?: number;
     handMesh?: HandMesh;
     mesh: THREE.Object3D;
     power: number;

@@ -1,3 +1,4 @@
+import { parse } from "query-string";
 import THREE = require("three");
 import { Attractor } from "./attractor";
 
@@ -34,6 +35,11 @@ export interface ParticleSystemParameters {
     STATIONARY_CONSTANT: number;
     constrainToBox: boolean;
 }
+
+const MUSIC_FACTOR = parse(location.search).musicFactor || 100;
+const ACTIVATION_FACTOR = parse(location.search).activationFactor || 3.3;
+const ACTIVATION_SPEED = parse(location.search).activationSpeed || 0.001;
+const BLOB_AMOUNT = parse(location.search).blobAmount || 25;
 
 export class ParticleSystem {
     private BAKED_PULLING_DRAG_CONSTANT: number;
@@ -80,7 +86,7 @@ export class ParticleSystem {
             energy /= (100 - 20);
             energy /= 255;
         }
-        console.log(energy);
+        // console.log(energy);
 
         const hasAttractors = nonzeroAttractors.length > 0;
         const dragConstant = hasAttractors ? BAKED_PULLING_DRAG_CONSTANT : BAKED_INERTIAL_DRAG_CONSTANT;
@@ -99,12 +105,22 @@ export class ParticleSystem {
                 forceX += attractor.power * sizeScaledGravityConstant * dx / length;
                 forceY += attractor.power * sizeScaledGravityConstant * dy / length;
 
+                // if (attractor.dx && attractor.dy) {
+                //     forceX += attractor.dx;
+                //     forceY += attractor.dy;
+                // }
+
                 // const maxLength = 100 + energy * 127;
                 const maxLength = 80;
-                const targetActivation = 0.02 + 0.98 * (1 - THREE.Math.smoothstep(length, 20, maxLength));
+                const targetActivation = 0.02 + 0.98 * (1 - THREE.Math.smoothstep(length, 20, maxLength)) + attractor.power / 5;
                 maxActivation = Math.max(maxActivation, targetActivation);
             }
-            particle.activation = particle.activation * 0.99 + 0.01 * maxActivation;
+            if (maxActivation > particle.activation) {
+                particle.activation = particle.activation * (1 - ACTIVATION_SPEED) + ACTIVATION_SPEED * maxActivation;
+            } else {
+                const decayActivationSpeed = ACTIVATION_SPEED * 2;
+                particle.activation = particle.activation * (1 - decayActivationSpeed) + decayActivationSpeed * maxActivation;
+            }
 
             if (STATIONARY_CONSTANT > 0) {
                 const dx = particle.originalX - particle.x;
@@ -119,7 +135,7 @@ export class ParticleSystem {
                 // }
             }
 
-            const timeStep = timeStepBase * (0.5 + particle.activation * 4);
+            const timeStep = timeStepBase * (0.5 + particle.activation * ACTIVATION_FACTOR);
             particle.dx = (particle.dx + forceX * timeStep) * dragConstant;
             particle.dy = (particle.dy + forceY * timeStep) * dragConstant;
 
@@ -158,8 +174,8 @@ export class ParticleSystem {
             const oy = (particle.y - canvas.height / 2) / 200;
             // particle.vertex!.x = particle.x + ox * energy;
             // particle.vertex!.y = particle.y + oy * energy;
-            particle.vertex!.x = particle.x + ox * (maxActivation - energy * 500);
-            particle.vertex!.y = particle.y + oy * (maxActivation - energy * 500);
+            particle.vertex!.x = particle.x + ox * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
+            particle.vertex!.y = particle.y + oy * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
             // particle.vertex!.z = particle.activation;
         }
     }

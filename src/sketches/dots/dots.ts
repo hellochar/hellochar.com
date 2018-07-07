@@ -167,13 +167,17 @@ class Dots extends ISketch {
                 if (joint.w !== 0) {
                     const prevJoint = body.previous && body.previous.joints[jointIndex];
                     let power = 0.01;
+                    let dx = 0, dy = 0;
                     if (prevJoint && prevJoint.w !== 0) {
-                        const dx = joint.x - prevJoint.x;
-                        const dy = joint.y - prevJoint.y;
+                        dx = joint.x - prevJoint.x;
+                        dy = joint.y - prevJoint.y;
                         const speed2 = dx * dx + dy * dy;
                         power += Math.sqrt(speed2) * 10;
                     }
-                    attractors.push(makeAttractor(joint.x * this.canvas.width, joint.y * this.canvas.height, power));
+                    const attractor = makeAttractor(joint.x * this.canvas.width, joint.y * this.canvas.height, power);
+                    attractor.dx = dx * this.canvas.width;
+                    attractor.dy = dy * this.canvas.height;
+                    attractors.push(attractor);
                 }
             }
         }
