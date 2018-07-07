@@ -23,13 +23,14 @@ export function createParticle(originalX: number, originalY: number): IParticle 
 }
 
 export interface ParticleSystemParameters {
-    GRAVITY_CONSTANT: number; // = 280;
+    GRAVITY_CONSTANT: number;
     timeStep: number;
     // speed becomes this percentage of its original speed every second
     PULLING_DRAG_CONSTANT: number;
     INERTIAL_DRAG_CONSTANT: number;
-    STATIONARY_CONSTANT: number; // = 0.01;
+    STATIONARY_CONSTANT: number;
     constrainToBox: boolean;
+    lengthPower: number;
 }
 
 export class ParticleSystem {
@@ -65,6 +66,7 @@ export class ParticleSystem {
             STATIONARY_CONSTANT,
             GRAVITY_CONSTANT,
             constrainToBox,
+            lengthPower,
         } = params;
 
         const hasAttractors = nonzeroAttractors.length > 0;
@@ -76,9 +78,10 @@ export class ParticleSystem {
                 const attractor = nonzeroAttractors[j];
                 const dx = attractor.x - particle.x;
                 const dy = attractor.y - particle.y;
-                const length2 = Math.sqrt(dx * dx + dy * dy);
-                const forceX = attractor.power * sizeScaledGravityConstant * dx / length2;
-                const forceY = attractor.power * sizeScaledGravityConstant * dy / length2;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const lengthPow = Math.pow(length, lengthPower);
+                const forceX = attractor.power * sizeScaledGravityConstant * dx / lengthPow;
+                const forceY = attractor.power * sizeScaledGravityConstant * dy / lengthPow;
 
                 particle.dx += forceX * timeStep;
                 particle.dy += forceY * timeStep;
@@ -94,10 +97,10 @@ export class ParticleSystem {
                 particle.dx += forceX * timeStep;
                 particle.dy += forceY * timeStep;
 
-                if (!hasAttractors) {
-                    particle.originalX -= dx * 0.05;
-                    particle.originalY -= dy * 0.05;
-                }
+                // if (!hasAttractors) {
+                //     particle.originalX -= dx * 0.05;
+                //     particle.originalY -= dy * 0.05;
+                // }
             }
 
             particle.dx *= dragConstant;
@@ -105,6 +108,8 @@ export class ParticleSystem {
 
             particle.x += particle.dx * timeStep;
             particle.y += particle.dy * timeStep;
+            // particle.x = particle.originalX + particle.dx * timeStep * 1;
+            // particle.y = particle.originalY + particle.dy * timeStep * 1;
             if (constrainToBox) {
                 if (particle.x < 0 || particle.x > canvas.width || particle.y < 0 || particle.y > canvas.height) {
                     this.resetToOriginalPosition(particle);

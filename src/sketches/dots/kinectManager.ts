@@ -12,13 +12,27 @@ export interface Body {
     id: number;
     position: Vector3;
     joints: Vector4[];
+    previous?: Body;
 }
 
 export class KinectManager {
-    private socket: SocketIOClient.Socket;
-    constructor(public handleUpdate: (bodies: Body[]) => void) {
-        this.socket = io();
-        this.socket.on('update', this.handleSocketUpdate);
+    private socket!: SocketIOClient.Socket;
+    private prevBodies: Map<number, Body> = new Map();
+    constructor(public handleUpdate: (bodies: Body[]) => void, nodeEnv = process.env.NODE_ENV) {
+        if (nodeEnv === "development") {
+            const frames = require("./fake_body_data.json");
+            let frameIndex = 0;
+            setInterval(() => {
+                frameIndex = (frameIndex + 1) % frames.length;
+                const bodies = frames[frameIndex];
+                this.setPreviousBodies(bodies);
+                this.updatePreviousBodies(bodies);
+                this.handleUpdate(bodies);
+            }, 1000 / 30);
+        } else {
+            this.socket = io();
+            this.socket.on('update', this.handleSocketUpdate);
+        }
     }
 
     private handleSocketUpdate = (oscMessage: number[]) => {
@@ -50,6 +64,29 @@ export class KinectManager {
             };
             bodies.push(body);
         }
+
+        this.setPreviousBodies(bodies);
+        this.updatePreviousBodies(bodies);
         this.handleUpdate(bodies);
     };
+
+    private setPreviousBodies(bodies: Body[]) {
+        for (const body of bodies) {
+            const previous = this.prevBodies.get(body.id);
+            body.previous = previous;
+            if (previous) {
+                previous.previous = undefined;
+            }
+        }
+    }
+
+    private updatePreviousBodies(bodies: Body[]) {
+        for (const body of this.prevBodies.values()) {
+            body.previous = undefined; // give up reference so it can be GC-ed
+        }
+        this.prevBodies.clear();
+        for (const body of bodies) {
+            this.prevBodies.set(body.id, body);
+        }
+    }
 }

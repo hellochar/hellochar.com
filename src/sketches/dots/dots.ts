@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 import { ExplodeShader } from "../../common/explodeShader";
 import lazy from "../../common/lazy";
-import { computeStats, createParticle, createParticlePoints, IParticle, makeAttractor, ParticleSystem, ParticleSystemParameters } from "../../common/particleSystem";
+import { Attractor, computeStats, createParticle, createParticlePoints, IParticle, makeAttractor, ParticleSystem, ParticleSystemParameters } from "../../common/particleSystem";
 import { ISketch } from "../../sketch";
 import { createAudioGroup } from "./audio";
 import { Body, KinectManager } from "./kinectManager";
@@ -12,13 +12,14 @@ import { Body, KinectManager } from "./kinectManager";
 const params: ParticleSystemParameters = {
     timeStep: 0.016 * 3,
     GRAVITY_CONSTANT: 100,
-    PULLING_DRAG_CONSTANT: 0.96075095702,
-    INERTIAL_DRAG_CONSTANT: 0.23913643334,
-    STATIONARY_CONSTANT: 0.01,
+    PULLING_DRAG_CONSTANT: 0.639,
+    INERTIAL_DRAG_CONSTANT: 0.639,
+    STATIONARY_CONSTANT: 0.02,
     constrainToBox: false,
+    lengthPower: 1,
 };
 
-const attractor = makeAttractor();
+let attractors: Attractor[] = [];
 let mouseX: number, mouseY: number;
 
 function touchstart(event: JQuery.Event) {
@@ -69,20 +70,18 @@ function mouseup(event: JQuery.Event) {
 }
 
 function createAttractor(x: number, y: number) {
-    attractor.x = x;
-    attractor.y = y;
-    attractor.power = 1;
+    attractors.push(makeAttractor(x, y, 1));
 }
 
 function moveAttractor(x: number, y: number) {
-    if (attractor != null) {
-        attractor.x = x;
-        attractor.y = y;
+    if (attractors[0] != null) {
+        attractors[0].x = x;
+        attractors[0].y = y;
     }
 }
 
 function removeAttractor() {
-    attractor.power = 0;
+    attractors.shift();
 }
 
 function resize(width: number, height: number) {
@@ -138,17 +137,47 @@ class Dots extends ISketch {
         this.manager = new KinectManager(this.handleKinectUpdate);
     }
 
+    // private record: Body[][] = [];
+    // private repeatIntervalId?: number;
     private handleKinectUpdate = (bodies: Body[]) => {
-        if (bodies[0] != null) {
-            createAttractor(bodies[0].position.x * this.canvas.width, bodies[0].position.y * this.canvas.height);
-        } else {
-            removeAttractor();
+        // this.record.push(bodies);
+        // if (this.repeatIntervalId) {
+        //     clearInterval(this.repeatIntervalId);
+        // }
+        // this.repeatIntervalId = setInterval(() => {
+        //     this.record.push(bodies);
+        // }, 1000 / 30);
+        attractors = [];
+        for (const body of bodies) {
+            for (const jointIndex in body.joints) {
+                const joint = body.joints[jointIndex];
+                // 0 is untracked
+                if (joint.w !== 0) {
+                    const prevJoint = body.previous && body.previous.joints[jointIndex];
+                    let power = 0.01;
+                    if (prevJoint && prevJoint.w !== 0) {
+                        const dx = joint.x - prevJoint.x;
+                        const dy = joint.y - prevJoint.y;
+                        const speed2 = dx * dx + dy * dy;
+                        power += Math.sqrt(speed2) * 10;
+                        // console.log(speed2);
+                    }
+                    attractors.push(makeAttractor(joint.x * this.canvas.width, joint.y * this.canvas.height, power));
+                }
+            }
         }
+        // if (bodies[0] != null) {
+        //     createAttractor(bodies[0].position.x * this.canvas.width, bodies[0].position.y * this.canvas.height);
+        // } else {
+        //     removeAttractor();
+        // }
     };
 
     public animate(millisElapsed: number) {
-        const nonzeroAttractors = attractor.power > 0 ? [attractor] : [];
-        this.ps.stepParticles(nonzeroAttractors);
+        this.ps.stepParticles(attractors);
+        // if (this.frameCount % 1000 === 0) {
+        //     console.log(this.record);
+        // }
 
         const { flatRatio, normalizedVarianceLength, groupedUpness } = computeStats(this.ps);
         this.audioGroup.lfo.frequency.setTargetAtTime(flatRatio, this.audioContext.currentTime, 0.016);

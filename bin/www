@@ -6,7 +6,7 @@ var io;
 
 var oscServer = new osc.Server(12000, '0.0.0.0');
 oscServer.on("message", function (msg, rinfo) {
-  console.log(msg);
+  // console.log(msg);
   io.sockets.emit('update', msg);
   // const name = msg[2][1];
   // const value = msg[2][2];

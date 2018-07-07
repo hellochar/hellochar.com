@@ -242,6 +242,7 @@ const PARTICLE_SYSTEM_PARAMS = {
     PULLING_DRAG_CONSTANT: 0.93075095702,
     timeStep: 0.016 * 2,
     STATIONARY_CONSTANT: 0.0,
+    lengthPower: 1,
     constrainToBox: true,
 };
 

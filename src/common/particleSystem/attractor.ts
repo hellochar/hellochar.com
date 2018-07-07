@@ -22,22 +22,22 @@ export interface Attractor {
 }
 
 export function makeAttractor(x = 0, y = 0, power = 0): Attractor {
-    const mesh = new THREE.Object3D();
-    mesh.position.set(x, y, -100);
-    for (let i = 0; i < 10; i++) {
-        // var ring = THREE.SceneUtils.createMultiMaterialObject(attractorGeometry, [attractorMaterialSolid, attractorMaterialStroke]);
-        const ring = new THREE.Mesh(attractorGeometry(), attractorMaterialSolid());
-        const scale = 1 + Math.pow(i / 10, 2) * 2;
-        ring.scale.set(scale, scale, scale);
-        mesh.add(ring);
-    }
-    mesh.visible = false;
+    // const mesh = new THREE.Object3D();
+    // mesh.position.set(x, y, -100);
+    // for (let i = 0; i < 10; i++) {
+    //     // var ring = THREE.SceneUtils.createMultiMaterialObject(attractorGeometry, [attractorMaterialSolid, attractorMaterialStroke]);
+    //     const ring = new THREE.Mesh(attractorGeometry(), attractorMaterialSolid());
+    //     const scale = 1 + Math.pow(i / 10, 2) * 2;
+    //     ring.scale.set(scale, scale, scale);
+    //     mesh.add(ring);
+    // }
+    // mesh.visible = false;
 
     return {
         x,
         y,
         handMesh: undefined,
-        mesh,
+        mesh: null!,
         power,
     };
 }
