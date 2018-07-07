@@ -2,6 +2,7 @@ import * as $ from "jquery";
 import { parse } from "query-string";
 import * as THREE from "three";
 
+import React = require("react");
 import { ExplodeShader } from "../../common/explodeShader";
 import lazy from "../../common/lazy";
 import { Attractor, computeStats, createParticle, createParticlePoints, IParticle, makeAttractor, ParticleSystem, ParticleSystemParameters } from "../../common/particleSystem";
@@ -87,6 +88,10 @@ function resize(width: number, height: number) {
 }
 
 class Dots extends ISketch {
+    public elements = [
+        <div style={{color: "white", margin: "auto auto 0 auto", bottom: "25%", position: "relative"}}>View on your phone - hellochar.com/dots</div>,
+    ];
+
     public events = {
         mousedown,
         mousemove,
@@ -112,7 +117,6 @@ class Dots extends ISketch {
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 1024;
             this.analyser.smoothingTimeConstant = 0.016;
-            // this.analyser.maxDecibels
 
             microphone.connect(this.analyser);
             this.frequencyArray = new Uint8Array(this.analyser.frequencyBinCount);
@@ -204,17 +208,18 @@ class Dots extends ISketch {
 
         this.shader.uniforms.iMouse.value = new THREE.Vector2(mouseX / this.canvas.width, (this.canvas.height - mouseY) / this.canvas.height);
         if (this.frequencyArray) {
-            let lowVolumes = 0;
-            for (let i = 10; i < 30; i++) {
-                lowVolumes += this.frequencyArray[i];
-            }
-            lowVolumes /= (30 - 10);
+            const lowVolumes = this.frequencyArray[5];
+            // for (let i = 10; i < 30; i++) {
+            //     lowVolumes += this.frequencyArray[i];
+            // }
+            // lowVolumes /= (30 - 10);
             // console.log(lowVolumes);
             // this.shader.uniforms.shrinkFactor.value = ;
             this.shader.uniforms.scalar.value = THREE.Math.mapLinear(lowVolumes, 0, 128, 0.1, 1);
         }
 
         (this.pointCloud.geometry as THREE.Geometry).verticesNeedUpdate = true;
+        (this.pointCloud.geometry as THREE.Geometry).colorsNeedUpdate = true;
         this.composer.render();
     }
 
@@ -232,6 +237,7 @@ const material = lazy(() => {
     const starTexture = new THREE.TextureLoader().load("/assets/sketches/line/star.png");
     starTexture.minFilter = THREE.NearestFilter;
     return new THREE.PointsMaterial({
+        vertexColors: THREE.VertexColors,
         size: 15,
         sizeAttenuation: false,
         map: starTexture,

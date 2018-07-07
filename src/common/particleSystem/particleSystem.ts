@@ -11,6 +11,7 @@ export interface IParticle {
     dy: number;
     activation: number;
     vertex: THREE.Vertex | null;
+    color: THREE.Color;
 }
 
 export function createParticle(originalX: number, originalY: number): IParticle {
@@ -23,6 +24,7 @@ export function createParticle(originalX: number, originalY: number): IParticle 
         y: originalY,
         activation: 0,
         vertex: null!,
+        color: new THREE.Color(0, 0, 0),
     };
 }
 
@@ -61,6 +63,8 @@ export class ParticleSystem {
     }
 
     stepParticles(nonzeroAttractors: Attractor[], analyser?: AnalyserNode, frequencyArray?: Uint8Array) {
+        const t = performance.now();
+
         const {
             BAKED_PULLING_DRAG_CONSTANT,
             BAKED_INERTIAL_DRAG_CONSTANT,
@@ -80,16 +84,16 @@ export class ParticleSystem {
 
         let energy = 0;
         if (frequencyArray) {
-            for (let i = 20; i < 100; i++) {
-                energy += frequencyArray[i];
-            }
-            energy /= (100 - 20);
-            energy /= 255;
+            // for (let i = 20; i < 100; i++) {
+            //     energy += frequencyArray[i];
+            // }
+            // energy /= (100 - 20);
+            energy = frequencyArray[5];
         }
-        // console.log(energy);
+        energy /= 255;
 
-        const hasAttractors = nonzeroAttractors.length > 0;
-        const dragConstant = hasAttractors ? BAKED_PULLING_DRAG_CONSTANT : BAKED_INERTIAL_DRAG_CONSTANT;
+        // const hasAttractors = nonzeroAttractors.length > 0;
+        const dragConstant = BAKED_PULLING_DRAG_CONSTANT;
         const sizeScaledGravityConstant = GRAVITY_CONSTANT * Math.min(Math.pow(2, canvas.width / 836 - 1), 1);
         for (const particle of particles) {
 
@@ -112,7 +116,7 @@ export class ParticleSystem {
 
                 // const maxLength = 100 + energy * 127;
                 const maxLength = 80;
-                const targetActivation = 0.02 + 0.98 * (1 - THREE.Math.smoothstep(length, 20, maxLength)) + attractor.power / 5;
+                const targetActivation = 0.02 + 0.98 * (1 - THREE.Math.smoothstep(length, 20, maxLength));
                 maxActivation = Math.max(maxActivation, targetActivation);
             }
             if (maxActivation > particle.activation) {
@@ -176,7 +180,25 @@ export class ParticleSystem {
             // particle.vertex!.y = particle.y + oy * energy;
             particle.vertex!.x = particle.x + ox * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
             particle.vertex!.y = particle.y + oy * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
-            // particle.vertex!.z = particle.activation;
+            const skew = frequencyArray && THREE.Math.mapLinear(frequencyArray[15], 0, 255, -1, 1) || 1;
+            particle.vertex!.x += Math.sin(particle.x / 20 + particle.y / 100 * skew + t / 200 + (t / 1000 * (1 + particle.y / canvas.height * 5)) / 500) * 10;
+
+            // particle.color.r = maxActivation * 10;
+            // particle.color.g = maxActivation * 10;
+            // particle.color.b = maxActivation * 10;
+            // console.log(maxActivation);
+
+            particle.color.r = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
+            particle.color.g = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
+            particle.color.b = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
+
+            // particle.color.r = (particle.activation) * 5;
+            // particle.color.g = (particle.activation) * 5;
+            // particle.color.b = (particle.activation) * 5;
+
+            // particle.color.r = energy * 255;
+            // particle.color.g = energy * 255;
+            // particle.color.b = energy * 255;
         }
     }
 }
