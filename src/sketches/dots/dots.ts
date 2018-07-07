@@ -16,7 +16,6 @@ const params: ParticleSystemParameters = {
     INERTIAL_DRAG_CONSTANT: 0.5,
     STATIONARY_CONSTANT: 0.02,
     constrainToBox: false,
-    lengthPower: 1,
 };
 
 let attractors: Attractor[] = [];
@@ -106,7 +105,7 @@ class Dots extends ISketch {
     public ps!: ParticleSystem;
     public manager!: KinectManager;
     public init() {
-        this.audioGroup = createAudioGroup(this.audioContext);
+        // this.audioGroup = createAudioGroup(this.audioContext);
 
         this.camera = new THREE.OrthographicCamera(0, this.canvas.width, 0, this.canvas.height, 1, 1000);
         this.camera.position.z = 500;
@@ -179,10 +178,10 @@ class Dots extends ISketch {
         //     console.log(this.record);
         // }
 
-        const { flatRatio, normalizedVarianceLength, groupedUpness } = computeStats(this.ps);
-        this.audioGroup.lfo.frequency.setTargetAtTime(flatRatio, this.audioContext.currentTime, 0.016);
-        this.audioGroup.setFrequency(111 / normalizedVarianceLength);
-        this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
+        // const { flatRatio, normalizedVarianceLength, groupedUpness } = computeStats(this.ps);
+        // this.audioGroup.lfo.frequency.setTargetAtTime(flatRatio, this.audioContext.currentTime, 0.016);
+        // this.audioGroup.setFrequency(111 / normalizedVarianceLength);
+        // this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
         this.shader.uniforms.iMouse.value = new THREE.Vector2(mouseX / this.canvas.width, (this.canvas.height - mouseY) / this.canvas.height);
 

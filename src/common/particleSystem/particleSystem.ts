@@ -33,7 +33,6 @@ export interface ParticleSystemParameters {
     INERTIAL_DRAG_CONSTANT: number;
     STATIONARY_CONSTANT: number;
     constrainToBox: boolean;
-    lengthPower: number;
 }
 
 export class ParticleSystem {
@@ -69,7 +68,6 @@ export class ParticleSystem {
             STATIONARY_CONSTANT,
             GRAVITY_CONSTANT,
             constrainToBox,
-            lengthPower,
         } = params;
 
         const hasAttractors = nonzeroAttractors.length > 0;
@@ -84,11 +82,10 @@ export class ParticleSystem {
                 const dx = attractor.x - particle.x;
                 const dy = attractor.y - particle.y;
                 const length = Math.sqrt(dx * dx + dy * dy);
-                const lengthPow = Math.pow(length, lengthPower);
-                forceX += attractor.power * sizeScaledGravityConstant * dx / lengthPow;
-                forceY += attractor.power * sizeScaledGravityConstant * dy / lengthPow;
+                forceX += attractor.power * sizeScaledGravityConstant * dx / length;
+                forceY += attractor.power * sizeScaledGravityConstant * dy / length;
 
-                const targetActivation = 0.5 + 30.5 * (1 - THREE.Math.smoothstep(length, 20, 100));
+                const targetActivation = 0.5 + 29.5 * (1 - THREE.Math.smoothstep(length, 20, 100));
                 particle.activation = particle.activation * 0.99 + 0.01 * targetActivation;
 
                 // particle.dx += forceX * timeStep;
