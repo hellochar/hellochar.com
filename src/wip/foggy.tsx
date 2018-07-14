@@ -1,7 +1,6 @@
-import { AmbientLight, AxesHelper, BackSide, BufferAttribute, Color, DirectionalLight, DoubleSide, EffectComposer, Float32BufferAttribute, Fog, FogExp2, Geometry, Mesh, MeshPhongMaterial, MeshStandardMaterial, Object3D, OrbitControls, PerspectiveCamera, PlaneBufferGeometry, Points, PointsMaterial, RenderPass, Scene, TextureLoader, Vector3 } from "three";
-
 import * as React from "react";
-import THREE = require("three");
+import * as THREE from "three";
+
 import { AudioClip } from "../audio";
 import { Noise } from "../common/perlin";
 import { ISketch } from "../sketch";
@@ -24,12 +23,12 @@ noise.octaveNum = 3;
 class Sky {
     public heightScale = 20;
     private geom = (() => {
-        const geom = new PlaneBufferGeometry(1000, 1000, 100, 100);
+        const geom = new THREE.PlaneBufferGeometry(1000, 1000, 100, 100);
         geom.rotateX(-Math.PI / 2);
         return geom;
     })();
     private positions = (() => {
-        const positions = this.geom.getAttribute("position") as Float32BufferAttribute;
+        const positions = this.geom.getAttribute("position") as THREE.Float32BufferAttribute;
         // for (let i = 0; i < positions.count; i++) {
         //     const x = positions.getX(i);
         //     const z = positions.getZ(i);
@@ -46,18 +45,18 @@ class Sky {
     })();
 
     private mat = (() => {
-        const mat = new MeshPhongMaterial({
+        const mat = new THREE.MeshPhongMaterial({
             flatShading: true,
             shininess: 2,
-            side: BackSide,
-            color: new Color("rgb(84, 145, 242)"),
+            side: THREE.BackSide,
+            color: new THREE.Color("rgb(84, 145, 242)"),
         });
         return mat;
     })();
 
-    private mesh: Mesh;
-    constructor(public scene: Scene) {
-        this.mesh = new Mesh(this.geom, this.mat);
+    private mesh: THREE.Mesh;
+    constructor(public scene: THREE.Scene) {
+        this.mesh = new THREE.Mesh(this.geom, this.mat);
         // this.mesh.position.y = 130;
         scene.add(this.mesh);
         this.animate(0);
@@ -84,23 +83,23 @@ class Sky {
 
 class Ground {
     private geom = (() => {
-        const geom = new PlaneBufferGeometry(1000, 1000, 100, 100);
+        const geom = new THREE.PlaneBufferGeometry(1000, 1000, 100, 100);
         geom.rotateX(-Math.PI / 2);
 
         return geom;
     })();
 
-    private positions = this.geom.getAttribute("position") as Float32BufferAttribute;
+    private positions = this.geom.getAttribute("position") as THREE.Float32BufferAttribute;
 
-    constructor(private foggy: Foggy, scene: Scene) {
-        const mat = new MeshPhongMaterial({
+    constructor(private foggy: Foggy, scene: THREE.Scene) {
+        const mat = new THREE.MeshPhongMaterial({
             flatShading: true,
             shininess: 2,
-            side: DoubleSide,
+            side: THREE.DoubleSide,
             // color: new Color("#F9FFFF"),
-            color: new Color("#31DCEC"),
+            color: new THREE.Color("#31DCEC"),
         });
-        const mesh = new Mesh(this.geom, mat);
+        const mesh = new THREE.Mesh(this.geom, mat);
         mesh.position.y -= 50;
         scene.add(mesh);
     }
@@ -122,9 +121,9 @@ class Ground {
 
 class WaterDrops {
     private geometry = (() => {
-        const geometry = new Geometry();
+        const geometry = new THREE.Geometry();
         for (let i = 0; i < 10000; i++) {
-            const v = new Vector3(
+            const v = new THREE.Vector3(
                 THREE.Math.randFloat(-400, 400),
                 THREE.Math.randFloat(400, 800),
                 THREE.Math.randFloat(-400, 400),
@@ -134,16 +133,16 @@ class WaterDrops {
         return geometry;
     })();
 
-    constructor(scene: Scene) {
-        const material = new PointsMaterial({
-            color: new Color("#31DCEC"),
+    constructor(scene: THREE.Scene) {
+        const material = new THREE.PointsMaterial({
+            color: new THREE.Color("#31DCEC"),
             transparent: true,
             opacity: 0.5,
             size: 1.2,
             sizeAttenuation: true,
-            map: new TextureLoader().load("/assets/sketches/drop.png"),
+            map: new THREE.TextureLoader().load("/assets/sketches/drop.png"),
         });
-        const points = new Points(this.geometry, material);
+        const points = new THREE.Points(this.geometry, material);
         scene.add(points);
     }
 
@@ -196,16 +195,16 @@ class Foggy extends ISketch {
     elements = [<Attribution />];
     private sky!: Sky;
     private ground!: Ground;
-    private scene = new Scene();
-    private camera!: PerspectiveCamera;
-    private controls!: OrbitControls;
-    private tree01?: Object3D;
-    private fog = new FogExp2(new Color("rgb(131, 240, 252)").getHex(), 0.004);
+    private scene = new THREE.Scene();
+    private camera!: THREE.PerspectiveCamera;
+    private controls!: THREE.OrbitControls;
+    private tree01?: THREE.Object3D;
+    private fog = new THREE.FogExp2(new THREE.Color("rgb(131, 240, 252)").getHex(), 0.004);
     private water!: WaterDrops;
-    private composer!: EffectComposer;
+    private composer!: THREE.EffectComposer;
     init() {
         this.renderer.domElement.style.background = "rgb(131, 240, 252)";
-        this.renderer.setClearColor(new Color("rgb(131, 240, 252)"));
+        this.renderer.setClearColor(new THREE.Color("rgb(131, 240, 252)"));
         this.sky = new Sky(this.scene);
         this.ground = new Ground(this, this.scene);
         this.scene.fog = this.fog;
@@ -259,10 +258,10 @@ class Foggy extends ISketch {
 
     private loadAndInitTrees() {
         this.loadModel("/assets/3dmodels/tree01_out/tree01.gltf", (gltf) => {
-            const tree: Object3D = this.tree01 = gltf.scene.children[0].children[0];
+            const tree: THREE.Object3D = this.tree01 = gltf.scene.children[0].children[0];
             console.log(tree);
-            ((tree.children[1] as Mesh).material as MeshStandardMaterial).flatShading = true;
-            ((tree.children[1] as Mesh).material as MeshStandardMaterial).needsUpdate = true;
+            ((tree.children[1] as THREE.Mesh).material as THREE.MeshStandardMaterial).flatShading = true;
+            ((tree.children[1] as THREE.Mesh).material as THREE.MeshStandardMaterial).needsUpdate = true;
             for (let i = 0; i < 35; i++) {
                 setTimeout(() => {
                     const t = tree.clone(true);
@@ -306,7 +305,7 @@ class Foggy extends ISketch {
         );
     }
 
-    private initGround(scene: Scene) {
+    private initGround(scene: THREE.Scene) {
     }
 
     getRockiness(x: number, z: number) {
@@ -315,7 +314,7 @@ class Foggy extends ISketch {
     }
 
     private initCamera(aspectRatio: number) {
-        const camera = new PerspectiveCamera(60, 1 / aspectRatio, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(60, 1 / aspectRatio, 0.1, 1000);
         camera.position.x = -23;
         camera.position.y = -1.8;
         // camera.position.y = 10;
@@ -323,17 +322,17 @@ class Foggy extends ISketch {
         return camera;
     }
 
-    private initLights(scene: Scene) {
+    private initLights(scene: THREE.Scene) {
         // const directional = new DirectionalLight("rgb(208, 220, 239)", 1);
-        const directional = new DirectionalLight("rgb(255, 255, 255)", 0.25);
+        const directional = new THREE.DirectionalLight("rgb(255, 255, 255)", 0.25);
         scene.add(directional);
 
-        const ambient = new AmbientLight(new Color("rgb(131, 240, 252)"), 0.15);
+        const ambient = new THREE.AmbientLight(new THREE.Color("rgb(131, 240, 252)"), 0.15);
         scene.add(ambient);
     }
 
-    private initControls(camera: PerspectiveCamera) {
-        const controls = new OrbitControls(camera);
+    private initControls(camera: THREE.PerspectiveCamera) {
+        const controls = new THREE.OrbitControls(camera);
         controls.autoRotate = true;
         return controls;
     }
