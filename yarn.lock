@@ -92,8 +92,8 @@
   resolved "https://registry.yarnpkg.com/@types/webpack-env/-/webpack-env-1.13.5.tgz#ca854e9fbdbcdf45d7376882875f28e2c60593f8"
 
 "@types/webvr-api@*":
-  version "0.0.32"
-  resolved "https://registry.yarnpkg.com/@types/webvr-api/-/webvr-api-0.0.32.tgz#3afb30b6e06392fb0473a01b350913942ef6fa76"
+  version "0.0.34"
+  resolved "https://registry.yarnpkg.com/@types/webvr-api/-/webvr-api-0.0.34.tgz#8fa49028de925c7b8bce3d559d3374ce2c89ee28"
 
 abbrev@1:
   version "1.1.1"

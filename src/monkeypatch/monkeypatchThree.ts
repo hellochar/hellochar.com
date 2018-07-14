@@ -4,9 +4,12 @@ import * as THREE from "three";
 (window as any).THREE = THREE;
 // tslint:disable
 
+import "three/examples/js/loaders/GLTFLoader";
+
 import "three/examples/js/postprocessing/EffectComposer";
 
 import "three/examples/js/controls/OrbitControls";
+import "three/examples/js/controls/PointerLockControls";
 
 import "three/examples/js/libs/stats.min";
 // import * as dat from "three/examples/js/libs/dat.gui.min";
@@ -27,6 +30,7 @@ import "three/examples/js/postprocessing/ShaderPass";
 import "three/examples/js/postprocessing/RenderPass";
 import "three/examples/js/postprocessing/BokehPass";
 import "three/examples/js/postprocessing/MaskPass";
+import "three/examples/js/postprocessing/SSAARenderPass";
 import "three/examples/js/postprocessing/SAOPass";
 import "three/examples/js/postprocessing/SSAOPass";
 

@@ -91,4 +91,16 @@ declare module 'three' {
         public box: THREE.Box3;
         constructor(box: THREE.Box3, hex?: number);
     }
+
+    interface GLTFResponse {
+		animations: Array<THREE.AnimationClip>;
+		scene: THREE.Scene;
+		scenes: Array<THREE.Scene>;
+		cameras: Array<THREE.Camera>;
+		asset: Object;
+    }
+
+    class GLTFLoader {
+        load(url: string, onLoad: (gltf: GLTFResponse) => void, onProgress: (xhr: XMLHttpRequest) => void, onError: (error: any) => void): void;
+    }
 }

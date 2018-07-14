@@ -1,3 +1,5 @@
+import { Matrix3 } from "../../node_modules/@types/three";
+
 // copy-pasted from https://raw.githubusercontent.com/josephg/noisejs/master/perlin.js
 // tslint:disable
 
@@ -64,6 +66,14 @@ export class Noise {
     // To remove the need for index wrapping, double the permutation table length
     public perm = new Array(512);
     public gradP = new Array(512);
+
+    public octaveNum = 6;
+    public octaveFalloff = 0.5;
+    // rotate by 1 radians (~57 deg), scale by 2
+    public octaveMatrix2 = [
+        Math.cos(1) * 2, -Math.sin(1) * 2,
+        Math.sin(1) * 2,  Math.cos(1) * 2,
+    ];
 
     // This isn't a very good seeding function, but it works ok. It supports 2^16
     // different seed values. Write something better if you need more seeds.
@@ -153,6 +163,22 @@ export class Noise {
         return 70 * (n0 + n1 + n2);
     };
 
+    public octaveSimplex2(xin: number, yin: number, octaveNum = this.octaveNum, octaveFalloff = this.octaveFalloff) {
+        let sum = 0;
+        let x = xin;
+        let y = yin;
+        let scalar = 1;
+        for (let i = 0; i < octaveNum; i++) {
+            sum += this.simplex2(x, y) * scalar;
+            const newX = x * this.octaveMatrix2[0] + y * this.octaveMatrix2[1];
+            const newY = x * this.octaveMatrix2[2] + y * this.octaveMatrix2[3];
+            x = newX;
+            y = newY;
+            scalar *= octaveFalloff;
+        }
+        return sum;
+    }
+
     // 3D simplex noise
     public simplex3(xin: number, yin: number, zin: number) {
         let n0, n1, n2, n3; // Noise contributions from the four corners
@@ -241,6 +267,23 @@ export class Noise {
         return 32 * (n0 + n1 + n2 + n3);
 
     };
+
+    public octaveSimplex3(xin: number, yin: number, zin: number, octaveNum = this.octaveNum, octaveFalloff = this.octaveFalloff) {
+        let sum = 0;
+        let x = xin;
+        let y = yin;
+        let z = zin;
+        let scalar = 1;
+        for (let i = 0; i < octaveNum; i++) {
+            sum += this.simplex3(x, y, z) * scalar;
+            x *= 2;
+            y *= 2;
+            z *= 2;
+            scalar *= octaveFalloff;
+        }
+        return sum;
+    }
+
 
     // ##### Perlin noise stuff
 
