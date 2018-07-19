@@ -24,7 +24,7 @@ export function initLeap(sketch: LineSketch) {
             if (attractor.handMesh != null) {
                 attractor.handMesh.visible = false;
             }
-            attractor.mesh.visible = false;
+            // attractor.mesh.visible = false;
             attractor.power = 0;
         });
         frame.hands.filter((hand) => hand.valid).forEach((hand, index) => {
@@ -36,10 +36,10 @@ export function initLeap(sketch: LineSketch) {
             const attractor = sketch.attractors[index];
             attractor.x = x;
             attractor.y = y;
-            attractor.mesh.position.x = x;
-            attractor.mesh.position.y = y;
+            // attractor.mesh.position.x = x;
+            // attractor.mesh.position.y = y;
 
-            attractor.mesh.visible = true;
+            // attractor.mesh.visible = true;
             if (hand.indexFinger.extended) {
                 // position[2] goes from -300 to 300
                 const wantedPower = Math.pow(7, (-position[2] + 350) / 200);

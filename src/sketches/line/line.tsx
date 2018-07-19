@@ -102,9 +102,9 @@ export class LineSketch extends ISketch {
         this.resize(this.canvas.width, this.canvas.height);
         this.camera.position.z = 500;
 
-        this.attractors.forEach((attractor) => {
-            this.scene.add(attractor.mesh);
-        });
+        // this.attractors.forEach((attractor) => {
+        //     this.scene.add(attractor.mesh);
+        // });
 
         const NUM_PARTICLES = Number(parse(location.search).p) ||
             // cheap mobile detection
@@ -139,19 +139,19 @@ export class LineSketch extends ISketch {
     }
 
     public animate(millisElapsed: number) {
-        this.attractors.forEach((attractor) => {
-            attractor.mesh.position.z = -100;
-            attractor.mesh.children.forEach((child, idx) => {
-                child.rotation.y += (10 - idx) / 20 * attractor.power;
-            });
-            attractor.mesh.rotation.x = 0.8; // attractor.power + 0.1;
-            const scale = Math.sqrt(attractor.power) / 5;
-            attractor.mesh.scale.set(scale, scale, scale);
-            if (attractor.power > 0 && attractor.power < 1400) {
-                // attractor.power += (100 - attractor.power) * 0.001;
-                attractor.power *= 1.005;
-            }
-        });
+        // this.attractors.forEach((attractor) => {
+        //     attractor.mesh.position.z = -100;
+        //     attractor.mesh.children.forEach((child, idx) => {
+        //         child.rotation.y += (10 - idx) / 20 * attractor.power;
+        //     });
+        //     attractor.mesh.rotation.x = 0.8; // attractor.power + 0.1;
+        //     const scale = Math.sqrt(attractor.power) / 5;
+        //     attractor.mesh.scale.set(scale, scale, scale);
+        //     if (attractor.power > 0 && attractor.power < 1400) {
+        //         // attractor.power += (100 - attractor.power) * 0.001;
+        //         attractor.power *= 1.005;
+        //     }
+        // });
 
         this.gravityShaderPass.uniforms.iMouse.value.set(this.attractors[0].x, this.renderer.domElement.height - this.attractors[0].y);
 
@@ -227,7 +227,7 @@ export class LineSketch extends ISketch {
         const attractor = this.attractors[0];
         attractor.x = x;
         attractor.y = y;
-        attractor.mesh.position.set(x, y, 0);
+        // attractor.mesh.position.set(x, y, 0);
     }
 
     public disableFirstAttractor() {

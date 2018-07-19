@@ -170,35 +170,38 @@ export class ParticleSystem {
                 }
             }
 
-            // const hsl = particle.color.getHSL();
-            // hsl.h = (hsl.h + freqValue / 128) % 1;
-            // particle.color.setHSL(hsl.h, 1, 0.5);
+            particle.vertex!.x = particle.x;
+            particle.vertex!.y = particle.y;
 
-            const ox = (particle.x - canvas.width / 2) / 200;
-            const oy = (particle.y - canvas.height / 2) / 200;
-            // particle.vertex!.x = particle.x + ox * energy;
-            // particle.vertex!.y = particle.y + oy * energy;
-            particle.vertex!.x = particle.x + ox * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
-            particle.vertex!.y = particle.y + oy * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
-            const skew = frequencyArray && THREE.Math.mapLinear(frequencyArray[15], 0, 255, -1, 1) || 1;
-            particle.vertex!.x += Math.sin(particle.x / 20 + particle.y / 120 * skew + t / 200 + (t / 1000 * (1 + particle.y / canvas.height * 5)) / 500) * 10;
+            // // const hsl = particle.color.getHSL();
+            // // hsl.h = (hsl.h + freqValue / 128) % 1;
+            // // particle.color.setHSL(hsl.h, 1, 0.5);
 
-            // particle.color.r = maxActivation * 10;
-            // particle.color.g = maxActivation * 10;
-            // particle.color.b = maxActivation * 10;
-            // console.log(maxActivation);
+            // const ox = (particle.x - canvas.width / 2) / 200;
+            // const oy = (particle.y - canvas.height / 2) / 200;
+            // // particle.vertex!.x = particle.x + ox * energy;
+            // // particle.vertex!.y = particle.y + oy * energy;
+            // particle.vertex!.x = particle.x + ox * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
+            // particle.vertex!.y = particle.y + oy * (maxActivation * BLOB_AMOUNT - energy * energy * MUSIC_FACTOR);
+            // const skew = frequencyArray && THREE.Math.mapLinear(frequencyArray[15], 0, 255, -1, 1) || 1;
+            // particle.vertex!.x += Math.sin(particle.x / 20 + particle.y / 120 * skew + t / 200 + (t / 1000 * (1 + particle.y / canvas.height * 5)) / 500) * 10;
 
-            particle.color.r = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
-            particle.color.g = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
-            particle.color.b = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
+            // // particle.color.r = maxActivation * 10;
+            // // particle.color.g = maxActivation * 10;
+            // // particle.color.b = maxActivation * 10;
+            // // console.log(maxActivation);
 
-            // particle.color.r = (particle.activation) * 5;
-            // particle.color.g = (particle.activation) * 5;
-            // particle.color.b = (particle.activation) * 5;
+            // particle.color.r = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
+            // particle.color.g = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
+            // particle.color.b = (particle.activation * 3 + maxActivation * 0.5) * 5 + 0.2;
 
-            // particle.color.r = energy * 255;
-            // particle.color.g = energy * 255;
-            // particle.color.b = energy * 255;
+            // // particle.color.r = (particle.activation) * 5;
+            // // particle.color.g = (particle.activation) * 5;
+            // // particle.color.b = (particle.activation) * 5;
+
+            // // particle.color.r = energy * 255;
+            // // particle.color.g = energy * 255;
+            // // particle.color.b = energy * 255;
         }
     }
 }

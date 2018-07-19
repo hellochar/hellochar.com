@@ -19,7 +19,7 @@ export interface Attractor {
     dx?: number;
     dy?: number;
     handMesh?: HandMesh;
-    mesh: THREE.Object3D;
+    // mesh: THREE.Object3D;
     power: number;
 }
 
@@ -39,7 +39,7 @@ export function makeAttractor(x = 0, y = 0, power = 0): Attractor {
         x,
         y,
         handMesh: undefined,
-        mesh: null!,
+        // mesh: null!,
         power,
     };
 }
