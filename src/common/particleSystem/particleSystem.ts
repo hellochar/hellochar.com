@@ -80,33 +80,34 @@ export class ParticleSystem {
             constrainToBox,
         } = params;
 
-        nonzeroAttractors.push({
-            x: canvas.width,
-            y: canvas.height / 2,
-            power: 1,
-        });
+        // nonzeroAttractors.push({
+        //     x: canvas.width,
+        //     y: canvas.height / 2,
+        //     power: 1,
+        // });
 
-        nonzeroAttractors.push({
-            x: 0,
-            y: canvas.height / 2,
-            power: 1,
-        });
+        // nonzeroAttractors.push({
+        //     x: 0,
+        //     y: canvas.height / 2,
+        //     power: 1,
+        // });
 
         const hasAttractors = nonzeroAttractors.length > 0;
         const dragConstant = hasAttractors ? BAKED_PULLING_DRAG_CONSTANT : BAKED_INERTIAL_DRAG_CONSTANT;
         const sizeScaledGravityConstant = GRAVITY_CONSTANT * Math.min(Math.pow(2, canvas.width / 836 - 1), 1);
         for (let i = 0; i < particles.length; i++) {
             const particle = particles[i];
-            if (i > 0) {
+            if (i % 100 === 0) {
+                this.resetToOriginalPosition(particle);
+                // particle.x = canvas.width / 2;
+                // particle.y = canvas.height / 2;
+                // particle.dx = 0;
+                // particle.dy = 0;
+            } else {
                 particle.x = particles[i - 1].x;
                 particle.y = particles[i - 1].y;
                 particle.dx = particles[i - 1].dx;
                 particle.dy = particles[i - 1].dy;
-            } else {
-                particle.x = canvas.width / 2;
-                particle.y = canvas.height / 2;
-                particle.dx = 0;
-                particle.dy = 0;
             }
             let forceX = 0, forceY = 0;
 

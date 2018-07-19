@@ -14,6 +14,8 @@ import { createAudioGroup } from "./audio";
 import { Instructions } from "./instructions";
 import { initLeap } from "./leapMotion";
 
+import { Body, KinectManager } from "../dots/kinectManager";
+
 export class LineSketch extends ISketch {
 
     public events = {
@@ -96,6 +98,7 @@ export class LineSketch extends ISketch {
     public composer!: THREE.EffectComposer;
 
     public ps!: ParticleSystem;
+    public manager!: KinectManager;
 
     public init() {
         this.audioGroup = createAudioGroup(this.audioContext);
@@ -136,7 +139,46 @@ export class LineSketch extends ISketch {
 
         this.controller = initLeap(this);
         devlog(this.controller);
+
+        this.manager = new KinectManager(this.handleKinectUpdate);
     }
+
+    private handleKinectUpdate = (bodies: Body[]) => {
+        // this.record.push(bodies);
+        // if (this.repeatIntervalId) {
+        //     clearInterval(this.repeatIntervalId);
+        // }
+        // this.repeatIntervalId = setInterval(() => {
+        //     this.record.push(bodies);
+        // }, 1000 / 30);
+        this.attractors = [];
+        for (const body of bodies) {
+            for (const jointIndex in body.joints) {
+                const joint = body.joints[jointIndex];
+                // 0 is untracked
+                if (joint.w !== 0) {
+                    const prevJoint = body.previous && body.previous.joints[jointIndex];
+                    let power = 0.01;
+                    let dx = 0, dy = 0;
+                    if (prevJoint && prevJoint.w !== 0) {
+                        dx = joint.x - prevJoint.x;
+                        dy = joint.y - prevJoint.y;
+                        const speed2 = dx * dx + dy * dy;
+                        power += Math.sqrt(speed2) * 10;
+                    }
+                    const attractor = makeAttractor(joint.x * this.canvas.width, joint.y * this.canvas.height, power);
+                    attractor.dx = dx * this.canvas.width;
+                    attractor.dy = dy * this.canvas.height;
+                    this.attractors.push(attractor);
+                }
+            }
+        }
+        // if (bodies[0] != null) {
+        //     createAttractor(bodies[0].position.x * this.canvas.width, bodies[0].position.y * this.canvas.height);
+        // } else {
+        //     removeAttractor();
+        // }
+    };
 
     public animate(millisElapsed: number) {
         // this.attractors.forEach((attractor) => {
@@ -153,7 +195,9 @@ export class LineSketch extends ISketch {
         //     }
         // });
 
-        this.gravityShaderPass.uniforms.iMouse.value.set(this.attractors[0].x, this.renderer.domElement.height - this.attractors[0].y);
+        if (this.attractors[0]) {
+            this.gravityShaderPass.uniforms.iMouse.value.set(this.attractors[0].x, this.renderer.domElement.height - this.attractors[0].y);
+        }
 
         if (this.returnToStartPower > 0 && this.returnToStartPower < 1) {
             this.returnToStartPower *= 1.01;
@@ -229,9 +273,11 @@ export class LineSketch extends ISketch {
 
     public moveFirstAttractor(x: number, y: number) {
         const attractor = this.attractors[0];
-        attractor.x = x;
-        attractor.y = y;
+        if (attractor) {
+            attractor.x = x;
+            attractor.y = y;
         // attractor.mesh.position.set(x, y, 0);
+        }
     }
 
     public disableFirstAttractor() {
@@ -242,8 +288,8 @@ export class LineSketch extends ISketch {
 
 const PARTICLE_SYSTEM_PARAMS = {
     GRAVITY_CONSTANT: 280,
-    INERTIAL_DRAG_CONSTANT: 0.53913643334,
-    PULLING_DRAG_CONSTANT: 0.93075095702,
+    INERTIAL_DRAG_CONSTANT: 0.1,
+    PULLING_DRAG_CONSTANT: 0.1,
     timeStep: 0.016 * 2,
     STATIONARY_CONSTANT: 0.0,
     constrainToBox: true,
