@@ -74,32 +74,41 @@ export class ParticleSystem {
         } = this;
 
         const {
-            timeStep: timeStepBase,
+            timeStep,
             STATIONARY_CONSTANT,
             GRAVITY_CONSTANT,
             constrainToBox,
         } = params;
 
-        // const freqBandMin = 35;
+        nonzeroAttractors.push({
+            x: canvas.width,
+            y: canvas.height / 2,
+            power: 1,
+        });
 
-        let energy = 0;
-        if (frequencyArray) {
-            // for (let i = 20; i < 100; i++) {
-            //     energy += frequencyArray[i];
-            // }
-            // energy /= (100 - 20);
-            energy = frequencyArray[5];
-        }
-        energy /= 255;
+        nonzeroAttractors.push({
+            x: 0,
+            y: canvas.height / 2,
+            power: 1,
+        });
 
-        // const hasAttractors = nonzeroAttractors.length > 0;
-        const dragConstant = BAKED_PULLING_DRAG_CONSTANT;
+        const hasAttractors = nonzeroAttractors.length > 0;
+        const dragConstant = hasAttractors ? BAKED_PULLING_DRAG_CONSTANT : BAKED_INERTIAL_DRAG_CONSTANT;
         const sizeScaledGravityConstant = GRAVITY_CONSTANT * Math.min(Math.pow(2, canvas.width / 836 - 1), 1);
-        for (const particle of particles) {
-
+        for (let i = 0; i < particles.length; i++) {
+            const particle = particles[i];
+            if (i > 0) {
+                particle.x = particles[i - 1].x;
+                particle.y = particles[i - 1].y;
+                particle.dx = particles[i - 1].dx;
+                particle.dy = particles[i - 1].dy;
+            } else {
+                particle.x = canvas.width / 2;
+                particle.y = canvas.height / 2;
+                particle.dx = 0;
+                particle.dy = 0;
+            }
             let forceX = 0, forceY = 0;
-
-            let maxActivation = 0.02;
 
             for (let j = 0; j < nonzeroAttractors.length; j++) {
                 const attractor = nonzeroAttractors[j];
@@ -108,22 +117,6 @@ export class ParticleSystem {
                 const length = Math.sqrt(dx * dx + dy * dy);
                 forceX += attractor.power * sizeScaledGravityConstant * dx / length;
                 forceY += attractor.power * sizeScaledGravityConstant * dy / length;
-
-                // if (attractor.dx && attractor.dy) {
-                //     forceX += attractor.dx;
-                //     forceY += attractor.dy;
-                // }
-
-                // const maxLength = 100 + energy * 127;
-                const maxLength = 80;
-                const targetActivation = 0.02 + 0.98 * (1 - THREE.Math.smoothstep(length, 20, maxLength));
-                maxActivation = Math.max(maxActivation, targetActivation);
-            }
-            if (maxActivation > particle.activation) {
-                particle.activation = particle.activation * (1 - ACTIVATION_SPEED) + ACTIVATION_SPEED * maxActivation;
-            } else {
-                const decayActivationSpeed = ACTIVATION_SPEED * 2;
-                particle.activation = particle.activation * (1 - decayActivationSpeed) + decayActivationSpeed * maxActivation;
             }
 
             if (STATIONARY_CONSTANT > 0) {
@@ -139,7 +132,6 @@ export class ParticleSystem {
                 // }
             }
 
-            const timeStep = timeStepBase * (0.5 + particle.activation * ACTIVATION_FACTOR);
             particle.dx = (particle.dx + forceX * timeStep) * dragConstant;
             particle.dy = (particle.dy + forceY * timeStep) * dragConstant;
 

@@ -165,24 +165,7 @@ export class LineSketch extends ISketch {
         const { averageX, averageY, groupedUpness, normalizedAverageVel, normalizedVarianceLength, flatRatio, normalizedEntropy } =
             computeStats(this.ps);
 
-        this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
-        if (normalizedEntropy !== 0) {
-            this.
-                // audioGroup.setFrequency(222 / normalizedEntropy);
-                audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
-        }
-
-        // const noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
-        const noiseFreq = 2000 * normalizedVarianceLength;
-        this.audioGroup.setNoiseFrequency(noiseFreq);
-
-        this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 5.);
-
-        const mouseDistanceToCenter = Math.sqrt(Math.pow(this.mouseX - averageX, 2) + Math.pow(this.mouseY - averageY, 2));
-        const normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(this.canvas.width * this.canvas.height);
-        // const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
-        const backgroundVolume = 1.00;
-        this.audioGroup.setBackgroundVolume(backgroundVolume);
+        // this.updateAudio();
 
         this.gravityShaderPass.uniforms.iGlobalTime.value = this.audioContext.currentTime / 1;
         this.gravityShaderPass.uniforms.G.value = triangleWaveApprox(this.audioContext.currentTime / 5) * (groupedUpness + 0.50) * 15000;
@@ -198,6 +181,27 @@ export class LineSketch extends ISketch {
             this.instructionsEl.setLeapMotionControllerValid(isLeapMotionControllerValid);
         }
     }
+
+    // updateAudio() {
+    //     this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
+    //     if (normalizedEntropy !== 0) {
+    //         this.
+    //             // audioGroup.setFrequency(222 / normalizedEntropy);
+    //             audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
+    //     }
+
+    //     // const noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
+    //     const noiseFreq = 2000 * normalizedVarianceLength;
+    //     this.audioGroup.setNoiseFrequency(noiseFreq);
+
+    //     this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0) * 5.);
+
+    //     const mouseDistanceToCenter = Math.sqrt(Math.pow(this.mouseX - averageX, 2) + Math.pow(this.mouseY - averageY, 2));
+    //     const normalizedMouseDistanceToCenter = mouseDistanceToCenter / Math.sqrt(this.canvas.width * this.canvas.height);
+    //     // const backgroundVolume = 0.33 / (1 + normalizedMouseDistanceToCenter * normalizedMouseDistanceToCenter);
+    //     const backgroundVolume = 1.00;
+    //     this.audioGroup.setBackgroundVolume(backgroundVolume);
+    // }
 
     public resize(width: number, height: number) {
         this.camera.right = width;
