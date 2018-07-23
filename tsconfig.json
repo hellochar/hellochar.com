@@ -5,14 +5,7 @@
         "module": "commonjs",
         "jsx": "react",
         "strict": true,
-        "sourceMap": true,
-        "typeRoots": [
-            "src/custom-typings",
-            "src/custom-typings/**",
-        ],
-        "types": [
-            "webpack-env"
-        ]
+        "sourceMap": true
     },
     "include": [
         "src"
