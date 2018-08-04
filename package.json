@@ -79,7 +79,6 @@
     "worker-loader": "^1.1.0"
   },
   "devDependencies": {
-    "bundle-buddy-webpack-plugin": "^0.3.0",
     "tslint": "^5.8.0"
   }
 }
