@@ -1,6 +1,7 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require("path");
 const merge = require('webpack-merge');
+const BundleBuddyWebpackPlugin = require("bundle-buddy-webpack-plugin");
 
 const common = require('./webpack.common.js');
 
@@ -31,5 +32,6 @@ module.exports = merge(common, {
       filename: "[name].css",
       chunkFilename: "[id].css"
     }),
+    new BundleBuddyWebpackPlugin(),
   ]
 });
