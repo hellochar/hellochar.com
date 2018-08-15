@@ -329,12 +329,18 @@ export default class GPUComputationRenderer {
 
     };
 
-    public createTexture( sizeXTexture?: number, sizeYTexture?: number ) {
-
-        sizeXTexture = sizeXTexture || this.sizeX;
-        sizeYTexture = sizeYTexture || this.sizeY;
-
+    public createTexture(valueFn?: (u: number, v: number) => [number, number, number, number], sizeXTexture = this.sizeX, sizeYTexture = this.sizeY) {
         const a = new Float32Array( sizeXTexture * sizeYTexture * 4 );
+        if (valueFn != null) {
+            for (let x = 0; x < sizeXTexture; x++) {
+                for (let y = 0; y < sizeYTexture; y++) {
+                    const u = x / sizeXTexture;
+                    const v = y / sizeYTexture;
+                    const offset = (y * sizeXTexture + x) * 4;
+                    a.set(valueFn(u, v), offset);
+                }
+            }
+        }
         const texture = new THREE.DataTexture( a, this.sizeX, this.sizeY, THREE.RGBAFormat, THREE.FloatType );
         texture.needsUpdate = true;
 

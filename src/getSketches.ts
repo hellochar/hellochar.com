@@ -8,6 +8,10 @@ export default function getSketches(context: __WebpackModuleApi.RequireContext) 
         }
         const sketchModule = context(key);
         const sketch = sketchModule.default as SketchConstructor;
+        if (sketch == null) {
+            console.warn("no default export for module ", sketchModule, "skipping");
+            return;
+        }
         if (sketch.id == null) {
             const match = /\.\/(\w+)$/.exec(key)!;
             const id = match[1];

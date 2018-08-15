@@ -13,6 +13,7 @@ import FaTwitter = require("react-icons/lib/fa/twitter");
 import { ISketch } from "../sketch";
 import { HistorySection } from "./history";
 import { ShrinkingHeader } from "./shrinkingHeader";
+import Workshops from "./workshops";
 
 export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     public render() {
@@ -42,6 +43,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
             <main className="content">
                 { this.renderWork() }
                 { this.renderAboutMe() }
+                <Workshops />
                 { this.renderContact() }
                 <HistorySection />
             </main>

@@ -1,0 +1,28 @@
+#workshops {
+    .workshops-listing {
+        display: block;
+        justify-content: space-between;
+    }
+    .workshop {
+        // width: 33.3%;
+        display: block;
+        position: relative;
+        text-align: center;
+        margin-top: 50px;
+
+        .workshop-slides {
+            display: inline-block;
+            margin: 15px auto;
+        }
+    }
+
+    .workshop-title {
+        font-family: $palatino-family;
+    }
+
+    .workshop-description {
+        color: $black;
+        font-size: 16px;
+        font-family: $arial-family;
+    }
+}
