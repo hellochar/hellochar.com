@@ -89,16 +89,10 @@ class WaterDrops {
     }
 }
 
-class Attribution extends React.Component<{}, {opened?: boolean}> {
-    state = {
-        opened: true,
-    };
+class Attribution extends React.Component<{}, {}> {
     render() {
-        const text = this.state.opened ? this.renderAttribution() : "?";
-        return <div style={{cursor: "pointer", margin: "auto auto 10px auto", color: "#8a9ba8"}} onClick={this.handleClick}>{text}</div>
-    }
-    private handleClick = () => {
-        this.setState({opened: !this.state.opened})
+        const text = this.renderAttribution();
+        return <div style={{margin: "auto auto 10px auto", color: "#8a9ba8"}}>{text}</div>
     }
 
     private renderAttribution() {
