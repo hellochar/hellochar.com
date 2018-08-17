@@ -13,7 +13,7 @@ import FaTwitter = require("react-icons/lib/fa/twitter");
 import Hero from "./hero";
 import { HistorySection } from "./history";
 import { ShrinkingHeader } from "./shrinkingHeader";
-import Workshops from "./workshops";
+import Teaching from "./workshops";
 
 export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     public render() {
@@ -44,7 +44,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
             <main className="content">
                 { this.renderWork() }
                 { this.renderAboutMe() }
-                <Workshops />
+                <Teaching />
                 { this.renderContact() }
                 <HistorySection />
             </main>
@@ -80,8 +80,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
         return (
             <article className="content-section about-me" id="about-me">
                 <h1>About Me</h1>
-                <p>Hi there.</p>
-                <p>My name's Xiaohan, but everyone just calls me Han-Han (the X can be intimidating!).</p>
+                <p>Hi there. My name's Xiaohan, but everyone just calls me Han-Han.</p>
                 <p>
                     I am a new media artist in the San Francisco Bay Area, interested in
                     discovering and sharing the beauty of mathematics and physics. Topics of interest
@@ -123,37 +122,26 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     email correspondence, collaborations, going for a walk in the park, connecting
                     like old friends, running away from a bear, etc. etc!
                 </p>
-                <p className="contact-links">
+                <div className="contact-links">
                     <a href="mailto:hellocharlien@hotmail.com">
                         <FaEnvelope />
-                        Email
                     </a>
-                    &middot;
-                    <a href="https://www.facebook.com/xiaohan.zhang.16">
-                        <FaFacebookOfficial />
-                        Facebook
-                    </a>
-                    &middot;
-                    <a href="https://github.com/hellochar">
-                        <FaGithub />
-                        Github
-                    </a>
-                    &middot;
-                    <a href="https://twitter.com/hellocharlien">
-                        <FaTwitter />
-                        Twitter
-                    </a>
-                    &middot;
-                    <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">
-                        <FaLinkedInSquare />
-                        LinkedIn
-                    </a>
-                    &middot;
                     <a href="https://www.instagram.com/hellochar">
                         <FaInstagram />
-                        Instagram
                     </a>
-                </p>
+                    <a href="https://www.facebook.com/hellocharlien">
+                        <FaFacebookOfficial />
+                    </a>
+                    <a href="https://twitter.com/hellocharlien">
+                        <FaTwitter />
+                    </a>
+                    <a href="https://github.com/hellochar">
+                        <FaGithub />
+                    </a>
+                    <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">
+                        <FaLinkedInSquare />
+                    </a>
+                </div>
             </section>
         );
     }

@@ -13,6 +13,11 @@
         .workshop-slides {
             display: inline-block;
             margin: 15px auto;
+            max-width: 100%;
+
+            img {
+                width: 100%;
+            }
         }
     }
 

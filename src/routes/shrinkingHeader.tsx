@@ -51,11 +51,15 @@ export class ShrinkingHeader extends React.Component<IShrinkingHeaderProps, IShr
                     <nav className="header-nav">
                         <a href="#work">Work</a>
                         &middot;
-                        <a href="#about-me">About Me</a>
+                        {/* <a href="#installation">Installation</a>
+                        &middot; */}
+                        <a href="#about-me">About</a>
                         &middot;
-                        <a href="#history">History</a>
+                        <a href="#workshops">Teaching</a>
                         &middot;
                         <a href="#contact">Contact</a>
+                        &middot;
+                        <a href="#history">History</a>
                     </nav>
                 </header>
                 <div className="extra-hover-area"></div>

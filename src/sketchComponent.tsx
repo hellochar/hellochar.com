@@ -56,9 +56,9 @@ class SketchSuccessComponent extends React.Component<{ sketch: ISketch }, {}> {
             }
         });
         // prevent scrolling the viewport
-        $canvas.on("touchmove", (event) => {
-            event.preventDefault();
-        });
+        // $canvas.on("touchmove", (event) => {
+        //     event.preventDefault();
+        // });
 
         // TODO handle errors here
         this.props.sketch.init();

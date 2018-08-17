@@ -37,6 +37,8 @@ a {
 
 body {
     font-family: $palatino-family;
+    color: $black;
+    background: $light-gray5;
 }
 
 p {
@@ -209,7 +211,7 @@ p ~ p {
     left: 0;
     right: 0;
     bottom: 0;
-    background: white;
+    background: $light-gray5;
 
     // 5s is time of outtro
     transition: opacity 5s;

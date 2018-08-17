@@ -14,7 +14,7 @@
     }
 
     &.theme-light {
-        background: rgba(255, 255, 255, 0.95);
+        background: transparentize($light-gray5, 0.05);
         border-bottom: 1px solid $gray5;
     }
 
@@ -23,10 +23,10 @@
         border-bottom: 1px solid $dark-gray1;
 
         a {
-            color: white;
+            color: $light-gray5;
 
             &:hover {
-                border-bottom: 3px solid white;
+                border-bottom: 3px solid $light-gray5;
             }
         }
     }

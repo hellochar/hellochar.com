@@ -1,12 +1,8 @@
-.homepage {
+.content {
+    position: relative;
     max-width: 800px;
     margin: auto;
     padding: 0 10px;
-}
-
-.content {
-    position: relative;
-    padding-bottom: 80px;
 
     .content-section {
         // adding padding-top to account for header when navving to it
@@ -56,6 +52,7 @@
 .contact-links {
     a {
         margin: 0 15px;
+        font-size: 32px;
 
         .fa-icon {
             margin-right: 5px;
@@ -70,12 +67,12 @@
 .page-footer {
     font-family: $palatino-family;
     background: $black;
-    color: $white;
+    color: $light-gray5;
     margin-left: -100vw;
     margin-right: -100vw;
 
     .get-in-touch {
-        color: $white;
+        color: $light-gray5;
         padding: 80px;
         text-align: center;
         font-size: 30px;
@@ -91,6 +88,5 @@
 
 @media screen and (max-width: 539px) {
     .content {
-        padding-top: 150px;
     }
 }

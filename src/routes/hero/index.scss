@@ -1,35 +1,88 @@
 .hero {
-    padding: 80px 0;
-    max-width: 800px;
-    height: 90vh;
-    margin: auto;
+    color: $light-gray5;
+    min-height: 100vh;
     transition: all 0.2s;
     font-family: $palatino-family;
-    text-align: center;
     display: flex;
     flex-direction: column;
-    border-bottom: 1px solid $black;
 
-    .header-name {
-        transition: all 0.2s;
-        margin: 0 auto 0 auto;
-
-        h1 {
-            font-size: 80px;
-        }
+    .hero-sketch {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .hero-content {
+        position: relative;
+        max-width: 800px;
+        margin: 25vh auto auto auto;
     }
 
-    .header-nav {
-        margin-top: 60px;
+    .hero-name {
         transition: all 0.2s;
-        font-size: 15px;
+        // margin: 0 auto 100px auto;
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 80px;
+    }
 
-        a {
-            margin: 0 15px;
+    a {
+        &:first-child {
+            margin-left: 0;
+        }
+        margin: 0 15px;
+        color: $light-gray1;
 
-            &.active {
-                border-bottom: 1.5px solid transparentize($black, 0.2);
-            }
+        &:active {
+            border-bottom: 3px solid transparentize($light-gray1, 0.2);
+        }
+
+        &:hover {
+            border-bottom: 3px solid transparentize($light-gray1, 0.2);
+        }
+    }
+}
+
+@-webkit-keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@-moz-keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@media screen and (max-width: 539px) {
+    .hero {
+        .hero-name {
+            font-size: 50px;
         }
     }
 }
