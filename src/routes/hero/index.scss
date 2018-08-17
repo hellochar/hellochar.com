@@ -1,0 +1,35 @@
+.hero {
+    padding: 80px 0;
+    max-width: 800px;
+    height: 90vh;
+    margin: auto;
+    transition: all 0.2s;
+    font-family: $palatino-family;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid $black;
+
+    .header-name {
+        transition: all 0.2s;
+        margin: 0 auto 0 auto;
+
+        h1 {
+            font-size: 80px;
+        }
+    }
+
+    .header-nav {
+        margin-top: 60px;
+        transition: all 0.2s;
+        font-size: 15px;
+
+        a {
+            margin: 0 15px;
+
+            &.active {
+                border-bottom: 1.5px solid transparentize($black, 0.2);
+            }
+        }
+    }
+}

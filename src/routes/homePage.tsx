@@ -10,7 +10,7 @@ import FaInstagram = require("react-icons/lib/fa/instagram");
 import FaLinkedInSquare = require("react-icons/lib/fa/linkedin-square");
 import FaTwitter = require("react-icons/lib/fa/twitter");
 
-import { ISketch } from "../sketch";
+import Hero from "./hero";
 import { HistorySection } from "./history";
 import { ShrinkingHeader } from "./shrinkingHeader";
 import Workshops from "./workshops";
@@ -20,6 +20,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
         return (
             <div className="homepage">
                 { this.renderHeader() }
+                <Hero />
                 { this.renderContent() }
                 { this.renderFooter() }
             </div>

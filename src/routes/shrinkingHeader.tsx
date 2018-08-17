@@ -37,11 +37,12 @@ export class ShrinkingHeader extends React.Component<IShrinkingHeaderProps, IShr
             + (this.props.darkTheme ? " theme-dark" : " theme-light")
             + (this.props.onlyShowOnHover ? " only-show-on-hover" : "");
 
-        const isMinimized = this.state.scrollTop > 80 || this.props.alwaysShrunken;
+        const isMinimized = true;
+        const isHidden = this.state.scrollTop < 80;
         const className = "header" + (isMinimized ? " minimized" : "");
 
         return (
-            <div className={containerClassName}>
+            <div className={containerClassName} style={{display: isHidden ? "none" : ""}}>
                 <header className={className}>
                     <a className="header-name" href="/"><h1>Xiaohan Zhang</h1></a>
                     <p className="header-services">
