@@ -13,6 +13,7 @@ const $window = $(window);
 const HAS_SOUND = true;
 
 export interface ISketchComponentProps extends React.DOMAttributes<HTMLDivElement> {
+    errorElement?: JSX.Element;
     sketchClass: SketchConstructor;
 }
 
@@ -132,7 +133,8 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             try {
                 // create dependencies, setup sketch, and move to success state
                 // we are responsible for live-updating the global user volume.
-                const audioContext = this.audioContext = new AudioContext() as SketchAudioContext;
+                const AudioContextConstructor: typeof AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
+                const audioContext = this.audioContext = new AudioContextConstructor() as SketchAudioContext;
                 (THREE.AudioContext as any).setContext(audioContext);
                 this.userVolume = audioContext.createGain();
                 this.userVolume.gain.setValueAtTime(0.8, 0);
@@ -169,8 +171,9 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         }
 
         const { sketchClass, ...containerProps } = this.props;
+        const className = classnames("sketch-component", this.state.status.type);
         return (
-            <div {...containerProps} id={this.props.sketchClass.id} className="sketch-component" ref={this.handleContainerRef}>
+            <div {...containerProps} id={this.props.sketchClass.id} className={className} ref={this.handleContainerRef}>
                 {this.renderSketchOrStatus()}
                 {this.renderVolumeButton()}
             </div>
@@ -183,16 +186,21 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
             // key on id to not destroy and re-create the component somehow
             return <SketchSuccessComponent key={this.props.sketchClass.id} sketch={status.sketch} />;
         } else if (status.type === "error") {
-            return (
-                <p className="sketch-error">
-                    Oops - something went wrong! Make sure you're using Chrome, or are on your desktop.
-                    <p><Link className="back" to="/">Back</Link></p>
-                    {status.error.message}
-                </p>
-            );
+            const errorElement = this.props.errorElement || this.renderDefaultErrorElement(status.error.message);
+            return errorElement;
         } else if (status.type === "loading") {
             return null;
         }
+    }
+
+    private renderDefaultErrorElement(message: string) {
+        return (
+            <p className="sketch-error">
+                Oops - something went wrong! Make sure you're using Chrome, or are on your desktop.
+                <pre>{message}</pre>
+                <p><Link className="back" to="/">Back</Link></p>
+            </p>
+        );
     }
 
     private renderVolumeButton() {

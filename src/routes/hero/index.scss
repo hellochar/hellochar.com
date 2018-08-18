@@ -10,6 +10,12 @@
         position: absolute;
         width: 100%;
         height: 100%;
+
+        .sketch-component.error {
+            background: url('/assets/images/hero_still.jpg') no-repeat;
+            background-size: cover;
+            background-position: center center;
+        }
     }
     
     .hero-content {
