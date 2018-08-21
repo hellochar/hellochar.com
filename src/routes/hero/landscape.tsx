@@ -183,58 +183,6 @@ class Landscape extends ISketch {
         // this.composer.addPass(copyPass);
     }
 
-    private loadAndInitTrees() {
-        this.loadModel("/assets/3dmodels/tree01_out/tree01.gltf", (gltf) => {
-            const tree: THREE.Object3D = this.tree01 = gltf.scene.children[0].children[0];
-            console.log(tree);
-            ((tree.children[1] as THREE.Mesh).material as THREE.MeshStandardMaterial).flatShading = true;
-            ((tree.children[1] as THREE.Mesh).material as THREE.MeshStandardMaterial).needsUpdate = true;
-            for (let i = 0; i < 35; i++) {
-                setTimeout(() => {
-                    const t = tree.clone(true);
-                    t.position.x = THREE.Math.randFloat(-500, 500);
-                    t.position.z = THREE.Math.randFloat(-500, 500);
-                    // 150 generally corresponds to low rockiness
-                    if (t.position.length() < 100) {
-                        t.position.setLength(100);
-                    }
-                    // guess -65
-                    t.position.y = -65;
-                    t.rotateY(THREE.Math.randFloat(0, Math.PI * 2));
-                    const finalScale = THREE.Math.randFloat(3000, 5500) * (1 - this.getRockiness(t.position.x, t.position.z));
-                    scheduleTween((lerp) => {
-                        const scale = THREE.Math.smootherstep(lerp, 0, 1) * finalScale + 1e-2;
-                        t.scale.setScalar(scale);
-                    }, 0, 6000);
-                    this.scene.add(t);
-                }, 4000 + THREE.Math.randFloat(0, 5000));
-            }
-        });
-    }
-
-    private loadModel(url: string, success: (gltf: THREE.GLTFResponse) => void) {
-        const loader = new THREE.GLTFLoader();
-
-        // // Optional: Provide a DRACOLoader instance to decode compressed mesh data
-        // THREE.DRACOLoader.setDecoderPath('/examples/js/libs/draco');
-        // loader.setDRACOLoader(new THREE.DRACOLoader());
-
-        // Load a glTF resource
-        loader.load(
-            url,
-            success,
-            (xhr: any) => {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            (error: any) => {
-                console.log('An error happened', error);
-            },
-        );
-    }
-
-    private initGround(scene: THREE.Scene) {
-    }
-
     getRockiness(x: number, z: number) {
         const len = x * x + z * z;
         return 1 / (1 + len / 15000);
