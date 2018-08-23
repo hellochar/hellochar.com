@@ -70,7 +70,7 @@
     "style-loader": "^0.20.0",
     "three": "^0.88.0",
     "ts-loader": "^4.0.0",
-    "typescript": "^2.7.2",
+    "typescript": "^3.0.0",
     "webpack": "^4.2.0",
     "webpack-bundle-analyzer": "^2.10.0",
     "webpack-cli": "^2.0.13",
