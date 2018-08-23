@@ -222,7 +222,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         if (this.audioContext != null) {
             if (document.hidden) {
                 this.audioContext.suspend();
-            } else {
+            } else if (this.state.volumeEnabled) {
                 this.audioContext.resume();
             }
         }
