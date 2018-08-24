@@ -4,7 +4,7 @@ import { BONES_PER_UNIT_LENGTH, BranchMeshManager } from "./branchMeshManager";
 
 // TODO move this to the base, and feed nutrients from the root, and allow feeding in generic Components
 export let NUTRIENT_PER_SECOND = {
-    value: 0.17,
+    value: 5.17,
 };
 
 export class Branch extends Component {

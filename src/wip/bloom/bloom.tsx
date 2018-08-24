@@ -40,8 +40,8 @@ export class Bloom extends ISketch {
         this.scene.add(this.camera);
 
         this.orbitControls = new THREE.OrbitControls(this.camera);
-        this.orbitControls.autoRotate = true;
-        this.orbitControls.autoRotateSpeed = 1.6;
+        // this.orbitControls.autoRotate = true;
+        // this.orbitControls.autoRotateSpeed = 1.6;
 
         // do this before adding the flowers or anything
         this.initCubeTexture();
@@ -113,7 +113,7 @@ export class Bloom extends ISketch {
     }
 
     public initComponent() {
-        const branch = new Branch(10, 0);
+        const branch = new Branch(6, 0);
         // const helper = new THREE.SkeletonHelper(branch.meshManager.skeleton.bones[0]);
         // scene.add(helper);
         this.component = branch;
@@ -172,10 +172,10 @@ export class Bloom extends ISketch {
         } catch {}
 
         try {
-            const numCameraUpdates = Math.ceil(ms / 17);
-            for (let i = 0; i < numCameraUpdates; i++) {
-                this.updateCamera();
-            }
+            // const numCameraUpdates = Math.ceil(ms / 17);
+            // for (let i = 0; i < numCameraUpdates; i++) {
+            //     this.updateCamera();
+            // }
         } catch {}
 
         try {
@@ -212,19 +212,22 @@ export class Bloom extends ISketch {
             (8 * 60 + 16),
             (10 * 60 + 14),
         ];
-        const currentTime = this.audio.currentTime;
-        if (currentTime < flowerTime) {
-            season.type = "growing";
-            season.percent = THREE.Math.clamp(currentTime / flowerTime, 0, 1);
-        } else if (currentTime < dieTime) {
-            season.type = "flowering";
-            season.percent = THREE.Math.clamp((currentTime - flowerTime) / (dieTime - flowerTime), 0, 1);
-        } else {
-            season.type = "dying";
-            season.percent = THREE.Math.clamp((currentTime - dieTime) / (restartTime - dieTime), 0, 1);
-        }
-        const timeOfDay = THREE.Math.clamp(Math.min(currentTime / restartTime, 1), 0, 1);
-        this.scene.setTimeOfDay(timeOfDay);
+        // const currentTime = this.audio.currentTime * 10;
+        // if (currentTime < flowerTime) {
+        //     season.type = "growing";
+        //     season.percent = THREE.Math.clamp(currentTime / flowerTime, 0, 1);
+        // } else if (currentTime < dieTime) {
+        //     season.type = "flowering";
+        //     season.percent = THREE.Math.clamp((currentTime - flowerTime) / (dieTime - flowerTime), 0, 1);
+        // } else {
+        //     season.type = "dying";
+        //     season.percent = THREE.Math.clamp((currentTime - dieTime) / (restartTime - dieTime), 0, 1);
+        // }
+        season.type = "flowering";
+        season.percent = 1;
+        // const timeOfDay = THREE.Math.clamp(Math.min(currentTime / restartTime, 1), 0, 1);
+        // this.scene.setTimeOfDay(timeOfDay);
+        this.scene.setTimeOfDay(0.2);
     }
 
     public updateSeasonalEffect() {

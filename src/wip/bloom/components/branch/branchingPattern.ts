@@ -26,7 +26,7 @@ export class DefaultBranchingPattern implements BranchingPattern {
     public branchRotationZ = THREE.Math.mapLinear(Math.random(), 0, 1, Math.PI / 2, Math.PI / 8);
 
     // this *dramatically* changes growth
-    public lengthPerGrowth = THREE.Math.randFloat(0.95, 1.05);
+    public lengthPerGrowth = 0.7; // THREE.Math.randFloat(0.95, 1.05);
 
     public lengthPerYRotation = THREE.Math.randFloat(2, 4);
 
@@ -104,7 +104,7 @@ export class DefaultBranchingPattern implements BranchingPattern {
         } else {
             lastBone.addBud(new Bud((bud) => {
                 const pos = bud.getWorldPosition();
-                const chance = THREE.Math.mapLinear(pos.y, 0.5, 2.5, 0, 1);
+                const chance = THREE.Math.mapLinear(pos.y, 0.1, 1.0, 0, 1);
 
                 if (Math.random() < chance || branch instanceof FlowerWhorlBranch) {
                     const flower = Flower.generate();
