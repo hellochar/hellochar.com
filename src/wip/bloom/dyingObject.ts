@@ -43,7 +43,9 @@ export class DyingObject extends THREE.Object3D {
         } else {
             this.visible = false;
             this.object.visible = false;
-            this.parent.remove(this);
+            if (this.parent != null) {
+                this.parent.remove(this);
+            }
         }
     }
 }

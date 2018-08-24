@@ -202,7 +202,7 @@ export function randomWhorlParametersLeaf(leafTemplate: LeafTemplate): WhorlPara
 
 function getRandomWhorlNum(leaf: LeafTemplate) {
     const boundingBox = leaf.veinedLeaf.getBoundingBox();
-    const yExtent = boundingBox.getSize().y * leaf.veinedLeaf.normalizationDownScalar! * THREE.Math.randFloat(0.7, 1.5);
+    const yExtent = boundingBox.getSize(new THREE.Vector2()).y * leaf.veinedLeaf.normalizationDownScalar! * THREE.Math.randFloat(0.7, 1.5);
     // at extent 1, we have a "fat" leaf and we can only fit like 4 of them probably
     const totalAnglage = Math.PI * 2;
     const angleOfOnePetal = THREE.Math.mapLinear(yExtent, 0, 1, 0, Math.PI / 2);

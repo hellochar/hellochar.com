@@ -34,6 +34,4 @@ import "three/examples/js/postprocessing/SSAARenderPass";
 import "three/examples/js/postprocessing/SAOPass";
 import "three/examples/js/postprocessing/SSAOPass";
 
-import "three/examples/js/modifiers/BufferSubdivisionModifier";
-
 import "three/examples/js/objects/Sky";

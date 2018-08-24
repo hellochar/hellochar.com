@@ -7,12 +7,15 @@ import { map } from "../../math/index";
 import { LineSketch } from "./line";
 
 const boneGeometry = lazy(() => new THREE.SphereGeometry(10, 3, 3));
-const boneMaterial = lazy(() => new THREE.LineBasicMaterial({
-    // color: 0xefeffb,
+const boneMeshMaterial = lazy(() => new THREE.MeshBasicMaterial({
+    color: 0xadd6b6,
+    wireframeLinewidth: 5,
+    wireframe: true,
+}));
+
+const boneLineMaterial = lazy(() => new THREE.LineBasicMaterial({
     color: 0xadd6b6,
     linewidth: 5,
-    transparent: true,
-    opacity: 1,
 }));
 
 export function initLeap(sketch: LineSketch) {
@@ -63,7 +66,7 @@ function updateHandMesh(sketch: LineSketch, attractor: Attractor, hand: Leap.Han
     const handMesh = attractor.handMesh;
     hand.fingers.forEach((finger) => {
         if (handMesh["finger" + finger.type] == null) {
-            const fingerLine = new THREE.Line(new THREE.Geometry(), boneMaterial());
+            const fingerLine = new THREE.Line(new THREE.Geometry(), boneLineMaterial());
             handMesh["finger" + finger.type] = fingerLine;
             handMesh.add(fingerLine);
         }
@@ -72,7 +75,7 @@ function updateHandMesh(sketch: LineSketch, attractor: Attractor, hand: Leap.Han
             // create sphere for every bone
             const id = finger.type + ',' + bone.type;
             if (handMesh[id] == null) {
-                const boneMesh = new THREE.Mesh(boneGeometry(), boneMaterial());
+                const boneMesh = new THREE.Mesh(boneGeometry(), boneMeshMaterial());
                 handMesh[id] = boneMesh;
                 handMesh.add(boneMesh);
             }

@@ -3,6 +3,8 @@ import * as THREE from "three";
 import dna from "../../dna";
 import { Component } from "../component";
 
+const worldScale = new THREE.Vector3();
+
 export class Bud extends Component {
     public growthPercentage = 0;
     private sprouted = false;
@@ -16,7 +18,7 @@ export class Bud extends Component {
         this.growthPercentage = Math.min(1, this.growthPercentage + nutrients);
 
         // if (!this.sprouted && this.growthPercentage > dna.growth.budDevelopmentThreshold) {
-        const worldScale = this.getWorldScale();
+        this.getWorldScale(worldScale);
         if (!this.sprouted && worldScale.y > 0.01 && this.growthPercentage > 0.75) {
             this.sprouted = true;
             const sprouts = this.eventualSprouts(this);

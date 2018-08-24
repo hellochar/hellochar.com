@@ -51,7 +51,7 @@ export class BranchBone extends THREE.Bone {
      * You should call .updateView() after you've added these bones to a skeleton and .bind() it to a SkinnedMesh.
      */
     constructor(public index: number, public branch: Branch) {
-        super(null as any);
+        super();
     }
 
     private buds: Bud[] = [];

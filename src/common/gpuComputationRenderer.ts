@@ -362,7 +362,7 @@ export default class GPUComputationRenderer {
 
     };
 
-    public doRenderTarget( material: THREE.Material, output: THREE.WebGLRenderTarget ) {
+    public doRenderTarget( material: THREE.MeshMaterialType, output: THREE.WebGLRenderTarget ) {
 
         this.mesh.material = material;
         this.renderer.render( this.scene, this.camera, output );

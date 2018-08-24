@@ -10,14 +10,14 @@ export class VeinedLeafSkeleton extends THREE.Skeleton {
         }
         // veined leaf into skeleton
         // for now, just convert every leaf vein into a bone.
-        const baseBone = new THREE.Bone(null as any);
+        const baseBone = new THREE.Bone();
         baseBone.visible = false;
 
-        const forwardBone = new THREE.Bone(null as any);
+        const forwardBone = new THREE.Bone();
         forwardBone.position.x = 1;
         baseBone.add(forwardBone);
 
-        const sideBone = new THREE.Bone(null as any);
+        const sideBone = new THREE.Bone();
         sideBone.position.y = 0.1;
         baseBone.add(sideBone);
 
