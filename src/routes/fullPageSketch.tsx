@@ -20,7 +20,7 @@ export class FullPageSketch extends React.Component<ISketchRouteProps, {}> {
         const isPresentationMode = !!parse(location.search).presentationMode;
         const classes = classnames("full-page-sketch", { "presentation-mode": isPresentationMode, "kiosk-mode": isKiosk });
         return (
-            <div className={classes}>
+            <div className={classes} ref={this.handleDivRef}>
                 { !isKiosk ? <Link className="back-button" to="/">&#10094;</Link> : null }
                 {/* <ShrinkingHeader
                     alwaysShrunken
@@ -30,5 +30,28 @@ export class FullPageSketch extends React.Component<ISketchRouteProps, {}> {
                 <SketchComponent sketchClass={this.props.sketchClass} />
             </div>
         );
+    }
+    private handleDivRef = (div: HTMLDivElement | null) => {
+        if (div != null) {
+            this.requestFullscreen(div);
+        } else {
+            this.exitFullscreen();
+        }
+    }
+
+    private requestFullscreen(ref: HTMLElement) {
+        if (ref.webkitRequestFullscreen) {
+            ref.webkitRequestFullscreen();
+        } else if (ref.mozRequestFullScreen) {
+            ref.mozRequestFullScreen();
+        }
+    }
+
+    private exitFullscreen() {
+        if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        }
     }
 }
