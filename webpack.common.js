@@ -33,7 +33,7 @@ const config = {
       //   ]
       // },
       {
-        test: /\.(vert|frag)$/,
+        test: /\.(vert|frag|glsl)$/,
         use: "webpack-glsl-loader"
       }
     ]

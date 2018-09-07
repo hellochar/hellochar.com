@@ -71,6 +71,18 @@ declare module 'three' {
         }
     }
 
+    class UnrealBloomPass extends Pass {
+        public resolution: THREE.Vector2;
+        public strength: number;
+        public radius: number;
+        public threshold: number;
+        constructor(resolution: THREE.Vector2 | undefined, strength: number | undefined, radius: number, threshold: number);
+    }
+
+    class AdaptiveToneMappingPass extends Pass {
+        constructor(adaptive?: boolean, resolution?: number);
+    }
+
     class Sky extends THREE.Mesh {
         material: THREE.ShaderMaterial;
     }

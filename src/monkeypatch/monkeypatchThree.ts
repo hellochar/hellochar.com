@@ -24,6 +24,9 @@ import "three/examples/js/shaders/DotScreenShader";
 import "three/examples/js/shaders/DepthLimitedBlurShader";
 import "three/examples/js/shaders/SAOShader";
 import "three/examples/js/shaders/SSAOShader";
+import "three/examples/js/shaders/LuminosityHighPassShader";
+import "three/examples/js/shaders/LuminosityShader";
+import "three/examples/js/shaders/ToneMapShader";
 // required by SAOShader
 import "three/examples/js/shaders/UnpackDepthRGBAShader";
 import "three/examples/js/postprocessing/ShaderPass";
@@ -33,5 +36,7 @@ import "three/examples/js/postprocessing/MaskPass";
 import "three/examples/js/postprocessing/SSAARenderPass";
 import "three/examples/js/postprocessing/SAOPass";
 import "three/examples/js/postprocessing/SSAOPass";
+import "three/examples/js/postprocessing/UnrealBloomPass";
+import "three/examples/js/postprocessing/AdaptiveToneMappingPass";
 
 import "three/examples/js/objects/Sky";
