@@ -14,7 +14,7 @@ import Landscape from "./landscape";
 const Hero = () => (
     <header className="hero">
         <div className="hero-sketch">
-            <SketchComponent sketchClass={Landscape} />
+            <SketchComponent sketchClass={Landscape} eventsOnBody={true} />
         </div>
         <div className="hero-content">
             <h1 className="hero-name">Xiaohan Zhang</h1>

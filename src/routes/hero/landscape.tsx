@@ -24,22 +24,20 @@ class Ground {
             flatShading: true,
             shininess: 2,
             side: THREE.DoubleSide,
-            // color: new Color("#F9FFFF"),
-            color: new THREE.Color("#31DCEC"),
+            color: new THREE.Color("#ebf1f5"),
         });
         const mesh = new THREE.Mesh(this.geom, mat);
         mesh.position.y -= 50;
         scene.add(mesh);
     }
 
-    animate(timeElapsed: number) {
+    animate(timeElapsed: number, t: number) {
         const { positions } = this;
-        const heightScale = THREE.Math.mapLinear(THREE.Math.smootherstep(timeElapsed, 4000, 6000), 0, 1, 0, 35);
+        const heightScale = THREE.Math.mapLinear(THREE.Math.smootherstep(timeElapsed, 2000, 8000), 0, 1, 0, 35);
         for (let i = 0; i < positions.count; i++) {
             const x = positions.getX(i);
             const z = positions.getZ(i);
-            // const wantedY = noise.octaveSimplex2(x, z) * 2;
-            const wantedY = (noise.simplex2(x / 80, z / 80) + 0.5) * heightScale * this.landscape.getRockiness(x, z) - heightScale / 2;
+            const wantedY = (noise.simplex3(x / 80, z / 80, t) + 0.5) * heightScale * this.landscape.getRockiness(x, z) - heightScale / 2;
             positions.setY(i, wantedY);
         }
         positions.needsUpdate = true;
@@ -50,7 +48,7 @@ class Ground {
 class WaterDrops {
     private geometry = (() => {
         const geometry = new THREE.Geometry();
-        for (let i = 0; i < 10000; i++) {
+        for (let i = 0; i < 1000; i++) {
             const v = new THREE.Vector3(
                 THREE.Math.randFloat(-400, 400),
                 THREE.Math.randFloat(400, 800),
@@ -63,10 +61,10 @@ class WaterDrops {
 
     constructor(scene: THREE.Scene) {
         const material = new THREE.PointsMaterial({
-            color: new THREE.Color("#31DCEC"),
+            color: new THREE.Color("#8a9ba8"),
             transparent: true,
-            opacity: 0.5,
-            size: 1.2,
+            opacity: 0.8,
+            size: 2.1,
             sizeAttenuation: true,
             map: new THREE.TextureLoader().load("/assets/sketches/drop.png"),
         });
@@ -76,7 +74,7 @@ class WaterDrops {
 
     animate(timeElapsed: number) {
         for (const vertex of this.geometry.vertices) {
-            vertex.y -= 1.5;
+            vertex.y -= 2.5;
             if (vertex.y < -60) {
                 vertex.y += 200;
             }
@@ -108,7 +106,7 @@ class Attribution extends React.Component<{}, {}> {
     }
 }
 
-const bgColor = "#10161a";
+const bgColor = "#f5f8fa";
 
 class Landscape extends ISketch {
     private get scrollTop() {
@@ -118,8 +116,8 @@ class Landscape extends ISketch {
     elements = [<Attribution />];
     public events = {
         mousemove: (event: JQuery.Event) => {
-            this.mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-            this.mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+            this.mouseX = event.clientX || (event.originalEvent as MouseEvent).layerX;
+            this.mouseY = event.clientY || (event.originalEvent as MouseEvent).layerY;
         },
     };
     private mouseX = 0;
@@ -198,23 +196,27 @@ class Landscape extends ISketch {
     }
 
     private initLights(scene: THREE.Scene) {
-        // const directional = new DirectionalLight("rgb(208, 220, 239)", 1);
-        const directional = new THREE.DirectionalLight("rgb(255, 255, 255)", 0.25);
+        const directional = new THREE.DirectionalLight("#ffffff", 0.50);
         directional.position.set(1, 1, 1);
         scene.add(directional);
 
-        const ambient = new THREE.AmbientLight(new THREE.Color("rgb(131, 240, 252)"), 0.15);
+        const ambient = new THREE.AmbientLight(new THREE.Color("#f5f8fa"), 0.50);
         scene.add(ambient);
     }
 
+    private t: number = 0;
     animate(millisElapsed: number) {
         const { camera } = this;
-        camera.position.x = -23 + THREE.Math.mapLinear(this.mouseX, 0, this.canvas.width, 5, -5);
-        camera.position.y = -1.8 + THREE.Math.mapLinear(this.mouseY, 0, this.canvas.height, -2, 2);
-        // // camera.position.y = 10;
-        // camera.position.z = lerp(camera.position.z, 148 + this.scrollTop / 100, 0.1);
-        camera.lookAt(new THREE.Vector3());
-        this.ground.animate(this.timeElapsed);
+        const targetPos = new THREE.Vector3(
+            -23 + THREE.Math.mapLinear(this.mouseX, 0, this.canvas.width, -100, 100),
+            -1.8 + THREE.Math.mapLinear(this.mouseY, 0, this.canvas.height, 200, -40),
+            148 + this.scrollTop / 100,
+        );
+        camera.position.lerp(targetPos, 0.5);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        const targetT = this.scrollTop / 2000;
+        this.t = this.t * 0.85 + targetT * 0.15;
+        this.ground.animate(this.timeElapsed, this.t);
         this.water.animate(this.timeElapsed);
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();

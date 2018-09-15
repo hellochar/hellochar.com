@@ -10,9 +10,11 @@ import { Link } from "react-router-dom";
 import { ISketch, SketchAudioContext, SketchConstructor, UI_EVENTS } from "./sketch";
 
 const $window = $(window);
+const $body = $(document.body);
 const HAS_SOUND = true;
 
 export interface ISketchComponentProps extends React.DOMAttributes<HTMLDivElement> {
+    eventsOnBody?: boolean;
     errorElement?: JSX.Element;
     sketchClass: SketchConstructor;
 }
@@ -37,7 +39,7 @@ export type SketchStatus = SketchSuccess | SketchError | SketchLoading;
 //      firing resize events
 //      attaching ui event listeners
 //      keeping focus on the canvas
-class SketchSuccessComponent extends React.Component<{ sketch: ISketch }, {}> {
+class SketchSuccessComponent extends React.Component<{ sketch: ISketch, eventsOnBody?: boolean }, {}> {
     private frameId?: number;
     private lastTimestamp = 0;
 
@@ -52,7 +54,11 @@ class SketchSuccessComponent extends React.Component<{ sketch: ISketch }, {}> {
             if (this.props.sketch.events != null) {
                 const callback = this.props.sketch.events[eventName];
                 if (callback != null) {
-                    $canvas.on(eventName, callback);
+                    if (this.props.eventsOnBody) {
+                        $body.on(eventName, callback);
+                    } else {
+                        $canvas.on(eventName, callback);
+                    }
                 }
             }
         });
@@ -86,6 +92,20 @@ class SketchSuccessComponent extends React.Component<{ sketch: ISketch }, {}> {
         }
         this.props.sketch.renderer.dispose();
         $window.off("resize", this.handleWindowResize);
+
+        const $canvas = $(this.props.sketch.canvas);
+        (Object.keys(UI_EVENTS) as Array<keyof typeof UI_EVENTS>).forEach((eventName) => {
+            if (this.props.sketch.events != null) {
+                const callback = this.props.sketch.events[eventName];
+                if (callback != null) {
+                    if (this.props.eventsOnBody) {
+                        $body.off(eventName, callback);
+                    } else {
+                        $canvas.off(eventName, callback);
+                    }
+                }
+            }
+        });
     }
 
     private loop = (timestamp: number) => {
@@ -184,7 +204,7 @@ export class SketchComponent extends React.Component<ISketchComponentProps, ISke
         const { status } = this.state;
         if (status.type === "success") {
             // key on id to not destroy and re-create the component somehow
-            return <SketchSuccessComponent key={this.props.sketchClass.id} sketch={status.sketch} />;
+            return <SketchSuccessComponent key={this.props.sketchClass.id} sketch={status.sketch} eventsOnBody={this.props.eventsOnBody} />;
         } else if (status.type === "error") {
             const errorElement = this.props.errorElement || this.renderDefaultErrorElement(status.error.message);
             return errorElement;
