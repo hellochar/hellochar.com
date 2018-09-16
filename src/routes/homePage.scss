@@ -47,6 +47,31 @@
         font-weight: bold;
         margin: 1em 0;
     }
+
+    .work-highlight-image {
+        width: 100%;
+        max-height: 500px;
+        position: relative;
+    }
+
+    .work-highlight-sheen {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 100px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        
+        &:hover {
+            opacity: 1;
+        }
+    }
 }
 
 .contact-links {
@@ -89,4 +114,46 @@
 @media screen and (max-width: 539px) {
     .content {
     }
+}
+
+// https://jsfiddle.net/AntonTrollback/nqQc7/
+.sheen-on-hover {
+    overflow: hidden;
+}
+
+.sheen-on-hover:after {
+  content: "";
+  position: absolute;
+  top: -150%;
+  left: -210%;
+  width: 200%;
+  height: 250%;
+  opacity: 0;
+  transform: rotate(30deg);
+  
+  background: rgba(255, 255, 255, 0.13);
+  background: linear-gradient(
+    to right, 
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.13) 77%,
+    rgba(255, 255, 255, 0.5) 92%,
+    rgba(255, 255, 255, 0.0) 100%
+  );
+}
+
+/* Hover state - trigger effect */
+
+.sheen-on-hover:hover:after {
+  opacity: 1;
+  top: -50%;
+  left: -30%;
+  transition-property: left, top, opacity;
+  transition-duration: 0.5s, 0.5s, 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Active state */
+
+.sheen-on-hover:active:after {
+  opacity: 0;
 }

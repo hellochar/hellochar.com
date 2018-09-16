@@ -8,6 +8,7 @@ import FaFacebookOfficial = require("react-icons/lib/fa/facebook-official");
 import FaGithub = require("react-icons/lib/fa/github");
 import FaInstagram = require("react-icons/lib/fa/instagram");
 import FaLinkedInSquare = require("react-icons/lib/fa/linkedin-square");
+import FaPlay = require("react-icons/lib/fa/play");
 import FaTwitter = require("react-icons/lib/fa/twitter");
 
 import Hero from "./hero";
@@ -154,7 +155,14 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     <Link className="work-highlight-name" to={linkUrl}>{name}</Link>
                 </figcaption>
                 <LazyLoad height={500} offset={200} once>
-                    <Link to={linkUrl}><img className="full-width" src={imageUrl} /></Link>
+                    <Link to={linkUrl}>
+                        <div className="work-highlight-image">
+                            <img className="full-width" src={imageUrl} />
+                            <div className="work-highlight-sheen sheen-on-hover">
+                                <FaPlay />
+                            </div>
+                        </div>
+                        </Link>
                 </LazyLoad>
             </figure>
         );
