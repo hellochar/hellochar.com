@@ -11,13 +11,21 @@ noise.octaveNum = 3;
 
 class Ground {
     private geom = (() => {
+        // const geom = new THREE.PlaneBufferGeometry(1000, 1000, 100, 100);
+        // geom.rotateX(-Math.PI / 2);
+
+        // const geom = new THREE.SphereBufferGeometry(50, 100, 100);
+
+        // const geom = new THREE.CylinderBufferGeometry(50, 50, 500, 20, 100, true);
+        // geom.rotateZ(-Math.PI / 2);
+
         const geom = new THREE.PlaneBufferGeometry(1000, 1000, 100, 100);
-        geom.rotateX(-Math.PI / 2);
 
         return geom;
     })();
 
     private positions = this.geom.getAttribute("position") as THREE.Float32BufferAttribute;
+    private mesh: THREE.Mesh;
 
     constructor(private landscape: Landscape, scene: THREE.Scene) {
         const mat = new THREE.MeshPhongMaterial({
@@ -26,22 +34,39 @@ class Ground {
             side: THREE.DoubleSide,
             color: new THREE.Color("#ebf1f5"),
         });
-        const mesh = new THREE.Mesh(this.geom, mat);
-        mesh.position.y -= 50;
-        scene.add(mesh);
+        this.mesh = new THREE.Mesh(this.geom, mat);
+        // mesh.position.y -= 50;
+        scene.add(this.mesh);
     }
 
     animate(timeElapsed: number, t: number) {
         const { positions } = this;
-        const heightScale = THREE.Math.mapLinear(THREE.Math.smootherstep(timeElapsed, 2000, 8000), 0, 1, 0, 35);
+        const heightScale = THREE.Math.mapLinear(THREE.Math.smootherstep(timeElapsed, 0, 6000), 0, 1, 0, 500);
+        // const heightScale = 12;
         for (let i = 0; i < positions.count; i++) {
             const x = positions.getX(i);
-            const z = positions.getZ(i);
-            const wantedY = (noise.simplex3(x / 80, z / 80, t) + 0.5) * heightScale * this.landscape.getRockiness(x, z) - heightScale / 2;
-            positions.setY(i, wantedY);
+            const y = positions.getY(i);
+
+            // const yNorm = y / length;
+            // const zNorm = z / length;
+
+            // const yzVec = new THREE.Vector2(yNorm, zNorm);
+            // yzVec.rotateAround(new THREE.Vector2(), t);
+
+            // const wantedLength = 25 + THREE.Math.mapLinear(noise.simplex3(x / 80, yNorm, zNorm), -1, 1, -heightScale, heightScale);
+            const wantedLength = -500 + THREE.Math.mapLinear(noise.simplex3(Math.floor(x / 80), Math.floor(y / 80), t), -1, 1, 0, heightScale);
+
+            // const wantedY = (noise.simplex3(x / 80, z / 80, t) + 0.5) * heightScale * this.landscape.getRockiness(x, z) - heightScale / 2;
+            // positions.setY(i, wantedY);
+
+            // positions.setXYZ(i, xNorm * wantedLength, yNorm * wantedLength, zNorm * wantedLength);
+
+            // positions.setY(i, yNorm * wantedLength);
+            positions.setZ(i, wantedLength);
         }
         positions.needsUpdate = true;
         this.geom.computeVertexNormals();
+        // this.mesh.rotation.x = t;
     }
 }
 
@@ -125,7 +150,6 @@ class Landscape extends ISketch {
     private ground!: Ground;
     private scene = new THREE.Scene();
     private camera!: THREE.PerspectiveCamera;
-    private tree01?: THREE.Object3D;
     private fog = new THREE.FogExp2(bgColor, 0.004);
     private water!: WaterDrops;
     private composer!: THREE.EffectComposer;
@@ -139,19 +163,19 @@ class Landscape extends ISketch {
         // this.loadAndInitTrees();
         this.water = new WaterDrops(this.scene);
         this.initComposer();
-        this.initAudio();
+        // this.initAudio();
     }
 
-    private initAudio() {
-        const rain = new AudioClip({
-            autoplay: true,
-            loop: true,
-            context: this.audioContext,
-            srcs: ["/assets/audio/light-rain-and-thunder-sounds.mp3"],
-            volume: 0.5,
-        });
-        rain.getNode().connect(this.audioContext.gain);
-    }
+    // private initAudio() {
+        // const rain = new AudioClip({
+        //     autoplay: true,
+        //     loop: true,
+        //     context: this.audioContext,
+        //     srcs: ["/assets/audio/light-rain-and-thunder-sounds.mp3"],
+        //     volume: 0.5,
+        // });
+        // rain.getNode().connect(this.audioContext.gain);
+    // }
 
     private initComposer() {
         this.composer = new THREE.EffectComposer(this.renderer);
@@ -217,7 +241,8 @@ class Landscape extends ISketch {
         const targetT = this.scrollTop / 2000;
         this.t = this.t * 0.85 + targetT * 0.15;
         this.ground.animate(this.timeElapsed, this.t);
-        this.water.animate(this.timeElapsed);
+        // this.fog.density = THREE.Math.mapLinear(THREE.Math.smoothstep(this.timeElapsed, 0, 10000), 0, 1, 0.1, 0.004);
+        // this.water.animate(this.timeElapsed);
         // this.renderer.render(this.scene, this.camera);
         this.composer.render();
     }
