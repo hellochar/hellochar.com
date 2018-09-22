@@ -227,6 +227,17 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                         that water into sugar, which is required to upkeep your plant, keep expanding, and finally load your fruit. <b>You win
                         the game by building and loading the Fruit with 1000 sugar (you can only build one fruit per game).</b>
                     </p>
+                    <h2>Tips</h2>
+                    <p>
+                    <ol>
+                        <li>Click around to see the different properties of each tile.</li>
+                        <li>Build leaves early.</li>
+                        <li>Leaves higher up have better water/sugar ratios, determined by the co2 percentage in the air.</li>
+                        <li>Explore underground for water reservoires and Fountains.</li>
+                        <li>Build transports to carry water back up the plant.</li>
+                        <li>You can scroll out infinitely far.</li>
+                    </ol>
+                    </p>
                     <h3>You</h3>
                     <p>
                         You can carry max {PLAYER_MAX_INVENTORY} resources, and you automatically suck in any resources you're standing over.
@@ -295,17 +306,6 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <p>
                         You can only build one Fruit, and it is the goal of the game to fill it up with resources. Fruit has up to 1000 sugar storage
                         and aggressively pulls in every available sugar in its surrounding vicinity.
-                    </p>
-                    <h2>Tips</h2>
-                    <p>
-                    <ol>
-                        <li>Click around to see the different properties of each tile.</li>
-                        <li>You can scroll out infinitely far.</li>
-                        <li>Build leaves early.</li>
-                        <li>Leaves higher up have better water/sugar ratios, determined by the co2 percentage in the air.</li>
-                        <li>Explore underground for water reservoires and Fountains.</li>
-                        <li>Build transports to carry water back up the plant.</li>
-                    </ol>
                     </p>
                     {this.renderCredit()}
                 </div>
