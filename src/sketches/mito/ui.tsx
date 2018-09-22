@@ -222,19 +222,16 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                         Play
                     </div>
                     <p>
-                        Mito is a game where you play the single cell responsible for the growth and success of a plant-based life form.
-                        Build cell Tissue to expand your reach. Build Roots underground to suck up water nearby. Build Leaves to convert
-                        that water into sugar, which is required to upkeep your plant, keep expanding, and finally load your fruit. <b>You win
-                        the game by building and loading the Fruit with 1000 sugar (you can only build one fruit per game).</b>
-                    </p>
-                    <h2>Tips</h2>
-                    <p>
                     <ol>
+                        <li>Build Tissue to expand your reach (press t and walk into empty space).</li>
+                        <li>Build Roots (press r) underground to suck up adjacent water.</li>
+                        <li>Build Leaves (press l) above ground and drop water (press 1) to convert water into sugar.</li>
+                        <li><b>Win the game by building and loading the Fruit with 1000 sugar.</b></li>
                         <li>Click around to see the different properties of each tile.</li>
                         <li>Build leaves early.</li>
                         <li>Leaves higher up have better water/sugar ratios, determined by the co2 percentage in the air.</li>
                         <li>Explore underground for water reservoires and Fountains.</li>
-                        <li>Build transports to carry water back up the plant.</li>
+                        <li>Build transports (capital T) to carry water back up the plant.</li>
                         <li>You can scroll out infinitely far.</li>
                     </ol>
                     </p>

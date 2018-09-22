@@ -68,6 +68,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     private renderWork() {
         return (
             <section className="content-section work" id="work">
+                { this.renderHighlight("Mito", "/assets/images/mito_cover.png") }
                 { this.renderHighlight("Flame", "/assets/images/flame.jpg") }
                 { this.renderHighlight("Line", "/assets/images/gravity4_cropped.jpg") }
                 { this.renderHighlight("Dots", "/assets/images/dots2.jpg") }
