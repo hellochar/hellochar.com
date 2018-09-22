@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Route, Switch } from "react-router-dom";
+import { Redirect, Route, Switch } from "react-router-dom";
 
 import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
@@ -64,6 +64,7 @@ const SlidesProgrammerCC = () => {
 
 export const Routes = () => (
     <Switch>
+        <Redirect from="/wip/mito" to="/mito" />
         { sketchRoutes }
         { wipSketchRoutes }
         <Route path="/slides/introcc" component={SlidesIntroCC} />
