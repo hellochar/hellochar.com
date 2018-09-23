@@ -137,6 +137,13 @@ class Landscape extends ISketch {
     private get scrollTop() {
         return document.documentElement.scrollTop || document.body.scrollTop;
     }
+    private handleTouch = (event: JQuery.Event) => {
+        const touch = (event.originalEvent as TouchEvent).touches[0];
+        if (touch) {
+            this.mouseX = touch.clientX || touch.screenX;
+            this.mouseY = touch.clientY || touch.screenY;
+        }
+    };
 
     elements = [<Attribution />];
     public events = {
@@ -144,6 +151,9 @@ class Landscape extends ISketch {
             this.mouseX = event.clientX || (event.originalEvent as MouseEvent).layerX;
             this.mouseY = event.clientY || (event.originalEvent as MouseEvent).layerY;
         },
+        touchmove: this.handleTouch,
+        touchstart: this.handleTouch,
+        touchend: this.handleTouch,
     };
     private mouseX = 0;
     private mouseY = 0;
@@ -164,6 +174,8 @@ class Landscape extends ISketch {
         this.water = new WaterDrops(this.scene);
         this.initComposer();
         // this.initAudio();
+        this.mouseX = this.canvas.width / 2;
+        this.mouseY = this.canvas.height / 2;
     }
 
     // private initAudio() {
