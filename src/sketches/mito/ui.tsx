@@ -54,9 +54,9 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         if (cellType === Tissue) {
             text = `Build ${cellType.displayName}`;
         } else if (cellType === Leaf || cellType === Root) {
-            text = `Build one ${cellType.displayName}`;
+            text = `Build ${cellType.displayName}`;
         } else if (cellType === Fruit) {
-            text = `Build the ${cellType.displayName}`;
+            text = `Build ${cellType.displayName}`;
         } else if (cellType === Transport) {
             text = `Lay ${cellType.displayName} underneath`;
         } else {

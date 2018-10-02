@@ -1,18 +1,12 @@
-import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
-import { Color, Geometry, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
+import { Color, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
-import { BufferAttribute } from "three";
-import { BufferGeometry } from "three";
-import { Float32BufferAttribute } from "three";
-import { LineBasicMaterial } from "three";
-import { Line } from "three";
 import devlog from "../../common/devlog";
 import lazy from "../../common/lazy";
 import { Noise } from "../../common/perlin";
-import { lerp, map } from "../../math/index";
-import { ISketch, SketchAudioContext } from "../../sketch";
+import { map } from "../../math/index";
+import { ISketch } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
@@ -226,30 +220,6 @@ const DIRECTION_VALUES_RAND = [
     shuffle(DIRECTION_VALUES.slice()),
     shuffle(DIRECTION_VALUES.slice()),
 ];
-
-// https://stackoverflow.com/a/37580979
-function permute<T>(permutation: T[]) {
-  const length = permutation.length,
-      result = [permutation.slice()],
-      c = new Array(length).fill(0);
-  let i = 1, k, p;
-
-  while (i < length) {
-    if (c[i] < i) {
-      k = i % 2 && c[i];
-      p = permutation[i];
-      permutation[i] = permutation[k];
-      permutation[k] = p;
-      ++c[i];
-      i = 1;
-      result.push(permutation.slice());
-    } else {
-      c[i] = 0;
-      ++i;
-    }
-  }
-  return result;
-}
 
 function shuffle<T>(array: T[]) {
   let currentIndex = array.length, temporaryValue, randomIndex;
@@ -874,14 +844,14 @@ class TileRenderer extends Renderer<Tile> {
     }
 
     static lineGeometry = (() => {
-        const g = new BufferGeometry();
-        g.addAttribute('position', new Float32BufferAttribute([0, 0, 0, 0, 1, 0], 3));
+        const g = new THREE.BufferGeometry();
+        g.addAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 1, 0], 3));
         return g;
     })();
 
     private makeLine(dir: Vector3, origin: Vector3, length: number, color: number) {
         // copied from https://github.com/mrdoob/three.js/blob/master/src/helpers/ArrowHelper.js
-        const line = new Line(TileRenderer.lineGeometry, new LineBasicMaterial({ color: color }));
+        const line = new THREE.Line(TileRenderer.lineGeometry, new THREE.LineBasicMaterial({ color: color }));
         line.position.copy(origin);
 
         // dir is assumed to be normalized
@@ -1122,7 +1092,7 @@ class Mito extends ISketch {
             //     this.hudRef.setState({ autoplace: this.autoplace });
             // }}
             onTryActionKey={(key) => {
-                this.tryAction(key);
+                this.tryAction(key, false);
             }}
             world={this.world}
         />,
@@ -1137,6 +1107,7 @@ class Mito extends ISketch {
     private raycaster = new THREE.Raycaster();
     public gameState: GameState = "instructions";
     public audioListener = new THREE.AudioListener();
+    private keyMap = new Set<string>();
 
     public events = {
         mousemove: (event: JQuery.Event) => {
@@ -1149,22 +1120,21 @@ class Mito extends ISketch {
                 });
             }
         },
-        click: (event: JQuery.Event) => {
+        click: () => {
             if (this.hoverRef != null) {
                 this.hoverRef.setState({
                     show: !this.hoverRef.state.show,
                 });
             }
         },
-        keypress: (event: JQuery.Event) => {
-            const key = event.key!;
-            this.tryAction(key);
-            event.stopPropagation();
-        },
         keydown: (event: JQuery.Event) => {
-            if (event.key! === "Escape") {
-                this.tryAction(event.key!);
-            }
+            const key = event.key!;
+            const isRepeatedStroke = this.keyMap.has(key);
+            this.keyMap.add(key);
+            this.tryAction(key, isRepeatedStroke);
+        },
+        keyup: (event: JQuery.Event) => {
+            this.keyMap.delete(event.key!);
         },
         wheel: (event: JQuery.Event) => {
             const e = event.originalEvent as WheelEvent;
@@ -1181,7 +1151,7 @@ class Mito extends ISketch {
         },
     };
 
-    tryAction(key: string) {
+    tryAction(key: string, isRepeatedStroke: boolean) {
         const { world } = this;
         if (key === "?") {
             this.gameState = (this.gameState === "instructions" ? "main" : "instructions");
@@ -1206,18 +1176,17 @@ class Mito extends ISketch {
                         dir: action.dir,
                     };
                     this.world.player.action = buildTransportAction;
-                } else if (!world.player.verifyMove(action)) {
+                } else if (!world.player.verifyMove(action) && !isRepeatedStroke) {
                     const buildAction: ActionBuild = {
                         type: "build",
                         cellType: this.autoplace,
                         position: this.world.player.pos.clone().add(action.dir),
                     };
                     this.world.player.action = buildAction;
-                    if (this.autoplace === Root || this.autoplace === Leaf || this.autoplace === Fruit) {
-                        this.autoplace = undefined;
-                    }
+                    this.autoplace = undefined;
                 } else {
                     this.world.player.action = action;
+                    this.autoplace = undefined;
                 }
             } else {
                 this.world.player.action = action;
@@ -1237,9 +1206,7 @@ class Mito extends ISketch {
     }
 
     public init() {
-        const { world } = this;
         hookUpAudio(this.audioContext);
-        const aspect = this.aspectRatio;
         this.camera.zoom = 1.5;
         this.camera.add(this.audioListener);
 
@@ -1277,7 +1244,6 @@ class Mito extends ISketch {
     }
 
     public updateAmbientAudio() {
-        const { world } = this;
         const yPos = this.world.player.pos.y;
         const drumVolume = map(yPos, height / 2, height, 0, 0.5);
         const stringsVolume = map(yPos, height / 2, 0, 0, 0.5);
