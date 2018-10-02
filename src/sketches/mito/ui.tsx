@@ -27,6 +27,29 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         expanded: true,
     };
 
+    public render() {
+        const isMaxed = this.state.water + this.state.sugar > PLAYER_MAX_INVENTORY - 1;
+        const isMaxedEl = <div className={`mito-inventory-maxed${isMaxed ? " is-maxed" : ""}`}>maxed</div>;
+
+        return (
+            <>
+                <div className="mito-hud">
+                    {this.renderFruitUI()}
+                    {this.renderAllBuildButtons()}
+                    {this.renderSecondEls()}
+                    {this.renderDPad()}
+                </div>
+                <div className="mito-inventory">
+                    {isMaxedEl}
+                    <div className="mito-inventory-container">
+                        {this.renderInventoryBar()}
+                        {this.renderInventory()}
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     ensureCanvasFocus(e: React.SyntheticEvent<any>) {
         e.preventDefault();
         const canvas = document.getElementsByTagName("canvas")[0];
@@ -46,10 +69,6 @@ export class HUD extends React.Component<HUDProps, HUDState> {
 
     renderBuildButton(key: string, props?: React.HTMLProps<HTMLDivElement>) {
         const cellType = BUILD_HOTKEYS[key];
-        // skip building fruit when one already exists
-        if (this.props.world.fruit != null && cellType === Fruit) {
-            return null;
-        }
         let text: string;
         if (cellType === Tissue) {
             text = `Build ${cellType.displayName}`;
@@ -58,7 +77,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         } else if (cellType === Fruit) {
             text = `Build ${cellType.displayName}`;
         } else if (cellType === Transport) {
-            text = `Lay ${cellType.displayName} underneath`;
+            text = `Lay ${cellType.displayName}`;
         } else {
             text = `Build ${cellType.displayName}`;
         }
@@ -79,11 +98,41 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         return this.renderButton(key, text, { ...props, style });
     }
 
+    renderInventory() {
+        return (
+            <div className="mito-inventory-indicator">
+                <span className="mito-inventory-water">
+                    {this.state.water} water
+                    </span>&nbsp;<span className="mito-inventory-sugar">
+                    {this.state.sugar.toFixed(2)} sugar
+                    </span>
+            </div>
+        )
+    }
+
+    renderInventoryBar() {
+        const waterPercent = this.state.water / PLAYER_MAX_INVENTORY;
+        const sugarPercent = this.state.sugar / PLAYER_MAX_INVENTORY;
+        const emptyPercent = 1 - (this.state.water + this.state.sugar) / PLAYER_MAX_INVENTORY;
+
+        const waterStyles: React.CSSProperties = { width: `${(waterPercent * 100)}%` };
+        const sugarStyles: React.CSSProperties = { width: `${(sugarPercent * 100)}%` };
+        const emptyStyles: React.CSSProperties = { width: `${(emptyPercent * 100)}%` };
+        const inventoryBar = (
+            <div className="mito-inventory-bar">
+                <div style={waterStyles} className="mito-inventory-bar-water"></div>
+                <div style={sugarStyles} className="mito-inventory-bar-sugar"></div>
+                <div style={emptyStyles} className="mito-inventory-bar-empty"></div>
+            </div>
+        );
+        return inventoryBar;
+    }
+
     renderAllBuildButtons() {
         const buttons: JSX.Element[] = [];
         for (const key in BUILD_HOTKEYS) {
             if (key === "F") {
-                // fruit is coverec by the fruit ui
+                // put fruit last, handle specially
                 continue;
             }
             const el = this.renderBuildButton(key);
@@ -91,16 +140,21 @@ export class HUD extends React.Component<HUDProps, HUDState> {
                 buttons.push(el);
             }
         }
-        return buttons;
+        if (this.props.world.fruit == null) {
+            buttons.push(this.renderBuildButton("F"));
+        }
+        return <div className="mito-hud-section mito-hud-section-build">{buttons}</div>;
     }
 
     public renderSecondEls() {
-        return [
-            this.renderButton('1', "Drop water"),
-            this.renderButton('2', "Drop sugar"),
-            this.renderButton('.', "Wait a turn"),
-            this.renderButton('?', "Instructions"),
-        ];
+        return (
+            <div className="mito-hud-section mito-hud-section-actions">
+                {this.renderButton('1', "Drop water")}
+                {this.renderButton('2', "Drop sugar")}
+                {this.renderButton('.', "Wait a turn")}
+                {this.renderButton('?', "Instructions")}
+            </div>
+        );
     }
 
     public renderDPad() {
@@ -114,7 +168,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
             }));
         }
         return (
-            <div className="d-pad">
+            <div className="mito-hud-section d-pad">
             {els}
             </div>
         );
@@ -122,44 +176,13 @@ export class HUD extends React.Component<HUDProps, HUDState> {
 
     public renderFruitUI() {
         const { world } = this.props;
-        if (world.fruit == null) {
-            return <div>No Fruit. {this.renderBuildButton("F", { style: { display: "inline-block" }})}</div>;
-        } else {
-            return <div>You bear Fruit! {world.fruit.inventory.sugar.toFixed(2)} of {1000} sugar!</div>;
-        }
-    }
-
-    public render() {
-        const hudStyles: React.CSSProperties = {
-            background: "rgba(255, 255, 255, 0.8)",
-            padding: "10px",
-        };
-        let capacitySpan: JSX.Element | null = null;
-        if (this.state.water + this.state.sugar >= PLAYER_MAX_INVENTORY) {
-            capacitySpan = <span style={{color: "black"}}> (maxed) </span>;
-        }
-        return (
-            <div className="mito-hud" style={hudStyles}>
-                <div style={{fontWeight: "bold"}}>
-                    <span className="mito-hud-water">
-                        {this.state.water} water
-                    </span>, <span className="mito-hud-sugar">
-                        {this.state.sugar.toFixed(2)} sugar
-                    </span>{capacitySpan}
+        if (world.fruit != null) {
+            return (
+                <div className="mito-hud-section">
+                You bear Fruit! {world.fruit.inventory.sugar.toFixed(2)} of {1000} sugar!
                 </div>
-                <br />
-                {this.renderFruitUI()}
-                <br />
-                {this.renderAllBuildButtons()}
-                <br />
-                {this.renderSecondEls()}
-                <br />
-                <div className="classybr" />
-                <br />
-                {this.renderDPad()}
-                <br />
-            </div>
-        );
+            );
+        }
     }
 }
 

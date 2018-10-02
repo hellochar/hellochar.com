@@ -1,6 +1,13 @@
 .mito-hud {
     text-align: initial;
-    font-size: 16px;
+    background: $light-gray5;
+    opacity: 0.95;
+    box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
+    border-bottom-right-radius: 2px;
+
+    .mito-hud-section {
+        padding: 15px 10px;
+    }
 
     .mito-hud-button {
         border-radius: 2px;
@@ -8,6 +15,7 @@
         margin: 2px;
         padding: 2px;
         cursor: pointer;
+        // box-shadow: 0 2px 6px 0 transparentize($black, 0.8);
 
         &:hover {
             border: 1px solid $black;
@@ -19,26 +27,87 @@
         }
     }
 
-    .mito-hud-water {
-        color: rgb(90, 120, 255);
-    }
-
-    .mito-hud-sugar {
-        color: rgb(52, 87, 6);
-    }
-
     .d-pad {
+        // background: $gray1;
         $size: 25px;
         display: grid;
         grid-template: $size $size #{$size} / $size $size $size;
         justify-items: stretch;
         align-items: stretch;
         justify-content: center;
+        // color: $light-gray5;
     }
 }
 
-.classybr {
-    border-bottom: 1px solid $gray3;
+.mito-inventory {
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    right: 25%;
+    display: flex;
+    flex-direction: column;
+    opacity: 0.95;
+
+    .mito-inventory-container {
+        z-index: 1;
+        padding: 10px;
+        background: hsl(111, 70%, 27%);
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+    }
+
+    .mito-inventory-indicator {
+        font-weight: bold;
+    }
+
+    .mito-inventory-water {
+        color: hsl(242, 81%, 42%);
+    }
+
+    .mito-inventory-sugar {
+        color: hsl(41, 73%, 67%);
+    }
+
+    .mito-inventory-maxed {
+        text-align: center;
+        position: absolute;
+        bottom: calc(100% - 100px);
+        // background: $light-gray5;
+        background: hsl(111, 70%, 27%);
+        font-weight: bold;
+        padding: 5px;
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+        align-self: center;
+        transition: bottom 0.2s;
+        color: $white;
+
+        &.is-maxed {
+            bottom: 100%;
+        }
+    }
+
+    .mito-inventory-bar {
+        height: 10px;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+
+        .mito-inventory-bar-water {
+            background: hsl(242, 81%, 42%);
+            transition: width 0.2s;
+        }
+
+        .mito-inventory-bar-sugar {
+            background: hsl(41, 73%, 67%);
+            transition: width 0.2s;
+        }
+
+        .mito-inventory-bar-empty {
+            box-shadow: 0 5px 6px inset rgba(0, 0, 0, 0.25);
+            transition: width 0.2s;
+        }
+    }
 }
 
 .mito-instructions {

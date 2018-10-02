@@ -1067,8 +1067,8 @@ export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
     t: Tissue,
     l: Leaf,
     r: Root,
-    F: Fruit,
     T: Transport,
+    F: Fruit,
 };
 
 export type GameState = "main" | "win" | "lose" | "instructions";
