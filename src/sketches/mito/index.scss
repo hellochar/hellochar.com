@@ -1,37 +1,64 @@
 .mito-hud {
     text-align: initial;
-    background: $light-gray5;
+    background: $white;
     opacity: 0.95;
     box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
     border-bottom-right-radius: 2px;
+    font-size: 12px;
 
     .mito-hud-section {
-        padding: 15px 10px;
+        padding: 10px 10px;
     }
 
     .mito-hud-button {
         border-radius: 2px;
-        border: 1px solid transparentize($gray3, 0.8);
-        margin: 2px;
-        padding: 2px;
+        // border: 1px solid transparentize($gray3, 0.8);
+        margin: 5px;
+        padding: 5px;
         cursor: pointer;
         // box-shadow: 0 2px 6px 0 transparentize($black, 0.8);
 
         &:hover {
-            border: 1px solid $black;
-            box-shadow: 2px 2px 2px transparentize($black, 0.8);
+            .mito-hud-button-hotkey {
+                top: -2px;
+                left: -2px;
+                box-shadow: 4px 4px 1px 0 $dark-gray1;
+            }
+        }
+
+        &:active {
+            .mito-hud-button-hotkey {
+                top: 0;
+                left: 0;
+                box-shadow: none;
+            }
         }
 
         .mito-hud-button-hotkey {
             font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            // text-decoration: underline;
+            font-size: 16px;
+            border: 1px solid $dark-gray1;
+            width: 30px;
+            height: 30px;
+            box-shadow: 2px 2px 1px 0 $dark-gray1;
+            border-radius: 5px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: left 0.2s, top 0.2s, box-shadow 0.2s;
+            margin-right: 5px;
         }
     }
 
     .d-pad {
         // background: $gray1;
-        $size: 25px;
+        // $size: 40px;
         display: grid;
-        grid-template: $size $size #{$size} / $size $size $size;
+        // grid-template: $size $size #{$size} / $size $size $size;
+        grid-template: auto auto auto / auto auto auto;
         justify-items: stretch;
         align-items: stretch;
         justify-content: center;
