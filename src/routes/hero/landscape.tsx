@@ -112,30 +112,11 @@ class WaterDrops {
     }
 }
 
-class Attribution extends React.Component<{}, {}> {
-    render() {
-        const text = this.renderAttribution();
-        return <div style={{margin: "auto auto 10px auto", color: "#8a9ba8"}}>{text}</div>
-    }
-
-    private renderAttribution() {
-        return (
-            <div style={{fontSize: "0.5em"}}>
-                <a style={{color: "#8a9ba8"}} href="http://www.orangefreesounds.com/light-rain-and-thunder-sounds/">Rain sound</a>
-                &nbsp;
-                &bull;
-                &nbsp;
-                <a style={{color: "#8a9ba8"}} href="https://www.flaticon.com/free-icon/drop_25039">Raindrop texture</a>
-            </div>
-            );
-    }
-}
-
 const bgColor = "#f5f8fa";
 
 class Landscape extends ISketch {
     private get scrollTop() {
-        return document.documentElement.scrollTop || document.body.scrollTop;
+        return (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
     }
     private handleTouch = (event: JQuery.Event) => {
         const touch = (event.originalEvent as TouchEvent).touches[0];
@@ -144,8 +125,6 @@ class Landscape extends ISketch {
             this.mouseY = touch.clientY || touch.screenY;
         }
     };
-
-    elements = [<Attribution />];
     public events = {
         mousemove: (event: JQuery.Event) => {
             this.mouseX = event.clientX || (event.originalEvent as MouseEvent).layerX;
