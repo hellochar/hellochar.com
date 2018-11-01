@@ -1,0 +1,11 @@
+<svg viewBox="-10 -10 120 120" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .name { font: bold 150px Palatino, Palatino Linotype, Palatino LT STD, Book Antiqua, serif; fill: white; text-anchor: middle; alignment-baseline: middle;  }
+  </style>
+  <rect x="-10" y="-10" width="120" height="120" fill="white" />
+  <ellipse cx="50" cy="50" rx="50" ry="50" fill="black"></ellipse>
+<!--   <ellipse cx="58" cy="42" rx="35" ry="35" fill="white" />
+   -->
+   <text x="6" y="62" class="name">X</text>
+   <text x="90" y="62" class="name">Z</text>
+</svg>
