@@ -147,10 +147,14 @@ export class LineSketch extends ISketch {
             attractor.mesh.rotation.x = 0.8; // attractor.power + 0.1;
             const scale = Math.sqrt(attractor.power) / 5;
             attractor.mesh.scale.set(scale, scale, scale);
-            if (attractor.power > 0 && attractor.power < 1400) {
-                // attractor.power += (100 - attractor.power) * 0.001;
-                attractor.power *= 1.005;
+            if (attractor.power > 0) {
+                // tend towards power 2
+                attractor.power = attractor.power * 0.5 + 2 * 0.5;
             }
+            // if (attractor.power > 0 && attractor.power < 1400) {
+            //     // attractor.power += (100 - attractor.power) * 0.001;
+            //     attractor.power *= 1.005;
+            // }
         });
 
         this.gravityShaderPass.uniforms.iMouse.value.set(this.attractors[0].x, this.renderer.domElement.height - this.attractors[0].y);
@@ -168,8 +172,8 @@ export class LineSketch extends ISketch {
         this.audioGroup.sourceLfo.frequency.setTargetAtTime(flatRatio, 0, 0.016);
         if (normalizedEntropy !== 0) {
             this.
-                // audioGroup.setFrequency(222 / normalizedEntropy);
-                audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
+                audioGroup.setFrequency(222 / normalizedEntropy);
+                // audioGroup.setFrequency(220 + 600 * normalizedAverageVel);
         }
 
         // const noiseFreq = 2000 * (Math.pow(8, normalizedVarianceLength) / 8);
@@ -218,7 +222,7 @@ export class LineSketch extends ISketch {
         const attractor = this.attractors[0];
         attractor.x = x;
         attractor.y = y;
-        attractor.power = 1;
+        attractor.power = 20;
         this.gravityShaderPass.uniforms.iMouse.value.set(x, this.renderer.domElement.height - y);
         this.returnToStartPower = 0;
     }
