@@ -135,9 +135,9 @@ class Dots extends ISketch {
         const nonzeroAttractors = attractor.power > 0 ? [attractor] : [];
         this.ps.stepParticles(nonzeroAttractors);
 
-        const { flatRatio, normalizedVarianceLength, groupedUpness } = computeStats(this.ps);
+        const { flatRatio, normalizedVarianceLength, groupedUpness, averageVel } = computeStats(this.ps);
         this.audioGroup.lfo.frequency.setTargetAtTime(flatRatio, this.audioContext.currentTime, 0.016);
-        this.audioGroup.setFrequency(111 / normalizedVarianceLength);
+        this.audioGroup.setFrequency(120 / normalizedVarianceLength * averageVel / 100 );
         this.audioGroup.setVolume(Math.max(groupedUpness - 0.05, 0));
 
         this.shader.uniforms.iMouse.value = new THREE.Vector2(mouseX / this.canvas.width, (this.canvas.height - mouseY) / this.canvas.height);

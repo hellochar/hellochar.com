@@ -15,7 +15,7 @@ export function createAudioGroup(audioContext: SketchAudioContext) {
     const source1 = (() => {
         const node = audioContext.createOscillator();
         node.frequency.setValueAtTime(detuned(BASE_FREQUENCY / 2, 2), 0);
-        node.type = "square";
+        node.type = "triangle";
         node.start(0);
 
         const gain = audioContext.createGain();
@@ -27,7 +27,7 @@ export function createAudioGroup(audioContext: SketchAudioContext) {
     const source2 = (() => {
         const node = audioContext.createOscillator();
         node.frequency.setValueAtTime(BASE_FREQUENCY, 0);
-        node.type = "sawtooth";
+        node.type = "triangle";
         node.start(0);
 
         const gain = audioContext.createGain();
@@ -50,7 +50,7 @@ export function createAudioGroup(audioContext: SketchAudioContext) {
     lfo.connect(lfoGain);
 
     const filter = audioContext.createBiquadFilter();
-    filter.type = "bandpass";
+    filter.type = "lowpass";
     filter.frequency.setValueAtTime(0, 0);
     filter.Q.setValueAtTime(5.18, 0);
 
