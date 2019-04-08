@@ -9,10 +9,9 @@ export class Basic extends ISketch {
     public scene = new THREE.Scene();
     public camera!: THREE.PerspectiveCamera;
     public geom = this.createNoiseTerrainGeometry();
-    public mat = new THREE.MeshStandardMaterial({
+    // public mat = new THREE.MeshStandardMaterial({
+    public mat = new THREE.MeshLambertMaterial({
         color: "brown",
-        roughness: 1,
-        metalness: 0.01,
         side: THREE.DoubleSide,
     });
     public mesh = (() => {
@@ -32,6 +31,7 @@ export class Basic extends ISketch {
         for (const vertex of geom.vertices) {
             const {x, z} = vertex;
             vertex.y = noise.octaveSimplex2(x / (height * 1), z / (height * 1)) * height / 8;
+            vertex.y += (x - z) > 0 ? 20 : -20;
         }
         return geom;
     }
@@ -44,7 +44,7 @@ export class Basic extends ISketch {
         this.renderer.toneMappingWhitePoint = 1.1;
 
         this.camera = new THREE.PerspectiveCamera(60, 1 / this.aspectRatio, 10, 5000);
-        this.camera.position.set(0, 200, 340);
+        this.camera.position.set(0, 50, 70);
         this.camera.lookAt(0, 0, 0);
 
         this.composer = new THREE.EffectComposer(this.renderer);
@@ -77,28 +77,30 @@ export class Basic extends ISketch {
 
         this.scene.add(this.mesh);
 
-        const light1 = new THREE.DirectionalLight("#f5f8fa", 0.8);
-        light1.position.set(0.2, 1, 0.3).setLength(1000);
+        const light1 = new THREE.DirectionalLight("#f5f8fa", 1.2);
+        light1.position.set(0.2, 1.0, 0.3).setLength(300);
         light1.target = this.scene;
         light1.castShadow = true;
 
-        light1.shadow.mapSize.width = 2048 * 2;
+        light1.shadow.mapSize.width = 2048 * 1;
         light1.shadow.mapSize.height = 2048 * 2;
 
-        light1.shadow.bias = 0.000;
+        light1.shadow.bias = 0.0001;
         light1.shadow.radius = 1.5; // 1 is normal; 1.5 makes it a bit blurrier
         light1.shadow.camera.near = 100;
-        light1.shadow.camera.far = 2000;
-        light1.shadow.camera.left = -1000;
-        light1.shadow.camera.right = 1000;
-        light1.shadow.camera.top = 1000;
-        light1.shadow.camera.bottom = -1000;
+        light1.shadow.camera.far = 500;
+        light1.shadow.camera.left = -180;
+        light1.shadow.camera.right = 180;
+        light1.shadow.camera.top = 180;
+        light1.shadow.camera.bottom = -180;
         light1.shadow.camera.updateProjectionMatrix();
+        light1.shadow.camera.visible = true;
+        (window as any).light1 = light1;
 
         this.scene.add(light1);
 
-        // this.scene.add(new THREE.DirectionalLightHelper(light1));
-        // this.scene.add(new THREE.CameraHelper(light1.shadow.camera));
+        this.scene.add(new THREE.DirectionalLightHelper(light1));
+        this.scene.add(new THREE.CameraHelper(light1.shadow.camera));
 
         this.scene.add(new THREE.AmbientLight("#182026", 3));
 
@@ -116,7 +118,7 @@ export class Basic extends ISketch {
         sky.material.uniforms.sunPosition.value.copy(light1.position);
         this.scene.add(sky);
 
-        this.scene.add(new THREE.AxesHelper(100));
+        // this.scene.add(new THREE.AxesHelper(100));
 
         const path = simulateSingleErosionParticle(this.geom);
         this.geom.verticesNeedUpdate = true;
@@ -129,18 +131,29 @@ export class Basic extends ISketch {
         // }
     }
 
+    private matLine = new THREE.LineBasicMaterial({ color: "white" });
+
     public animate(millisElapsed: number) {
         let path: any;
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 500 - this.frameCount; i++) {
             path = simulateSingleErosionParticle(this.geom);
         }
+        this.geom.verticesNeedUpdate = true;
+
+        // this.geom.computeFlatVertexNormals();
+        // this.geom.computeVertexNormals();
+
+        // if (this.frameCount % 60 === 0) {
+        //     console.log(lostSoil);
+        // }
+
         // if (this.frameCount % 60 === 0) {
         //     console.table(buckets);
         // }
 
         // const g = new THREE.Geometry();
         // g.vertices.push(...path);
-        // this.scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color: "white" })));
+        // this.scene.add(new THREE.Line(g, this.matLine));
 
         // const g = new THREE.SphereGeometry(1, 10, 10);
         // const m = new THREE.MeshNormalMaterial();
@@ -149,7 +162,8 @@ export class Basic extends ISketch {
         //     sphere.position.copy(v);
         //     this.scene.add(sphere);
         // }
-        this.geom.verticesNeedUpdate = true;
+        // this.geom.computeFaceNormals();
+        // this.geom.computeFlatVertexNormals();
         this.controls.update();
         this.composer.render();
     }
@@ -187,12 +201,17 @@ function simulateSingleErosionParticle(geom: THREE.Geometry) {
     // gets and sets are bilinear.
     for (let i = 0; i < 100; i++) {
         if (position.x < 1 || position.y < 1 || position.x > height - 2 || position.y > height - 2) {
-            deposit(geom, position.x, position.y, 99999, collectedSoil);
+            collectedSoil -= deposit(geom, position.x, position.y, 99999, collectedSoil);
+            // collectedSoil -= deposit(geom, height / 2, height / 2, 999999, collectedSoil);
+            // collectedSoil -= deposit(geom, THREE.Math.randFloat(0, height), THREE.Math.randFloat(0, height),
+            //     999999, collectedSoil);
             break;
         }
         // compute force
+        // TODO these are introducing a bias
         // bilinearSlope(force, geom, position.x, position.y);
-        gridGradient(force, geom, Math.floor(position.x), Math.floor(position.y));
+        gridGradient(force, geom, Math.round(position.x), Math.round(position.y));
+
         const angleBucket = (Math.floor(THREE.Math.radToDeg(force.angle()) / 10) * 10).toFixed(0);
         buckets[angleBucket] = (buckets[angleBucket] || 0) + 1;
         // console.log();
@@ -240,7 +259,10 @@ function simulateSingleErosionParticle(geom: THREE.Geometry) {
 
             // todo: maybe change speed to be e.g. tanh from 0 to 1
             const speed = velocity.length(); // e.g. 5
-            const erosionSpeed = 100;
+            // if (speed > 1) {
+            //     speed = 0;
+            // }
+            const erosionSpeed = 8;
             const erodeAmount = speed * waterAmount * -hDiff * erosionSpeed; // e.g. 50
 
             // where do we erode?
@@ -250,15 +272,15 @@ function simulateSingleErosionParticle(geom: THREE.Geometry) {
             const amountEroded = erode(geom, position.x, position.y, hNew, erodeAmount);
             collectedSoil += amountEroded;
 
-            const amountOfSoilWaterCanCarry = 10;
+            const amountOfSoilWaterCanCarry = 1;
             const carryCapacity = waterAmount * amountOfSoilWaterCanCarry - collectedSoil;
 
-            // if (collectedSoil > carryCapacity) {
-            //     // we're overloaded; some of the soil will be deposited
-            //     const wantedDepositAmount = (collectedSoil - carryCapacity) * 0.5;
-            //     const amountDeposited = deposit(geom, position.x, position.y, hOld, wantedDepositAmount);
-            //     collectedSoil -= amountDeposited;
-            // }
+            if (collectedSoil > carryCapacity) {
+                // we're overloaded; some of the soil will be deposited
+                const wantedDepositAmount = (collectedSoil - carryCapacity) * 0.5;
+                const amountDeposited = deposit(geom, position.x, position.y, hOld, wantedDepositAmount);
+                collectedSoil -= amountDeposited;
+            }
         }
         // compute evaporation
         waterAmount = Math.max(waterAmount - 0.02, 0);
@@ -266,12 +288,15 @@ function simulateSingleErosionParticle(geom: THREE.Geometry) {
         position.copy(newPosition);
         // break early if: no more water, or not moving
         if (waterAmount <= 0) {
+            collectedSoil -= deposit(geom, position.x, position.y, 99999, collectedSoil);
             break;
         }
     }
+    lostSoil += collectedSoil;
     geom.verticesNeedUpdate = true;
     return path;
 }
+let lostSoil = 0;
 
 const vertices = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
 function erode(geom: THREE.Geometry, x: number, y: number, bottomHeight: number, erodeAmount: number): number {
@@ -287,7 +312,7 @@ function erode(geom: THREE.Geometry, x: number, y: number, bottomHeight: number,
     vertices[3].set(ix, iy1, 0);
 
     // we'll take at most 50% of the soil height
-    const erodibility = 0.99;
+    const erodibility = 0.5;
 
     let totalSoilAvailable = 0;
     for (const v of vertices) {
