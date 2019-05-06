@@ -10,7 +10,7 @@ import { ISketch } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
-import { CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, PLAYER_MAX_INVENTORY, SUNLIGHT_REINTRODUCTION } from "./params";
+import { CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, IS_REALTIME, PLAYER_MAX_INVENTORY, SUNLIGHT_REINTRODUCTION } from "./params";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
@@ -73,6 +73,9 @@ class Player {
 
     public attemptAction(action: Action) {
         switch (action.type) {
+            case "none":
+                // literally do nothing
+                break;
             case "still":
                 this.attemptStill(action);
                 break;
@@ -1256,6 +1259,11 @@ class Mito extends ISketch {
         if (document.activeElement !== this.canvas) {
             this.canvas.focus();
         }
+        if (IS_REALTIME && this.frameCount % 3 === 0) {
+            if (world.player.action == null) {
+                this.world.player.action = { type: "none" };
+            }
+        }
         if (world.player.action != null) {
             this.world.step();
             this.gameState = this.world.checkWinLoss();
@@ -1276,10 +1284,6 @@ class Mito extends ISketch {
 
             this.updateAmbientAudio();
         }
-        // if (world.player.action == null) {
-        //     this.world.player.action = { type: "still" };
-        // }
-        // this.world.step();
         // this.world.entities().forEach((entity) => {
         this.world.renderableEntities().forEach((entity) => {
             const renderer = this.getOrCreateRenderer(entity);

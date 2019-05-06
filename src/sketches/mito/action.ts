@@ -31,4 +31,8 @@ export interface ActionDrop {
     sugar: number;
 }
 
-export type Action = ActionStill | ActionMove | ActionBuild | ActionBuildTransport | ActionDrop;
+export interface ActionNone {
+    type: "none";
+}
+
+export type Action = ActionStill | ActionMove | ActionBuild | ActionBuildTransport | ActionDrop | ActionNone;

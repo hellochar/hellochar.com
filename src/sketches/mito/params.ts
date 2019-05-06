@@ -1,6 +1,7 @@
 import { parse } from "query-string";
 
 interface SearchParams {
+    isRealtime: string;
     cellEnergyMax: string;
     tissueInventoryCapacity: string;
     leafReactionRate: string;
@@ -12,6 +13,8 @@ interface SearchParams {
     maxResources: string;
 }
 const params: SearchParams = parse(location.search);
+
+export const IS_REALTIME = Boolean(params.isRealtime) || false;
 
 export const CELL_ENERGY_MAX = Number(params.cellEnergyMax) || 2000;
 export const ENERGY_TO_SUGAR_RATIO = Number(params.cellEnergyMax) || 2000;
