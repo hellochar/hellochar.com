@@ -1,20 +1,10 @@
 import { Vector2 } from "three";
-import * as THREE from "three";
 
 import { Noise } from "../../common/perlin";
 import { map } from "../../math/index";
-import { DIRECTIONS, Entity, height, width, World } from "./index";
-import Mito from "./index";
+import { DIRECTIONS, height, width, World } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
-
-export const CELL_ENERGY_MAX = 2000;
-export const ENERGY_TO_SUGAR_RATIO = 2000;
-export const CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
-
-export const SOIL_MAX_WATER = 20;
-export const TISSUE_INVENTORY_CAPACITY = 6;
-export const LEAF_MAX_CHANCE = 0.02;
-export const WATER_DIFFUSION_RATE = 0.01;
+import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE } from "./params";
 
 export interface HasEnergy {
     energy: number;
@@ -154,7 +144,6 @@ export class DeadCell extends Tile {
     static displayName = "Dead Cell";
 }
 
-export const FOUNTAINS_TURNS_PER_WATER = 10;
 export class Fountain extends Soil {
     static displayName = "Fountain";
     private cooldown = 0;
@@ -334,9 +323,9 @@ export class Cell extends Tile implements HasEnergy {
         const aboveLeft = tileNeighbors.get(DIRECTIONS.nw)!;
         const aboveRight = tileNeighbors.get(DIRECTIONS.ne)!;
 
-        this.droopY += 0.03;
+        this.droopY += DROOP_PER_TURN;
         if (this.energy < CELL_ENERGY_MAX / 2) {
-            this.droopY += 0.03;
+            this.droopY += DROOP_PER_TURN;
         }
 
         let hasSupportBelow = false;
@@ -489,14 +478,17 @@ export class Fruit extends Cell {
 export class Transport extends Tissue {
     static displayName = "Transport";
     public dir!: Vector2;
+    private cooldown = 0;
 
     step() {
+        this.cooldown -= 1;
         // transport hungers at double speed
         this.energy -= 1;
         super.step();
         const targetTile = this.world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
-        if (targetTile instanceof Cell && hasInventory(targetTile)) {
+        if (targetTile instanceof Cell && hasInventory(targetTile) && this.cooldown <= 0) {
             this.inventory.give(targetTile.inventory, 1, 0);
+            this.cooldown += TRANSPORT_TURNS_PER_MOVE;
         }
     }
 }

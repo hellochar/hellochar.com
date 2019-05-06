@@ -1,10 +1,11 @@
 import * as React from "react";
 
-import { Action } from "./action";
-import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, DIRECTION_NAMES, GameState, PLAYER_MAX_INVENTORY, World } from "./index";
+import { hookUpAudio } from "./audio";
+import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, GameState, World } from "./index";
 import Mito from "./index";
 import { hasInventory } from "./inventory";
-import { Air, Cell, CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, Fruit, hasEnergy, hasTilePairs, Leaf, LEAF_MAX_CHANCE, Root, SOIL_MAX_WATER, Tile, Tissue, TISSUE_INVENTORY_CAPACITY, Transport, WATER_DIFFUSION_RATE } from "./tile";
+import { CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, PLAYER_MAX_INVENTORY, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, WATER_DIFFUSION_RATE } from "./params";
+import { Air, Cell, Fruit, hasEnergy, Leaf, Root, Tile, Tissue, Transport } from "./tile";
 
 interface HUDProps {
     world: World;
@@ -160,7 +161,6 @@ export class HUD extends React.Component<HUDProps, HUDState> {
     public renderDPad() {
         const els: JSX.Element[] = [];
         for (const key of "qwea.dzsc".split("")) {
-            const action = ACTION_KEYMAP[key];
             els.push(this.renderButton(key, undefined, {
                 style: {
 
@@ -239,9 +239,9 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
         return (
             <div className="mito-instructions">
                 <div className="mito-instructions-container">
-                    <div className="esc" onClick={(e) => this.props.play()}>Back (Esc)</div>
+                    <div className="esc" onClick={() => this.props.play()}>Back (Esc)</div>
                     <h1>Mito</h1>
-                    <div className="play-button" onClick={(e) => this.props.play()}>
+                    <div className="play-button" onClick={() => this.props.play()}>
                         Play
                     </div>
                     <p>

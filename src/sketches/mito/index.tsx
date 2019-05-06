@@ -10,8 +10,9 @@ import { ISketch } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
 import { hasInventory, Inventory } from "./inventory";
+import { CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, PLAYER_MAX_INVENTORY, SUNLIGHT_REINTRODUCTION } from "./params";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
-import { Air, Cell, CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
+import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { GameStack, HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
@@ -30,9 +31,8 @@ export interface Constructor<T> {
     displayName: string;
 }
 
-export const PLAYER_MAX_INVENTORY = 100;
 class Player {
-    public inventory = new Inventory(PLAYER_MAX_INVENTORY, 50, 50);
+    public inventory = new Inventory(PLAYER_MAX_INVENTORY, PLAYER_MAX_INVENTORY / 2, PLAYER_MAX_INVENTORY / 2);
     public action?: Action;
     public constructor(public pos: Vector2, public world: World) {}
 
@@ -497,7 +497,7 @@ export class World {
                         sunlight = sunlight * 0.5 + ((upSunlight + rightSunlight + leftSunlight) / 3) * 0.5;
                     }
                     // have at least a bit
-                    sunlight = 0.2 + sunlight * 0.8;
+                    sunlight = SUNLIGHT_REINTRODUCTION + sunlight * (1 - SUNLIGHT_REINTRODUCTION);
                     t.sunlightCached = sunlight;
                 }
             }
