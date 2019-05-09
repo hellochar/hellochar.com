@@ -4,7 +4,7 @@ import { Noise } from "../../common/perlin";
 import { map } from "../../math/index";
 import { DIRECTIONS, height, width, World } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
-import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE } from "./params";
+import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE } from "./params";
 
 export interface HasEnergy {
     energy: number;
@@ -426,9 +426,18 @@ export class Root extends Cell {
     static displayName = "Root";
     public waterTransferAmount = 0;
     public tilePairs: Vector2[] = []; // implied that the opposite direction is connected
+    cooldown = 0;
 
     public step() {
         super.step();
+        if (this.cooldown <= 0) {
+            this.stepWaterTransfer();
+            this.cooldown += ROOT_TURNS_PER_TRANSFER;
+        }
+        this.cooldown -= 1;
+    }
+
+    private stepWaterTransfer() {
         this.waterTransferAmount = 0;
         this.tilePairs = [];
         const neighbors = this.world.tileNeighbors(this.pos);
@@ -437,8 +446,6 @@ export class Root extends Cell {
             if (tile instanceof Soil &&
                 oppositeTile instanceof Tissue) {
                 this.tilePairs.push(dir);
-                const soilWater = tile.inventory.water;
-                const tissueWater = oppositeTile.inventory.water;
                 // const transferAmount = Math.ceil(Math.max(0, soilWater - tissueWater) / 2);
                 if (tile.inventory.water > 0) {
                     const {water: transferAmount} = tile.inventory.give(oppositeTile.inventory, 1, 0);
@@ -450,11 +457,6 @@ export class Root extends Cell {
                 }
             }
         }
-        // const tissueNeighbors = Array.from(neighbors.values()).filter((e) => e instanceof Tissue) as Tissue[];
-        // const soilNeighbors = Array.from(neighbors.values()).filter((e) => e instanceof Soil) as Soil[];
-        // for (const soil of soilNeighbors) {
-
-        // }
     }
 }
 
@@ -478,18 +480,18 @@ export class Fruit extends Cell {
 export class Transport extends Tissue {
     static displayName = "Transport";
     public dir!: Vector2;
-    private cooldown = 0;
+    public cooldown = 0;
 
     step() {
-        this.cooldown -= 1;
         // transport hungers at double speed
         this.energy -= 1;
         super.step();
         const targetTile = this.world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
         if (targetTile instanceof Cell && hasInventory(targetTile) && this.cooldown <= 0) {
-            this.inventory.give(targetTile.inventory, 1, 0);
+            this.inventory.give(targetTile.inventory, 1, 1);
             this.cooldown += TRANSPORT_TURNS_PER_MOVE;
         }
+        this.cooldown -= 1;
     }
 }
 

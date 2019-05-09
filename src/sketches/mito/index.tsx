@@ -61,14 +61,14 @@ class Player {
         }
         this.attemptAction(this.action);
         this.action = undefined;
-        const tile = this.world.tileAt(this.pos.x, this.pos.y);
-        if (tile instanceof Transport) {
-            const action: ActionMove = {
-                type: "move",
-                dir: tile.dir,
-            };
-            this.attemptAction(action);
-        }
+        // const tile = this.world.tileAt(this.pos.x, this.pos.y);
+        // if (tile instanceof Transport && tile.cooldown <= 0) {
+        //     const action: ActionMove = {
+        //         type: "move",
+        //         dir: tile.dir,
+        //     };
+        //     this.attemptAction(action);
+        // }
     }
 
     public attemptAction(action: Action) {
@@ -152,7 +152,8 @@ class Player {
 
         const waterCost = 1;
         const sugarCost = CELL_SUGAR_BUILD_COST;
-        if (!(targetTile instanceof cellType) &&
+        const tileAlreadyExists = targetTile instanceof cellType && !((cellType as any) === Transport && targetTile instanceof Transport);
+        if (!tileAlreadyExists &&
             !(targetTile instanceof Rock) &&
             this.inventory.water >= waterCost &&
             this.inventory.sugar >= sugarCost) {
@@ -177,6 +178,13 @@ class Player {
             if (this.world.fruit == null && newCell instanceof Fruit) {
                 this.world.fruit = newCell;
             }
+            if (newCell instanceof Tissue) {
+                // move into the tissue cell
+                this.attemptMove({
+                    type: "move",
+                    dir: action.position.clone().sub(this.pos),
+                });
+            }
         }
     }
 
@@ -185,6 +193,11 @@ class Player {
         if (newCell != null) {
             newCell.dir = action.dir;
             this.world.setTileAt(action.position, newCell);
+            // move into the next cell
+            this.attemptMove({
+                type: "move",
+                dir: action.dir,
+            });
         }
     }
 
@@ -1186,10 +1199,12 @@ class Mito extends ISketch {
                         position: this.world.player.pos.clone().add(action.dir),
                     };
                     this.world.player.action = buildAction;
-                    this.autoplace = undefined;
+                    if (this.autoplace !== Tissue) {
+                        this.autoplace = undefined;
+                    }
                 } else {
                     this.world.player.action = action;
-                    this.autoplace = undefined;
+                    // this.autoplace = undefined;
                 }
             } else {
                 this.world.player.action = action;
@@ -1254,6 +1269,27 @@ class Mito extends ISketch {
         strings.gain.gain.value = Math.max(0, stringsVolume);
     }
 
+    public worldStepAndUpdateRenderers() {
+        this.world.step();
+        this.gameState = this.world.checkWinLoss();
+
+        const oldEntities = Array.from(this.renderers.keys());
+        // delete the renderers for entities that have been removed since last render
+        // this is the performance bottleneck, it's O(n^2)
+        const renderableEntities = this.world.renderableEntities();
+        const removedEntities = oldEntities.filter((e) => renderableEntities.indexOf(e) === -1);
+        for (const e of removedEntities) {
+            const renderer = this.renderers.get(e);
+            if (renderer == null) {
+                throw new Error(`Couldn't find renderer for ${e}!`);
+            }
+            renderer.destroy();
+            this.renderers.delete(e);
+        }
+
+        this.updateAmbientAudio();
+    }
+
     public animate() {
         const { world } = this;
         if (document.activeElement !== this.canvas) {
@@ -1263,26 +1299,9 @@ class Mito extends ISketch {
             if (world.player.action == null) {
                 this.world.player.action = { type: "none" };
             }
-        }
-        if (world.player.action != null) {
-            this.world.step();
-            this.gameState = this.world.checkWinLoss();
-
-            const oldEntities = Array.from(this.renderers.keys());
-            // delete the renderers for entities that have been removed since last render
-            // this is the performance bottleneck, it's O(n^2)
-            const renderableEntities = this.world.renderableEntities();
-            const removedEntities = oldEntities.filter((e) => renderableEntities.indexOf(e) === -1);
-            for (const e of removedEntities) {
-                const renderer = this.renderers.get(e);
-                if (renderer == null) {
-                    throw new Error(`Couldn't find renderer for ${e}!`);
-                }
-                renderer.destroy();
-                this.renderers.delete(e);
-            }
-
-            this.updateAmbientAudio();
+            this.worldStepAndUpdateRenderers();
+        } else if (world.player.action != null) {
+            this.worldStepAndUpdateRenderers();
         }
         // this.world.entities().forEach((entity) => {
         this.world.renderableEntities().forEach((entity) => {

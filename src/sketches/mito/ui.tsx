@@ -389,7 +389,7 @@ export class TileHover extends React.Component<{}, HoverState> {
             return <div className="hover" style={style}>Unknown</div>;
         }
 
-        const spans = [this.energyInfo(tile), this.inventoryInfo(tile), this.cellInfo(tile), this.leafInfo(tile), this.airInfo(tile)];
+        const spans = [this.energyInfo(tile), this.inventoryInfo(tile), this.cellInfo(tile), this.rootInfo(tile), this.leafInfo(tile), this.airInfo(tile)];
         const children = ([] as JSX.Element[]).concat(
             ...spans.map((span) => {
                 return span == null ? [] : [<br />, span];
@@ -402,6 +402,15 @@ export class TileHover extends React.Component<{}, HoverState> {
                 { children }
             </div>
         );
+    }
+
+    private rootInfo(tile: Tile) {
+        return tile instanceof Root ? (
+            <>
+            <div>{tile.cooldown} turns until next water suck</div>
+            <div>{tile.waterTransferAmount.toFixed(0)} water transfer per round</div>
+            </>
+        ) : null
     }
 
     private leafInfo(tile: Tile) {
