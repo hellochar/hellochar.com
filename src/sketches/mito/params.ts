@@ -6,6 +6,7 @@ interface SearchParams {
     tissueInventoryCapacity: string;
     rootTurnsPerTransfer: string;
     leafReactionRate: string;
+    leafSugarPerReaction: string;
     waterDiffusionRate: string;
     droop: string;
     fountainTurnsPerWater: string;
@@ -26,6 +27,7 @@ export const ROOT_TURNS_PER_TRANSFER = Number(params.rootTurnsPerTransfer) || 50
 export const SOIL_MAX_WATER = 20;
 export const TISSUE_INVENTORY_CAPACITY = Number(params.tissueInventoryCapacity) || 6;
 export const LEAF_MAX_CHANCE = Number(params.leafReactionRate) || 0.02;
+export const LEAF_SUGAR_PER_REACTION = Number(params.leafSugarPerReaction) || 1;
 export const WATER_DIFFUSION_RATE = Number(params.waterDiffusionRate) || 0.01;
 
 export const DROOP_PER_TURN = Number(params.droop) || 0.03;

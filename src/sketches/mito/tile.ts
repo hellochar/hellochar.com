@@ -4,7 +4,7 @@ import { Noise } from "../../common/perlin";
 import { map } from "../../math/index";
 import { DIRECTIONS, height, width, World } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
-import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE } from "./params";
+import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE } from "./params";
 
 export interface HasEnergy {
     energy: number;
@@ -399,17 +399,16 @@ export class Leaf extends Cell {
                 this.averageSpeed += speed;
                 numAir += 1;
                 if (Math.random() < speed * LEAF_MAX_CHANCE) {
-                    // transform 1 sugar this turn
-                    const wantedSugar = efficiency;
                     // const neededWater = Math.round(1 / efficiency);
-                    const neededWaterFract = 1 / efficiency;
+                    // transform 1 sugar this turn
+                    const neededWaterFract = LEAF_SUGAR_PER_REACTION / efficiency;
                     const waterLow = Math.floor(neededWaterFract);
                     const waterHigh = Math.ceil(neededWaterFract);
                     const chance = neededWaterFract - waterLow;
-                    const neededWater = Math.random() < chance ? waterLow : waterHigh;
+                    const neededWater = neededWaterFract; // Math.random() < chance ? waterLow : waterHigh;
                     const tissueWater = tissue.inventory.water;
                     if (tissueWater >= neededWater) {
-                        tissue.inventory.change(-neededWater, 1);
+                        tissue.inventory.change(-neededWater, LEAF_SUGAR_PER_REACTION);
                         this.didConvert = true;
                     }
                 }

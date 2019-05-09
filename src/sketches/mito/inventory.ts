@@ -1,3 +1,8 @@
+// floating point rounding error fix
+function fpref(x: number) {
+    return Math.floor(x * 1e12) / 1e12;
+}
+
 export class Inventory {
     constructor(
         public capacity: number,
@@ -18,7 +23,7 @@ export class Inventory {
         //      if it doesn't, scale down to the amount that is available
         let water = Math.min(amountWater, this.water);
         let sugar = Math.min(amountSugar, this.sugar);
-        const spaceNeeded = water + sugar;
+        const spaceNeeded = fpref(water + sugar);
         if (spaceNeeded > other.space()) {
             const capacity = other.space();
             // scale down the amount to give
@@ -32,14 +37,16 @@ export class Inventory {
     }
 
     public change(water: number, sugar: number) {
-        this.validate(this.water + water, this.sugar + sugar);
-        this.water += water;
-        this.sugar += sugar;
+        const newWater = fpref(this.water + water);
+        const newSugar = fpref(this.sugar + sugar);
+        this.validate(newWater, newSugar);
+        this.water = newWater;
+        this.sugar = newSugar;
     }
 
     public space() {
         const { capacity, water, sugar } = this;
-        return capacity - water - sugar;
+        return fpref(capacity - water - sugar);
     }
 
     validate(water: number = this.water, sugar: number = this.sugar) {
