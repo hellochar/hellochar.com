@@ -50,6 +50,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
                     </div>
                 </div>
                 {this.renderUIState()}
+                {this.renderAutoplacePopup()}
             </>
         );
     }
@@ -208,13 +209,26 @@ export class HUD extends React.Component<HUDProps, HUDState> {
             }
             buttons.push(this.renderButton("Esc", null));
             return (
-                <div className="expanding-ui">
+                <div className="ui-popup ui-popup-bottom">
                     <span className="build-title">Build</span>
-                    <div className="button-row">
+                    <div className="content button-row">
                         {buttons}
                     </div>
                 </div>
             )
+        }
+    }
+
+    public renderAutoplacePopup() {
+        if (this.state.autoplace) {
+            return (
+                <div className="ui-popup ui-popup-left">
+                    <div className="popup-autoplace content text">
+                        Building {this.state.autoplace.displayName}
+                        {this.renderButton("Esc", null)}
+                    </div>
+                </div>
+            );
         }
     }
 }

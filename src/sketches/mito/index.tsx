@@ -1297,6 +1297,9 @@ class Mito extends ISketch {
             // block further actions
             return;
         }
+        if (this.autoplace != null && key === "Escape") {
+            this.autoplace = undefined;
+        }
         const action = ACTION_KEYMAP[key];
         if (action != null) {
             // autoplace

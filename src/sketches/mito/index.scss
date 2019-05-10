@@ -66,21 +66,28 @@
     }
 }
 
-.expanding-ui {
+.ui-popup {
     position: absolute;
-    bottom: 25%;
-    left: 50%;
-    transform: translateX(-50%);
     animation: popIn 0.2s both;
     @keyframes popIn {
         from {
-            transform: translateX(-50%) scale(0.75);
+            transform: translate(-50%, -50%) scale(0.75);
             opacity: 0;
         }
         to {
-            transform: translateX(-50%) scale(1);
+            transform: translate(-50%, -50%) scale(1);
             opactiy: 0.95;
         }
+    }
+
+    &.ui-popup-bottom {
+        bottom: 15%;
+        left: 50%;
+    }
+
+    &.ui-popup-left {
+        left: 33%;
+        top: 50%;
     }
 
     .build-title {
@@ -90,12 +97,23 @@
         padding: 10px;
     }
 
-    .button-row {
+    .content {
         border-radius: 2px;
         background: white;
         box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
+    }
+
+    .button-row {
         display: flex;
         justify-content: center;
+    }
+
+    .text {
+        padding: 15px;
+    }
+
+    .popup-autoplace .mito-hud-button {
+        display: inline-block;
     }
 }
 
