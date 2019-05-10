@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { hookUpAudio } from "./audio";
-import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, GameState, World } from "./index";
+import { ACTION_KEYMAP, BUILD_HOTKEYS, Constructor, GameState, UIState, World } from "./index";
 import Mito from "./index";
 import { hasInventory } from "./inventory";
 import { CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, PLAYER_MAX_INVENTORY, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, WATER_DIFFUSION_RATE } from "./params";
@@ -18,6 +18,7 @@ interface HUDState {
     water: number;
     sugar: number;
     expanded?: boolean;
+    uiState: UIState;
 }
 
 export class HUD extends React.Component<HUDProps, HUDState> {
@@ -26,6 +27,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         sugar: 0,
         autoplace: undefined,
         expanded: true,
+        uiState: { type: "main" },
     };
 
     public render() {
@@ -47,6 +49,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
                         {this.renderInventory()}
                     </div>
                 </div>
+                {this.renderUIState()}
             </>
         );
     }
@@ -57,13 +60,13 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         canvas.focus();
     }
 
-    renderButton(key: string, text?: string, props?: React.HTMLProps<HTMLDivElement>) {
+    renderButton(key: string, text: string | null, props?: React.HTMLProps<HTMLDivElement>) {
         return (
             <div className="mito-hud-button mito-hud-build-item" onClick={(e) => {
                 this.props.onTryActionKey(key);
                 this.ensureCanvasFocus(e);
             }} {...props}>
-                <span className="mito-hud-button-hotkey">{key}</span>{text != null ? " - " + text : null}
+                <span className="mito-hud-button-hotkey">{key}</span>{text}
             </div>
         );
     }
@@ -96,7 +99,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
                 style.color = "red";
             }
         }
-        return this.renderButton(key, text, { ...props, style });
+        return this.renderButton(key, " - " + text, { ...props, style });
     }
 
     renderInventory() {
@@ -150,10 +153,10 @@ export class HUD extends React.Component<HUDProps, HUDState> {
     public renderSecondEls() {
         return (
             <div className="mito-hud-section mito-hud-section-actions">
-                {this.renderButton('1', "Drop water")}
-                {this.renderButton('2', "Drop sugar")}
-                {this.renderButton('.', "Wait a turn")}
-                {this.renderButton('?', "Instructions")}
+                {this.renderButton('1', " - Drop water")}
+                {this.renderButton('2', " - Drop sugar")}
+                {this.renderButton('.', " - Wait a turn")}
+                {this.renderButton('?', " - Instructions")}
             </div>
         );
     }
@@ -161,7 +164,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
     public renderDPad() {
         const els: JSX.Element[] = [];
         for (const key of "qwea.dzsc".split("")) {
-            els.push(this.renderButton(key, undefined, {
+            els.push(this.renderButton(key, null, {
                 style: {
 
                 },
@@ -182,6 +185,36 @@ export class HUD extends React.Component<HUDProps, HUDState> {
                 You bear Fruit! {world.fruit.inventory.sugar.toFixed(2)} of {1000} sugar!
                 </div>
             );
+        }
+    }
+
+    public renderUIState() {
+        if (this.state.uiState.type === "expanding") {
+            const buttons: JSX.Element[] = [];
+            for (const key in BUILD_HOTKEYS) {
+                const cellType = BUILD_HOTKEYS[key];
+                if (cellType === Fruit && this.props.world.fruit != null) {
+                    // put fruit last, handle specially
+                    continue;
+                }
+                if (cellType === Transport) {
+                    continue;
+                }
+                const el = this.renderButton(key, cellType.displayName);
+
+                if (el != null) {
+                    buttons.push(el);
+                }
+            }
+            buttons.push(this.renderButton("Esc", null));
+            return (
+                <div className="expanding-ui">
+                    <span className="build-title">Build</span>
+                    <div className="button-row">
+                        {buttons}
+                    </div>
+                </div>
+            )
         }
     }
 }

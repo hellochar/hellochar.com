@@ -10,49 +10,6 @@
         padding: 10px 10px;
     }
 
-    .mito-hud-button {
-        border-radius: 2px;
-        // border: 1px solid transparentize($gray3, 0.8);
-        margin: 5px;
-        padding: 5px;
-        cursor: pointer;
-        // box-shadow: 0 2px 6px 0 transparentize($black, 0.8);
-
-        &:hover {
-            .mito-hud-button-hotkey {
-                top: -2px;
-                left: -2px;
-                box-shadow: 4px 4px 1px 0 $dark-gray1;
-            }
-        }
-
-        &:active {
-            .mito-hud-button-hotkey {
-                top: 0;
-                left: 0;
-                box-shadow: none;
-            }
-        }
-
-        .mito-hud-button-hotkey {
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            // text-decoration: underline;
-            font-size: 16px;
-            border: 1px solid $dark-gray1;
-            width: 30px;
-            height: 30px;
-            box-shadow: 2px 2px 1px 0 $dark-gray1;
-            border-radius: 5px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            transition: left 0.2s, top 0.2s, box-shadow 0.2s;
-            margin-right: 5px;
-        }
-    }
-
     .d-pad {
         // background: $gray1;
         // $size: 40px;
@@ -63,6 +20,72 @@
         align-items: stretch;
         justify-content: center;
         // color: $light-gray5;
+    }
+}
+
+.mito-hud-button {
+    border-radius: 2px;
+    // border: 1px solid transparentize($gray3, 0.8);
+    margin: 5px;
+    padding: 5px;
+    cursor: pointer;
+    // box-shadow: 0 2px 6px 0 transparentize($black, 0.8);
+
+    &:hover {
+        .mito-hud-button-hotkey {
+            top: -2px;
+            left: -2px;
+            box-shadow: 4px 4px 1px 0 $dark-gray1;
+        }
+    }
+
+    &:active {
+        .mito-hud-button-hotkey {
+            top: 0;
+            left: 0;
+            box-shadow: none;
+        }
+    }
+
+    .mito-hud-button-hotkey {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: bold;
+        // text-decoration: underline;
+        font-size: 16px;
+        border: 1px solid $dark-gray1;
+        width: 30px;
+        height: 30px;
+        box-shadow: 2px 2px 1px 0 $dark-gray1;
+        border-radius: 5px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        transition: left 0.2s, top 0.2s, box-shadow 0.2s;
+        margin-right: 5px;
+    }
+}
+
+.expanding-ui {
+    position: absolute;
+    bottom: 25%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.95;
+
+    .build-title {
+        border-top-left-radius: 2px;
+        border-top-right-radius: 2px;
+        background: white;
+        padding: 10px;
+    }
+
+    .button-row {
+        border-radius: 2px;
+        background: white;
+        box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
+        display: flex;
+        justify-content: center;
     }
 }
 

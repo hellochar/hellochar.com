@@ -5,7 +5,7 @@ import { Color, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera,
 import devlog from "../../common/devlog";
 import lazy from "../../common/lazy";
 import { Noise } from "../../common/perlin";
-import { map } from "../../math/index";
+import { lerp, map } from "../../math/index";
 import { ISketch } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
@@ -1089,6 +1089,17 @@ export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
 
 export type GameState = "main" | "win" | "lose" | "instructions";
 
+export interface UIStateMain {
+    type: "main";
+}
+export interface UIStateExpanding {
+    type: "expanding";
+    originalAction: Action;
+    originalZoom: number;
+    target: THREE.Vector2;
+}
+export type UIState = UIStateMain | UIStateExpanding;
+
 class Mito extends ISketch {
     public readonly world = new World();
     public scene = new Scene();
@@ -1124,6 +1135,32 @@ class Mito extends ISketch {
     public gameState: GameState = "instructions";
     public audioListener = new THREE.AudioListener();
     private keyMap = new Set<string>();
+    private uiState: UIState = { type: "main" };
+
+    private enterUIStateExpanding(move: ActionMove) {
+        const originalZoom = this.uiState.type === "main" ? this.camera.zoom : this.uiState.originalZoom;
+        const target = this.world.player.pos.clone().add(move.dir);
+        this.uiState = {
+            type: "expanding",
+            originalAction: move,
+            originalZoom,
+            target,
+        };
+        if (this.hudRef) {
+            this.hudRef.setState({ uiState: this.uiState });
+        }
+    }
+
+    private resetUIState() {
+        if (this.uiState.type === "expanding") {
+            this.camera.zoom = this.uiState.originalZoom;
+            this.camera.updateProjectionMatrix();
+            this.uiState = { type: "main" };
+            if (this.hudRef) {
+                this.hudRef.setState({ uiState: this.uiState });
+            }
+        }
+    }
 
     public events = {
         mousemove: (event: JQuery.Event) => {
@@ -1173,6 +1210,26 @@ class Mito extends ISketch {
             this.gameState = (this.gameState === "instructions" ? "main" : "instructions");
             return;
         }
+        if (this.uiState.type === "expanding") {
+            if (key === "Escape") {
+                this.resetUIState();
+                return;
+            }
+            if (key in BUILD_HOTKEYS && !(BUILD_HOTKEYS[key] === Fruit && this.world.fruit != null)) {
+                const cellType = BUILD_HOTKEYS[key];
+                const buildAction: ActionBuild = {
+                    type: "build",
+                    cellType: cellType,
+                    position: this.uiState.target,
+                };
+                this.world.player.action = buildAction;
+                this.resetUIState();
+                return;
+            } else if (ACTION_KEYMAP[key] && ACTION_KEYMAP[key] !== this.uiState.originalAction) {
+                this.resetUIState();
+                return;
+            }
+        }
         if (this.gameState === "instructions") {
             if (key === "Escape") {
                 this.gameState = "main";
@@ -1206,6 +1263,9 @@ class Mito extends ISketch {
                     this.world.player.action = action;
                     // this.autoplace = undefined;
                 }
+            } else if (this.autoplace == null && action.type === "move" && !world.player.verifyMove(action)) {
+                // we attempt to move into a place we cannot
+                this.enterUIStateExpanding(action);
             } else {
                 this.world.player.action = action;
             }
@@ -1222,6 +1282,19 @@ class Mito extends ISketch {
             this.hudRef.setState({ autoplace: this.autoplace });
         }
     }
+
+    private expandingTileHighlight = (() => {
+        const mesh = new THREE.Mesh(
+            TileRenderer.geometry,
+            new THREE.MeshBasicMaterial({
+                color: "white",
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.5,
+            }),
+        );
+        return mesh;
+    })();
 
     public init() {
         hookUpAudio(this.audioContext);
@@ -1313,11 +1386,30 @@ class Mito extends ISketch {
             -this.mouse.y / this.canvas.height * 2 + 1,
         );
 
-        const target = new THREE.Vector2(
-            this.world.player.pos.x + mouseNorm.x / 2,
-            this.world.player.pos.y - mouseNorm.y / 2,
-        );
-        lerp2(this.camera.position, target, 0.3);
+        if (this.uiState.type === "main") {
+            this.scene.remove(this.expandingTileHighlight);
+            const target = new THREE.Vector2(
+                this.world.player.pos.x + mouseNorm.x / 2,
+                this.world.player.pos.y - mouseNorm.y / 2,
+            );
+            lerp2(this.camera.position, target, 0.3);
+        } else {
+            this.scene.add(this.expandingTileHighlight);
+            this.expandingTileHighlight.position.set(
+                this.uiState.target.x,
+                this.uiState.target.y,
+                1,
+            );
+            const target = new THREE.Vector2(
+                this.uiState.target.x,
+                this.uiState.target.y,
+            );
+            lerp2(this.camera.position, target, 0.3);
+
+            const targetZoom = this.uiState.originalZoom * 2;
+            this.camera.zoom = lerp(this.camera.zoom, targetZoom, 0.8);
+            this.camera.updateProjectionMatrix();
+        }
         this.renderer.render(this.scene, this.camera);
 
         // this.mouse.x = event.clientX! / this.canvas.width * 2 - 1;
