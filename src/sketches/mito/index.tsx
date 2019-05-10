@@ -585,6 +585,9 @@ class PlayerRenderer extends Renderer<Player> {
                 side: THREE.DoubleSide,
             }),
         );
+        for (const [key, mesh] of FONT_MESHES) {
+            this.mesh.add(mesh);
+        }
         devlog("created player renderer");
         lerp2(this.mesh.position, this.target.pos, 1);
         this.mesh.position.z = 2;
@@ -1087,6 +1090,46 @@ export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
     F: Fruit,
 };
 
+const fontMeshGeometry = new THREE.PlaneGeometry(1, 1);
+fontMeshGeometry.rotateX(Math.PI);
+function createFontMesh(char: string) {
+    const size = 64;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d")!;
+
+    context.fillStyle = "white";
+    context.font = `${size * 0.6}px monospace`;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(char, size / 2, size / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.magFilter = THREE.NearestFilter;
+    texture.flipY = true;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+
+    const mat = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(
+        fontMeshGeometry,
+        mat,
+    );
+    const offset = ACTION_KEYMAP[char] as ActionMove;
+    mesh.position.x = offset.dir.x;
+    mesh.position.y = offset.dir.y;
+    return mesh;
+}
+export const FONT_MESHES: Map<string, THREE.Mesh> = new Map();
+for (const char of "qweasdzc") {
+    FONT_MESHES.set(char, createFontMesh(char));
+}
+
 export type GameState = "main" | "win" | "lose" | "instructions";
 
 export interface UIStateMain {
@@ -1406,9 +1449,9 @@ class Mito extends ISketch {
             );
             lerp2(this.camera.position, target, 0.3);
 
-            const targetZoom = this.uiState.originalZoom * 2;
-            this.camera.zoom = lerp(this.camera.zoom, targetZoom, 0.8);
-            this.camera.updateProjectionMatrix();
+            // const targetZoom = this.uiState.originalZoom * 2;
+            // this.camera.zoom = lerp(this.camera.zoom, targetZoom, 0.8);
+            // this.camera.updateProjectionMatrix();
         }
         this.renderer.render(this.scene, this.camera);
 
