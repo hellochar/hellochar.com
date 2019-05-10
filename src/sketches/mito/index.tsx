@@ -107,6 +107,12 @@ class Player {
         return true;
     }
 
+    public isBuildCandidate(action: ActionMove) {
+        const target = this.pos.clone().add(action.dir);
+        const targetTile = this.world.tileAt(target.x, target.y);
+        return !this.verifyMove(action) && targetTile != null && !(targetTile instanceof Rock);
+    }
+
     public attemptMove(action: ActionMove) {
         if (this.verifyMove(action)) {
             footsteps.audio.currentTime = Math.random() * 0.05;
@@ -585,9 +591,6 @@ class PlayerRenderer extends Renderer<Player> {
                 side: THREE.DoubleSide,
             }),
         );
-        for (const [key, mesh] of FONT_MESHES) {
-            this.mesh.add(mesh);
-        }
         devlog("created player renderer");
         lerp2(this.mesh.position, this.target.pos, 1);
         this.mesh.position.z = 2;
@@ -597,6 +600,21 @@ class PlayerRenderer extends Renderer<Player> {
     update() {
         lerp2(this.mesh.position, this.target.droopPos(), 0.5);
         this.mesh.position.z = 2;
+        for (const [key, keyMesh] of MOVEMENT_KEY_MESHES) {
+            const action = ACTION_KEYMAP[key] as ActionMove;
+            const x = this.target.pos.x + action.dir.x;
+            const y = this.target.pos.y + action.dir.y;
+
+            if (this.target.isBuildCandidate(action) && this.mito.uiState.type === "main") {
+                this.scene.add(keyMesh);
+                keyMesh.position.x = x;
+                keyMesh.position.y = y;
+                keyMesh.position.z = 2;
+            } else {
+                this.scene.remove(keyMesh);
+            }
+
+        }
     }
 
     destroy() {
@@ -1099,17 +1117,17 @@ function createFontMesh(char: string) {
     canvas.height = size;
     const context = canvas.getContext("2d")!;
 
-    context.fillStyle = "white";
-    context.font = `${size * 0.6}px monospace`;
+    context.font = `${size * 0.5}px monospace`;
     context.textAlign = "center";
     context.textBaseline = "middle";
+    context.fillStyle = "white";
     context.fillText(char, size / 2, size / 2);
+    // context.strokeStyle = "black";
+    // context.strokeText(char, size / 2, size / 2);
 
     const texture = new THREE.CanvasTexture(canvas);
-    texture.magFilter = THREE.NearestFilter;
+    // texture.magFilter = THREE.NearestFilter;
     texture.flipY = true;
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
 
     const mat = new THREE.MeshBasicMaterial({
         map: texture,
@@ -1120,14 +1138,11 @@ function createFontMesh(char: string) {
         fontMeshGeometry,
         mat,
     );
-    const offset = ACTION_KEYMAP[char] as ActionMove;
-    mesh.position.x = offset.dir.x;
-    mesh.position.y = offset.dir.y;
     return mesh;
 }
-export const FONT_MESHES: Map<string, THREE.Mesh> = new Map();
+export const MOVEMENT_KEY_MESHES: Map<string, THREE.Mesh> = new Map();
 for (const char of "qweasdzc") {
-    FONT_MESHES.set(char, createFontMesh(char));
+    MOVEMENT_KEY_MESHES.set(char, createFontMesh(char));
 }
 
 export type GameState = "main" | "win" | "lose" | "instructions";
@@ -1178,11 +1193,13 @@ class Mito extends ISketch {
     public gameState: GameState = "instructions";
     public audioListener = new THREE.AudioListener();
     private keyMap = new Set<string>();
-    private uiState: UIState = { type: "main" };
+    public uiState: UIState = { type: "main" };
 
     private enterUIStateExpanding(move: ActionMove) {
-        const originalZoom = this.uiState.type === "main" ? this.camera.zoom : this.uiState.originalZoom;
         const target = this.world.player.pos.clone().add(move.dir);
+        // const targetTile = this.world.tileAt(target.x, target.y);
+        // if (!this.world.player.verifyMove(move) && targetTile != null && !(targetTile instanceof Rock)) {
+        const originalZoom = this.uiState.type === "main" ? this.camera.zoom : this.uiState.originalZoom;
         this.uiState = {
             type: "expanding",
             originalAction: move,
@@ -1306,7 +1323,7 @@ class Mito extends ISketch {
                     this.world.player.action = action;
                     // this.autoplace = undefined;
                 }
-            } else if (this.autoplace == null && action.type === "move" && !world.player.verifyMove(action)) {
+            } else if (this.autoplace == null && action.type === "move" && this.world.player.isBuildCandidate(action)) {
                 // we attempt to move into a place we cannot
                 this.enterUIStateExpanding(action);
             } else {
@@ -1449,9 +1466,9 @@ class Mito extends ISketch {
             );
             lerp2(this.camera.position, target, 0.3);
 
-            // const targetZoom = this.uiState.originalZoom * 2;
-            // this.camera.zoom = lerp(this.camera.zoom, targetZoom, 0.8);
-            // this.camera.updateProjectionMatrix();
+            const targetZoom = this.uiState.originalZoom * 2;
+            this.camera.zoom = lerp(this.camera.zoom, targetZoom, 0.8);
+            this.camera.updateProjectionMatrix();
         }
         this.renderer.render(this.scene, this.camera);
 
