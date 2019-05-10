@@ -71,7 +71,17 @@
     bottom: 25%;
     left: 50%;
     transform: translateX(-50%);
-    opacity: 0.95;
+    animation: popIn 0.2s both;
+    @keyframes popIn {
+        from {
+            transform: translateX(-50%) scale(0.75);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(-50%) scale(1);
+            opactiy: 0.95;
+        }
+    }
 
     .build-title {
         border-top-left-radius: 2px;
