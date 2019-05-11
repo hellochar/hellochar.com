@@ -22,7 +22,7 @@ export const CELL_ENERGY_MAX = Number(params.cellEnergyMax) || 2000;
 export const ENERGY_TO_SUGAR_RATIO = Number(params.cellEnergyMax) || 2000;
 export const CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
 
-export const ROOT_TURNS_PER_TRANSFER = Number(params.rootTurnsPerTransfer) || 50;
+export const ROOT_TURNS_PER_TRANSFER = Number(params.rootTurnsPerTransfer) || 1;
 
 export const SOIL_MAX_WATER = 20;
 export const TISSUE_INVENTORY_CAPACITY = Number(params.tissueInventoryCapacity) || 6;
