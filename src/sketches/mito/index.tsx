@@ -2,6 +2,7 @@ import * as React from "react";
 import * as THREE from "three";
 import { Color, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
+import { Constructor } from "../../common/constructor";
 import devlog from "../../common/devlog";
 import lazy from "../../common/lazy";
 import { Noise } from "../../common/perlin";
@@ -9,7 +10,10 @@ import { lerp, map } from "../../math/index";
 import { ISketch } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
+import { DIRECTION_VALUES } from "./directions";
 import { hasInventory, Inventory } from "./inventory";
+import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
+import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 import { CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, IS_REALTIME, PLAYER_MAX_INVENTORY, SUNLIGHT_REINTRODUCTION } from "./params";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
@@ -24,13 +28,6 @@ interface Steppable {
 function isSteppable(obj: any): obj is Steppable {
     return typeof obj.step === "function";
 }
-
-export interface Constructor<T> {
-    new(...args: any[]): T;
-    // lmao
-    displayName: string;
-}
-
 class Player {
     public inventory = new Inventory(PLAYER_MAX_INVENTORY, PLAYER_MAX_INVENTORY / 2, PLAYER_MAX_INVENTORY / 2);
     public action?: Action;
@@ -219,29 +216,6 @@ class Player {
 
 export const width = 50;
 export const height = 100;
-export const DIRECTIONS = {
-    nw: new Vector2(-1, -1),
-    w : new Vector2(-1,  0),
-    sw: new Vector2(-1, +1),
-    n : new Vector2( 0, -1),
-    // new Vector2( 0,  0),
-    s : new Vector2( 0, +1),
-    ne: new Vector2(+1, -1),
-    e : new Vector2(+1,  0),
-    se: new Vector2(+1, +1),
-};
-
-export type Directions = keyof typeof DIRECTIONS;
-
-export const DIRECTION_NAMES = Object.keys(DIRECTIONS) as Directions[];
-export const DIRECTION_VALUES: Vector2[] = DIRECTION_NAMES.map((o) => DIRECTIONS[o]);
-const DIRECTION_VALUES_RAND = [
-    shuffle(DIRECTION_VALUES.slice()),
-    shuffle(DIRECTION_VALUES.slice()),
-    shuffle(DIRECTION_VALUES.slice()),
-    shuffle(DIRECTION_VALUES.slice()),
-    shuffle(DIRECTION_VALUES.slice()),
-];
 
 function shuffle<T>(array: T[]) {
   let currentIndex = array.length, temporaryValue, randomIndex;
@@ -261,7 +235,13 @@ function shuffle<T>(array: T[]) {
 
   return array;
 }
-
+const DIRECTION_VALUES_RAND = [
+    shuffle(DIRECTION_VALUES.slice()),
+    shuffle(DIRECTION_VALUES.slice()),
+    shuffle(DIRECTION_VALUES.slice()),
+    shuffle(DIRECTION_VALUES.slice()),
+    shuffle(DIRECTION_VALUES.slice()),
+];
 export class World {
     public time: number = 0;
     public player: Player = new Player(new Vector2(width / 2, height / 2), this);
@@ -1050,99 +1030,6 @@ function createRendererFor<E extends Entity>(object: E, scene: Scene, mito: Mito
     } else {
         throw new Error(`Couldn't find renderer for ${object}`);
     }
-}
-
-export const ACTION_KEYMAP: { [key: string]: Action } = {
-    "1": {
-        type: "drop",
-        sugar: 0,
-        water: 10, // hack hack we can assume max 100 water, it's fine
-    },
-    "2": {
-        type: "drop",
-        sugar: 10,
-        water: 0, // hack hack we can assume max 100 water, it's fine
-    },
-    ".": {
-        type: "still",
-    },
-    "w": {
-        type: "move",
-        dir: DIRECTIONS.n,
-    },
-    "a": {
-        type: "move",
-        dir: DIRECTIONS.w,
-    },
-    "s": {
-        type: "move",
-        dir: DIRECTIONS.s,
-    },
-    "d": {
-        type: "move",
-        dir: DIRECTIONS.e,
-    },
-    "q": {
-        type: "move",
-        dir: DIRECTIONS.nw,
-    },
-    "e": {
-        type: "move",
-        dir: DIRECTIONS.ne,
-    },
-    "z": {
-        type: "move",
-        dir: DIRECTIONS.sw,
-    },
-    "c": {
-        type: "move",
-        dir: DIRECTIONS.se,
-    },
-};
-
-export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
-    t: Tissue,
-    l: Leaf,
-    r: Root,
-    T: Transport,
-    F: Fruit,
-};
-
-const fontMeshGeometry = new THREE.PlaneGeometry(1, 1);
-fontMeshGeometry.rotateX(Math.PI);
-function createFontMesh(char: string) {
-    const size = 64;
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const context = canvas.getContext("2d")!;
-
-    context.font = `${size * 0.5}px monospace`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillStyle = "white";
-    context.fillText(char, size / 2, size / 2);
-    // context.strokeStyle = "black";
-    // context.strokeText(char, size / 2, size / 2);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    // texture.magFilter = THREE.NearestFilter;
-    texture.flipY = true;
-
-    const mat = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        side: THREE.DoubleSide,
-    });
-    const mesh = new THREE.Mesh(
-        fontMeshGeometry,
-        mat,
-    );
-    return mesh;
-}
-export const MOVEMENT_KEY_MESHES: Map<string, THREE.Mesh> = new Map();
-for (const char of "qweasdzc") {
-    MOVEMENT_KEY_MESHES.set(char, createFontMesh(char));
 }
 
 export type GameState = "main" | "win" | "lose" | "instructions";
