@@ -6,7 +6,7 @@ import Mito from "./index";
 import { hasInventory } from "./inventory";
 import { CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, PLAYER_MAX_INVENTORY, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, WATER_DIFFUSION_RATE } from "./params";
 import { Air, Cell, Fruit, hasEnergy, Leaf, Root, Tile, Tissue, Transport } from "./tile";
-import { Constructor } from "../../common/constructor";
+import { Constructor } from "./constructor";
 import { BUILD_HOTKEYS } from "./keymap";
 
 interface HUDProps {

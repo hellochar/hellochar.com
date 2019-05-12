@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { World } from "..";
 import { Action } from "../action";
-import { Tissue, Tile } from "../tile";
+import { Tile, Tissue } from "../tile";
 import TileHighlight from "./tileHighlight";
 import { Tutorial } from "./tutorial";
 

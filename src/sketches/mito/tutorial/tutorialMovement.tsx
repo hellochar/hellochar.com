@@ -39,16 +39,25 @@ export default class TutorialMovement extends Tutorial {
     }
 }
 
-class TutorialMovementKeyHint extends React.PureComponent<{x: number, y: number, keyChar: string, parent: THREE.Object3D}, {}> {
+interface TutorialMovementKeyHintProps {
+    x: number;
+    y: number;
+    keyChar: string;
+    parent: THREE.Object3D;
+}
+
+class TutorialMovementKeyHint extends React.PureComponent<TutorialMovementKeyHintProps, {}> {
+    private mesh: THREE.Mesh;
+    constructor(props: TutorialMovementKeyHintProps) {
+        super(props);
+        this.mesh = MOVEMENT_KEY_MESHES.get(this.props.keyChar)!.clone();
+    }
+
     render() {
-        const mesh = MOVEMENT_KEY_MESHES.get(this.props.keyChar);
-        if (mesh == null) {
-            throw new Error("wtf");
-        }
         const action = ACTION_KEYMAP[this.props.keyChar] as ActionMove;
         const x = this.props.x + action.dir.x;
         const y = this.props.y + action.dir.y;
-        mesh.position.set(x, y, 2);
-        return <SceneObject parent={this.props.parent} object={mesh} />;
+        this.mesh.position.set(x, y, 2);
+        return <SceneObject parent={this.props.parent} object={this.mesh} />;
     }
 }

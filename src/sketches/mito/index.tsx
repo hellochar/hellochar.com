@@ -2,7 +2,8 @@ import * as React from "react";
 import * as THREE from "three";
 import { Color, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
-import { Constructor } from "../../common/constructor";
+import { EventEmitter } from "events";
+import { Constructor } from "./constructor";
 import devlog from "../../common/devlog";
 import lazy from "../../common/lazy";
 import { Noise } from "../../common/perlin";
@@ -18,7 +19,7 @@ import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { NewPlayerTutorial } from "./tutorial";
 import { GameStack, HUD, TileHover } from "./ui";
-import { EventEmitter } from "events";
+import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 
 export type Entity = Tile | Player;
 
@@ -598,6 +599,22 @@ class PlayerRenderer extends Renderer<Player> {
     update() {
         lerp2(this.mesh.position, this.target.droopPos(), 0.5);
         this.mesh.position.z = 2;
+
+        for (const [key, keyMesh] of MOVEMENT_KEY_MESHES) {
+            const action = ACTION_KEYMAP[key] as ActionMove;
+            const x = this.target.pos.x + action.dir.x;
+            const y = this.target.pos.y + action.dir.y;
+
+            if (this.target.isBuildCandidate(action) && this.mito.uiState.type === "main") {
+                this.scene.add(keyMesh);
+                keyMesh.position.x = x;
+                keyMesh.position.y = y;
+                keyMesh.position.z = 2;
+            } else {
+                this.scene.remove(keyMesh);
+            }
+        }
+
     }
 
     destroy() {

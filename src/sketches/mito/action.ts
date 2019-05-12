@@ -1,6 +1,6 @@
 import { Vector2 } from "three";
 
-import { Constructor } from "../../common/constructor";
+import { Constructor } from "./constructor";
 import { Cell, Transport } from "./tile";
 
 export interface ActionStill {

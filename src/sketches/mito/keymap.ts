@@ -1,4 +1,4 @@
-import { Constructor } from "../../common/constructor";
+import { Constructor } from "./constructor";
 import { Action } from "./action";
 import { DIRECTIONS } from "./directions";
 import { Cell, Fruit, Leaf, Root, Tissue, Transport } from "./tile";

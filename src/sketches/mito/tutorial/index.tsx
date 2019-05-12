@@ -3,8 +3,8 @@ import * as React from "react";
 import Mito from "..";
 import { Action } from "../action";
 import { Tutorial } from "./tutorial";
-import TutorialMovement from "./tutorialMovement";
 import TutorialBuildTissue from "./tutorialBuildTissue";
+import TutorialMovement from "./tutorialMovement";
 
 interface NewPlayerTutorialProps {
     mito: Mito;
