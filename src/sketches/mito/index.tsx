@@ -112,7 +112,7 @@ class Player {
     public isBuildCandidate(action: ActionMove) {
         const target = this.pos.clone().add(action.dir);
         const targetTile = this.world.tileAt(target.x, target.y);
-        return !this.verifyMove(action) && targetTile != null && !(targetTile instanceof Rock);
+        return !this.verifyMove(action) && targetTile != null && !targetTile.isObstacle;
     }
 
     public attemptMove(action: ActionMove) {
@@ -166,7 +166,7 @@ class Player {
         const sugarCost = CELL_SUGAR_BUILD_COST;
         const tileAlreadyExists = targetTile instanceof cellType && !((cellType as any) === Transport && targetTile instanceof Transport);
         if (!tileAlreadyExists &&
-            !(targetTile instanceof Rock) &&
+            !targetTile.isObstacle &&
             this.inventory.water >= waterCost &&
             this.inventory.sugar >= sugarCost) {
             this.inventory.change(-waterCost, -sugarCost);
@@ -1089,8 +1089,6 @@ class Mito extends ISketch {
 
     private enterUIStateExpanding(move: ActionMove) {
         const target = this.world.player.pos.clone().add(move.dir);
-        // const targetTile = this.world.tileAt(target.x, target.y);
-        // if (!this.world.player.verifyMove(move) && targetTile != null && !(targetTile instanceof Rock)) {
         const originalZoom = this.uiState.type === "main" ? this.camera.zoom : this.uiState.originalZoom;
         this.uiState = {
             type: "expanding",
@@ -1394,7 +1392,9 @@ class Mito extends ISketch {
             }
         }
         if (this.hudRef != null) {
+            const isTutorialFinished = this.tutorialRef == null ? true : this.tutorialRef.isFinished();
             this.hudRef.setState({
+                isTutorialFinished,
                 sugar: this.world.player.inventory.sugar,
                 water: this.world.player.inventory.water,
             });

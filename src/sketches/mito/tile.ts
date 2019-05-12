@@ -17,6 +17,7 @@ export function hasEnergy(e: any): e is HasEnergy {
 
 export abstract class Tile {
     static displayName = "Tile";
+    public isObstacle = false;
     public darkness = Infinity;
     public constructor(public pos: Vector2, public world: World) {
         if (world == null) {
@@ -138,6 +139,7 @@ export class Soil extends Tile implements HasInventory {
 }
 
 export class Rock extends Tile {
+    isObstacle = true;
     static displayName = "Rock";
 }
 
@@ -147,6 +149,7 @@ export class DeadCell extends Tile {
 
 export class Fountain extends Soil {
     static displayName = "Fountain";
+    isObstacle = true;
     private cooldown = 0;
     constructor(pos: Vector2, water: number = 0, world: World, public turnsPerWater = FOUNTAINS_TURNS_PER_WATER) {
         super(pos, water, world);
@@ -494,13 +497,3 @@ export class Transport extends Tissue {
         this.cooldown -= 1;
     }
 }
-
-// export class Vacuole extends Tissue {
-//     static displayName = "Vacuole";
-//     public invnetory = new Inventory()
-
-//     step() {
-//         super.step();
-
-//     }
-// }

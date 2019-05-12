@@ -5,6 +5,13 @@
     box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
     border-bottom-right-radius: 2px;
     font-size: 12px;
+    position: relative;
+    right: 0;
+    transition: right 2s;
+
+    &.hidden {
+        right: 100%;
+    }
 
     .mito-hud-section {
         padding: 10px 10px;
@@ -80,6 +87,11 @@
         }
     }
 
+    &.ui-popup-top {
+        top: 25%;
+        left: 50%;
+    }
+
     &.ui-popup-bottom {
         bottom: 15%;
         left: 50%;
@@ -90,31 +102,36 @@
         top: 50%;
     }
 
-    .build-title {
+    .popup-title {
         border-top-left-radius: 2px;
         border-top-right-radius: 2px;
         background: white;
         padding: 10px;
     }
 
-    .content {
+    .popup-content {
         border-radius: 2px;
         background: white;
         box-shadow: 0 4px 6px 0 hsla(0, 0%, 0%, 0.2);
     }
 
-    .button-row {
+    .popup-row {
         display: flex;
         justify-content: center;
     }
 
-    .text {
+    .popup-text {
         padding: 15px;
     }
 
     .popup-autoplace .mito-hud-button {
         display: inline-block;
     }
+}
+
+.tutorial-content {
+    font-size: 24px;
+    padding: 20px;
 }
 
 .mito-inventory {
@@ -125,6 +142,11 @@
     display: flex;
     flex-direction: column;
     opacity: 0.95;
+    transition: transform 2s;
+
+    &.hidden {
+        transform: translateY(170%);
+    }
 
     .mito-inventory-container {
         z-index: 1;

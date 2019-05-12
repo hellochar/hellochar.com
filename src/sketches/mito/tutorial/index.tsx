@@ -2,7 +2,9 @@ import * as React from "react";
 
 import Mito from "..";
 import { Action } from "../action";
-import { TutorialMovement, TutorialStep } from "./steps";
+import { Tutorial } from "./tutorial";
+import TutorialMovement from "./tutorialMovement";
+import TutorialBuildTissue from "./tutorialBuildTissue";
 
 interface NewPlayerTutorialProps {
     mito: Mito;
@@ -16,6 +18,7 @@ interface NewPlayerTutorialState {
 export class NewPlayerTutorial extends React.PureComponent<NewPlayerTutorialProps, NewPlayerTutorialState> {
     static STEPS = [
         TutorialMovement,
+        TutorialBuildTissue,
     ];
 
     state = {
@@ -26,60 +29,15 @@ export class NewPlayerTutorial extends React.PureComponent<NewPlayerTutorialProp
     handleFulfilled = () => {
         this.setState({ step: this.state.step + 1});
     }
-    private tutorialStep: TutorialStep | null = null;
-    handleCurrentTutorialStepRef = (ref: TutorialStep) => {
-        this.tutorialStep = ref;
+    private tutorialRef: Tutorial | null = null;
+    handleCurrentTutorialRef = (ref: Tutorial) => {
+        this.tutorialRef = ref;
+    }
+
+    isFinished() {
+        return this.state.step >= NewPlayerTutorial.STEPS.length;
     }
     // private steps = [
-    //     {
-    //         content: (
-    //         <div className="guide-movement">
-    //             Use WASD, QEZC to move around.
-    //         </div>
-    //         ),
-    //         onActionPerformed(action: Action) {
-    //             if (action.type === "move") {
-    //                 this.counter++;
-    //             }
-    //         },
-    //         isFulfilled() {
-    //             user moves around 2 times
-    //         },
-    //         mount() {
-    //             // Show movement hotkey helper.
-    //         },
-    //         unmount() {
-    //             // remove movement hotkey helper.
-    //         },
-    //     },
-    //     {
-    //         content: (
-    //         <div className="guide-build-tissue">
-    //             Build Tissue to expand your reach.
-    //             { if (counter > 1) {
-    //                 Building costs 1 water and 1 sugar.
-    //               }
-    //             }
-    //         </div>
-    //         ),
-    //         onActionPerformed(action: Action) {
-    //             if (action.type === "build") {
-    //                 this.counter++;
-    //             }
-    //         }
-    //         isFulfilled() {
-    //             user builds 3 tissue.
-    //         },
-    //         mount() {
-    //             // highlight a line 3 tiles downwards
-    //             // as it's built, remove highlight
-
-    //             // or, highlight all buildable tiles
-    //         },
-    //         unmount() {
-    //             // unhighlight tiles
-    //         },
-    //     },
     //     {
     //         content: (
     //         <div className="guide-build-root">
@@ -169,8 +127,8 @@ export class NewPlayerTutorial extends React.PureComponent<NewPlayerTutorialProp
 
     componentDidMount() {
         this.props.mito.world.player.on("action", (action: Action) => {
-            if (this.tutorialStep) {
-                this.tutorialStep.onActionPerformed(action);
+            if (this.tutorialRef) {
+                this.tutorialRef.onActionPerformed(action);
             }
         });
     }
@@ -182,16 +140,16 @@ export class NewPlayerTutorial extends React.PureComponent<NewPlayerTutorialProp
            <back   use wasd to move around        next>
            -------------------------------------------
         */
-        const currentTutorialStepType = NewPlayerTutorial.STEPS[this.state.step];
-        if (currentTutorialStepType) {
+        const currentTutorialType = NewPlayerTutorial.STEPS[this.state.step];
+        if (currentTutorialType) {
             return (
-                <div className="new-player-tutorial ui-popup ui-popup-bottom">
-                    <div className="build-title progress-bar">{this.state.step + 1} of {NewPlayerTutorial.STEPS.length}</div>
+                <div className="new-player-tutorial ui-popup ui-popup-top">
+                    {/* <div className="popup-title progress-bar">{this.state.step + 1} of {NewPlayerTutorial.STEPS.length}</div> */}
                     {/* <button className="next">-> Next</button> */}
                     {/* {this.state.step > 0 ? <button>&lt;- Back</button> : null} */}
-                    <div className="content">
-                        {React.createElement(currentTutorialStepType, {
-                            ref: this.handleCurrentTutorialStepRef,
+                    <div className="popup-content tutorial-content">
+                        {React.createElement(currentTutorialType, {
+                            ref: this.handleCurrentTutorialRef,
                             mito: this.props.mito,
                             time: this.state.time,
                             scene: this.props.mito.scene,

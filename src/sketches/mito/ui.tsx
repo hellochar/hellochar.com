@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as classnames from "classnames";
 
 import { GameState, UIState, World } from "./index";
 import Mito from "./index";
@@ -20,6 +21,7 @@ interface HUDState {
     sugar: number;
     expanded?: boolean;
     uiState: UIState;
+    isTutorialFinished: boolean;
 }
 
 export class HUD extends React.Component<HUDProps, HUDState> {
@@ -29,6 +31,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         autoplace: undefined,
         expanded: true,
         uiState: { type: "main" },
+        isTutorialFinished: false,
     };
 
     public render() {
@@ -37,13 +40,13 @@ export class HUD extends React.Component<HUDProps, HUDState> {
 
         return (
             <>
-                <div className="mito-hud">
+                <div className={classnames("mito-hud", { hidden: !this.state.isTutorialFinished} )}>
                     {this.renderFruitUI()}
                     {this.renderAllBuildButtons()}
                     {this.renderSecondEls()}
                     {this.renderDPad()}
                 </div>
-                <div className="mito-inventory">
+                <div className={classnames("mito-inventory", { hidden: !this.state.isTutorialFinished} )}>
                     {isMaxedEl}
                     <div className="mito-inventory-container">
                         {this.renderInventoryBar()}
@@ -211,8 +214,8 @@ export class HUD extends React.Component<HUDProps, HUDState> {
             buttons.push(this.renderButton("Esc", null));
             return (
                 <div className="ui-popup ui-popup-bottom">
-                    <span className="build-title">Build</span>
-                    <div className="content button-row">
+                    <span className="popup-title">Build</span>
+                    <div className="popup-content popup-row">
                         {buttons}
                     </div>
                 </div>
@@ -224,7 +227,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         if (this.state.autoplace) {
             return (
                 <div className="ui-popup ui-popup-left">
-                    <div className="popup-autoplace content text">
+                    <div className="popup-autoplace popup-content popup-text">
                         Building {this.state.autoplace.displayName}
                         {this.renderButton("Esc", null)}
                     </div>
