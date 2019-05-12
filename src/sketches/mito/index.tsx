@@ -13,11 +13,12 @@ import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuf
 import { DIRECTION_VALUES } from "./directions";
 import { hasInventory, Inventory } from "./inventory";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
-import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 import { CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, IS_REALTIME, PLAYER_MAX_INVENTORY, SUNLIGHT_REINTRODUCTION } from "./params";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
+import { NewPlayerTutorial } from "./tutorial";
 import { GameStack, HUD, TileHover } from "./ui";
+import { EventEmitter } from "events";
 
 export type Entity = Tile | Player;
 
@@ -31,6 +32,8 @@ function isSteppable(obj: any): obj is Steppable {
 class Player {
     public inventory = new Inventory(PLAYER_MAX_INVENTORY, PLAYER_MAX_INVENTORY / 2, PLAYER_MAX_INVENTORY / 2);
     public action?: Action;
+    private events = new EventEmitter();
+
     public constructor(public pos: Vector2, public world: World) {}
 
     public droopY() {
@@ -52,11 +55,18 @@ class Player {
         return this.pos;
     }
 
+    public on(event: string, cb: (...args: any[]) => void) {
+        this.events.on(event, cb);
+    }
+
     public step() {
         if (this.action === undefined) {
             throw new Error("tried stepping player before action was filled in!");
         }
-        this.attemptAction(this.action);
+        const actionSuccessful = this.attemptAction(this.action);
+        if (actionSuccessful) {
+            this.events.emit("action", this.action);
+        }
         this.action = undefined;
         // const tile = this.world.tileAt(this.pos.x, this.pos.y);
         // if (tile instanceof Transport && tile.cooldown <= 0) {
@@ -68,26 +78,21 @@ class Player {
         // }
     }
 
-    public attemptAction(action: Action) {
+    public attemptAction(action: Action): boolean {
         switch (action.type) {
             case "none":
                 // literally do nothing
-                break;
+                return true;
             case "still":
-                this.attemptStill(action);
-                break;
+                return this.attemptStill(action);
             case "move":
-                this.attemptMove(action);
-                break;
+                return this.attemptMove(action);
             case "build":
-                this.attemptBuild(action);
-                break;
+                return this.attemptBuild(action);
             case "build-transport":
-                this.attemptBuildTransport(action);
-                break;
+                return this.attemptBuildTransport(action);
             case "drop":
-                this.attemptDrop(action);
-                break;
+                return this.attemptDrop(action);
         }
     }
 
@@ -119,11 +124,15 @@ class Player {
             // do the move
             this.pos.add(action.dir);
             this.autopickup();
+            return true;
+        } else {
+            return false;
         }
     }
 
     public attemptStill(action: ActionStill) {
         this.autopickup();
+        return true;
     }
 
     private autopickup() {
@@ -188,6 +197,9 @@ class Player {
                     dir: action.position.clone().sub(this.pos),
                 });
             }
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -201,6 +213,9 @@ class Player {
                 type: "move",
                 dir: action.dir,
             });
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -210,6 +225,9 @@ class Player {
         if (hasInventory(currentTile)) {
             const { water, sugar } = action;
             this.inventory.give(currentTile.inventory, water, sugar);
+            return true;
+        } else {
+            return false;
         }
     }
 }
@@ -580,21 +598,6 @@ class PlayerRenderer extends Renderer<Player> {
     update() {
         lerp2(this.mesh.position, this.target.droopPos(), 0.5);
         this.mesh.position.z = 2;
-        for (const [key, keyMesh] of MOVEMENT_KEY_MESHES) {
-            const action = ACTION_KEYMAP[key] as ActionMove;
-            const x = this.target.pos.x + action.dir.x;
-            const y = this.target.pos.y + action.dir.y;
-
-            if (this.target.isBuildCandidate(action) && this.mito.uiState.type === "main") {
-                this.scene.add(keyMesh);
-                keyMesh.position.x = x;
-                keyMesh.position.y = y;
-                keyMesh.position.z = 2;
-            } else {
-                this.scene.remove(keyMesh);
-            }
-
-        }
     }
 
     destroy() {
@@ -1070,10 +1073,12 @@ class Mito extends ISketch {
         />,
         <TileHover ref={(ref) => this.hoverRef = ref } />,
         <GameStack ref={(ref) => this.gameStackRef = ref } mito={this} />,
+        <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />,
     ];
     public hudRef: HUD | null = null;
     public hoverRef: TileHover | null = null;
     public gameStackRef: GameStack | null = null;
+    public tutorialRef: NewPlayerTutorial | null = null;
     public mouse = new THREE.Vector2();
     public hoveredTile?: Tile;
     private raycaster = new THREE.Raycaster();
@@ -1294,6 +1299,9 @@ class Mito extends ISketch {
 
     public worldStepAndUpdateRenderers() {
         this.world.step();
+        if (this.tutorialRef) {
+            this.tutorialRef.setState({ time: this.world.time });
+        }
         this.gameState = this.world.checkWinLoss();
 
         const oldEntities = Array.from(this.renderers.keys());

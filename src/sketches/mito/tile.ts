@@ -2,7 +2,8 @@ import { Vector2 } from "three";
 
 import { Noise } from "../../common/perlin";
 import { map } from "../../math/index";
-import { DIRECTIONS, height, width, World } from "./index";
+import { DIRECTIONS } from "./directions";
+import { height, width, World } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE } from "./params";
 
