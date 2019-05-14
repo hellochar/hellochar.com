@@ -949,13 +949,13 @@ class InventoryRenderer extends Renderer<Inventory> {
             this.createWaterMesh();
         }
         for (let i = 0; i < this.target.sugar; i++) {
-            this.createWaterMesh();
+            this.createSugarMesh();
         }
 
         // don't add to scene yourself
     }
 
-    private updateMeshes(resource: number, array: Mesh[], create: () => void) {
+    private updateMeshes(resourceType: "water" | "sugar", resource: number, array: Mesh[], create: () => void) {
         const wantedMeshes = Math.ceil(resource);
         while (array.length < wantedMeshes) {
             create();
@@ -964,12 +964,13 @@ class InventoryRenderer extends Renderer<Inventory> {
             const mesh = array.shift()!;
             this.object.remove(mesh);
         }
+        const s = InventoryRenderer.resourceMeshScale[resourceType];
         for (const mesh of array) {
-            mesh.scale.set(InventoryRenderer.resourceMeshScale, InventoryRenderer.resourceMeshScale, 1);
+            mesh.scale.set(s, s, 1);
         }
         const fract = resource - Math.floor(resource);
         if (array.length > 0 && fract > 0) {
-            const scale = InventoryRenderer.resourceMeshScale * fract;
+            const scale = s * fract;
             const lastMesh = array[array.length - 1];
             lastMesh.scale.set(scale, scale, 1);
         }
@@ -983,8 +984,8 @@ class InventoryRenderer extends Renderer<Inventory> {
     }
 
     update() {
-        this.updateMeshes(this.target.water, this.waters, () => this.createWaterMesh());
-        this.updateMeshes(this.target.sugar, this.sugars, () => this.createSugarMesh());
+        this.updateMeshes("water", this.target.water, this.waters, () => this.createWaterMesh());
+        this.updateMeshes("sugar", this.target.sugar, this.sugars, () => this.createSugarMesh());
         const resources = this.waters.concat(this.sugars);
         for (const r of resources) {
             const vel = r.position.clone();
@@ -1014,7 +1015,10 @@ class InventoryRenderer extends Renderer<Inventory> {
         // don't destroy yourself
     }
 
-    static resourceMeshScale = .12;
+    static resourceMeshScale = {
+        water: .12,
+        sugar: .12,
+    }
 
     createWaterMesh() {
         const mesh = new Mesh(
@@ -1022,7 +1026,6 @@ class InventoryRenderer extends Renderer<Inventory> {
             InventoryRenderer.waterMaterial,
         );
         mesh.position.set((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, 0);
-        mesh.scale.set(InventoryRenderer.resourceMeshScale, InventoryRenderer.resourceMeshScale, 1);
         this.object.add(mesh);
         this.waters.push(mesh);
     }
@@ -1034,8 +1037,6 @@ class InventoryRenderer extends Renderer<Inventory> {
         );
         // mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
         mesh.position.set((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, 0);
-        mesh.scale.set(InventoryRenderer.resourceMeshScale, InventoryRenderer.resourceMeshScale, 1);
-
         this.object.add(mesh);
         this.sugars.push(mesh);
     }
