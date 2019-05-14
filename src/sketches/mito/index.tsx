@@ -359,15 +359,26 @@ export class World {
         const oldTile = this.tileAt(x, y)!;
         // if replacing a tile with inventory, try giving resources to neighbors of the same type
         if (hasInventory(oldTile)) {
-            const neighbors = this.tileNeighbors(position);
-            for (const neighbor of neighbors.values()) {
-                if (hasInventory(neighbor) && neighbor instanceof oldTile.constructor) {
-                    oldTile.inventory.give(neighbor.inventory, oldTile.inventory.water, oldTile.inventory.sugar);
-                }
-                if (oldTile.inventory.water === 0 && oldTile.inventory.sugar === 0) {
-                    // we're all done
-                    break;
-                }
+
+            // one mechanic - push water to nearby tiles
+            // const neighbors = this.tileNeighbors(position);
+            // for (const neighbor of neighbors.values()) {
+            //     if (hasInventory(neighbor) && neighbor instanceof oldTile.constructor) {
+            //         oldTile.inventory.give(neighbor.inventory, oldTile.inventory.water, oldTile.inventory.sugar);
+            //     }
+            //     if (oldTile.inventory.water === 0 && oldTile.inventory.sugar === 0) {
+            //         // we're all done
+            //         break;
+            //     }
+            // }
+
+            if (hasInventory(tile)) {
+                oldTile.inventory.give(tile.inventory, oldTile.inventory.water, oldTile.inventory.sugar);
+            }
+
+            if (oldTile.inventory.water !== 0 || oldTile.inventory.sugar !== 0) {
+                console.warn("lost", oldTile.inventory, "resources to building");
+                oldTile.inventory.change(-oldTile.inventory.water, -oldTile.inventory.sugar);
             }
         }
 
@@ -1268,7 +1279,7 @@ class Mito extends ISketch {
         this.resize(this.canvas.width, this.canvas.height);
         // darkness and water diffuse a few times to stabilize it
         for (let i = 0; i < 5; i++) {
-            this.world.player.action = { type: "still" };
+            this.world.player.action = { type: "none" };
             this.world.step();
         }
         // this.gameState = "instructions";
@@ -1335,19 +1346,23 @@ class Mito extends ISketch {
         if (document.activeElement !== this.canvas) {
             this.canvas.focus();
         }
-        if (IS_REALTIME && this.frameCount % 3 === 0) {
-            if (world.player.action == null) {
-                this.world.player.action = { type: "none" };
+        if (this.gameState === "main") {
+            if (IS_REALTIME) {
+                if (this.frameCount % 3 === 0) {
+                    if (world.player.action == null) {
+                        this.world.player.action = { type: "none" };
+                    }
+                    this.worldStepAndUpdateRenderers();
+                }
+            } else if (world.player.action != null) {
+                this.worldStepAndUpdateRenderers();
             }
-            this.worldStepAndUpdateRenderers();
-        } else if (world.player.action != null) {
-            this.worldStepAndUpdateRenderers();
+            // this.world.entities().forEach((entity) => {
+            this.world.renderableEntities().forEach((entity) => {
+                const renderer = this.getOrCreateRenderer(entity);
+                renderer.update();
+            });
         }
-        // this.world.entities().forEach((entity) => {
-        this.world.renderableEntities().forEach((entity) => {
-            const renderer = this.getOrCreateRenderer(entity);
-            renderer.update();
-        });
         const mouseNorm = new THREE.Vector2(
             this.mouse.x / this.canvas.width * 2 - 1,
             -this.mouse.y / this.canvas.height * 2 + 1,
