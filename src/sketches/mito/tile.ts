@@ -5,7 +5,7 @@ import { map } from "../../math/index";
 import { DIRECTIONS } from "./directions";
 import { height, width, World } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
-import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE, WATER_GRAVITY_PER_TURN, SUGAR_DIFFUSION_RATE } from "./params";
+import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, SUGAR_DIFFUSION_RATE, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE, WATER_GRAVITY_PER_TURN } from "./params";
 
 export interface HasEnergy {
     energy: number;
@@ -45,6 +45,10 @@ export abstract class Tile {
                 }
             }, this.darkness);
             this.darkness = minDarkness;
+            const cellHere = this.world.gridCells[this.pos.x][this.pos.y] != null;
+            if (cellHere) {
+                console.error("stepping environmental tile even when a cell is on-top:", cellHere);
+            }
         }
         if (hasInventory(this)) {
             const self = this;

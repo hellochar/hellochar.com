@@ -188,6 +188,7 @@ class Player {
         if (newCell != null) {
             newCell.droopY = this.droopY();
             this.world.setTileAt(action.position, newCell);
+            console.log("built", newCell);
             if (this.world.fruit == null && newCell instanceof Fruit) {
                 this.world.fruit = newCell;
             }
@@ -265,7 +266,7 @@ export class World {
     public time: number = 0;
     public player: Player = new Player(new Vector2(width / 2, height / 2), this);
     public fruit?: Fruit = undefined;
-    private gridEnvironment: Tile[][] = (() => {
+    public gridEnvironment: Tile[][] = (() => {
         // start with a half water half air
         const noiseWater = new Noise();
         const noiseRock = new Noise();
@@ -315,7 +316,7 @@ export class World {
         return grid;
     })();
 
-    private gridCells: Array<Array<Cell | null>> = (() => {
+    public gridCells: Array<Array<Cell | null>> = (() => {
         const radius = 2.5;
         const grid = new Array(width).fill(undefined).map((_, x) => (
             new Array(height).fill(undefined).map((__, y) => {
@@ -422,43 +423,35 @@ export class World {
         return this.cachedEntities;
     }
     private fillCachedEntities() {
-        // dear god
-        const flattenedTiles: Tile[] = [];
+        const newEntities: Entity[] = [];
+
+        // we do this super hacky thing for performance where we only run every other entity in
+        // a checkerboard pattern.
+        //
+        // also, entities can interact with other entities, there is no lock-step buffer state,
+        // which means you can get weird artifacts like "water suddenly moves 20 squares".
+        // to combat this we alternatingly reverse the tile iteration order.
         let x = 0, y = 0;
         for (x = 0; x < width; x++) {
             for (y = (x + this.time) % 2; y < height; y += 2) {
                 // checkerboard
-                flattenedTiles.push(this.tileAt(x, y)!);
+                newEntities.push(this.tileAt(x, y)!);
             }
         }
         for (x = 0; x < width; x++) {
             for (y = (x + this.time + 1) % 2; y < height; y += 2) {
                 // opposite checkerboard
-                flattenedTiles.push(this.tileAt(x, y)!);
+                newEntities.push(this.tileAt(x, y)!);
             }
         }
         if (this.time % 4 < 2) {
-            flattenedTiles.reverse();
+            newEntities.reverse();
         }
-        // switch (this.time % 4) {
-        //     case 0:
-        //         // start at top-left corner, go down/right
-        //         flattenedTiles = ([] as Tile[]).concat(...this.grid);
-        //         break;
-        //     case 1:
-        //         // start at top-right corner, go down/left
-        //         flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse());
-        //         break;
-        //     case 2:
-        //         // start at bottom-left corner, go up/right
-        //         flattenedTiles = ([] as Tile[]).concat(...this.grid.map((col) => col.slice().reverse()));
-        //         break;
-        //     case 3:
-        //         // start at bottom-right corner, go up/left
-        //         flattenedTiles = ([] as Tile[]).concat(...this.grid.slice().reverse().map((col) => col.slice().reverse()));
-        //         break;
-        // }
-        const newEntities = ([this.player] as Entity[]).concat(flattenedTiles);
+
+        // add player at the end - this is important since Player is currently the only thing
+        // that modifies tiles. You can get into situations where tiles that should be dead
+        // are still left-over in the entities cache.
+        newEntities.push(this.player);
         this.cachedEntities = newEntities;
 
         (() => {
@@ -488,7 +481,7 @@ export class World {
         this.computeSunlight();
         this.time++;
         this.fillCachedEntities();
-        this.checkResources();
+        // this.checkResources();
     }
 
     public computeSunlight() {
