@@ -1,5 +1,5 @@
-import { Constructor } from "./constructor";
 import { Action } from "./action";
+import { Constructor } from "./constructor";
 import { DIRECTIONS } from "./directions";
 import { Cell, Fruit, Leaf, Root, Tissue, Transport } from "./tile";
 

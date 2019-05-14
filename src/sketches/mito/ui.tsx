@@ -1,13 +1,13 @@
-import * as React from "react";
 import * as classnames from "classnames";
+import * as React from "react";
 
+import { Constructor } from "./constructor";
 import { GameState, UIState, World } from "./index";
 import Mito from "./index";
 import { hasInventory } from "./inventory";
+import { BUILD_HOTKEYS } from "./keymap";
 import { CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, PLAYER_MAX_INVENTORY, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, WATER_DIFFUSION_RATE } from "./params";
 import { Air, Cell, Fruit, hasEnergy, Leaf, Root, Tile, Tissue, Transport } from "./tile";
-import { Constructor } from "./constructor";
-import { BUILD_HOTKEYS } from "./keymap";
 
 interface HUDProps {
     world: World;
@@ -41,6 +41,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         return (
             <>
                 <div className={classnames("mito-hud", { hidden: !this.state.isTutorialFinished} )}>
+                    {/* {this.renderTime()} */}
                     {this.renderFruitUI()}
                     {this.renderAllBuildButtons()}
                     {this.renderSecondEls()}
@@ -181,6 +182,10 @@ export class HUD extends React.Component<HUDProps, HUDState> {
             </div>
         );
     }
+
+    // public renderTime() {
+    //     return <div className="mito-hud-section">{this.props.world.time}</div>;
+    // }
 
     public renderFruitUI() {
         const { world } = this.props;

@@ -1,25 +1,25 @@
+import { EventEmitter } from "events";
 import * as React from "react";
 import * as THREE from "three";
 import { Color, Material, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneBufferGeometry, Scene, Vector2, Vector3 } from "three";
 
-import { EventEmitter } from "events";
-import { Constructor } from "./constructor";
 import devlog from "../../common/devlog";
 import lazy from "../../common/lazy";
 import { Noise } from "../../common/perlin";
-import { lerp, map } from "../../math/index";
+import { map } from "../../math/index";
 import { ISketch } from "../../sketch";
 import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
+import { Constructor } from "./constructor";
 import { DIRECTION_VALUES } from "./directions";
 import { hasInventory, Inventory } from "./inventory";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
+import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 import { CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, IS_REALTIME, PLAYER_MAX_INVENTORY, SUNLIGHT_REINTRODUCTION } from "./params";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { NewPlayerTutorial } from "./tutorial";
 import { GameStack, HUD, TileHover } from "./ui";
-import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 
 export type Entity = Tile | Player;
 
@@ -85,7 +85,7 @@ class Player {
                 // literally do nothing
                 return true;
             case "still":
-                return this.attemptStill(action);
+                return this.attemptStill();
             case "move":
                 return this.attemptMove(action);
             case "build":
@@ -131,7 +131,7 @@ class Player {
         }
     }
 
-    public attemptStill(action: ActionStill) {
+    public attemptStill() {
         this.autopickup();
         return true;
     }
@@ -530,7 +530,7 @@ export class World {
     //     // if the neighbor is soil or rock, it's 100% free
     // }
 
-    public checkWinLoss(): GameState {
+    public checkWinLoss(): GameState | null {
         // you win if there's a seed with full capacity
         if (this.fruit != null) {
             if (this.fruit.inventory.sugar > 1000) {
@@ -541,7 +541,7 @@ export class World {
         if (this.tileAt(this.player.pos.x, this.player.pos.y) instanceof DeadCell) {
             return "lose";
         }
-        return "main";
+        return null;
     }
 
     public checkResources() {
@@ -1317,7 +1317,7 @@ class Mito extends ISketch {
         if (this.tutorialRef) {
             this.tutorialRef.setState({ time: this.world.time });
         }
-        this.gameState = this.world.checkWinLoss();
+        this.gameState = this.world.checkWinLoss() || this.gameState;
 
         const oldEntities = Array.from(this.renderers.keys());
         // delete the renderers for entities that have been removed since last render
