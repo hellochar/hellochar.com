@@ -882,6 +882,26 @@ class TileRenderer extends Renderer<Tile> {
                 });
             }
         }
+        if (this.hasActiveNeighbors(this.target)) {
+            const color = InventoryRenderer.waterMaterial.color.getHex();
+            const lines = this.target.activeNeighbors;
+            if (lines.length !== this.pairsLines.length) {
+                // redo pairs
+                this.pairsLines.forEach((line) => this.object.remove(line));
+                this.pairsLines = lines.map((dir) => {
+                    const length = dir.length() - 0.25;
+                    const arrowDir = new THREE.Vector3(dir.x, dir.y, 0).normalize();
+                    const arrowHelper = this.makeLine(arrowDir, new THREE.Vector3(), length, color);
+                    arrowHelper.position.z = 0.1;
+                    this.object.add(arrowHelper);
+                    return arrowHelper;
+                });
+            }
+        }
+    }
+
+    hasActiveNeighbors(t: any): t is { activeNeighbors: Vector2[] } {
+        return Array.isArray(t.activeNeighbors);
     }
 
     static lineGeometry = (() => {
