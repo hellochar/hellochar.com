@@ -1090,7 +1090,7 @@ class Mito extends ISketch {
         />,
         <TileHover ref={(ref) => this.hoverRef = ref } />,
         <GameStack ref={(ref) => this.gameStackRef = ref } mito={this} />,
-        <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />,
+        // <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />,
     ];
     public hudRef: HUD | null = null;
     public hoverRef: TileHover | null = null;
@@ -1378,10 +1378,6 @@ class Mito extends ISketch {
                 this.uiState.target.y,
             );
             lerp2(this.camera.position, target, 0.3);
-
-            const targetZoom = this.uiState.originalZoom * 2;
-            this.camera.zoom = lerp(this.camera.zoom, targetZoom, 0.8);
-            this.camera.updateProjectionMatrix();
         }
         this.renderer.render(this.scene, this.camera);
 

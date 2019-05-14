@@ -5,7 +5,7 @@ import { map } from "../../math/index";
 import { DIRECTIONS } from "./directions";
 import { height, width, World } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
-import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE } from "./params";
+import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE, WATER_GRAVITY_PER_TURN } from "./params";
 
 export interface HasEnergy {
     energy: number;
@@ -51,9 +51,15 @@ export abstract class Tile {
             const neighborsWithMore =
                 Array.from(neighbors.values()).filter((tile) => {
                     // this allows tissue and transports to diffuse water
-                    const isSubclass = tile instanceof this.constructor || this instanceof tile.constructor;
-                    return hasInventory(tile) && isSubclass && tile.inventory.water > self.inventory.water;
+                    return hasInventory(tile) && isSubclass(tile, this) && tile.inventory.water > self.inventory.water;
                 }) as any as HasInventory[];
+
+            const upperNeighbor = neighbors.get(DIRECTIONS.n);
+
+            // do some gravity
+            if (upperNeighbor && hasInventory(upperNeighbor) && isSubclass(upperNeighbor, this) && !(this instanceof Cell)) {
+                upperNeighbor.inventory.give(this.inventory, WATER_GRAVITY_PER_TURN, 0);
+            }
 
             for (const tile of neighborsWithMore) {
                 // // give water to neighbors that you're less than
@@ -496,4 +502,8 @@ export class Transport extends Tissue {
         }
         this.cooldown -= 1;
     }
+}
+
+function isSubclass<T, U>(a: T, b: U) {
+    return a instanceof b.constructor || b instanceof a.constructor;
 }
