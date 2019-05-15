@@ -5,7 +5,7 @@ import { map } from "../../math/index";
 import { DIRECTIONS } from "./directions";
 import { height, width, World } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
-import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, SUGAR_DIFFUSION_RATE, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE, WATER_GRAVITY_PER_TURN } from "./params";
+import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, SUGAR_DIFFUSION_RATE, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE, WATER_DIFFUSION_TYPE, WATER_GRAVITY_PER_TURN } from "./params";
 
 export interface HasEnergy {
     energy: number;
@@ -93,10 +93,15 @@ export abstract class Tile {
                     //     tile.inventory.give(this.inventory, diff, 0);
                     // }
 
-                    const diffusionAmount = (tile.inventory.water - this.inventory.water) * WATER_DIFFUSION_RATE;
-                    // if (Math.random() < diffusionChance) {
-                    tile.inventory.give(this.inventory, diffusionAmount, 0);
-                    // }
+                    if (WATER_DIFFUSION_TYPE === "continuous") {
+                        const diffusionAmount = (tile.inventory.water - this.inventory.water) * WATER_DIFFUSION_RATE;
+                        tile.inventory.give(this.inventory, diffusionAmount, 0);
+                    } else {
+                        const waterDiff = tile.inventory.water - this.inventory.water;
+                        if (waterDiff > 1 && Math.random() < waterDiff * WATER_DIFFUSION_RATE) {
+                            tile.inventory.give(this.inventory, 1, 0);
+                        }
+                    }
                 }
                 if (tile.inventory.sugar > this.inventory.sugar) {
                     const diffusionAmount = (tile.inventory.sugar - this.inventory.sugar) * SUGAR_DIFFUSION_RATE;
