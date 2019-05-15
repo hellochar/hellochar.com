@@ -1339,6 +1339,18 @@ class Mito extends ISketch {
         strings.gain.gain.value = Math.max(0, stringsVolume);
     }
 
+    public logRenderInfo() {
+        devlog(
+`Geometries in memory: ${this.renderer.info.memory.geometries}
+Textures in memory: ${this.renderer.info.memory.textures}
+# Render Calls: ${this.renderer.info.render.calls}
+# Render Lines: ${this.renderer.info.render.lines}
+# Render Points: ${this.renderer.info.render.points}
+# Render Tris: ${this.renderer.info.render.triangles}
+`,
+        );
+    }
+
     public worldStepAndUpdateRenderers() {
         this.world.step();
         if (this.tutorialRef) {
@@ -1448,6 +1460,7 @@ class Mito extends ISketch {
                 state: this.gameState,
             });
         }
+        // this.logRenderInfo();
     }
 
     public resize(w: number, h: number) {
