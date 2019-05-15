@@ -16,6 +16,7 @@ import { hasInventory, Inventory } from "./inventory";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 import { params } from "./params";
+import ParamsGUI from "./paramsGui";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { NewPlayerTutorial } from "./tutorial";
@@ -1116,6 +1117,7 @@ class Mito extends ISketch {
         <TileHover ref={(ref) => this.hoverRef = ref } />,
         <GameStack ref={(ref) => this.gameStackRef = ref } mito={this} />,
         // <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />,
+        <ParamsGUI />,
     ];
     public hudRef: HUD | null = null;
     public hoverRef: TileHover | null = null;
