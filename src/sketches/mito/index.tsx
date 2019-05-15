@@ -17,6 +17,7 @@ import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 import { params } from "./params";
 import ParamsGUI from "./paramsGui";
+import { findPath } from "./pathfinding";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { NewPlayerTutorial } from "./tutorial";
@@ -33,10 +34,24 @@ function isSteppable(obj: any): obj is Steppable {
 }
 class Player {
     public inventory = new Inventory(params.maxResources, params.maxResources / 2, params.maxResources / 2);
-    public action?: Action;
+    private action?: Action;
     private events = new EventEmitter();
+    private actionQueue: Action[] = [];
 
     public constructor(public pos: Vector2, public world: World) {}
+
+    public setActions(actions: Action[]) {
+        this.actionQueue = actions;
+    }
+
+    public setAction(action: Action) {
+        this.action = action;
+        this.actionQueue = [];
+    }
+
+    public getAction() {
+        return this.action;
+    }
 
     public droopY() {
         const tile = this.world.tileAt(this.pos.x, this.pos.y);
@@ -63,7 +78,7 @@ class Player {
 
     public step() {
         if (this.action === undefined) {
-            throw new Error("tried stepping player before action was filled in!");
+            this.action = this.actionQueue.shift() || { type: "none" };
         }
         const actionSuccessful = this.attemptAction(this.action);
         if (actionSuccessful) {
@@ -265,9 +280,9 @@ const DIRECTION_VALUES_RAND = [
 ];
 export class World {
     public time: number = 0;
-    public player: Player = new Player(new Vector2(width / 2, height / 2), this);
+    public readonly player = new Player(new Vector2(width / 2, height / 2), this);
     public fruit?: Fruit = undefined;
-    public gridEnvironment: Tile[][] = (() => {
+    private gridEnvironment: Tile[][] = (() => {
         // start with a half water half air
         const noiseWater = new Noise();
         const noiseRock = new Noise();
@@ -317,7 +332,7 @@ export class World {
         return grid;
     })();
 
-    public gridCells: Array<Array<Cell | null>> = (() => {
+    private gridCells: Array<Array<Cell | null>> = (() => {
         const radius = 2.5;
         const grid = new Array(width).fill(undefined).map((_, x) => (
             new Array(height).fill(undefined).map((__, y) => {
@@ -1167,12 +1182,13 @@ class Mito extends ISketch {
                 });
             }
         },
-        click: () => {
+        click: (event: JQuery.Event) => {
             if (this.hoverRef != null) {
                 this.hoverRef.setState({
                     show: !this.hoverRef.state.show,
                 });
             }
+            // this.enqueuePlayerMoveToMouse(event.clientX!, event.clientY!);
         },
         keydown: (event: JQuery.Event) => {
             const key = event.key!;
@@ -1216,7 +1232,7 @@ class Mito extends ISketch {
                     cellType: cellType,
                     position: this.uiState.target,
                 };
-                this.world.player.action = buildAction;
+                this.world.player.setAction(buildAction);
                 this.resetUIState();
                 return;
             } else if (ACTION_KEYMAP[key] && ACTION_KEYMAP[key] !== this.uiState.originalAction) {
@@ -1245,26 +1261,26 @@ class Mito extends ISketch {
                         position: this.world.player.pos.clone(),
                         dir: action.dir,
                     };
-                    this.world.player.action = buildTransportAction;
+                    this.world.player.setAction(buildTransportAction);
                 } else if (!world.player.verifyMove(action) && !isRepeatedStroke) {
                     const buildAction: ActionBuild = {
                         type: "build",
                         cellType: this.autoplace,
                         position: this.world.player.pos.clone().add(action.dir),
                     };
-                    this.world.player.action = buildAction;
+                    this.world.player.setAction(buildAction);
                     if (this.autoplace !== Tissue) {
                         this.autoplace = undefined;
                     }
                 } else {
-                    this.world.player.action = action;
+                    this.world.player.setAction(action);
                     // this.autoplace = undefined;
                 }
             } else if (this.autoplace == null && action.type === "move" && this.world.player.isBuildCandidate(action)) {
                 // we attempt to move into a place we cannot
                 this.enterUIStateExpanding(action);
             } else {
-                this.world.player.action = action;
+                this.world.player.setAction(action);
             }
         } else {
             if (key in BUILD_HOTKEYS) {
@@ -1301,7 +1317,6 @@ class Mito extends ISketch {
         this.resize(this.canvas.width, this.canvas.height);
         // darkness and water diffuse a few times to stabilize it
         for (let i = 0; i < 5; i++) {
-            this.world.player.action = { type: "none" };
             this.world.step();
         }
         // this.gameState = "instructions";
@@ -1375,6 +1390,29 @@ Textures in memory: ${this.renderer.info.memory.textures}
         this.updateAmbientAudio();
     }
 
+    private getCameraNormCoordinates(clientX: number, clientY: number) {
+        return new THREE.Vector2(
+            clientX / this.canvas.width * 2 - 1,
+            -clientY / this.canvas.height * 2 + 1,
+        );
+    }
+
+    private getTileAtScreenPosition(clientX: number, clientY: number) {
+        const cameraNorm = this.getCameraNormCoordinates(clientX, clientY);
+        this.raycaster.setFromCamera(cameraNorm, this.camera);
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+        const i = intersects[0];
+        if (i != null) {
+            const {x, y} = i.point;
+            const ix = Math.round(x);
+            const iy = Math.round(y);
+            const tile = this.world.tileAt(ix, iy);
+            if (tile != null && tile.lightAmount() > 0) {
+                return tile;
+            }
+        }
+    }
+
     public animate() {
         const { world } = this;
         if (document.activeElement !== this.canvas) {
@@ -1383,12 +1421,9 @@ Textures in memory: ${this.renderer.info.memory.textures}
         if (this.gameState === "main") {
             if (params.isRealtime) {
                 if (this.frameCount % 3 === 0) {
-                    if (world.player.action == null) {
-                        this.world.player.action = { type: "none" };
-                    }
                     this.worldStepAndUpdateRenderers();
                 }
-            } else if (world.player.action != null) {
+            } else if (world.player.getAction() != null) {
                 this.worldStepAndUpdateRenderers();
             }
             // this.world.entities().forEach((entity) => {
@@ -1397,11 +1432,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
                 renderer.update();
             });
         }
-        const mouseNorm = new THREE.Vector2(
-            this.mouse.x / this.canvas.width * 2 - 1,
-            -this.mouse.y / this.canvas.height * 2 + 1,
-        );
-
+        const mouseNorm = this.getCameraNormCoordinates(this.mouse.x, this.mouse.y);
         if (this.uiState.type === "main") {
             this.scene.remove(this.expandingTileHighlight);
             const target = new THREE.Vector2(
@@ -1424,29 +1455,13 @@ Textures in memory: ${this.renderer.info.memory.textures}
         }
         this.renderer.render(this.scene, this.camera);
 
-        // this.mouse.x = event.clientX! / this.canvas.width * 2 - 1;
-        // this.mouse.y = -event.clientY! / this.canvas.height * 2 + 1;
-        this.raycaster.setFromCamera(mouseNorm, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
-        const i = intersects[0];
-        if (i != null) {
-            const {x, y} = i.point;
-            const ix = Math.round(x);
-            const iy = Math.round(y);
-            const thisHoveredTile = this.world.tileAt(ix, iy);
-            if (thisHoveredTile != null) {
-                if (thisHoveredTile.lightAmount() === 0) {
-                    this.hoveredTile = undefined;
-                } else {
-                    this.hoveredTile = thisHoveredTile;
-                }
-                if (this.hoverRef != null) {
-                    this.hoverRef.setState({
-                        tile: this.hoveredTile,
-                    });
-                }
-            }
+        if (this.hoverRef != null) {
+            this.hoveredTile = this.getTileAtScreenPosition(this.mouse.x, this.mouse.y);
+            this.hoverRef.setState({
+                tile: this.hoveredTile,
+            });
         }
+
         if (this.hudRef != null) {
             const isTutorialFinished = this.tutorialRef == null ? true : this.tutorialRef.isFinished();
             this.hudRef.setState({
@@ -1473,6 +1488,18 @@ Textures in memory: ${this.renderer.info.memory.textures}
         // this.camera.position.z = 1;
         // this.camera.lookAt(new Vector3(0, 0, 0));
         this.camera.updateProjectionMatrix();
+    }
+
+    public enqueuePlayerMoveToMouse(clientX: number, clientY: number) {
+        const target = this.getTileAtScreenPosition(clientX, clientY);
+        if (target) {
+            const path = findPath(this.world, target.pos);
+            const actions = path.map((dir) => ({
+                type: "move",
+                dir,
+            }) as ActionMove);
+            this.world.player.setActions(actions);
+        }
     }
 }
 
