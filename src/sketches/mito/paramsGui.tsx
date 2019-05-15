@@ -17,7 +17,7 @@ export default class ParamsGUI extends React.Component {
         gui.add(params, "leafReactionRate", 0, 1, .01);
         gui.add(params, "leafSugarPerReaction", 0, 1, .01);
         gui.add(params, "rootTurnsPerTransfer", 1, 100, 1);
-        gui.add(params, "sugarDiffusionRate", 0, .25);
+        gui.add(params, "sugarDiffusionRate", 0, .25, .0001);
         gui.add(params, "sunlightReintroduction", 0, 1, 0.01);
         gui.add(params, "transportTurnsPerMove", 1, 50, 1);
         gui.add(params, "waterDiffusionRate", 0, .25);
