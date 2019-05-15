@@ -5,7 +5,7 @@ import { map } from "../../math/index";
 import { DIRECTIONS } from "./directions";
 import { height, width, World } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
-import { CELL_ENERGY_MAX, DROOP_PER_TURN, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, LEAF_SUGAR_PER_REACTION, ROOT_TURNS_PER_TRANSFER, SOIL_MAX_WATER, SUGAR_DIFFUSION_RATE, TISSUE_INVENTORY_CAPACITY, TRANSPORT_TURNS_PER_MOVE, WATER_DIFFUSION_RATE, WATER_DIFFUSION_TYPE, WATER_GRAVITY_PER_TURN } from "./params";
+import { params } from "./params";
 
 export interface HasEnergy {
     energy: number;
@@ -64,7 +64,7 @@ export abstract class Tile {
 
             // do some gravity
             if (upperNeighbor && hasInventory(upperNeighbor) && isSubclass(upperNeighbor, this) && !(this instanceof Cell)) {
-                upperNeighbor.inventory.give(this.inventory, WATER_GRAVITY_PER_TURN, 0);
+                upperNeighbor.inventory.give(this.inventory, params.waterGravityPerTurn, 0);
             }
 
             for (const tile of diffusionNeighbors) {
@@ -93,18 +93,18 @@ export abstract class Tile {
                     //     tile.inventory.give(this.inventory, diff, 0);
                     // }
 
-                    if (WATER_DIFFUSION_TYPE === "continuous") {
-                        const diffusionAmount = (tile.inventory.water - this.inventory.water) * WATER_DIFFUSION_RATE;
+                    if (params.waterDiffusionType === "continuous") {
+                        const diffusionAmount = (tile.inventory.water - this.inventory.water) * params.waterDiffusionRate;
                         tile.inventory.give(this.inventory, diffusionAmount, 0);
                     } else {
                         const waterDiff = tile.inventory.water - this.inventory.water;
-                        if (waterDiff > 1 && Math.random() < waterDiff * WATER_DIFFUSION_RATE) {
+                        if (waterDiff > 1 && Math.random() < waterDiff * params.waterDiffusionRate) {
                             tile.inventory.give(this.inventory, 1, 0);
                         }
                     }
                 }
                 if (tile.inventory.sugar > this.inventory.sugar) {
-                    const diffusionAmount = (tile.inventory.sugar - this.inventory.sugar) * SUGAR_DIFFUSION_RATE;
+                    const diffusionAmount = (tile.inventory.sugar - this.inventory.sugar) * params.sugarDiffusionRate;
                     // if (Math.random() < diffusionChance) {
                     tile.inventory.give(this.inventory, 0, diffusionAmount);
                     // }
@@ -154,7 +154,7 @@ export class Air extends Tile {
 
 export class Soil extends Tile implements HasInventory {
     static displayName = "Soil";
-    public inventory = new Inventory(SOIL_MAX_WATER);
+    public inventory = new Inventory(params.soilMaxWater);
     constructor(pos: Vector2, water: number = 0, world: World) {
         super(pos, world);
         this.inventory.change(water, 0);
@@ -174,7 +174,7 @@ export class Fountain extends Soil {
     static displayName = "Fountain";
     isObstacle = true;
     private cooldown = 0;
-    constructor(pos: Vector2, water: number = 0, world: World, public turnsPerWater = FOUNTAINS_TURNS_PER_WATER) {
+    constructor(pos: Vector2, water: number = 0, world: World, public turnsPerWater = params.fountainTurnsPerWater) {
         super(pos, water, world);
     }
     step() {
@@ -196,7 +196,7 @@ interface MetabolismState {
 }
 export class Cell extends Tile implements HasEnergy {
     static displayName = "Cell";
-    public energy: number = CELL_ENERGY_MAX;
+    public energy: number = params.cellEnergyMax;
     public darkness = 0;
     // public metabolism: MetabolismState = {
     //     type: "not-eating",
@@ -240,14 +240,14 @@ export class Cell extends Tile implements HasEnergy {
         if (true) {
             for (const tile of neighborsAndSelf) {
                 if (hasInventory(tile) && !(tile instanceof Fruit)) {
-                    if (this.energy < CELL_ENERGY_MAX) {
-                        const wantedEnergy = CELL_ENERGY_MAX - this.energy;
+                    if (this.energy < params.cellEnergyMax) {
+                        const wantedEnergy = params.cellEnergyMax - this.energy;
                         const wantedSugar = Math.min(
-                            wantedEnergy / ENERGY_TO_SUGAR_RATIO,
+                            wantedEnergy / params.cellEnergyMax,
                             tile.inventory.sugar,
                         );
                         tile.inventory.change(0, -wantedSugar);
-                        const gotEnergy = wantedSugar * ENERGY_TO_SUGAR_RATIO;
+                        const gotEnergy = wantedSugar * params.cellEnergyMax;
                         this.energy += gotEnergy;
                         // if (gotEnergy > 0) {
                         //     console.log(`got ${gotEnergy}, now at ${this.energy}`);
@@ -257,11 +257,11 @@ export class Cell extends Tile implements HasEnergy {
                     }
                 }
             }
-            if (this.energy < CELL_ENERGY_MAX) {
+            if (this.energy < params.cellEnergyMax) {
                 const energeticNeighbors = neighborsAndSelf.filter((t) => hasEnergy(t)) as any as HasEnergy[];
                 const averageEnergy = energeticNeighbors.reduce((energy, neighbor) => energy + neighbor.energy, 0) / energeticNeighbors.length;
                 for (const neighbor of energeticNeighbors) {
-                    if (this.energy < CELL_ENERGY_MAX) {
+                    if (this.energy < params.cellEnergyMax) {
                         let energyTransfer = 0;
                         // // take energy from neighbors who have more than you - this might be unstable w/o double buffering
                         // const targetEnergy = averageEnergy;
@@ -274,7 +274,7 @@ export class Cell extends Tile implements HasEnergy {
                             if (neighbor.energy - energyTransfer < 0) {
                                 throw new Error("cell energy diffusion: taking more energy than available");
                             }
-                            if (this.energy + energyTransfer > CELL_ENERGY_MAX) {
+                            if (this.energy + energyTransfer > params.cellEnergyMax) {
                                 throw new Error("cell energy diffusion: taking more energy than i can carry");
                             }
                             // const boundedEnergy = Math.min(wantedEnergy, (neighbor.energy + this.energy) / 2);
@@ -350,9 +350,9 @@ export class Cell extends Tile implements HasEnergy {
         const aboveLeft = tileNeighbors.get(DIRECTIONS.nw)!;
         const aboveRight = tileNeighbors.get(DIRECTIONS.ne)!;
 
-        this.droopY += DROOP_PER_TURN;
-        if (this.energy < CELL_ENERGY_MAX / 2) {
-            this.droopY += DROOP_PER_TURN;
+        this.droopY += params.droop;
+        if (this.energy < params.cellEnergyMax / 2) {
+            this.droopY += params.droop;
         }
 
         let hasSupportBelow = false;
@@ -380,7 +380,7 @@ export class Cell extends Tile implements HasEnergy {
 
 export class Tissue extends Cell implements HasInventory {
     static displayName = "Tissue";
-    public inventory = new Inventory(TISSUE_INVENTORY_CAPACITY);
+    public inventory = new Inventory(params.tissueInventoryCapacity);
 }
 
 interface IHasTilePairs {
@@ -425,17 +425,17 @@ export class Leaf extends Cell {
                 this.averageEfficiency += efficiency;
                 this.averageSpeed += speed;
                 numAir += 1;
-                if (Math.random() < speed * LEAF_MAX_CHANCE) {
+                if (Math.random() < speed * params.leafReactionRate) {
                     // const neededWater = Math.round(1 / efficiency);
                     // transform 1 sugar this turn
-                    const neededWaterFract = LEAF_SUGAR_PER_REACTION / efficiency;
+                    const neededWaterFract = params.leafSugarPerReaction / efficiency;
                     const waterLow = Math.floor(neededWaterFract);
                     const waterHigh = Math.ceil(neededWaterFract);
                     const chance = neededWaterFract - waterLow;
                     const neededWater = neededWaterFract; // Math.random() < chance ? waterLow : waterHigh;
                     const tissueWater = tissue.inventory.water;
                     if (tissueWater >= neededWater) {
-                        tissue.inventory.change(-neededWater, LEAF_SUGAR_PER_REACTION);
+                        tissue.inventory.change(-neededWater, params.leafSugarPerReaction);
                         this.didConvert = true;
                     }
                 }
@@ -460,7 +460,7 @@ export class Root extends Cell {
         super.step();
         if (this.cooldown <= 0) {
             this.stepWaterTransfer();
-            this.cooldown += ROOT_TURNS_PER_TRANSFER;
+            this.cooldown += params.rootTurnsPerTransfer;
         }
         this.cooldown -= 1;
     }
@@ -521,7 +521,7 @@ export class Transport extends Tissue {
         const targetTile = this.world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
         if (targetTile instanceof Cell && hasInventory(targetTile) && this.cooldown <= 0) {
             this.inventory.give(targetTile.inventory, 1, 1);
-            this.cooldown += TRANSPORT_TURNS_PER_MOVE;
+            this.cooldown += params.transportTurnsPerMove;
         }
         this.cooldown -= 1;
     }

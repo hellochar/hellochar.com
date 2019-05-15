@@ -15,7 +15,7 @@ import { DIRECTION_VALUES } from "./directions";
 import { hasInventory, Inventory } from "./inventory";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
-import { CELL_ENERGY_MAX, CELL_SUGAR_BUILD_COST, IS_REALTIME, PLAYER_MAX_INVENTORY, SUNLIGHT_REINTRODUCTION } from "./params";
+import { params } from "./params";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { NewPlayerTutorial } from "./tutorial";
@@ -31,7 +31,7 @@ function isSteppable(obj: any): obj is Steppable {
     return typeof obj.step === "function";
 }
 class Player {
-    public inventory = new Inventory(PLAYER_MAX_INVENTORY, PLAYER_MAX_INVENTORY / 2, PLAYER_MAX_INVENTORY / 2);
+    public inventory = new Inventory(params.maxResources, params.maxResources / 2, params.maxResources / 2);
     public action?: Action;
     private events = new EventEmitter();
 
@@ -164,7 +164,7 @@ class Player {
         }
 
         const waterCost = 1;
-        const sugarCost = CELL_SUGAR_BUILD_COST;
+        const sugarCost = 1;
         const tileAlreadyExists = targetTile instanceof cellType && !((cellType as any) === Transport && targetTile instanceof Transport);
         if (!tileAlreadyExists &&
             !targetTile.isObstacle &&
@@ -522,7 +522,7 @@ export class World {
                         sunlight = sunlight * 0.5 + ((upSunlight + rightSunlight + leftSunlight) / 3) * 0.5;
                     }
                     // have at least a bit
-                    sunlight = SUNLIGHT_REINTRODUCTION + sunlight * (1 - SUNLIGHT_REINTRODUCTION);
+                    sunlight = params.sunlightReintroduction + sunlight * (1 - params.sunlightReintroduction);
                     t.sunlightCached = sunlight;
                 }
             }
@@ -822,7 +822,7 @@ class TileRenderer extends Renderer<Tile> {
             this.object.position.set(this.target.pos.x, this.target.pos.y + this.target.droopY, 1);
         }
         if (hasEnergy(this.target)) {
-            mat.color.lerp(new THREE.Color(0), 1 - this.target.energy / CELL_ENERGY_MAX);
+            mat.color.lerp(new THREE.Color(0), 1 - this.target.energy / params.cellEnergyMax);
         }
         if (this.inventoryRenderer != null) {
             if (lightAmount === 0) {
@@ -1367,7 +1367,7 @@ class Mito extends ISketch {
             this.canvas.focus();
         }
         if (this.gameState === "main") {
-            if (IS_REALTIME) {
+            if (params.isRealtime) {
                 if (this.frameCount % 3 === 0) {
                     if (world.player.action == null) {
                         this.world.player.action = { type: "none" };

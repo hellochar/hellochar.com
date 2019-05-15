@@ -6,7 +6,7 @@ import { GameState, UIState, World } from "./index";
 import Mito from "./index";
 import { hasInventory } from "./inventory";
 import { BUILD_HOTKEYS } from "./keymap";
-import { CELL_ENERGY_MAX, ENERGY_TO_SUGAR_RATIO, FOUNTAINS_TURNS_PER_WATER, LEAF_MAX_CHANCE, PLAYER_MAX_INVENTORY, SOIL_MAX_WATER, TISSUE_INVENTORY_CAPACITY, WATER_DIFFUSION_RATE } from "./params";
+import { params } from "./params";
 import { Air, Cell, Fruit, hasEnergy, Leaf, Root, Tile, Tissue, Transport } from "./tile";
 
 interface HUDProps {
@@ -35,7 +35,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
     };
 
     public render() {
-        const isMaxed = this.state.water + this.state.sugar > PLAYER_MAX_INVENTORY - 1;
+        const isMaxed = this.state.water + this.state.sugar > params.maxResources - 1;
         const isMaxedEl = <div className={`mito-inventory-maxed${isMaxed ? " is-maxed" : ""}`}>maxed</div>;
 
         return (
@@ -121,9 +121,9 @@ export class HUD extends React.Component<HUDProps, HUDState> {
     }
 
     renderInventoryBar() {
-        const waterPercent = this.state.water / PLAYER_MAX_INVENTORY;
-        const sugarPercent = this.state.sugar / PLAYER_MAX_INVENTORY;
-        const emptyPercent = 1 - (this.state.water + this.state.sugar) / PLAYER_MAX_INVENTORY;
+        const waterPercent = this.state.water / params.maxResources;
+        const sugarPercent = this.state.sugar / params.maxResources;
+        const emptyPercent = 1 - (this.state.water + this.state.sugar) / params.maxResources;
 
         const waterStyles: React.CSSProperties = { width: `${(waterPercent * 100)}%` };
         const sugarStyles: React.CSSProperties = { width: `${(sugarPercent * 100)}%` };
@@ -316,15 +316,15 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     </p>
                     <h3>You</h3>
                     <p>
-                        You can carry max {PLAYER_MAX_INVENTORY} resources, and you automatically suck in any resources you're standing over.
+                        You can carry max {params.maxResources} resources, and you automatically suck in any resources you're standing over.
                         You can only walk on Tissue (and Transport).
                         You start at the center of the map, with soil below and air above.
                     </p>
                     <h3>Soil and Underground</h3>
                     <p>
                         Underground, Soil holds water, rocks block your way, and occasionally Fountains (at the very bottom) are a permanent source of water.
-                        Soil holds up to {SOIL_MAX_WATER} water at a time.
-                        Fountains emit one water per {FOUNTAINS_TURNS_PER_WATER} turns.
+                        Soil holds up to {params.soilMaxWater} water at a time.
+                        Fountains emit one water per {params.fountainTurnsPerWater} turns.
                     </p>
                     <h3>Air and Aboveground</h3>
                     <p>
@@ -337,7 +337,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <h3>Water</h3>
                     <p>
                         Water is one of the main two resources.
-                        Water slowly diffuses from high to low densities (difference 2 required) at about 1 unit per {(1 / WATER_DIFFUSION_RATE).toFixed(0)} turns.
+                        Water slowly diffuses from high to low densities (difference 2 required) at about 1 unit per {(1 / params.waterDiffusionRate).toFixed(0)} turns.
                         Obtain water in the ground through Roots. Leaves require water to photosynthesize. You require water to build.
                     </p>
                     <h3>Sugar</h3>
@@ -355,11 +355,11 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <h3>Cells</h3>
                     <p>
                         All cells require energy upkeep and will automatically eat sugar on their tile, or get energy from their neighbors.
-                        Each cell consumes 1 sugar every {ENERGY_TO_SUGAR_RATIO} turns.
+                        Each cell consumes 1 sugar every {params.cellEnergyMax} turns.
                     </p>
                     <h3>Tissue</h3>
                     <p>
-                        Tissue connects your plant together, you may only walk on Tissue. Each Tissue carries up to {TISSUE_INVENTORY_CAPACITY} resources.
+                        Tissue connects your plant together, you may only walk on Tissue. Each Tissue carries up to {params.tissueInventoryCapacity} resources.
                     </p>
                     <h3>Roots</h3>
                     <p>
@@ -369,7 +369,7 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
                     <h3>Leaves</h3>
                     <p>
                         When exposed to Air, Leaves convert water to sugar. Leaves also use Pairings between opposite direction Air/Tissue with water.
-                        In perfect co2, leave produce on average 1 sugar per {(1 / LEAF_MAX_CHANCE).toFixed(0)} turns per pair.
+                        In perfect co2, leave produce on average 1 sugar per {(1 / params.leafReactionRate).toFixed(0)} turns per pair.
                         Leaf efficiency is heavily influenced by co2 and sunlight of its neighboring Air.
                         If your leaf is in too much shadow, it will not be able to photosynthesize.
                         Leaves higher up produce sugar faster.
@@ -472,7 +472,7 @@ export class TileHover extends React.Component<{}, HoverState> {
     private leafInfo(tile: Tile) {
         return tile instanceof Leaf ? (
             <>
-                <div>{(1 / (tile.averageSpeed * LEAF_MAX_CHANCE)).toFixed(0)} turns per reaction</div>
+                <div>{(1 / (tile.averageSpeed * params.leafReactionRate)).toFixed(0)} turns per reaction</div>
                 <div>{(1 / tile.averageEfficiency).toFixed(2)} water per sugar</div>
             </>
         ) : null;
@@ -484,7 +484,7 @@ export class TileHover extends React.Component<{}, HoverState> {
 
     private energyInfo(tile: Tile) {
         if (hasEnergy(tile)) {
-            return <>{(tile.energy / CELL_ENERGY_MAX * 100).toFixed(0)}% energy</>;
+            return <>{(tile.energy / params.cellEnergyMax * 100).toFixed(0)}% energy</>;
         }
         return null;
     }

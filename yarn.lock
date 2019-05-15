@@ -27,6 +27,10 @@
   version "2.2.6"
   resolved "https://registry.yarnpkg.com/@types/classnames/-/classnames-2.2.6.tgz#dbe8a666156d556ed018e15a4c65f08937c3f628"
 
+"@types/dat.gui@^0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@types/dat.gui/-/dat.gui-0.7.2.tgz#f6964d39504e97533774954e3dcf7a9f669196e8"
+
 "@types/google.analytics@^0.0.39":
   version "0.0.39"
   resolved "https://registry.yarnpkg.com/@types/google.analytics/-/google.analytics-0.0.39.tgz#19a952003dbf3c7373d655a5c3203b4726b8b802"
@@ -2171,6 +2175,10 @@ dashdash@^1.12.0:
   resolved "https://registry.yarnpkg.com/dashdash/-/dashdash-1.14.1.tgz#853cfa0f7cbe2fed5de20326b8dd581035f6e2f0"
   dependencies:
     assert-plus "^1.0.0"
+
+dat.gui@^0.7.6:
+  version "0.7.6"
+  resolved "https://registry.yarnpkg.com/dat.gui/-/dat.gui-0.7.6.tgz#92182a0f2dc96c26910f888238d3839166d82f76"
 
 date-fns@^1.27.2:
   version "1.29.0"
