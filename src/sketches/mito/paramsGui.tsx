@@ -11,25 +11,25 @@ export default class ParamsGUI extends React.Component {
             closed: true,
             width: 450,
         });
-        gui.add(params, "isRealtime");
-        gui.add(params, "rootTurnsPerTransfer", 1, 100, 1);
-        gui.add(params, "leafReactionRate", 0, 1, .01);
-        gui.add(params, "leafSugarPerReaction", 0, 1, .01);
-        gui.add(params, "waterDiffusionRate", 0, .25);
-        gui.add(params, "waterDiffusionType", ["discrete", "continuous"]);
-        gui.add(params, "sugarDiffusionRate", 0, .25);
-        gui.add(params, "waterGravityPerTurn", 0, 1);
         gui.add(params, "droop", 0, 0.5, 0.01);
         gui.add(params, "fountainTurnsPerWater", 1, 100, 1);
-        gui.add(params, "transportTurnsPerMove", 1, 50, 1);
+        gui.add(params, "isRealtime");
+        gui.add(params, "leafReactionRate", 0, 1, .01);
+        gui.add(params, "leafSugarPerReaction", 0, 1, .01);
+        gui.add(params, "rootTurnsPerTransfer", 1, 100, 1);
+        gui.add(params, "sugarDiffusionRate", 0, .25);
         gui.add(params, "sunlightReintroduction", 0, 1, 0.01);
+        gui.add(params, "transportTurnsPerMove", 1, 50, 1);
+        gui.add(params, "waterDiffusionRate", 0, .25);
+        gui.add(params, "waterDiffusionType", ["discrete", "continuous"]);
+        gui.add(params, "waterGravityPerTurn", -0.2, 1);
         const f = gui.addFolder("Needs Page Refresh");
-        f.add(params, "cellEnergyMax", 400, 10000, 100).name("cellEnergyMax");
+        f.add(params, "cellEnergyMax", 400, 10000, 100);
         f.add(params, "maxResources", 10, 1000, 1);
         f.add(params, "soilMaxWater", 1, 100, 1);
         f.add(params, "tissueInventoryCapacity", 1, 100, 1);
 
-        for (const c of gui.__controllers) {
+        for (const c of gui.__controllers.concat(f.__controllers)) {
             c.onFinishChange(updateParamsHash);
         }
 
