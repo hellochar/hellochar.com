@@ -1,7 +1,7 @@
 import { Vector2 } from "three";
 
 import { Constructor } from "./constructor";
-import { Cell, Transport } from "./tile";
+import { Cell, Transport } from "./game/tile";
 
 export interface ActionStill {
     type: "still";

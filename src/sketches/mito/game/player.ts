@@ -5,7 +5,7 @@ import { build, footsteps } from "../audio";
 import { Constructor } from "../constructor";
 import { hasInventory, Inventory } from "../inventory";
 import { params } from "../params";
-import { Cell, Fruit, Tissue, Transport } from "../tile";
+import { Cell, Fruit, Tissue, Transport } from "./tile";
 import { World } from "./world";
 
 export class Player {

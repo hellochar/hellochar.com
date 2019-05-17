@@ -1,12 +1,12 @@
 import { Vector2 } from "three";
 
-import { Noise } from "../../common/perlin";
-import { map } from "../../math/index";
-import { DIRECTIONS } from "./directions";
-import { World } from "./game/world";
-import { height, width } from "./index";
-import { hasInventory, HasInventory, Inventory } from "./inventory";
-import { params } from "./params";
+import { Noise } from "../../../common/perlin";
+import { map } from "../../../math/index";
+import { DIRECTIONS } from "../directions";
+import { height, width } from "../index";
+import { hasInventory, HasInventory, Inventory } from "../inventory";
+import { params } from "../params";
+import { World } from "./world";
 
 export interface HasEnergy {
     energy: number;

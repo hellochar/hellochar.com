@@ -10,13 +10,13 @@ import { Action, ActionBuild, ActionBuildTransport, ActionMove, ActionStill } fr
 import { blopBuffer, drums, hookUpAudio, strings, suckWaterBuffer } from "./audio";
 import { Constructor } from "./constructor";
 import { Player, World } from "./game";
+import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./game/tile";
 import { hasInventory, Inventory } from "./inventory";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 import { params } from "./params";
 import { directionFor, findPath } from "./pathfinding";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
-import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { NewPlayerTutorial } from "./tutorial";
 import TileHighlight from "./tutorial/tileHighlight";
 import { GameStack, HUD, ParamsGUI, TileHover } from "./ui";

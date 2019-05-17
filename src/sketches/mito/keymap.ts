@@ -1,7 +1,7 @@
 import { Action } from "./action";
 import { Constructor } from "./constructor";
 import { DIRECTIONS } from "./directions";
-import { Cell, Fruit, Leaf, Root, Tissue, Transport } from "./tile";
+import { Cell, Fruit, Leaf, Root, Tissue, Transport } from "./game/tile";
 
 export const ACTION_KEYMAP: { [key: string]: Action } = {
     "1": {

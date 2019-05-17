@@ -4,7 +4,7 @@ import { Vector2 } from "three";
 import { height, width } from ".";
 import { DIRECTION_VALUES } from "./directions";
 import { World } from "./game";
-import { Tissue } from "./tile";
+import { Tissue } from "./game/tile";
 
 export function findPath(world: World, target: Vector2, expandOne: boolean): Vector2[] {
     // const matrix = world.gridCells.map((row) => row.map((cell) => (cell instanceof Tissue) ? 0 : 1));

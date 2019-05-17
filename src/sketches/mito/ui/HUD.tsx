@@ -2,11 +2,11 @@ import * as classnames from "classnames";
 import * as React from "react";
 
 import { Constructor } from "../constructor";
+import { Cell, Fruit, Leaf, Root, Tissue, Transport } from "../game/tile";
 import { World } from "../game/world";
 import { UIState } from "../index";
 import { BUILD_HOTKEYS } from "../keymap";
 import { params } from "../params";
-import { Cell, Fruit, Leaf, Root, Tissue, Transport } from "../tile";
 
 export interface HUDProps {
     world: World;

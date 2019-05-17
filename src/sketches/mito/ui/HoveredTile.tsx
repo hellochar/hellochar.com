@@ -1,12 +1,14 @@
 import * as React from "react";
 
 import { Constructor } from "../constructor";
+import { Air, Cell, hasEnergy, Leaf, Root, Tile } from "../game/tile";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
-import { Air, Cell, hasEnergy, Leaf, Root, Tile } from "../tile";
+
 interface HoverState {
     tile?: Tile;
 }
+
 export class TileHover extends React.Component<{}, HoverState> {
     state: HoverState = {
         tile: undefined,

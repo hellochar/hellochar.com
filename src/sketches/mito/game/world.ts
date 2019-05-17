@@ -6,8 +6,8 @@ import { DIRECTION_VALUES } from "../directions";
 import { Entity, GameState, height, isSteppable, width } from "../index";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
-import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, Rock, Soil, Tile, Tissue } from "../tile";
 import { Player } from "./player";
+import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, Rock, Soil, Tile, Tissue } from "./tile";
 
 export class World {
     public time: number = 0;
