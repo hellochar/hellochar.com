@@ -1,9 +1,9 @@
 import * as dat from 'dat.gui';
 import * as React from 'react';
 
-import { params, updateParamsHash } from "./params";
+import { params, updateParamsHash } from "../params";
 
-export default class ParamsGUI extends React.Component {
+export class ParamsGUI extends React.Component {
     private gui: dat.GUI;
     constructor(props: any) {
         super(props);

@@ -16,13 +16,12 @@ import { hasInventory, Inventory } from "./inventory";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 import { params } from "./params";
-import ParamsGUI from "./paramsGui";
 import { directionFor, findPath } from "./pathfinding";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { NewPlayerTutorial } from "./tutorial";
 import TileHighlight from "./tutorial/tileHighlight";
-import { GameStack, HUD, TileHover } from "./ui";
+import { GameStack, HUD, ParamsGUI, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
 
