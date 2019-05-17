@@ -364,6 +364,14 @@ export class World {
         }
     }
 
+    public cellAt(x: number, y: number): Cell | null {
+        if (this.isValidPosition(x, y)) {
+            return this.gridCells[x][y];
+        } else {
+            return null;
+        }
+    }
+
     // Rules for replacement:
     // if tile is environment, clear out the gridCell and set the gridEnvironment.
     // if tile is cell, set gridCell, leave gridEnvironment alone.

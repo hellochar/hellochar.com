@@ -45,7 +45,7 @@ export abstract class Tile {
                 }
             }, this.darkness);
             this.darkness = minDarkness;
-            const cellHere = this.world.gridCells[this.pos.x][this.pos.y] != null;
+            const cellHere = this.world.cellAt(this.pos.x, this.pos.y) != null;
             if (cellHere) {
                 console.error("stepping environmental tile even when a cell is on-top:", cellHere);
             }
