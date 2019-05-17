@@ -95,6 +95,16 @@
     &.ui-popup-bottom {
         bottom: 15%;
         left: 50%;
+
+        .connector-line {
+            width: 3px;
+            height: calc(27.3vh - 100%);
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5), white);
+            z-index: -1;
+            position: absolute;
+            left: calc(50% - 1.5px);
+            bottom: 100%;
+        }
     }
 
     &.ui-popup-left {

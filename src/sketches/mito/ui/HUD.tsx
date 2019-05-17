@@ -2,7 +2,8 @@ import * as classnames from "classnames";
 import * as React from "react";
 
 import { Constructor } from "../constructor";
-import { UIState, World } from "../index";
+import { World } from "../game/world";
+import { UIState } from "../index";
 import { BUILD_HOTKEYS } from "../keymap";
 import { params } from "../params";
 import { Cell, Fruit, Leaf, Root, Tissue, Transport } from "../tile";
@@ -184,12 +185,15 @@ export class HUD extends React.Component<HUDProps, HUDState> {
                 }
             }
             buttons.push(this.renderButton("Esc", null));
-            return (<div className="ui-popup ui-popup-bottom">
-                <span className="popup-title">Build</span>
-                <div className="popup-content popup-row">
-                    {buttons}
+            return (
+                <div className="ui-popup ui-popup-bottom">
+                    <div className="connector-line"></div>
+                    <span className="popup-title">Build</span>
+                    <div className="popup-content popup-row">
+                        {buttons}
+                    </div>
                 </div>
-            </div>);
+            );
         }
     }
     public renderAutoplacePopup() {

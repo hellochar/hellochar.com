@@ -3,7 +3,8 @@ import { Vector2 } from "three";
 import { Noise } from "../../common/perlin";
 import { map } from "../../math/index";
 import { DIRECTIONS } from "./directions";
-import { height, width, World } from "./index";
+import { World } from "./game/world";
+import { height, width } from "./index";
 import { hasInventory, HasInventory, Inventory } from "./inventory";
 import { params } from "./params";
 

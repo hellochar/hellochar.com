@@ -1,8 +1,9 @@
 import { AStarFinder, DiagonalMovement, Grid } from "pathfinding";
 import { Vector2 } from "three";
 
-import { height, width, World } from ".";
-import { DIRECTION_VALUES, DIRECTIONS } from "./directions";
+import { height, width } from ".";
+import { DIRECTION_VALUES } from "./directions";
+import { World } from "./game";
 import { Tissue } from "./tile";
 
 export function findPath(world: World, target: Vector2, expandOne: boolean): Vector2[] {
