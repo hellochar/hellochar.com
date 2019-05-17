@@ -276,3 +276,28 @@
         -webkit-padding-start: 20px;
     }
 }
+
+.tile-hover {
+    text-align: left;
+    min-width: 120px;
+    min-height: 25px;
+    position: absolute;
+    top: 0;
+    left: 200px;
+    background: rgba(255, 255, 255, 0.95);
+    pointer-events: none;
+    border-radius: 2px;
+    border: 1px solid rgb(220, 220, 220);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+
+    .info-tile-name {
+        display: inline-block;
+        font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+        padding-right: 5px;
+    }
+    .info-energy {
+        font-size: 0.75em;
+    }
+}

@@ -8,7 +8,7 @@ import lazy from "../../common/lazy";
 import { Noise } from "../../common/perlin";
 import { map } from "../../math/index";
 import { ISketch } from "../../sketch";
-import { Action, ActionBuild, ActionBuildTransport, ActionDrop, ActionMove, ActionStill } from "./action";
+import { Action, ActionBuild, ActionBuildTransport, ActionDeconstruct, ActionDrop, ActionMove, ActionStill } from "./action";
 import { blopBuffer, build, drums, footsteps, hookUpAudio, strings, suckWaterBuffer } from "./audio";
 import { Constructor } from "./constructor";
 import { DIRECTION_VALUES } from "./directions";
@@ -17,10 +17,11 @@ import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { MOVEMENT_KEY_MESHES } from "./movementKeyMeshes";
 import { params } from "./params";
 import ParamsGUI from "./paramsGui";
-import { findPath } from "./pathfinding";
+import { directionFor, findPath } from "./pathfinding";
 import { fruitTexture, textureFromSpritesheet } from "./spritesheet";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "./tile";
 import { NewPlayerTutorial } from "./tutorial";
+import TileHighlight from "./tutorial/tileHighlight";
 import { GameStack, HUD, TileHover } from "./ui";
 
 export type Entity = Tile | Player;
@@ -108,6 +109,8 @@ class Player {
                 return this.attemptBuild(action);
             case "build-transport":
                 return this.attemptBuildTransport(action);
+            case "deconstruct":
+                return this.attemptDeconstruct(action);
             case "drop":
                 return this.attemptDrop(action);
         }
@@ -235,6 +238,21 @@ class Player {
         } else {
             return false;
         }
+    }
+
+    public attemptDeconstruct(action: ActionDeconstruct): boolean {
+        if (!action.position.equals(this.pos)) {
+            const maybeCell = this.world.maybeRemoveCellAt(action.position);
+            if (maybeCell != null) {
+                // refund the sugar remaining
+                this.inventory.change(0, Math.min(maybeCell.energy / params.cellEnergyMax, this.inventory.space()));
+                if (hasInventory(maybeCell)) {
+                    maybeCell.inventory.give(this.inventory, maybeCell.inventory.water, maybeCell.inventory.sugar);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     public attemptDrop(action: ActionDrop) {
@@ -416,6 +434,15 @@ export class World {
             this.gridEnvironment[x][y] = tile;
         }
         this.fillCachedEntities();
+    }
+
+    public maybeRemoveCellAt(position: Vector2): Cell | null {
+        const maybeCell = this.cellAt(position.x, position.y);
+        if (maybeCell) {
+            this.gridCells[position.x][position.y] = null;
+        }
+        this.fillCachedEntities();
+        return maybeCell;
     }
 
     public isValidPosition(x: number, y: number) {
@@ -1121,7 +1148,8 @@ class Mito extends ISketch {
     public renderers = new Map<Entity, Renderer<Entity>>();
     // when true, automatically create tissue tiles when walking into soil or dirt
     public autoplace: Constructor<Cell> | undefined;
-    public elements = [
+    public render() {
+        return <>
         <HUD
             ref={(ref) => this.hudRef = ref!}
             // onAutoplaceSet={(autoplace) => {
@@ -1136,12 +1164,14 @@ class Mito extends ISketch {
                 this.tryAction(key, false);
             }}
             world={this.world}
-        />,
-        <TileHover ref={(ref) => this.hoverRef = ref } />,
-        <GameStack ref={(ref) => this.gameStackRef = ref } mito={this} />,
-        // <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />,
-        <ParamsGUI />,
-    ];
+        />
+        <TileHover ref={(ref) => this.hoverRef = ref } />
+        <GameStack ref={(ref) => this.gameStackRef = ref } mito={this} />
+        {/* <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />, */}
+        <ParamsGUI />
+        { this.hoveredTile ? <TileHighlight x={this.hoveredTile.pos.x} y={this.hoveredTile.pos.y} scene={this.scene} /> : null }
+        </>;
+    }
     public hudRef: HUD | null = null;
     public hoverRef: TileHover | null = null;
     public gameStackRef: GameStack | null = null;
@@ -1180,23 +1210,47 @@ class Mito extends ISketch {
     }
 
     public events = {
+        contextmenu: (event: JQuery.Event) => {
+            if (this.uiState.type === "main") {
+                const tile = this.getTileAtScreenPosition(event.clientX!, event.clientY!);
+                if (tile != null) {
+                    this.world.player.setAction({
+                        type: "deconstruct",
+                        position: tile.pos,
+                    });
+                }
+            }
+            return false;
+        },
         mousemove: (event: JQuery.Event) => {
             this.mouse.x = event.clientX!;
             this.mouse.y = event.clientY!;
-            if (this.hoverRef != null) {
-                this.hoverRef.setState({
-                    left: this.mouse.x,
-                    top: this.mouse.y,
-                });
-            }
         },
         click: (event: JQuery.Event) => {
-            if (this.hoverRef != null) {
-                this.hoverRef.setState({
-                    show: !this.hoverRef.state.show,
-                });
+            // left-click
+            const isBuildAttempt = (() => {
+                const { player } = this.world;
+                // try build
+                const tile = this.getTileAtScreenPosition(event.clientX!, event.clientY!);
+                if (tile) {
+                    const direction = directionFor(player.pos.x, player.pos.y, tile.pos.x, tile.pos.y);
+                    if (direction) {
+                        const move: ActionMove = {
+                            type: "move",
+                            dir: direction,
+                        };
+                        const isBuildCandidate = this.world.player.isBuildCandidate(move);
+                        if (isBuildCandidate) {
+                            this.enterUIStateExpanding(move);
+                            return true;
+                        }
+                    }
+                }
+            })();
+            if (!isBuildAttempt) {
+                this.resetUIState();
+                this.enqueuePlayerMoveToMouse(event.clientX!, event.clientY!);
             }
-            // this.enqueuePlayerMoveToMouse(event.clientX!, event.clientY!);
         },
         keydown: (event: JQuery.Event) => {
             const key = event.key!;
@@ -1501,7 +1555,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
     public enqueuePlayerMoveToMouse(clientX: number, clientY: number) {
         const target = this.getTileAtScreenPosition(clientX, clientY);
         if (target) {
-            const path = findPath(this.world, target.pos);
+            const path = findPath(this.world, target.pos, true);
             const actions = path.map((dir) => ({
                 type: "move",
                 dir,

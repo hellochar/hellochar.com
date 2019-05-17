@@ -39,9 +39,19 @@ export type SketchStatus = SketchSuccess | SketchError | SketchLoading;
 //      firing resize events
 //      attaching ui event listeners
 //      keeping focus on the canvas
-class SketchSuccessComponent extends React.Component<{ sketch: ISketch, eventsOnBody?: boolean }, {}> {
+interface SketchSuccessComponentProps {
+    sketch: ISketch;
+    eventsOnBody?: boolean;
+}
+class SketchSuccessComponent extends React.Component<SketchSuccessComponentProps, {frameCount: number}> {
     private frameId?: number;
     private lastTimestamp = 0;
+    constructor(props: SketchSuccessComponentProps) {
+        super(props);
+        this.state = {
+            frameCount: props.sketch.frameCount,
+        }
+    };
 
     componentDidMount() {
         this.updateRendererCanvasToMatchParent(this.props.sketch.renderer);
@@ -73,9 +83,13 @@ class SketchSuccessComponent extends React.Component<{ sketch: ISketch, eventsOn
     }
 
     render() {
-        const sketchElementsWithKey = this.props.sketch.elements == null
-            ? []
-            : this.props.sketch.elements.map((el, idx) => React.cloneElement(el, { key: idx }));
+        const sketchElementsWithKey: React.ReactNode[] = [];
+        if (this.props.sketch.render != null) {
+            sketchElementsWithKey.push(this.props.sketch.render());
+        }
+        if (this.props.sketch.elements != null) {
+            sketchElementsWithKey.push(...this.props.sketch.elements.map((el, idx) => React.cloneElement(el, { key: idx })));
+        }
         return (
             <div className="sketch-elements">
                 {sketchElementsWithKey}
@@ -114,6 +128,9 @@ class SketchSuccessComponent extends React.Component<{ sketch: ISketch, eventsOn
         this.props.sketch.frameCount++;
         this.props.sketch.timeElapsed = timestamp;
         this.props.sketch.animate(millisElapsed);
+        this.setState({
+            frameCount: this.props.sketch.frameCount,
+        });
         this.frameId = requestAnimationFrame(this.loop);
     }
 

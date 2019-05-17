@@ -18,6 +18,11 @@ export interface ActionBuild {
     position: Vector2;
 }
 
+export interface ActionDeconstruct {
+    type: "deconstruct";
+    position: Vector2;
+}
+
 export interface ActionBuildTransport {
     type: "build-transport";
     cellType: Constructor<Transport>;
@@ -35,4 +40,4 @@ export interface ActionNone {
     type: "none";
 }
 
-export type Action = ActionStill | ActionMove | ActionBuild | ActionBuildTransport | ActionDrop | ActionNone;
+export type Action = ActionStill | ActionMove | ActionBuild | ActionDeconstruct | ActionBuildTransport | ActionDrop | ActionNone;

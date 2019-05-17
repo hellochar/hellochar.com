@@ -414,9 +414,6 @@ class Instructions extends React.PureComponent<InstructionsProps, {}> {
 }
 
 interface HoverState {
-    show?: boolean;
-    left?: number;
-    top?: number;
     tile?: Tile;
 }
 
@@ -426,35 +423,21 @@ export class TileHover extends React.Component<{}, HoverState> {
     };
 
     public render() {
-        const {tile, left, top, show} = this.state;
-        if (!show) {
+        const { tile } = this.state;
+        if (!tile) {
             return null;
         }
-        const style: React.CSSProperties = {
-            left: left,
-            top: top,
-            width: "120px",
-            minHeight: "25px",
-            position: "fixed",
-            background: "rgba(255, 255, 255, 0.8)",
-            pointerEvents: "none",
-            borderRadius: 2,
-            border: "1px solid rgb(220, 220, 220)",
-        };
-        if (tile == null) {
-            return <div className="hover" style={style}>Unknown</div>;
-        }
-
-        const spans = [this.energyInfo(tile), this.inventoryInfo(tile), this.cellInfo(tile), this.rootInfo(tile), this.leafInfo(tile), this.airInfo(tile)];
-        const children = ([] as JSX.Element[]).concat(
-            ...spans.map((span) => {
-                return span == null ? [] : [<br />, span];
-            }),
-        );
+        const infos = [
+            this.tileInfo(tile),
+            this.inventoryInfo(tile),
+            this.cellInfo(tile),
+            this.rootInfo(tile),
+            this.leafInfo(tile),
+            this.airInfo(tile),
+        ];
+        const children = infos;
         return (
-            <div className="hover" style={style}>
-                {/* {(tile.constructor as TileConstructor).displayName} ({tile.pos.x}, {tile.pos.y}) ({tile.darkness}) */}
-                {(tile.constructor as Constructor<Tile>).displayName}
+            <div className="tile-hover">
                 { children }
             </div>
         );
@@ -462,55 +445,59 @@ export class TileHover extends React.Component<{}, HoverState> {
 
     private rootInfo(tile: Tile) {
         return tile instanceof Root ? (
-            <>
+            <div className="info-root">
             <div>{tile.cooldown} turns until next water suck</div>
             <div>{tile.waterTransferAmount.toFixed(0)} water transfer per round</div>
-            </>
+            </div>
         ) : null
     }
 
     private leafInfo(tile: Tile) {
         return tile instanceof Leaf ? (
-            <>
+            <div className="info-leaf">
                 <div>{(1 / (tile.averageSpeed * params.leafReactionRate)).toFixed(0)} turns per reaction</div>
                 <div>{(1 / tile.averageEfficiency).toFixed(2)} water per sugar</div>
-            </>
+            </div>
         ) : null;
     }
 
     private airInfo(tile: Tile) {
-        return tile instanceof Air ? <>sunlight: {(tile.sunlight() * 100).toFixed(0)}%, co2: {(tile.co2() * 100).toFixed(0)}%</> : null;
+        if (tile instanceof Air) {
+            return (
+                <div className="info-air">
+                    <div>☀️ {(tile.sunlight() * 100).toFixed(0)}%</div>
+                    <div>☁️ {(tile.co2() * 100).toFixed(0)}%</div>
+                </div>
+            );
+        }
     }
 
-    private energyInfo(tile: Tile) {
-        if (hasEnergy(tile)) {
-            return <>{(tile.energy / params.cellEnergyMax * 100).toFixed(0)}% energy</>;
-        }
-        return null;
+    private tileInfo(tile: Tile) {
+        const energyInfo = (hasEnergy(tile)) ? (
+            <span className="info-energy">💚{(tile.energy / params.cellEnergyMax * 100).toFixed(0)}%</span>
+        ) : null;
+
+        return (
+            <div className="info-tile">
+                <div className="info-tile-name">{(tile.constructor as Constructor<Tile>).displayName}</div>
+                {energyInfo}
+            </div>
+        );
     }
 
     private inventoryInfo(tile: Tile) {
         if (hasInventory(tile)) {
-            // return <span>{tile.inventory.water} / {tile.inventory.sugar.toFixed(0)} of {tile.inventory.capacity}</span>;
-            const waterInfo = (tile.inventory.water > 0) ? <>{tile.inventory.water} water</> : null;
-            const sugarInfo = (tile.inventory.sugar > 0) ? <>{tile.inventory.sugar.toFixed(2)} sugar</> : null;
-            // const children = ([] as React.ReactNode[]).concat(
-            //     ...[waterInfo, sugarInfo].map((infoEl) => {
-            //         return infoEl == null ? [] : [", ", infoEl];
-            //     }),
-            // );
-            return <span className="inventory-info">{waterInfo}{sugarInfo}</span>;
+            const waterInfo = (tile.inventory.water > 0) ? <div className="info-inventory-item">💧 {tile.inventory.water.toFixed(2)}</div> : null;
+            const sugarInfo = (tile.inventory.sugar > 0) ? <div className="info-inventory-item">Sugar {tile.inventory.sugar.toFixed(2)}</div> : null;
+            return <div className="info-inventory">{waterInfo}{sugarInfo}</div>;
         }
     }
 
     private cellInfo(tile: Tile) {
         if (tile instanceof Cell) {
             if (tile.droopY * 200 > 1) {
-                return <>{(tile.droopY * 200).toFixed(0)}% droop</>;
-            } else {
-                return null;
+                return <div className="info-cell">{(tile.droopY * 200).toFixed(0)}% droop</div>;
             }
         }
-        return null;
     }
 }

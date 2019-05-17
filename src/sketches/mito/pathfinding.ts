@@ -5,12 +5,25 @@ import { height, width, World } from ".";
 import { DIRECTION_VALUES, DIRECTIONS } from "./directions";
 import { Tissue } from "./tile";
 
-export function findPath(world: World, target: Vector2): Vector2[] {
+export function findPath(world: World, target: Vector2, expandOne: boolean): Vector2[] {
     // const matrix = world.gridCells.map((row) => row.map((cell) => (cell instanceof Tissue) ? 0 : 1));
     const grid = new Grid(width, height);
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
-            grid.setWalkableAt(x, y, world.tileAt(x, y) instanceof Tissue);
+            grid.setWalkableAt(x, y, false);
+        }
+    }
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            const tile = world.tileAt(x, y);
+            if (tile instanceof Tissue) {
+                grid.setWalkableAt(x, y, true);
+                if (expandOne) {
+                    for (const [, neighbor] of world.tileNeighbors(tile.pos)) {
+                        grid.setWalkableAt(neighbor.pos.x, neighbor.pos.y, true);
+                    }
+                }
+            }
         }
     }
     const finder = new AStarFinder({ diagonalMovement: DiagonalMovement.Always });
@@ -32,7 +45,7 @@ export function findPath(world: World, target: Vector2): Vector2[] {
     return path;
 }
 
-function directionFor(fromX: number, fromY: number, toX: number, toY: number): Vector2 | undefined {
+export function directionFor(fromX: number, fromY: number, toX: number, toY: number): Vector2 | undefined {
     const dx = toX - fromX;
     const dy = toY - fromY;
     return DIRECTION_VALUES.find(({x, y}) => x === dx && y === dy)

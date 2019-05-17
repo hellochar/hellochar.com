@@ -3,6 +3,7 @@ import * as THREE from "three";
 
 export const UI_EVENTS = {
     click: true,
+    contextmenu: true,
     dblclick: true,
     mousedown: true,
     mouseup: true,
@@ -52,6 +53,8 @@ export abstract class ISketch {
     abstract init(): void;
 
     abstract animate(millisElapsed: number): void;
+
+    render?(): React.ReactNode;
 
     resize?(width: number, height: number): void;
 
