@@ -6,18 +6,14 @@ import { DIRECTION_VALUES } from "./directions";
 import { World } from "./game";
 import { Cell, Tissue } from "./game/tile";
 
-export function findPathThroughTissue(world: World, target: Vector2, expandOne: boolean): Vector2[] {
+export function findPathThroughTissue(world: World, target: Vector2): Vector2[] {
     const grid = newGrid((x, y, g) => {
         const tile = world.tileAt(x, y);
         if (tile instanceof Tissue) {
             g.setWalkableAt(x, y, true);
-            if (expandOne) {
-                for (const [, neighbor] of world.tileNeighbors(tile.pos)) {
-                    g.setWalkableAt(neighbor.pos.x, neighbor.pos.y, true);
-                }
-            }
         }
     });
+    grid.setWalkableAt(target.x, target.y, true);
     return findPath(grid, world.player.pos, target);
 }
 

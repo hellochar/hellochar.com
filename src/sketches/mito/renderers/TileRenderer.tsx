@@ -11,10 +11,16 @@ import { fruitTexture, textureFromSpritesheet } from "../spritesheet";
 import { InventoryRenderer } from "./InventoryRenderer";
 import { Renderer } from "./Renderer";
 
+export class TileMesh extends Mesh {
+    static geometry = new PlaneBufferGeometry(1, 1);
+    constructor(public renderer: TileRenderer) {
+        super(TileMesh.geometry, getMaterial(renderer.target) as MeshBasicMaterial);
+    }
+}
+
 export class TileRenderer extends Renderer<Tile> {
     public object = new Object3D();
-    public mesh: Mesh;
-    static geometry = new PlaneBufferGeometry(1, 1);
+    public mesh: TileMesh;
     private inventoryRenderer?: InventoryRenderer;
     private originalColor: Color;
     private audio?: Audio;
@@ -22,23 +28,21 @@ export class TileRenderer extends Renderer<Tile> {
     private pairsLines: Line[] = [];
     constructor(target: Tile, scene: Scene, mito: Mito) {
         super(target, scene, mito);
-        const mat = getMaterial(this.target) as MeshBasicMaterial;
-        const geom = TileRenderer.geometry;
-        this.mesh = new Mesh(geom, mat);
-        if (this.target instanceof Air) {
-            const colorIndex = map(this.target.co2(), 0.40, 1.001, 0, AIR_COLORSCALE.length - 1);
-            const startColorIndex = Math.floor(colorIndex);
-            const startColor = AIR_COLORSCALE[startColorIndex];
-            this.originalColor = startColor.clone();
-            if (startColorIndex !== AIR_COLORSCALE.length - 1) {
-                const alpha = colorIndex - startColorIndex;
-                const endColorIndex = startColorIndex + 1;
-                const endColor = AIR_COLORSCALE[endColorIndex];
-                this.originalColor.lerp(endColor, alpha);
-            }
-        } else {
-            this.originalColor = mat.color.clone();
-        }
+        this.mesh = new TileMesh(this);
+        // if (this.target instanceof Air) {
+        //     const colorIndex = map(this.target.co2(), 0.40, 1.001, 0, AIR_COLORSCALE.length - 1);
+        //     const startColorIndex = Math.floor(colorIndex);
+        //     const startColor = AIR_COLORSCALE[startColorIndex];
+        //     this.originalColor = startColor.clone();
+        //     if (startColorIndex !== AIR_COLORSCALE.length - 1) {
+        //         const alpha = colorIndex - startColorIndex;
+        //         const endColorIndex = startColorIndex + 1;
+        //         const endColor = AIR_COLORSCALE[endColorIndex];
+        //         this.originalColor.lerp(endColor, alpha);
+        //     }
+        // } else {
+        this.originalColor = (this.mesh.material as MeshBasicMaterial).color.clone();
+        // }
         this.object.add(this.mesh);
         if (hasInventory(this.target)) {
             this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.scene, this.mito);
@@ -73,7 +77,7 @@ export class TileRenderer extends Renderer<Tile> {
         const lightAmount = this.target.lightAmount();
         const mat = this.mesh.material as MeshBasicMaterial;
         if (this.target instanceof Air) {
-            const colorIndex = map(this.target.co2(), 0.40, 1.001, 0, AIR_COLORSCALE.length - 1);
+            const colorIndex = Math.max(0, map(this.target.co2(), 1 / 6, 1.001, 0, AIR_COLORSCALE.length - 1));
             const startColorIndex = Math.floor(colorIndex);
             const startColor = AIR_COLORSCALE[startColorIndex];
             this.originalColor = startColor.clone();
@@ -285,7 +289,8 @@ function getMaterial(tile: Tile) {
 //     // new Color("hsl(37, 35%, 99%)"),
 // ];
 const AIR_COLORSCALE = [
-    new Color("hsl(67, 31%, 55%)"),
+    // new Color("hsl(67, 31%, 55%)"),
+    new Color("hsl(67, 31%, 25%)"),
     new Color("hsl(180, 31%, 76%)"),
     new Color("hsl(213, 63%, 58%)"),
 ];

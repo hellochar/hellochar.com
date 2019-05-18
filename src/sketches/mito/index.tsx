@@ -15,7 +15,7 @@ import { params } from "./params";
 import { directionFor, findPathThroughNonObstacles, findPathThroughTissue } from "./pathfinding";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
-import { TileRenderer } from "./renderers/TileRenderer";
+import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
 import { NewPlayerTutorial } from "./tutorial";
 import TileHighlight from "./tutorial/tileHighlight";
 import { GameStack, HUD, ParamsGUI, TileHover } from "./ui";
@@ -208,7 +208,7 @@ export class Mito extends ISketch {
 
     private expandingTileHighlight = (() => {
         const mesh = new THREE.Mesh(
-            TileRenderer.geometry,
+            new THREE.PlaneBufferGeometry(1, 1),
             new THREE.MeshBasicMaterial({
                 color: "white",
                 side: THREE.DoubleSide,
@@ -311,7 +311,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
     private getTileAtScreenPosition(clientX: number, clientY: number) {
         const cameraNorm = this.getCameraNormCoordinates(clientX, clientY);
         this.raycaster.setFromCamera(cameraNorm, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true).filter((i) => i.object instanceof TileMesh);
         const i = intersects[0];
         if (i != null) {
             const {x, y} = i.point;
@@ -342,6 +342,11 @@ Textures in memory: ${this.renderer.info.memory.textures}
                 const renderer = this.getOrCreateRenderer(entity);
                 renderer.update();
             });
+        }
+        if (this.uiState.type === "expanding") {
+            if (!this.world.player.isBuildCandidate(this.world.tileAt(this.uiState.target))) {
+                this.resetUIState();
+            }
         }
         const mouseNorm = this.getCameraNormCoordinates(this.mouse.x, this.mouse.y);
         if (this.uiState.type === "main") {
@@ -386,6 +391,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
         // autoplace
         if (this.autoplace != null) {
             if (this.autoplace === Transport) {
+                if (action.dir == null) { throw new Error("bad dir"); }
                 const buildTransportAction: ActionBuildTransport = {
                     type: "build-transport",
                     cellType: Transport,
@@ -433,12 +439,8 @@ Textures in memory: ${this.renderer.info.memory.textures}
             let path: THREE.Vector2[];
             if (this.autoplace === Tissue) {
                 path = findPathThroughNonObstacles(this.world, target.pos);
-            } else if (!(target instanceof Cell)
-                    // && Array.from(this.world.tileNeighbors(target.pos).values()).find((n) => n instanceof Tissue)
-            ) {
-                path = findPathThroughTissue(this.world, target.pos, true);
             } else {
-                path = findPathThroughTissue(this.world, target.pos, false);
+                path = findPathThroughTissue(this.world, target.pos);
             }
             const actions = this.pathToActions(path);
             this.world.player.setActions(actions);

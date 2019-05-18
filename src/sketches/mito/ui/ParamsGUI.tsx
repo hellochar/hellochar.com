@@ -13,6 +13,7 @@ export class ParamsGUI extends React.Component {
         });
         gui.add(params, "droop", 0, 0.5, 0.01);
         gui.add(params, "fountainTurnsPerWater", 1, 100, 1);
+        gui.add(params, "floorCo2", 1 / 6, 1);
         gui.add(params, "isRealtime");
         gui.add(params, "leafReactionRate", 0, 0.2, .0001);
         gui.add(params, "leafSugarPerReaction", 0, 1, .01);
@@ -22,7 +23,7 @@ export class ParamsGUI extends React.Component {
         gui.add(params, "transportTurnsPerMove", 1, 50, 1);
         gui.add(params, "waterDiffusionRate", 0, .25);
         gui.add(params, "waterDiffusionType", ["discrete", "continuous"]);
-        gui.add(params, "waterGravityPerTurn", -0.2, 1);
+        gui.add(params, "waterGravityPerTurn", 0, 1);
         const f = gui.addFolder("Needs Page Refresh");
         f.add(params, "cellEnergyMax", 400, 10000, 100);
         f.add(params, "maxResources", 10, 1000, 1);

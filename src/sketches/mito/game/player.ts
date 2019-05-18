@@ -4,6 +4,7 @@ import { Action, ActionBuild, ActionBuildTransport, ActionDeconstruct, ActionDro
 import { build, footsteps } from "../audio";
 import { Constructor } from "../constructor";
 import { hasInventory, Inventory } from "../inventory";
+import { ACTION_KEYMAP } from "../keymap";
 import { params } from "../params";
 import { Cell, Fruit, Tile, Tissue, Transport } from "./tile";
 import { World } from "./world";
@@ -95,8 +96,12 @@ export class Player {
     }
 
     public isBuildCandidate(tile: Tile | null): tile is Tile {
-        if (tile != null && !(tile instanceof Tissue) && !tile.isObstacle && this.pos.distanceTo(tile.pos) < 2) {
-            return true;
+        if (tile != null && !(tile instanceof Tissue) && !tile.isObstacle) {
+            // This Tile could conceivably be built upon. But are we close enough?
+            const offset = tile.pos.clone().sub(this.pos);
+            const movementKeys = Object.keys(ACTION_KEYMAP).filter((k) => ACTION_KEYMAP[k].type === "move").map((v) => ACTION_KEYMAP[v] as ActionMove);
+            const areWeCloseEnough = movementKeys.find((move) => move.dir.equals(offset)) != null;
+            return areWeCloseEnough;
         } else {
             return false;
         }
@@ -162,6 +167,10 @@ export class Player {
         }
     }
     public attemptBuild(action: ActionBuild) {
+        const existingCell = this.world.cellAt(action.position.x, action.position.y);
+        if (existingCell) {
+            this.attemptDeconstruct({ type: "deconstruct", position: action.position });
+        }
         const newCell = this.tryConstructingNewCell(action.position, action.cellType);
         if (newCell != null) {
             newCell.droopY = this.droopY();
@@ -182,6 +191,10 @@ export class Player {
         }
     }
     public attemptBuildTransport(action: ActionBuildTransport) {
+        const existingCell = this.world.cellAt(action.position.x, action.position.y);
+        if (existingCell) {
+            this.attemptDeconstruct({ type: "deconstruct", position: action.position });
+        }
         const newCell = this.tryConstructingNewCell(action.position, action.cellType);
         if (newCell != null) {
             newCell.dir = action.dir;

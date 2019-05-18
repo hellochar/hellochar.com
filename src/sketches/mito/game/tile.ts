@@ -127,13 +127,13 @@ export class Air extends Tile {
     }
 
     private computeCo2() {
-        const base = map(this.pos.y, height / 2, 0, 0.5, 1.15);
+        const base = map(this.pos.y, height / 2, 0, params.floorCo2, 1.15);
         const scaleX = map(this.pos.y, height / 2, 0, 4, 9);
         // const offset = noiseCo2.perlin3(94.2321 - this.pos.x / scaleX, 3221 - this.pos.y / 2.5, world.time / 5 + 93.1) * 0.2;
         const time = this.world == null ? 0 : this.world.time;
         const offset = noiseCo2.perlin3(94.231 + (this.pos.x - width / 2) / scaleX, 2312 + this.pos.y / 8, time / 1000 + 93.1) * 0.25;
         // don't compute dark/light or water diffusion
-        return Math.max(Math.min(base + offset, 1), 0.4);
+        return Math.max(Math.min(base + offset, 1), Math.min(0.4, params.floorCo2 * 0.75));
     }
 
     public lightAmount() {
@@ -297,7 +297,7 @@ export class Cell extends Tile implements HasEnergy {
             if (this.world.player.pos.equals(this.pos)) {
                 this.world.player.pos.y += 1;
             }
-            this.world.setTileAt(this.pos, new Air(this.pos.clone(), this.world));
+            this.world.maybeRemoveCellAt(this.pos);
             this.pos.y += 1;
             this.droopY -= 1;
             // lol whatever lets just test it out
@@ -359,7 +359,7 @@ export class Cell extends Tile implements HasEnergy {
         let hasSupportBelow = false;
         for (const cell of [below, belowLeft, belowRight]) {
             if (cell instanceof Rock || cell instanceof Soil) {
-                this.droopY = 0;
+                this.droopY = Math.min(this.droopY, 0);
                 return;
             } else if (cell instanceof Cell) {
                 this.droopY = Math.min(this.droopY, cell.droopY);

@@ -4,6 +4,7 @@ const PARAMS_DEFAULT = {
     tissueInventoryCapacity: 6,
     rootTurnsPerTransfer: 10,
     leafReactionRate: 0.05,
+    floorCo2: 0.5,
     leafSugarPerReaction: 1,
     waterDiffusionRate: 0.02,
     waterDiffusionType: "discrete",
@@ -39,22 +40,3 @@ export function updateParamsHash() {
     }
 }
 updateParamsHash();
-
-// export let IS_REALTIME = PARAMS.isRealtime;
-// export let CELL_ENERGY_MAX = PARAMS.cellEnergyMax;
-// export let ENERGY_TO_SUGAR_RATIO = PARAMS.cellEnergyMax;
-// export let CELL_SUGAR_BUILD_COST = CELL_ENERGY_MAX / ENERGY_TO_SUGAR_RATIO;
-// export let ROOT_TURNS_PER_TRANSFER = PARAMS.rootTurnsPerTransfer;
-// export let SOIL_MAX_WATER = PARAMS.soilMaxWater;
-// export let TISSUE_INVENTORY_CAPACITY = PARAMS.tissueInventoryCapacity;
-// export let LEAF_MAX_CHANCE = PARAMS.leafReactionRate;
-// export let LEAF_SUGAR_PER_REACTION = PARAMS.leafSugarPerReaction;
-// export let WATER_DIFFUSION_RATE = PARAMS.waterDiffusionRate;
-// export let WATER_DIFFUSION_TYPE = PARAMS.waterDiffusionType;
-// export let SUGAR_DIFFUSION_RATE = PARAMS.sugarDiffusionRate;
-// export let WATER_GRAVITY_PER_TURN = PARAMS.waterGravityPerTurn;
-// export let DROOP_PER_TURN = PARAMS.droop;
-// export let FOUNTAINS_TURNS_PER_WATER = PARAMS.fountainTurnsPerWater;
-// export let TRANSPORT_TURNS_PER_MOVE = PARAMS.transportTurnsPerMove;
-// export let SUNLIGHT_REINTRODUCTION = PARAMS.sunlightReintroduction;
-// export let PLAYER_MAX_INVENTORY = PARAMS.maxResources;
