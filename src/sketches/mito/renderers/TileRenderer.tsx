@@ -65,6 +65,7 @@ export class TileRenderer extends Renderer<Tile> {
             const length = 0.3;
             const start = new Vector3(dir.x * -length / 2, dir.y * -length / 2, 0.1);
             const arrow = new ArrowHelper(dir, start, length, 0xffffff, 0.1, 0.1);
+            arrow.position.z = 1.1;
             this.object.add(arrow);
         }
         if (this.target instanceof Leaf || this.target instanceof Root) {
