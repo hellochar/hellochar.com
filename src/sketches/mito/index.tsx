@@ -12,7 +12,7 @@ import { Player, World } from "./game";
 import { Cell, Fruit, Tile, Tissue, Transport } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { params } from "./params";
-import { directionFor, findPath } from "./pathfinding";
+import { directionFor, findPathThroughNonObstacles, findPathThroughTissue } from "./pathfinding";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
 import { TileRenderer } from "./renderers/TileRenderer";
@@ -54,7 +54,6 @@ export interface UIStateMain {
 }
 export interface UIStateExpanding {
     type: "expanding";
-    originalAction: Action;
     originalZoom: number;
     target: THREE.Vector2;
 }
@@ -96,12 +95,10 @@ export class Mito extends ISketch {
     private keyMap = new Set<string>();
     public uiState: UIState = { type: "main" };
 
-    private enterUIStateExpanding(move: ActionMove) {
-        const target = this.world.player.pos.clone().add(move.dir);
+    private enterUIStateExpanding(target: THREE.Vector2) {
         const originalZoom = this.uiState.type === "main" ? this.camera.zoom : this.uiState.originalZoom;
         this.uiState = {
             type: "expanding",
-            originalAction: move,
             originalZoom,
             target,
         };
@@ -134,29 +131,7 @@ export class Mito extends ISketch {
         },
         click: (event: JQuery.Event) => {
             // left-click
-            const isBuildAttempt = (() => {
-                const { player } = this.world;
-                // try build
-                const tile = this.getTileAtScreenPosition(event.clientX!, event.clientY!);
-                if (tile) {
-                    const direction = directionFor(player.pos.x, player.pos.y, tile.pos.x, tile.pos.y);
-                    if (direction) {
-                        const move: ActionMove = {
-                            type: "move",
-                            dir: direction,
-                        };
-                        const isBuildCandidate = this.world.player.isBuildCandidate(move);
-                        if (isBuildCandidate) {
-                            this.enterUIStateExpanding(move);
-                            return true;
-                        }
-                    }
-                }
-            })();
-            if (!isBuildAttempt) {
-                this.resetUIState();
-                this.enqueuePlayerMoveToMouse(event.clientX!, event.clientY!);
-            }
+            this.enqueuePlayerMoveToMouse(event.clientX!, event.clientY!);
         },
         keydown: (event: JQuery.Event) => {
             const key = event.key!;
@@ -183,7 +158,6 @@ export class Mito extends ISketch {
     };
 
     tryAction(key: string, isRepeatedStroke: boolean) {
-        const { world } = this;
         if (key === "?") {
             this.gameState = (this.gameState === "instructions" ? "main" : "instructions");
             return;
@@ -203,7 +177,7 @@ export class Mito extends ISketch {
                 this.world.player.setAction(buildAction);
                 this.resetUIState();
                 return;
-            } else if (ACTION_KEYMAP[key] && ACTION_KEYMAP[key] !== this.uiState.originalAction) {
+            } else if (ACTION_KEYMAP[key] && ACTION_KEYMAP[key].type !== "move") {
                 this.resetUIState();
                 return;
             }
@@ -220,36 +194,7 @@ export class Mito extends ISketch {
         }
         const action = ACTION_KEYMAP[key];
         if (action != null) {
-            // autoplace
-            if (this.autoplace !== undefined && action.type === "move") {
-                if (this.autoplace === Transport) {
-                    const buildTransportAction: ActionBuildTransport = {
-                        type: "build-transport",
-                        cellType: Transport,
-                        position: this.world.player.pos.clone(),
-                        dir: action.dir,
-                    };
-                    this.world.player.setAction(buildTransportAction);
-                } else if (!world.player.verifyMove(action) && !isRepeatedStroke) {
-                    const buildAction: ActionBuild = {
-                        type: "build",
-                        cellType: this.autoplace,
-                        position: this.world.player.pos.clone().add(action.dir),
-                    };
-                    this.world.player.setAction(buildAction);
-                    if (this.autoplace !== Tissue) {
-                        this.autoplace = undefined;
-                    }
-                } else {
-                    this.world.player.setAction(action);
-                    // this.autoplace = undefined;
-                }
-            } else if (this.autoplace == null && action.type === "move" && this.world.player.isBuildCandidate(action)) {
-                // we attempt to move into a place we cannot
-                this.enterUIStateExpanding(action);
-            } else {
-                this.world.player.setAction(action);
-            }
+            this.world.player.setAction(action);
         } else {
             if (key in BUILD_HOTKEYS) {
                 if (this.autoplace === BUILD_HOTKEYS[key] || BUILD_HOTKEYS[key] === Fruit && this.world.fruit != null) {
@@ -298,6 +243,7 @@ export class Mito extends ISketch {
         // airBg.position.y = height / 2 - 0.5;
         // this.scene.add(airBg);
         this.updateAmbientAudio();
+        this.world.player.movementConversion = this.maybeGetMovementRelatedAction;
     }
 
     public getOrCreateRenderer(entity: Entity) {
@@ -423,6 +369,52 @@ Textures in memory: ${this.renderer.info.memory.textures}
         this.hoveredTile = this.getTileAtScreenPosition(this.mouse.x, this.mouse.y);
     }
 
+    // if this move, taken by Player, doesn't make sense, then take an action that does
+    public maybeGetMovementRelatedAction = (player: Player, action: Action): Action | null => {
+        if (action == null) {
+            return null;
+        }
+        if (action.type !== "move") {
+            return action;
+        }
+        if (this.uiState.type === "expanding") {
+            if (!player.isBuildCandidate(this.world.tileAt(this.uiState.target))) {
+                this.resetUIState();
+            }
+        }
+        const tile = this.world.tileAt(player.pos.x + action.dir.x, player.pos.y + action.dir.y);
+        // autoplace
+        if (this.autoplace != null) {
+            if (this.autoplace === Transport) {
+                const buildTransportAction: ActionBuildTransport = {
+                    type: "build-transport",
+                    cellType: Transport,
+                    position: this.world.player.pos,
+                    dir: action.dir,
+                };
+                return buildTransportAction;
+            } else if (!player.verifyMove(action)) {
+                const buildAction: ActionBuild = {
+                    type: "build",
+                    cellType: this.autoplace,
+                    position: player.pos.clone().add(action.dir),
+                };
+                if (this.autoplace !== Tissue) {
+                    this.autoplace = undefined;
+                }
+                return buildAction;
+            } else {
+                return action;
+            }
+        } else if (player.isBuildCandidate(tile)) {
+            // we attempt to move into a place we cannot
+            this.enterUIStateExpanding(tile.pos);
+            return null;
+        } else {
+            return action;
+        }
+    }
+
     public resize(w: number, h: number) {
         const aspect = h / w;
         const cameraHeight = 12;
@@ -438,13 +430,26 @@ Textures in memory: ${this.renderer.info.memory.textures}
     public enqueuePlayerMoveToMouse(clientX: number, clientY: number) {
         const target = this.getTileAtScreenPosition(clientX, clientY);
         if (target) {
-            const path = findPath(this.world, target.pos, true);
-            const actions = path.map((dir) => ({
-                type: "move",
-                dir,
-            }) as ActionMove);
+            let path: THREE.Vector2[];
+            if (this.autoplace === Tissue) {
+                path = findPathThroughNonObstacles(this.world, target.pos);
+            } else if (!(target instanceof Cell)
+                    // && Array.from(this.world.tileNeighbors(target.pos).values()).find((n) => n instanceof Tissue)
+            ) {
+                path = findPathThroughTissue(this.world, target.pos, true);
+            } else {
+                path = findPathThroughTissue(this.world, target.pos, false);
+            }
+            const actions = this.pathToActions(path);
             this.world.player.setActions(actions);
         }
+    }
+
+    private pathToActions(path: THREE.Vector2[]) {
+        return path.map((dir) => ({
+            type: "move",
+            dir,
+        }) as ActionMove);
     }
 }
 

@@ -5,7 +5,7 @@ import { build, footsteps } from "../audio";
 import { Constructor } from "../constructor";
 import { hasInventory, Inventory } from "../inventory";
 import { params } from "../params";
-import { Cell, Fruit, Tissue, Transport } from "./tile";
+import { Cell, Fruit, Tile, Tissue, Transport } from "./tile";
 import { World } from "./world";
 
 export class Player {
@@ -13,6 +13,7 @@ export class Player {
     private action?: Action;
     private events = new EventEmitter();
     private actionQueue: Action[] = [];
+    public movementConversion?: (player: Player, action: Action) => Action | null;
     public constructor(public pos: Vector2, public world: World) { }
     public setActions(actions: Action[]) {
         this.actionQueue = actions;
@@ -50,6 +51,9 @@ export class Player {
     public step() {
         if (this.action === undefined) {
             this.action = this.actionQueue.shift() || { type: "none" };
+        }
+        if (this.movementConversion) {
+            this.action = this.movementConversion(this, this.action) || { type: "none" };
         }
         const actionSuccessful = this.attemptAction(this.action);
         if (actionSuccessful) {
@@ -89,10 +93,13 @@ export class Player {
         }
         return true;
     }
-    public isBuildCandidate(action: ActionMove) {
-        const target = this.pos.clone().add(action.dir);
-        const targetTile = this.world.tileAt(target.x, target.y);
-        return !this.verifyMove(action) && targetTile != null && !targetTile.isObstacle;
+
+    public isBuildCandidate(tile: Tile | null): tile is Tile {
+        if (tile != null && !(tile instanceof Tissue) && !tile.isObstacle && this.pos.distanceTo(tile.pos) < 2) {
+            return true;
+        } else {
+            return false;
+        }
     }
     public attemptMove(action: ActionMove) {
         if (this.verifyMove(action)) {
@@ -121,6 +128,7 @@ export class Player {
         }
     }
     public tryConstructingNewCell<T>(position: Vector2, cellType: Constructor<T>) {
+        position = position.clone();
         const targetTile = this.world.tileAt(position.x, position.y);
         if (targetTile == null) {
             // out of bounds/out of map

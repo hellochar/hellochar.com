@@ -67,7 +67,19 @@ export class World {
     constructor() {
         this.fillCachedEntities();
     }
-    public tileAt(x: number, y: number): Tile | null {
+
+    public tileAt(v: Vector2): Tile | null;
+    public tileAt(x: number, y: number): Tile | null;
+    public tileAt(xOrVec2: number | Vector2, y?: number): Tile | null {
+        let x: number;
+        if (xOrVec2 instanceof Vector2) {
+            x = xOrVec2.x;
+            y = xOrVec2.y;
+        } else {
+            x = xOrVec2;
+            y = y!;
+        }
+
         if (!this.isValidPosition(x, y)) {
             return null;
         }
