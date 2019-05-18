@@ -311,7 +311,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
     private getTileAtScreenPosition(clientX: number, clientY: number) {
         const cameraNorm = this.getCameraNormCoordinates(clientX, clientY);
         this.raycaster.setFromCamera(cameraNorm, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.scene.children, true).filter((i) => i.object instanceof TileMesh);
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true).filter(({object}) => object instanceof TileMesh);
         const i = intersects[0];
         if (i != null) {
             const {x, y} = i.point;

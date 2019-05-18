@@ -53,7 +53,7 @@ export const ACTION_KEYMAP: { [key: string]: Action } = {
 
 export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
     t: Tissue,
-    l: Leaf,
+    f: Leaf,
     r: Root,
     T: Transport,
     F: Fruit,
