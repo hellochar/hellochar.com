@@ -3,15 +3,11 @@ import * as React from "react";
 import Mito, { GameState } from "../index";
 import { Instructions } from "./Instructions";
 
-export interface GameStackState {
+export interface GameStackProps {
+    mito: Mito;
     state: GameState;
 }
-export class GameStack extends React.Component<{
-    mito: Mito;
-}, GameStackState> {
-    state: GameStackState = {
-        state: "main",
-    };
+export class GameStack extends React.PureComponent<GameStackProps> {
     handlePlay = () => {
         this.props.mito.gameState = "main";
     };
@@ -26,17 +22,17 @@ export class GameStack extends React.Component<{
             justifyContent: "center",
             fontSize: "40px",
         };
-        if (this.state.state === "main") {
+        if (this.props.state === "main") {
             return null;
-        } else if (this.state.state === "win") {
+        } else if (this.props.state === "win") {
             return (<div className="screen-win" style={style}>
                 You won!
                 </div>);
-        } else if (this.state.state === "lose") {
+        } else if (this.props.state === "lose") {
             return (<div className="screen-lose" style={style}>
                 You lost!
                 </div>);
-        } else if (this.state.state === "instructions") {
+        } else if (this.props.state === "instructions") {
             return <Instructions play={this.handlePlay} />;
         }
     }

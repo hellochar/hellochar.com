@@ -3,8 +3,8 @@ import { Color, DoubleSide, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeomet
 import lazy from "../../../common/lazy";
 import { lerp2, Mito } from "../index";
 import { Inventory } from "../inventory";
-import { Renderer } from "./Renderer";
 import { textureFromSpritesheet } from "../spritesheet";
+import { Renderer } from "./Renderer";
 
 // we represent Resources as dots of certain colors.
 export class InventoryRenderer extends Renderer<Inventory> {

@@ -5,16 +5,13 @@ import { Air, Cell, hasEnergy, Leaf, Root, Tile } from "../game/tile";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
 
-interface HoverState {
+interface HoverProps {
     tile?: Tile;
 }
 
-export class TileHover extends React.Component<{}, HoverState> {
-    state: HoverState = {
-        tile: undefined,
-    };
+export class TileHover extends React.Component<HoverProps> {
     public render() {
-        const { tile } = this.state;
+        const { tile } = this.props;
         if (!tile) {
             return null;
         }

@@ -70,30 +70,23 @@ export class Mito extends ISketch {
     public render() {
         return <>
         <HUD
-            ref={(ref) => this.hudRef = ref!}
-            // onAutoplaceSet={(autoplace) => {
-            //     if (autoplace === this.autoplace) {
-            //         this.autoplace = undefined;
-            //     } else {
-            //         this.autoplace = autoplace;
-            //     }
-            //     this.hudRef.setState({ autoplace: this.autoplace });
-            // }}
+            autoplace={this.autoplace}
+            uiState={this.uiState}
+            isTutorialFinished={this.tutorialRef == null ? true : this.tutorialRef.isFinished()}
+            sugar={this.world.player.inventory.sugar}
+            water={this.world.player.inventory.water}
             onTryActionKey={(key) => {
                 this.tryAction(key, false);
             }}
             world={this.world}
         />
-        <TileHover ref={(ref) => this.hoverRef = ref } />
-        <GameStack ref={(ref) => this.gameStackRef = ref } mito={this} />
+        <TileHover tile={this.hoveredTile} />
+        <GameStack mito={this} state={this.gameState} />
         {/* <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />, */}
         <ParamsGUI />
         { this.hoveredTile ? <TileHighlight x={this.hoveredTile.pos.x} y={this.hoveredTile.pos.y} scene={this.scene} /> : null }
         </>;
     }
-    public hudRef: HUD | null = null;
-    public hoverRef: TileHover | null = null;
-    public gameStackRef: GameStack | null = null;
     public tutorialRef: NewPlayerTutorial | null = null;
     public mouse = new THREE.Vector2();
     public hoveredTile?: Tile;
@@ -112,9 +105,6 @@ export class Mito extends ISketch {
             originalZoom,
             target,
         };
-        if (this.hudRef) {
-            this.hudRef.setState({ uiState: this.uiState });
-        }
     }
 
     private resetUIState() {
@@ -122,9 +112,6 @@ export class Mito extends ISketch {
             this.camera.zoom = this.uiState.originalZoom;
             this.camera.updateProjectionMatrix();
             this.uiState = { type: "main" };
-            if (this.hudRef) {
-                this.hudRef.setState({ uiState: this.uiState });
-            }
         }
     }
 
@@ -271,9 +258,6 @@ export class Mito extends ISketch {
                     this.autoplace = BUILD_HOTKEYS[key];
                 }
             }
-        }
-        if (this.hudRef != null) {
-            this.hudRef.setState({ autoplace: this.autoplace });
         }
     }
 
@@ -436,27 +420,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
         }
         this.renderer.render(this.scene, this.camera);
 
-        if (this.hoverRef != null) {
-            this.hoveredTile = this.getTileAtScreenPosition(this.mouse.x, this.mouse.y);
-            this.hoverRef.setState({
-                tile: this.hoveredTile,
-            });
-        }
-
-        if (this.hudRef != null) {
-            const isTutorialFinished = this.tutorialRef == null ? true : this.tutorialRef.isFinished();
-            this.hudRef.setState({
-                isTutorialFinished,
-                sugar: this.world.player.inventory.sugar,
-                water: this.world.player.inventory.water,
-            });
-        }
-        if (this.gameStackRef != null) {
-            this.gameStackRef.setState({
-                state: this.gameState,
-            });
-        }
-        // this.logRenderInfo();
+        this.hoveredTile = this.getTileAtScreenPosition(this.mouse.x, this.mouse.y);
     }
 
     public resize(w: number, h: number) {

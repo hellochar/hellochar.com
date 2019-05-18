@@ -10,40 +10,29 @@ import { params } from "../params";
 
 export interface HUDProps {
     world: World;
-    // onAutoplaceSet: (cellType: Constructor<Cell>) => void;
-    onTryActionKey: (key: string) => void;
-}
-
-export interface HUDState {
     autoplace: Constructor<Cell> | undefined;
     water: number;
     sugar: number;
     expanded?: boolean;
     uiState: UIState;
     isTutorialFinished: boolean;
+    // onAutoplaceSet: (cellType: Constructor<Cell>) => void;
+    onTryActionKey: (key: string) => void;
 }
 
-export class HUD extends React.Component<HUDProps, HUDState> {
-    state: HUDState = {
-        water: 0,
-        sugar: 0,
-        autoplace: undefined,
-        expanded: true,
-        uiState: { type: "main" },
-        isTutorialFinished: false,
-    };
+export class HUD extends React.PureComponent<HUDProps> {
     public render() {
-        const isMaxed = this.state.water + this.state.sugar > params.maxResources - 1;
+        const isMaxed = this.props.water + this.props.sugar > params.maxResources - 1;
         const isMaxedEl = <div className={`mito-inventory-maxed${isMaxed ? " is-maxed" : ""}`}>maxed</div>;
         return (<>
-            <div className={classnames("mito-hud", { hidden: !this.state.isTutorialFinished })}>
+            <div className={classnames("mito-hud", { hidden: !this.props.isTutorialFinished })}>
 
                 {this.renderFruitUI()}
                 {this.renderAllBuildButtons()}
                 {this.renderSecondEls()}
                 {this.renderDPad()}
             </div>
-            <div className={classnames("mito-inventory", { hidden: !this.state.isTutorialFinished })}>
+            <div className={classnames("mito-inventory", { hidden: !this.props.isTutorialFinished })}>
                 {isMaxedEl}
                 <div className="mito-inventory-container">
                     {this.renderInventoryBar()}
@@ -82,15 +71,15 @@ export class HUD extends React.Component<HUDProps, HUDState> {
             text = `Build ${cellType.displayName}`;
         }
         const style: React.CSSProperties = { ...(props || { style: {} }).style };
-        if (this.state.autoplace === cellType) {
+        if (this.props.autoplace === cellType) {
             style.fontWeight = "bold";
             style.textDecoration = "underline";
             style.color = "rgb(45, 220, 40)";
-            if (this.state.water === 0) {
+            if (this.props.water === 0) {
                 text += " (need water!)";
                 style.color = "red";
             }
-            if (this.state.sugar === 0) {
+            if (this.props.sugar === 0) {
                 text += " (need sugar!)";
                 style.color = "red";
             }
@@ -100,16 +89,16 @@ export class HUD extends React.Component<HUDProps, HUDState> {
     renderInventory() {
         return (<div className="mito-inventory-indicator">
             <span className="mito-inventory-water">
-                {this.state.water} water
+                {this.props.water} water
                     </span>&nbsp;<span className="mito-inventory-sugar">
-                {this.state.sugar.toFixed(2)} sugar
+                {this.props.sugar.toFixed(2)} sugar
                     </span>
         </div>);
     }
     renderInventoryBar() {
-        const waterPercent = this.state.water / params.maxResources;
-        const sugarPercent = this.state.sugar / params.maxResources;
-        const emptyPercent = 1 - (this.state.water + this.state.sugar) / params.maxResources;
+        const waterPercent = this.props.water / params.maxResources;
+        const sugarPercent = this.props.sugar / params.maxResources;
+        const emptyPercent = 1 - (this.props.water + this.props.sugar) / params.maxResources;
         const waterStyles: React.CSSProperties = { width: `${(waterPercent * 100)}%` };
         const sugarStyles: React.CSSProperties = { width: `${(sugarPercent * 100)}%` };
         const emptyStyles: React.CSSProperties = { width: `${(emptyPercent * 100)}%` };
@@ -168,7 +157,7 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         }
     }
     public renderUIState() {
-        if (this.state.uiState.type === "expanding") {
+        if (this.props.uiState.type === "expanding") {
             const buttons: JSX.Element[] = [];
             for (const key in BUILD_HOTKEYS) {
                 const cellType = BUILD_HOTKEYS[key];
@@ -197,10 +186,10 @@ export class HUD extends React.Component<HUDProps, HUDState> {
         }
     }
     public renderAutoplacePopup() {
-        if (this.state.autoplace) {
+        if (this.props.autoplace) {
             return (<div className="ui-popup ui-popup-left">
                 <div className="popup-autoplace popup-content popup-text">
-                    Building {this.state.autoplace.displayName}
+                    Building {this.props.autoplace.displayName}
                     {this.renderButton("Esc", null)}
                 </div>
             </div>);
