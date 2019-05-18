@@ -77,11 +77,11 @@ export class HUD extends React.PureComponent<HUDProps> {
             style.fontWeight = "bold";
             style.textDecoration = "underline";
             style.color = "rgb(45, 220, 40)";
-            if (this.props.water === 0) {
+            if (this.props.water < 1) {
                 text += " (need water!)";
                 style.color = "red";
             }
-            if (this.props.sugar === 0) {
+            if (this.props.sugar < 1) {
                 text += " (need sugar!)";
                 style.color = "red";
             }
@@ -91,7 +91,7 @@ export class HUD extends React.PureComponent<HUDProps> {
     renderInventory() {
         return (<div className="mito-inventory-indicator">
             <span className="mito-inventory-water">
-                {this.props.water} water
+                {this.props.water.toFixed(2)} water
                     </span>&nbsp;<span className="mito-inventory-sugar">
                 {this.props.sugar.toFixed(2)} sugar
                     </span>

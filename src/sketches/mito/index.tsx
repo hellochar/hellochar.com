@@ -324,7 +324,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
 
     public animate() {
         const { world } = this;
-        if (document.activeElement !== this.canvas) {
+        if (document.activeElement !== this.canvas && !document.querySelector(".dg.ac")!.contains(document.activeElement)) {
             this.canvas.focus();
         }
         if (this.gameState === "main") {
