@@ -11,6 +11,8 @@ import { params } from "../params";
 export interface HUDProps {
     world: World;
     autoplace: Constructor<Cell> | undefined;
+    mouseX: number;
+    mouseY: number;
     water: number;
     sugar: number;
     expanded?: boolean;
@@ -187,8 +189,12 @@ export class HUD extends React.PureComponent<HUDProps> {
     }
     public renderAutoplacePopup() {
         if (this.props.autoplace) {
-            return (<div className="ui-popup ui-popup-left">
-                <div className="popup-autoplace popup-content popup-text">
+            const style: React.CSSProperties = {
+                left: this.props.mouseX,
+                top: this.props.mouseY,
+            };
+            return (<div className="popup-autoplace ui-popup" style={style}>
+                <div className="popup-content popup-text">
                     Building {this.props.autoplace.displayName}
                     {this.renderButton("Esc", null)}
                 </div>

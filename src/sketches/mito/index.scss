@@ -134,7 +134,17 @@
         padding: 15px;
     }
 
-    .popup-autoplace .mito-hud-button {
+}
+
+.popup-autoplace {
+    pointer-events: none;
+    opacity: 0.5;
+    .popup-content.popup-text {
+        margin-top: 80%;
+        padding: 5px;
+    }
+
+    .mito-hud-button {
         display: inline-block;
     }
 }

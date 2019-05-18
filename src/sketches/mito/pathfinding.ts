@@ -6,7 +6,7 @@ import { DIRECTION_VALUES } from "./directions";
 import { World } from "./game";
 import { Cell, Tissue } from "./game/tile";
 
-export function findPathThroughTissue(world: World, target: Vector2): Vector2[] {
+export function findPositionsThroughTissue(world: World, target: Vector2) {
     const grid = newGrid((x, y, g) => {
         const tile = world.tileAt(x, y);
         if (tile instanceof Tissue) {
@@ -17,7 +17,7 @@ export function findPathThroughTissue(world: World, target: Vector2): Vector2[] 
     return findPath(grid, world.player.pos, target);
 }
 
-export function findPathThroughNonObstacles(world: World, target: Vector2) {
+export function findPositionsThroughNonObstacles(world: World, target: Vector2) {
     const grid = newGrid((x, y, g) => {
         const tile = world.tileAt(x, y)!;
         if (tile instanceof Tissue || (!(tile instanceof Cell) && !tile.isObstacle)) {
@@ -28,13 +28,7 @@ export function findPathThroughNonObstacles(world: World, target: Vector2) {
     return findPath(grid, world.player.pos, target);
 }
 
-function findPath(grid: Grid, start: Vector2, target: Vector2) {
-    const finder = new AStarFinder({ diagonalMovement: DiagonalMovement.Always });
-    // positions comes back as an array of [x, y] positions that are all adjacent to each other
-    const positions = finder.findPath(
-        start.x, start.y,
-        target.x, target.y,
-        grid);
+export function pathFrom(positions: Array<[number, number]>) {
     const path: Vector2[] = [];
     for (let i = 0; i < positions.length - 1; i++) {
         const [fromX, fromY] = positions[i];
@@ -46,6 +40,15 @@ function findPath(grid: Grid, start: Vector2, target: Vector2) {
         path.push(direction);
     }
     return path;
+}
+
+function findPath(grid: Grid, start: Vector2, target: Vector2) {
+    const finder = new AStarFinder({ diagonalMovement: DiagonalMovement.Always });
+    // positions comes back as an array of [x, y] positions that are all adjacent to each other
+    return finder.findPath(
+        start.x, start.y,
+        target.x, target.y,
+        grid) as Array<[number, number]>;
 }
 
 function newGrid(fn: (x: number, y: number, grid: Grid) => void) {

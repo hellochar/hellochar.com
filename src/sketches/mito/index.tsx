@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as THREE from "three";
-import { OrthographicCamera, Scene, Vector3 } from "three";
+import { OrthographicCamera, Scene, Vector2, Vector3 } from "three";
 
 import devlog from "../../common/devlog";
 import { map } from "../../math/index";
@@ -12,7 +12,7 @@ import { Player, World } from "./game";
 import { Cell, Fruit, Tile, Tissue, Transport } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { params } from "./params";
-import { directionFor, findPathThroughNonObstacles, findPathThroughTissue } from "./pathfinding";
+import { findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
@@ -70,13 +70,13 @@ export class Mito extends ISketch {
         return <>
         <HUD
             autoplace={this.autoplace}
+            mouseX={this.mouse.x}
+            mouseY={this.mouse.y}
             uiState={this.uiState}
             isTutorialFinished={this.tutorialRef == null ? true : this.tutorialRef.isFinished()}
             sugar={this.world.player.inventory.sugar}
             water={this.world.player.inventory.water}
-            onTryActionKey={(key) => {
-                this.tryAction(key, false);
-            }}
+            onTryActionKey={this.tryAction}
             world={this.world}
         />
         <TileHover tile={this.hoveredTile} />
@@ -84,6 +84,7 @@ export class Mito extends ISketch {
         {/* <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />, */}
         <ParamsGUI />
         { this.hoveredTile ? <TileHighlight x={this.hoveredTile.pos.x} y={this.hoveredTile.pos.y} scene={this.scene} /> : null }
+        { (this.autoplace === Tissue && this.hoveredTile) ? <PathHighlight tile={this.hoveredTile} scene={this.scene} world={this.world} /> : null }
         </>;
     }
     public tutorialRef: NewPlayerTutorial | null = null;
@@ -135,9 +136,8 @@ export class Mito extends ISketch {
         },
         keydown: (event: JQuery.Event) => {
             const key = event.key!;
-            const isRepeatedStroke = this.keyMap.has(key);
             this.keyMap.add(key);
-            this.tryAction(key, isRepeatedStroke);
+            this.tryAction(key);
         },
         keyup: (event: JQuery.Event) => {
             this.keyMap.delete(event.key!);
@@ -157,7 +157,7 @@ export class Mito extends ISketch {
         },
     };
 
-    tryAction(key: string, isRepeatedStroke: boolean) {
+    tryAction = (key: string) => {
         if (key === "?") {
             this.gameState = (this.gameState === "instructions" ? "main" : "instructions");
             return;
@@ -438,9 +438,9 @@ Textures in memory: ${this.renderer.info.memory.textures}
         if (target) {
             let path: THREE.Vector2[];
             if (this.autoplace === Tissue) {
-                path = findPathThroughNonObstacles(this.world, target.pos);
+                path = pathFrom(findPositionsThroughNonObstacles(this.world, target.pos));
             } else {
-                path = findPathThroughTissue(this.world, target.pos);
+                path = pathFrom(findPositionsThroughTissue(this.world, target.pos));
             }
             const actions = this.pathToActions(path);
             this.world.player.setActions(actions);
@@ -452,6 +452,15 @@ Textures in memory: ${this.renderer.info.memory.textures}
             type: "move",
             dir,
         }) as ActionMove);
+    }
+}
+
+class PathHighlight extends React.PureComponent<{world: World, tile: Tile, scene: THREE.Scene}> {
+    render() {
+        const path = findPositionsThroughNonObstacles(this.props.world, this.props.tile.pos);
+        return <>
+            {path.map(([x, y]) => <TileHighlight x={x} y={y} scene={this.props.scene} />)}
+        </>;
     }
 }
 
