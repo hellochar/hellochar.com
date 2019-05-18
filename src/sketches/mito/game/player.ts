@@ -214,8 +214,8 @@ export class Player {
             const maybeCell = this.world.maybeRemoveCellAt(action.position);
             if (maybeCell != null) {
                 // refund the resources back
-                const refund = Math.min(maybeCell.energy / params.cellEnergyMax, this.inventory.space());
-                this.inventory.change(refund, refund);
+                const refund = maybeCell.energy / params.cellEnergyMax;
+                this.inventory.change(refund, refund, true);
                 if (hasInventory(maybeCell)) {
                     maybeCell.inventory.give(this.inventory, maybeCell.inventory.water, maybeCell.inventory.sugar);
                 }

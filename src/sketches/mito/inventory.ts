@@ -1,6 +1,8 @@
 // floating point rounding error fix
+// without: 0.8 - 0.1 = 0.7000000000000001
+// with: fpref(0.8 - 0.1) = 0.7
 function fpref(x: number) {
-    return Math.floor(x * 1e12) / 1e12;
+    return Math.round(x * 1e12) / 1e12;
 }
 
 export class Inventory {
@@ -11,6 +13,41 @@ export class Inventory {
     ) {
         this.validate();
     }
+
+    // public exchange(other: Inventory, giveWater: number, giveSugar: number, getWater: number, getSugar: number) {
+    //     giveWater = Math.min(giveWater, this.water);
+    //     giveSugar = Math.min(giveSugar, this.sugar);
+    //     getWater = Math.min(getWater, other.water);
+    //     getSugar = Math.min(getWater, other.sugar);
+
+    //     // positive = give this amount
+    //     // negative = other gives this amount
+    //     const wantedExchangedWater = giveWater - getWater;
+    //     const wantedExchangedSugar = giveSugar - getSugar;
+
+    //     const mySpace = fpref(this.space() + wantedExchangedSugar + wantedExchangedWater);
+    //     const otherSpace = fpref(other.space() - wantedExchangedSugar - wantedExchangedWater);
+
+    //     // const mySpace = fpref(this.capacity + giveWater + giveSugar - this.water - this.sugar);
+
+    //     // const otherSpace = fpref(other.capacity - other.water - other.sugar)
+
+    //     // const mySpaceNeeded = fpref(getWater + getSugar);
+    //     // const otherSpaceNeeded = fpref(giveWater + giveSugar);
+
+    //     // if (mySpace < mySpaceNeeded) {
+    //     //     // e.g. space = 2, needed = 4
+    //     //     // only get half
+    //     //     const weightedRatio = mySpace / mySpaceNeeded;
+    //     //     getWater = getWater * mySpace / mySpaceNeeded;
+    //     //     getSugar = getSugar * mySpace / mySpaceNeeded;
+    //     // }
+
+    //     // if (otherSpace < otherSpaceNeeded) {
+    //     //     giveWater = giveWater / otherSpace;
+    //     //     giveSugar = giveSugar / otherSpace;
+    //     // }
+    // }
 
     public give(other: Inventory, amountWater: number, amountSugar: number) {
         if (other === this) {
@@ -28,15 +65,24 @@ export class Inventory {
             const capacity = other.space();
             // scale down the amount to give
             // give less than capacity
-            water = Math.floor(water / spaceNeeded * capacity);
-            sugar = Math.floor(sugar / spaceNeeded * capacity);
+            water = water / spaceNeeded * capacity;
+            sugar = sugar / spaceNeeded * capacity;
         }
         this.change(-water, -sugar);
         other.change(water, sugar);
         return {water, sugar};
     }
 
-    public change(water: number, sugar: number) {
+    public change(water: number, sugar: number, autoRescale = false) {
+        if (autoRescale) {
+            const spaceNeeded = fpref(water + sugar);
+            const spaceAvailable = this.space();
+            if (spaceNeeded > spaceAvailable) {
+                // scale down the amount to give
+                water = water / spaceNeeded * spaceAvailable;
+                sugar = sugar / spaceNeeded * spaceAvailable;
+            }
+        }
         const newWater = fpref(this.water + water);
         const newSugar = fpref(this.sugar + sugar);
         this.validate(newWater, newSugar);
@@ -51,13 +97,6 @@ export class Inventory {
 
     validate(water: number = this.water, sugar: number = this.sugar) {
         const { capacity } = this;
-        // if (Math.floor(water) !== water) {
-        //     throw new Error("water isn't an integer: " + water);
-        // }
-        // eh fuck it
-        // if (Math.floor(sugar) !== sugar) {
-        //     throw new Error("sugar isn't an integer: " + sugar);
-        // }
         if (water < 0) {
             throw new Error(`water < 0: ${water}`);
         }
