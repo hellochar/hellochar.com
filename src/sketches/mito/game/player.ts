@@ -32,6 +32,7 @@ export class Player {
             return 0;
         }
     }
+
     public droopPos() {
         const droopY = this.droopY();
         if (droopY !== 0) {
@@ -41,9 +42,11 @@ export class Player {
         }
         return this.pos;
     }
+
     public on(event: string, cb: (...args: any[]) => void) {
         this.events.on(event, cb);
     }
+
     public step() {
         if (this.action === undefined) {
             this.action = this.actionQueue.shift() || { type: "none" };
@@ -53,15 +56,8 @@ export class Player {
             this.events.emit("action", this.action);
         }
         this.action = undefined;
-        // const tile = this.world.tileAt(this.pos.x, this.pos.y);
-        // if (tile instanceof Transport && tile.cooldown <= 0) {
-        //     const action: ActionMove = {
-        //         type: "move",
-        //         dir: tile.dir,
-        //     };
-        //     this.attemptAction(action);
-        // }
     }
+
     public attemptAction(action: Action): boolean {
         switch (action.type) {
             case "none":

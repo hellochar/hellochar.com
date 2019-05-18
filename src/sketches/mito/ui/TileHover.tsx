@@ -57,8 +57,12 @@ export class TileHover extends React.Component<HoverProps> {
     }
     private inventoryInfo(tile: Tile) {
         if (hasInventory(tile)) {
-            const waterInfo = (tile.inventory.water > 0) ? <div className="info-inventory-item">💧 {tile.inventory.water.toFixed(2)}</div> : null;
-            const sugarInfo = (tile.inventory.sugar > 0) ? <div className="info-inventory-item">Sugar {tile.inventory.sugar.toFixed(2)}</div> : null;
+            const waterInfo = (tile.inventory.water > 0)
+                ? <div className="info-inventory-item"> {tile.inventory.water.toFixed(2)}</div>
+                : null;
+            const sugarInfo = (tile.inventory.sugar > 0)
+                ? <div className="info-inventory-item">Sugar {tile.inventory.sugar.toFixed(2)}</div>
+                : null;
             return <div className="info-inventory">{waterInfo}{sugarInfo}</div>;
         }
     }
