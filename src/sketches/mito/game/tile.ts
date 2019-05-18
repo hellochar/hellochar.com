@@ -59,7 +59,7 @@ export abstract class Tile {
                         isSubclass(tile, this) ||
                         (tile instanceof Cell && this instanceof Cell)
                     );
-                }) as any as HasInventory[];
+                }) as Array<Tile & HasInventory>;
 
             const upperNeighbor = neighbors.get(DIRECTIONS.n);
 

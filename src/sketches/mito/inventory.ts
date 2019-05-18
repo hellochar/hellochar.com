@@ -61,12 +61,12 @@ export class Inventory {
         let water = Math.min(amountWater, this.water);
         let sugar = Math.min(amountSugar, this.sugar);
         const spaceNeeded = fpref(water + sugar);
-        if (spaceNeeded > other.space()) {
-            const capacity = other.space();
+        const spaceAvailable = other.space();
+        if (spaceNeeded > spaceAvailable) {
             // scale down the amount to give
             // give less than capacity
-            water = water / spaceNeeded * capacity;
-            sugar = sugar / spaceNeeded * capacity;
+            water = Math.floor(water / spaceNeeded * spaceAvailable);
+            sugar = Math.floor(sugar / spaceNeeded * spaceAvailable);
         }
         this.change(-water, -sugar);
         other.change(water, sugar);
@@ -113,6 +113,6 @@ export interface HasInventory {
     inventory: Inventory;
 }
 
-export function hasInventory(obj: any): obj is HasInventory {
-    return obj.inventory instanceof Inventory;
+export function hasInventory<T>(obj: T): obj is (HasInventory & T) {
+    return (obj as any).inventory instanceof Inventory;
 }
