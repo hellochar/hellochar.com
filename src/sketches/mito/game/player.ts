@@ -193,7 +193,7 @@ export class Player {
     public attemptBuildTransport(action: ActionBuildTransport) {
         const existingCell = this.world.cellAt(action.position.x, action.position.y);
         if (existingCell) {
-            this.attemptDeconstruct({ type: "deconstruct", position: action.position });
+            this.attemptDeconstruct({ type: "deconstruct", position: action.position, force: true });
         }
         const newCell = this.tryConstructingNewCell(action.position, action.cellType);
         if (newCell != null) {
@@ -210,11 +210,12 @@ export class Player {
         }
     }
     public attemptDeconstruct(action: ActionDeconstruct): boolean {
-        if (!action.position.equals(this.pos)) {
+        if (!action.position.equals(this.pos) || action.force) {
             const maybeCell = this.world.maybeRemoveCellAt(action.position);
             if (maybeCell != null) {
-                // refund the sugar remaining
-                this.inventory.change(0, Math.min(maybeCell.energy / params.cellEnergyMax, this.inventory.space()));
+                // refund the resources back
+                const refund = Math.min(maybeCell.energy / params.cellEnergyMax, this.inventory.space());
+                this.inventory.change(refund, refund);
                 if (hasInventory(maybeCell)) {
                     maybeCell.inventory.give(this.inventory, maybeCell.inventory.water, maybeCell.inventory.sugar);
                 }

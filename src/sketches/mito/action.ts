@@ -21,6 +21,7 @@ export interface ActionBuild {
 export interface ActionDeconstruct {
     type: "deconstruct";
     position: Vector2;
+    force?: boolean;
 }
 
 export interface ActionBuildTransport {
