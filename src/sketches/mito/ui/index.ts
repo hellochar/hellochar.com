@@ -1,4 +1,4 @@
 export * from "./GameStack";
-export * from "./TileHover";
+export * from "./HoveredTileInfo";
 export * from "./HUD";
 export * from "./ParamsGUI";

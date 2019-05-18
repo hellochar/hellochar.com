@@ -5,11 +5,11 @@ import { Air, Cell, hasEnergy, Leaf, Root, Tile } from "../game/tile";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
 
-interface HoverProps {
+interface HoveredTileInfoProps {
     tile?: Tile;
 }
 
-export class TileHover extends React.Component<HoverProps> {
+export class HoveredTileInfo extends React.Component<HoveredTileInfoProps> {
     public render() {
         const { tile } = this.props;
         if (!tile) {

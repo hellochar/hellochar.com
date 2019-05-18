@@ -18,7 +18,7 @@ import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
 import { NewPlayerTutorial } from "./tutorial";
 import TileHighlight from "./tutorial/tileHighlight";
-import { GameStack, HUD, ParamsGUI, TileHover } from "./ui";
+import { GameStack, HUD, ParamsGUI, HoveredTileInfo } from "./ui";
 
 export type Entity = Tile | Player;
 
@@ -79,12 +79,12 @@ export class Mito extends ISketch {
             onTryActionKey={this.tryAction}
             world={this.world}
         />
-        <TileHover tile={this.hoveredTile} />
+        <HoveredTileInfo tile={this.hoveredTile} />
         <GameStack mito={this} state={this.gameState} />
         {/* <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />, */}
         <ParamsGUI />
         { this.hoveredTile ? <TileHighlight x={this.hoveredTile.pos.x} y={this.hoveredTile.pos.y} scene={this.scene} /> : null }
-        { (this.autoplace === Tissue && this.hoveredTile) ? <PathHighlight tile={this.hoveredTile} scene={this.scene} world={this.world} /> : null }
+        { ((this.autoplace === Tissue || this.autoplace === Transport) && this.hoveredTile) ? <PathHighlight tile={this.hoveredTile} scene={this.scene} world={this.world} /> : null }
         </>;
     }
     public tutorialRef: NewPlayerTutorial | null = null;
