@@ -18,7 +18,7 @@ import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
 import { NewPlayerTutorial } from "./tutorial";
 import TileHighlight from "./tutorial/tileHighlight";
-import { GameStack, HUD, ParamsGUI, HoveredTileInfo } from "./ui";
+import { GameStack, Hover, HoveredTileInfo, HUD, ParamsGUI } from "./ui";
 
 export type Entity = Tile | Player;
 
@@ -79,12 +79,10 @@ export class Mito extends ISketch {
             onTryActionKey={this.tryAction}
             world={this.world}
         />
-        <HoveredTileInfo tile={this.hoveredTile} />
         <GameStack mito={this} state={this.gameState} />
         {/* <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />, */}
         <ParamsGUI />
-        { this.hoveredTile ? <TileHighlight x={this.hoveredTile.pos.x} y={this.hoveredTile.pos.y} scene={this.scene} /> : null }
-        { ((this.autoplace === Tissue || this.autoplace === Transport) && this.hoveredTile) ? <PathHighlight tile={this.hoveredTile} scene={this.scene} world={this.world} /> : null }
+        <Hover mito={this} />
         </>;
     }
     public tutorialRef: NewPlayerTutorial | null = null;
@@ -452,15 +450,6 @@ Textures in memory: ${this.renderer.info.memory.textures}
             type: "move",
             dir,
         }) as ActionMove);
-    }
-}
-
-class PathHighlight extends React.PureComponent<{world: World, tile: Tile, scene: THREE.Scene}> {
-    render() {
-        const path = findPositionsThroughNonObstacles(this.props.world, this.props.tile.pos);
-        return <>
-            {path.map(([x, y]) => <TileHighlight x={x} y={y} scene={this.props.scene} />)}
-        </>;
     }
 }
 
