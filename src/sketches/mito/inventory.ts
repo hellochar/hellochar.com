@@ -90,6 +90,17 @@ export class Inventory {
         this.validate(newWater, newSugar);
         this.water = newWater;
         this.sugar = newSugar;
+
+        // fixup if needed
+        if (this.water < 0) { this.water = 0; }
+        if (this.sugar < 0) { this.sugar = 0; }
+        if (this.water + this.sugar > this.capacity) {
+            if (this.water > this.sugar) {
+                this.water = this.capacity - this.sugar;
+            } else {
+                this.sugar = this.capacity - this.water;
+            }
+        }
     }
 
     public space() {
