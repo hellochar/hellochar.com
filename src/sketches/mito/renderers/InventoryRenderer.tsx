@@ -1,75 +1,119 @@
-import { Color, DoubleSide, Mesh, MeshBasicMaterial, Object3D, PlaneBufferGeometry, Scene, Vector3 } from "three";
+import { Color, DoubleSide, PointsMaterial, Scene, Vector2, Vector3 } from "three";
 
 import lazy from "../../../common/lazy";
-import { lerp2, Mito } from "../index";
+import { Mito } from "../index";
 import { Inventory } from "../inventory";
 import { textureFromSpritesheet } from "../spritesheet";
 import { Renderer } from "./Renderer";
+import { ResourceParticles } from "./resourceParticles";
 
 // we represent Resources as dots of certain colors.
 export class InventoryRenderer extends Renderer<Inventory> {
-    static geometry = new PlaneBufferGeometry(1, 1);
-    static waterMaterial = new MeshBasicMaterial({
-        // map: textureFromSpritesheet(0, 1),
-        transparent: true,
-        opacity: 0.75,
-        // color: new Color("rgb(12, 41, 255)"),
-        // color: new Color("rgb(29, 42, 255)"),
-        color: new Color("rgb(9, 12, 255)"),
-        side: DoubleSide,
-    });
-    static sugarMaterial = lazy(() => new MeshBasicMaterial({
-        map: textureFromSpritesheet(42, 12, "transparent"),
-        transparent: true,
-        opacity: 0.9,
-        color: "yellow",
-        // color: new Color("yellow"),
-        side: DoubleSide,
-    }));
+    static WaterParticles = lazy(() => new ResourceParticles(
+        {
+            color: new Color("rgb(9, 12, 255)"),
+            size: 45,
+            opacity: 0.75,
+        },
+        // new PointsMaterial({
+        //     // map: textureFromSpritesheet(0, 1),
+        //     transparent: true,
+        //     opacity: 0.75,
+        //     // color: new Color("rgb(12, 41, 255)"),
+        //     // color: new Color("rgb(29, 42, 255)"),
+        //     color: new Color("rgb(9, 12, 255)"),
+        //     size: .12,
+        //     side: DoubleSide,
+        // })
+    ));
+
+    static SugarParticles = lazy(() => new ResourceParticles(
+        {
+            color: new Color("yellow"),
+            size: 45,
+            opacity: 0.9,
+            map: textureFromSpritesheet(42, 12, "transparent"),
+        },
+        // new PointsMaterial({
+        //     map: textureFromSpritesheet(42, 12, "transparent"),
+        //     transparent: true,
+        //     opacity: 0.9,
+        //     color: "yellow",
+        //     size: .12,
+        //     side: DoubleSide,
+        // })
+    ));
+
+    static startFrame() {
+        InventoryRenderer.WaterParticles().startFrame();
+        InventoryRenderer.SugarParticles().startFrame();
+    }
+
+    static endFrame() {
+        InventoryRenderer.WaterParticles().endFrame();
+        InventoryRenderer.SugarParticles().endFrame();
+    }
+    // static geometry = new PlaneBufferGeometry(1, 1);
+    // static waterMaterial = new MeshBasicMaterial({
+    //     // map: textureFromSpritesheet(0, 1),
+    //     transparent: true,
+    //     opacity: 0.75,
+    //     // color: new Color("rgb(12, 41, 255)"),
+    //     // color: new Color("rgb(29, 42, 255)"),
+    //     color: new Color("rgb(9, 12, 255)"),
+    //     side: DoubleSide,
+    // });
+    // static sugarMaterial = lazy(() => new MeshBasicMaterial({
+    //     map: textureFromSpritesheet(42, 12, "transparent"),
+    //     transparent: true,
+    //     opacity: 0.9,
+    //     color: "yellow",
+    //     // color: new Color("yellow"),
+    //     side: DoubleSide,
+    // }));
     public animationOffset = 0;
-    public object = new Object3D();
-    public waters: Mesh[] = [];
-    public sugars: Mesh[] = [];
-    constructor(target: Inventory, scene: Scene, mito: Mito) {
+    // public object = new Object3D();
+    public waters: Vector2[] = [];
+    public sugars: Vector2[] = [];
+    constructor(target: Inventory, public position: Vector2, scene: Scene, mito: Mito) {
         super(target, scene, mito);
-        this.object.name = "InventoryRenderer Object";
-        this.object.position.z = 1;
-        this.object.updateMatrix();
-        this.object.matrixAutoUpdate = false;
+        // this.object.name = "InventoryRenderer Object";
+        // this.object.position.z = 1;
+        // this.object.updateMatrix();
+        // this.object.matrixAutoUpdate = false;
         for (let i = 0; i < this.target.water; i++) {
-            this.createWaterMesh();
+            this.newParticle(this.waters);
         }
         for (let i = 0; i < this.target.sugar; i++) {
-            this.createSugarMesh();
+            this.newParticle(this.sugars);
         }
-        // don't add to scene yourself
     }
-    private updateMeshes(resourceType: "water" | "sugar", resource: number, array: Mesh[], create: () => void) {
+    private updateNumParticles(resource: number, resourceArray: Vector2[]) {
         const wantedMeshes = Math.ceil(resource);
-        while (array.length < wantedMeshes) {
-            create();
+        while (resourceArray.length < wantedMeshes) {
+            this.newParticle(resourceArray);
         }
-        while (array.length > wantedMeshes) {
-            const mesh = array.shift()!;
-            this.object.remove(mesh);
-        }
-        const s = InventoryRenderer.resourceMeshScale[resourceType];
-        for (const mesh of array) {
-            mesh.scale.set(s, s, 1);
-        }
-        const fract = resource - Math.floor(resource);
-        if (array.length > 0 && fract > 0) {
-            const scale = s * fract;
-            const lastMesh = array[array.length - 1];
-            lastMesh.scale.set(scale, scale, 1);
+        if (resourceArray.length > wantedMeshes) {
+            resourceArray.splice(wantedMeshes, resourceArray.length - wantedMeshes);
         }
     }
-    update() {
-        this.updateMeshes("water", this.target.water, this.waters, () => this.createWaterMesh());
-        this.updateMeshes("sugar", this.target.sugar, this.sugars, () => this.createSugarMesh());
+
+    private commitParticles(particles: ResourceParticles, resource: number, resourceArray: Vector2[]) {
+        if (resourceArray.length > 0) {
+            for (let i = 0; i < resourceArray.length - 1; i++) {
+                const p = resourceArray[i];
+                particles.commit(p.x + this.position.x, p.y + this.position.y, 1, 1);
+            }
+            const p = resourceArray[resourceArray.length - 1];
+            const fract = resource - Math.floor(resource);
+            particles.commit(p.x + this.position.x, p.y + this.position.y, 1, fract);
+        }
+    }
+
+    private simulateResourcePositions() {
         const resources = this.waters.concat(this.sugars);
         for (const r of resources) {
-            const vel = r.position.clone();
+            const vel = r.clone();
             const angle = performance.now() / 3000 + this.animationOffset;
             vel.x += Math.cos(angle) * 0.2;
             // vel.y += Math.sin(performance.now() / 3000) * 0.1;
@@ -79,38 +123,29 @@ export class InventoryRenderer extends Renderer<Inventory> {
                 if (r === l) {
                     break;
                 }
-                const offset = r.position.clone().sub(l.position);
+                const offset = r.clone().sub(l);
                 const lengthSq = offset.lengthSq();
                 if (lengthSq > 0) {
                     const strength = 0.003 / lengthSq;
                     vel.add(offset.multiplyScalar(strength));
                 }
             }
-            // this.quantize(vel, 0.1);
-            r.position.add(vel);
-            // this.quantize(r.position, 0.01);
+            r.add(vel);
         }
     }
+
+    update() {
+        this.updateNumParticles(this.target.water, this.waters);
+        this.updateNumParticles(this.target.sugar, this.sugars);
+        this.simulateResourcePositions();
+        this.commitParticles(InventoryRenderer.WaterParticles(), this.target.water, this.waters);
+        this.commitParticles(InventoryRenderer.SugarParticles(), this.target.sugar, this.sugars);
+    }
     destroy() {
-        // don't destroy yourself
+        // no-op
     }
-    static resourceMeshScale = {
-        water: .12,
-        sugar: .12,
-    };
-    createWaterMesh() {
-        const mesh = new Mesh(InventoryRenderer.geometry, InventoryRenderer.waterMaterial);
-        mesh.name = "Water Mesh";
-        mesh.position.set((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, 0);
-        this.object.add(mesh);
-        this.waters.push(mesh);
-    }
-    createSugarMesh() {
-        const mesh = new Mesh(InventoryRenderer.geometry, InventoryRenderer.sugarMaterial());
-        mesh.name = "Sugar Mesh";
-        // mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
-        mesh.position.set((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, 0);
-        this.object.add(mesh);
-        this.sugars.push(mesh);
+    newParticle(arr: Vector2[]) {
+        const position = new Vector2((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01);
+        arr.push(position);
     }
 }

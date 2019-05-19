@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as THREE from "three";
-import { OrthographicCamera, Scene, Vector3 } from "three";
+import { Object3D, OrthographicCamera, Scene, Vector3 } from "three";
 
 import devlog from "../../common/devlog";
 import { map } from "../../math/index";
@@ -13,6 +13,7 @@ import { Cell, Fruit, Tile, Tissue, Transport, Vein } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS, MOVEMENT_KEYS } from "./keymap";
 import { params } from "./params";
 import { actionMoveFor, findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
+import { InventoryRenderer } from "./renderers/InventoryRenderer";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
@@ -216,12 +217,18 @@ export class Mito extends ISketch {
         return mesh;
     })();
 
+    static originalFn = Object3D.prototype.updateMatrixWorld;
     public init() {
+        (window as any).mito = this;
         hookUpAudio(this.audioContext);
         this.camera.zoom = 1.5;
         this.camera.add(this.audioListener);
 
         this.resize(this.canvas.width, this.canvas.height);
+
+        this.scene.add(InventoryRenderer.WaterParticles());
+        this.scene.add(InventoryRenderer.SugarParticles());
+
         // darkness and water diffuse a few times to stabilize it
         for (let i = 0; i < 5; i++) {
             this.world.step();
@@ -272,6 +279,16 @@ Textures in memory: ${this.renderer.info.memory.textures}
 # Render Tris: ${this.renderer.info.render.triangles}
 `,
         );
+    }
+
+    public perfDebug() {
+        // count how many have autoUpdate enabled
+        let yes = 0, no = 0; this.scene.traverse((o) => { if (o.matrixAutoUpdate) { yes++ } else { no++ } });
+        console.log("yes", yes, "no", no);
+
+        // count how many vertices of each type there are
+        const s = new Map(); this.scene.traverse((o) => { const k = (s.get(o.name || o.constructor.name) || []); s.set(o.name || o.constructor.name, k); k.push(o) })
+        console.log(s);
     }
 
     public worldStepAndDeleteOldRenderers() {
@@ -346,11 +363,13 @@ Textures in memory: ${this.renderer.info.memory.textures}
             } else if (world.player.getAction() != null) {
                 this.worldStepAndDeleteOldRenderers();
             }
-            // this.world.entities().forEach((entity) => {
+
+            InventoryRenderer.startFrame();
             this.world.entities().forEach((entity) => {
                 const renderer = this.getOrCreateRenderer(entity);
                 renderer.update();
             });
+            InventoryRenderer.endFrame();
         }
         if (this.uiState.type === "expanding") {
             if (!this.world.player.isBuildCandidate(this.world.tileAt(this.uiState.target))) {
@@ -378,9 +397,17 @@ Textures in memory: ${this.renderer.info.memory.textures}
             );
             lerp2(this.camera.position, target, 0.3);
         }
+
+        // const s = new Map();
+        // Object3D.prototype.updateMatrixWorld = function(...args) {
+        //     Mito.originalFn.apply(this, args);
+        //     const k = (s.get(this.name || this.constructor.name) || []); s.set(this.name || this.constructor.name, k); k.push(this);
+        // }
         this.renderer.render(this.scene, this.camera);
+        // console.log("update Matrix World: ", s);
 
         this.hoveredTile = this.getTileAtScreenPosition(this.mouse.x, this.mouse.y);
+        // this.perfDebug();
     }
 
     // if this move, taken by Player, doesn't make sense, then take an action that does
@@ -451,6 +478,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
 
     public resize(w: number, h: number) {
         const aspect = h / w;
+        // at zoom 1, we see 12 pixels up and 12 pixels down
         const cameraHeight = 12;
         this.camera.left = -cameraHeight / aspect;
         this.camera.right = cameraHeight / aspect;
@@ -495,13 +523,6 @@ Textures in memory: ${this.renderer.info.memory.textures}
             actions = pathFrom(findPositionsThroughTissue(this.world, target.pos, this.autoplace != null));
         }
         this.world.player.setActions(actions);
-    }
-
-    private pathToActions(path: THREE.Vector2[]) {
-        return path.map((dir) => ({
-            type: "move",
-            dir,
-        }) as ActionMove);
     }
 }
 

@@ -47,9 +47,9 @@ export class TileRenderer extends Renderer<Tile> {
         // }
         // this.object.add(this.mesh);
         if (hasInventory(this.target)) {
-            this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.scene, this.mito);
+            this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.target.pos, this.scene, this.mito);
             this.inventoryRenderer.animationOffset = (this.target.pos.x + this.target.pos.y) / 2;
-            this.mesh.add(this.inventoryRenderer.object);
+            // this.mesh.add(this.inventoryRenderer.object);
         }
         this.scene.add(this.mesh);
         const zIndex = this.target instanceof Cell ? 1 : 0;
@@ -97,11 +97,9 @@ export class TileRenderer extends Renderer<Tile> {
             mat.color.lerp(new Color(0), 1 - this.target.energy / params.cellEnergyMax);
         }
         if (this.inventoryRenderer != null) {
-            if (lightAmount === 0) {
-                this.inventoryRenderer.object.visible = false;
-            } else {
+            if (lightAmount > 0) {
+                // will not render without an update
                 this.inventoryRenderer.update();
-                this.inventoryRenderer.object.visible = true;
             }
         }
         if (this.target instanceof Leaf && this.audio != null) {
@@ -137,7 +135,7 @@ export class TileRenderer extends Renderer<Tile> {
             this.lastAudioValueTracker = newAudioValueTracker;
         }
         if (hasTilePairs(this.target)) {
-            const pairColor = this.target instanceof Leaf ? 0xffc90e : InventoryRenderer.waterMaterial.color.getHex();
+            const pairColor = this.target instanceof Leaf ? 0xffc90e : new Color("rgb(9, 12, 255)").getHex();
             const pairs = this.target.tilePairs;
             if (pairs.length !== this.pairsLines.length) {
                 // redo pairs
@@ -152,7 +150,7 @@ export class TileRenderer extends Renderer<Tile> {
             }
         }
         if (this.hasActiveNeighbors(this.target)) {
-            const color = InventoryRenderer.waterMaterial.color.getHex();
+            const color =  new Color("rgb(9, 12, 255)").getHex();
             const lines = this.target.activeNeighbors;
             if (lines.length !== this.pairsLines.length) {
                 // redo pairs
