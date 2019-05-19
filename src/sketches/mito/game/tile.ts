@@ -431,7 +431,7 @@ export class Leaf extends Cell {
                 const speed = air.sunlight();
 
                 // gives much less sugar lower down
-                const efficiency = air.co2() * air.co2();
+                const efficiency = air.co2();
 
                 this.averageEfficiency += efficiency;
                 this.averageSpeed += speed;
