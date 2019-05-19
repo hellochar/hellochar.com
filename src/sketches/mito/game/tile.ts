@@ -532,8 +532,12 @@ export class Transport extends Tissue {
         this.energy -= 1;
         super.step();
         const targetTile = this.world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
-        if (targetTile instanceof Cell && hasInventory(targetTile) && this.cooldown <= 0) {
+        const fromTile = this.world.tileAt(this.pos.x - this.dir.x, this.pos.y - this.dir.y);
+        if (targetTile instanceof Cell && hasInventory(targetTile) &&
+            fromTile instanceof Cell && hasInventory(fromTile) &&
+            this.cooldown <= 0) {
             this.inventory.give(targetTile.inventory, 1, 1);
+            fromTile.inventory.give(this.inventory, 1, 1);
             this.cooldown += params.transportTurnsPerMove;
         }
         this.cooldown -= 1;
