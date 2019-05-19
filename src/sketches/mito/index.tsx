@@ -10,7 +10,7 @@ import { drums, hookUpAudio, strings } from "./audio";
 import { Constructor } from "./constructor";
 import { Player, World } from "./game";
 import { Cell, Fruit, Tile, Tissue, Transport, Vein } from "./game/tile";
-import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
+import { ACTION_KEYMAP, BUILD_HOTKEYS, MOVEMENT_KEYS } from "./keymap";
 import { params } from "./params";
 import { directionFor, findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
@@ -174,7 +174,7 @@ export class Mito extends ISketch {
                 this.world.player.setAction(buildAction);
                 this.resetUIState();
                 return;
-            } else if (ACTION_KEYMAP[key] && ACTION_KEYMAP[key].type !== "move") {
+            } else if (ACTION_KEYMAP[key]) {
                 this.resetUIState();
                 return;
             }
@@ -189,7 +189,7 @@ export class Mito extends ISketch {
         if (this.autoplace != null && key === "Escape") {
             this.autoplace = undefined;
         }
-        const action = ACTION_KEYMAP[key];
+        const action = ACTION_KEYMAP[key] || MOVEMENT_KEYS[key];
         if (action != null) {
             this.world.player.setAction(action);
         } else {

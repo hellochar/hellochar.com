@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+import { MOVEMENT_KEYS } from "./keymap";
+
 const fontMeshGeometry = new THREE.PlaneGeometry(1, 1);
 fontMeshGeometry.rotateX(Math.PI);
 function createFontMesh(char: string) {
@@ -33,6 +35,6 @@ function createFontMesh(char: string) {
     return mesh;
 }
 export const MOVEMENT_KEY_MESHES: Map<string, THREE.Mesh> = new Map();
-for (const char of "qweasdzc") {
+for (const char in MOVEMENT_KEYS) {
     MOVEMENT_KEY_MESHES.set(char, createFontMesh(char));
 }

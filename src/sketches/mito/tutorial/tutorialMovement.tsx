@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { Action, ActionMove } from "../action";
-import { ACTION_KEYMAP } from "../keymap";
+import { Action } from "../action";
+import { ACTION_KEYMAP, MOVEMENT_KEYS } from "../keymap";
 import { MOVEMENT_KEY_MESHES } from "../movementKeyMeshes";
 import { SceneObject } from "./sceneObject";
 import { Tutorial } from "./tutorial";
@@ -54,7 +54,7 @@ class TutorialMovementKeyHint extends React.PureComponent<TutorialMovementKeyHin
     }
 
     render() {
-        const action = ACTION_KEYMAP[this.props.keyChar] as ActionMove;
+        const action = MOVEMENT_KEYS[this.props.keyChar];
         const x = this.props.x + action.dir.x;
         const y = this.props.y + action.dir.y;
         this.mesh.position.set(x, y, 2);
