@@ -32,6 +32,7 @@ export class InventoryRenderer extends Renderer<Inventory> {
     public sugars: Mesh[] = [];
     constructor(target: Inventory, scene: Scene, mito: Mito) {
         super(target, scene, mito);
+        this.object.name = "InventoryRenderer Object";
         this.object.position.z = 1;
         this.object.updateMatrix();
         this.object.matrixAutoUpdate = false;
@@ -99,12 +100,14 @@ export class InventoryRenderer extends Renderer<Inventory> {
     };
     createWaterMesh() {
         const mesh = new Mesh(InventoryRenderer.geometry, InventoryRenderer.waterMaterial);
+        mesh.name = "Water Mesh";
         mesh.position.set((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, 0);
         this.object.add(mesh);
         this.waters.push(mesh);
     }
     createSugarMesh() {
         const mesh = new Mesh(InventoryRenderer.geometry, InventoryRenderer.sugarMaterial());
+        mesh.name = "Sugar Mesh";
         // mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, 0);
         mesh.position.set((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01, 0);
         this.object.add(mesh);
