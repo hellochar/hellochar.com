@@ -6,7 +6,7 @@ import { DIRECTION_VALUES } from "./directions";
 import { World } from "./game";
 import { Cell, Tissue } from "./game/tile";
 
-export function findPositionsThroughTissue(world: World, target: Vector2) {
+export function findPositionsThroughTissue(world: World, target: Vector2, includeTargetIfNonTissue = false) {
     const grid = newGrid((x, y, g) => {
         const tile = world.tileAt(x, y);
         if (tile instanceof Tissue) {
@@ -14,7 +14,13 @@ export function findPositionsThroughTissue(world: World, target: Vector2) {
         }
     });
     grid.setWalkableAt(target.x, target.y, true);
-    return findPath(grid, world.player.pos, target);
+    const path = findPath(grid, world.player.pos, target);
+    if (!(world.tileAt(target) instanceof Cell) && !includeTargetIfNonTissue) {
+        // get rid of trying to actually walk past the edge
+        path.pop();
+        return path;
+    }
+    return path;
 }
 
 export function findPositionsThroughNonObstacles(world: World, target: Vector2) {

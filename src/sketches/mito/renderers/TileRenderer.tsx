@@ -146,7 +146,6 @@ export class TileRenderer extends Renderer<Tile> {
                     const length = dir.length() * 2 - 0.25;
                     const arrowDir = new Vector3(dir.x, dir.y, 0).normalize();
                     const arrowHelper = this.makeLine(arrowDir, arrowDir.clone().multiplyScalar(-length / 2), length, pairColor);
-                    arrowHelper.position.z = 0.1;
                     this.object.add(arrowHelper);
                     return arrowHelper;
                 });
@@ -162,7 +161,6 @@ export class TileRenderer extends Renderer<Tile> {
                     const length = dir.length() - 0.25;
                     const arrowDir = new Vector3(dir.x, dir.y, 0).normalize();
                     const arrowHelper = this.makeLine(arrowDir, new Vector3(), length, color);
-                    arrowHelper.position.z = 0.1;
                     this.object.add(arrowHelper);
                     return arrowHelper;
                 });
@@ -194,6 +192,7 @@ export class TileRenderer extends Renderer<Tile> {
             line.quaternion.setFromAxisAngle(axis, radians);
         }
         line.scale.set(1, Math.max(0, length), 1);
+        line.position.z = 0.1;
         line.updateMatrix();
         line.matrixAutoUpdate = false;
         return line;

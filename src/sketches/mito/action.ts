@@ -41,4 +41,9 @@ export interface ActionNone {
     type: "none";
 }
 
-export type Action = ActionStill | ActionMove | ActionBuild | ActionDeconstruct | ActionBuildTransport | ActionDrop | ActionNone;
+export interface ActionMultiple {
+    type: "multiple";
+    actions: Action[];
+}
+
+export type Action = ActionStill | ActionMove | ActionBuild | ActionDeconstruct | ActionBuildTransport | ActionDrop | ActionNone | ActionMultiple;

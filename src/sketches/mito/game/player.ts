@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { Vector2 } from "three";
-import { Action, ActionBuild, ActionBuildTransport, ActionDeconstruct, ActionDrop, ActionMove } from "../action";
+import { Action, ActionBuild, ActionBuildTransport, ActionDeconstruct, ActionDrop, ActionMove, ActionMultiple } from "../action";
 import { build, footsteps } from "../audio";
 import { Constructor } from "../constructor";
 import { hasInventory, Inventory } from "../inventory";
@@ -14,7 +14,7 @@ export class Player {
     private action?: Action;
     private events = new EventEmitter();
     private actionQueue: Action[] = [];
-    public movementConversion?: (player: Player, action: Action) => Action | null;
+    public mapActions?: (player: Player, action: Action) => Action | Action[] | undefined;
     public constructor(public pos: Vector2, public world: World) { }
     public setActions(actions: Action[]) {
         this.actionQueue = actions;
@@ -45,6 +45,10 @@ export class Player {
         return this.pos;
     }
 
+    public currentTile() {
+        return this.world.tileAt(this.pos);
+    }
+
     public on(event: string, cb: (...args: any[]) => void) {
         this.events.on(event, cb);
     }
@@ -53,8 +57,17 @@ export class Player {
         if (this.action === undefined) {
             this.action = this.actionQueue.shift() || { type: "none" };
         }
-        if (this.movementConversion) {
-            this.action = this.movementConversion(this, this.action) || { type: "none" };
+        if (this.mapActions) {
+            const mappedAction = this.mapActions(this, this.action);
+            if (Array.isArray(mappedAction)) {
+                const [currentAction, ...futureActions] = mappedAction;
+                this.action = currentAction;
+                this.actionQueue.unshift(...futureActions);
+            } else if (mappedAction != null) {
+                this.action = mappedAction;
+            } else {
+                this.action = { type: "none" };
+            }
         }
         const actionSuccessful = this.attemptAction(this.action);
         if (actionSuccessful) {
@@ -80,6 +93,8 @@ export class Player {
                 return this.attemptDeconstruct(action);
             case "drop":
                 return this.attemptDrop(action);
+            case "multiple":
+                return this.attemptMultiple(action);
         }
     }
     public verifyMove(action: ActionMove) {
@@ -126,9 +141,9 @@ export class Player {
     }
     private autopickup() {
         // autopickup resources in the position as possible
-        const targetTile = this.world.tileAt(this.pos.x, this.pos.y);
-        if (hasInventory(targetTile)) {
-            const inv = targetTile.inventory;
+        const cell = this.currentTile();
+        if (hasInventory(cell)) {
+            const inv = cell.inventory;
             inv.give(this.inventory, inv.water, inv.sugar);
         }
     }
@@ -168,6 +183,10 @@ export class Player {
     }
     public attemptBuild(action: ActionBuild) {
         const existingCell = this.world.cellAt(action.position.x, action.position.y);
+        if (existingCell instanceof action.cellType) {
+            // already built, whatever.
+            return true;
+        }
         if (existingCell) {
             this.attemptDeconstruct({ type: "deconstruct", position: action.position });
         }
@@ -190,6 +209,7 @@ export class Player {
             return false;
         }
     }
+
     public attemptBuildTransport(action: ActionBuildTransport) {
         const existingCell = this.world.cellAt(action.position.x, action.position.y);
         if (existingCell) {
@@ -226,7 +246,7 @@ export class Player {
     }
     public attemptDrop(action: ActionDrop) {
         // drop as much as you can onto the current tile
-        const currentTile = this.world.tileAt(this.pos.x, this.pos.y);
+        const currentTile = this.currentTile();
         if (hasInventory(currentTile)) {
             // first, pick up what you can from the tile
             currentTile.inventory.give(this.inventory, currentTile.inventory.water, currentTile.inventory.sugar);
@@ -237,5 +257,13 @@ export class Player {
         } else {
             return false;
         }
+    }
+
+    public attemptMultiple(multiple: ActionMultiple) {
+        let allSuccess = true;
+        for (const action of multiple.actions) {
+            allSuccess = this.attemptAction(action) && allSuccess;
+        }
+        return allSuccess;
     }
 }

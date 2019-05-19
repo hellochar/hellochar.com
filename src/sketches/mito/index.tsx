@@ -12,7 +12,7 @@ import { Player, World } from "./game";
 import { Cell, Fruit, Tile, Tissue, Transport, Vein } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { params } from "./params";
-import { findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
+import { directionFor, findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
@@ -129,7 +129,7 @@ export class Mito extends ISketch {
         },
         click: (event: JQuery.Event) => {
             // left-click
-            this.enqueuePlayerMoveToMouse(event.clientX!, event.clientY!);
+            this.handleClick(event.clientX!, event.clientY!);
         },
         keydown: (event: JQuery.Event) => {
             const key = event.key!;
@@ -240,7 +240,7 @@ export class Mito extends ISketch {
         // airBg.position.y = height / 2 - 0.5;
         // this.scene.add(airBg);
         this.updateAmbientAudio();
-        this.world.player.movementConversion = this.maybeGetMovementRelatedAction;
+        this.world.player.mapActions = this.mapActions;
     }
 
     public getOrCreateRenderer(entity: Entity) {
@@ -375,11 +375,15 @@ Textures in memory: ${this.renderer.info.memory.textures}
     }
 
     // if this move, taken by Player, doesn't make sense, then take an action that does
-    public maybeGetMovementRelatedAction = (player: Player, action: Action): Action | null => {
+    public mapActions = (player: Player, action: Action): Action | Action[] | undefined => {
         if (action == null) {
-            return null;
+            return;
         }
-        if (action.type === "still" && this.autoplace === Vein) {
+        if (action.type === "none") {
+            return action;
+        }
+        this.resetUIState();
+        if (action.type === "still" && (this.autoplace === Vein || this.autoplace === Tissue)) {
             return {
                 type: "build",
                 cellType: Vein,
@@ -389,12 +393,8 @@ Textures in memory: ${this.renderer.info.memory.textures}
         if (action.type !== "move") {
             return action;
         }
-        if (this.uiState.type === "expanding") {
-            if (!player.isBuildCandidate(this.world.tileAt(this.uiState.target))) {
-                this.resetUIState();
-            }
-        }
-        const tile = this.world.tileAt(player.pos.x + action.dir.x, player.pos.y + action.dir.y);
+        const targetTile = this.world.tileAt(player.pos.x + action.dir.x, player.pos.y + action.dir.y);
+        const currentTile = player.currentTile();
         // autoplace
         if (this.autoplace != null) {
             if (this.autoplace === Transport) {
@@ -406,13 +406,18 @@ Textures in memory: ${this.renderer.info.memory.textures}
                     dir: action.dir,
                 };
                 return buildTransportAction;
-            } else if (this.autoplace === Vein) {
-                const buildCapillaryAction: ActionBuild = {
-                    type: "build",
-                    cellType: Vein,
-                    position: player.pos.clone().add(action.dir),
+            } else if (this.autoplace === Vein && !(currentTile instanceof Vein)) {
+                return {
+                    type: "multiple",
+                    actions: [
+                        {
+                            type: "build",
+                            cellType: Vein,
+                            position: player.pos,
+                        },
+                        action,
+                    ],
                 };
-                return buildCapillaryAction;
             } else if (!player.verifyMove(action)) {
                 const buildAction: ActionBuild = {
                     type: "build",
@@ -426,10 +431,10 @@ Textures in memory: ${this.renderer.info.memory.textures}
             } else {
                 return action;
             }
-        } else if (player.isBuildCandidate(tile)) {
+        } else if (player.isBuildCandidate(targetTile)) {
             // we attempt to move into a place we cannot
-            this.enterUIStateExpanding(tile.pos);
-            return null;
+            this.enterUIStateExpanding(targetTile.pos);
+            return;
         } else {
             return action;
         }
@@ -447,18 +452,44 @@ Textures in memory: ${this.renderer.info.memory.textures}
         this.camera.updateProjectionMatrix();
     }
 
-    public enqueuePlayerMoveToMouse(clientX: number, clientY: number) {
+    public handleClick(clientX: number, clientY: number) {
         const target = this.getTileAtScreenPosition(clientX, clientY);
-        if (target) {
-            let path: THREE.Vector2[];
-            if (this.autoplace === Tissue || this.autoplace === Vein) {
-                path = pathFrom(findPositionsThroughNonObstacles(this.world, target.pos));
-            } else {
-                path = pathFrom(findPositionsThroughTissue(this.world, target.pos));
+        if (this.uiState.type === "expanding") {
+            if (target == null || !this.uiState.target.equals(target.pos)) {
+                this.resetUIState();
             }
-            const actions = this.pathToActions(path);
-            this.world.player.setActions(actions);
         }
+        if (!target) {
+            return;
+        }
+
+        // clicking self means "be still".
+        if (target.pos.equals(this.world.player.pos)) {
+            this.world.player.setAction({type: "still" });
+            return;
+        }
+
+        // clicking an adjacent tile means walk there, allowing for walking past the edge
+        const singleMove = directionFor(this.world.player.pos.x, this.world.player.pos.y, target.pos.x, target.pos.y);
+        if (singleMove) {
+            this.world.player.setAction({
+                type: "move",
+                dir: singleMove,
+            });
+            return;
+        }
+
+        // now we're clicking past an adjacent tile. find a path.
+        let path: THREE.Vector2[];
+        // Tissue and Vein are common tiles you use to expand with (two types of roads)
+        // when we're autoplacing those, allow building far away
+        if (this.autoplace === Tissue || this.autoplace === Vein) {
+            path = pathFrom(findPositionsThroughNonObstacles(this.world, target.pos));
+        } else {
+            path = pathFrom(findPositionsThroughTissue(this.world, target.pos, this.autoplace != null));
+        }
+        const actions = this.pathToActions(path);
+        this.world.player.setActions(actions);
     }
 
     private pathToActions(path: THREE.Vector2[]) {

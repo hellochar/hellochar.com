@@ -25,7 +25,7 @@ export abstract class Tile {
     }
 
     get diffusionSugar() {
-        return (this.constructor as any).diffusionWater;
+        return (this.constructor as any).diffusionSugar;
     }
 
     public constructor(public pos: Vector2, public world: World) {
