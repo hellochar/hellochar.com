@@ -12,14 +12,22 @@ export interface HasEnergy {
     energy: number;
 }
 
-export function hasEnergy(e: any): e is HasEnergy {
-    return typeof e.energy === "number";
+export function hasEnergy<T>(e: T): e is HasEnergy & T {
+    return typeof (e as any).energy === "number";
 }
 
 export abstract class Tile {
     static displayName = "Tile";
     public isObstacle = false;
     public darkness = Infinity;
+    get diffusionWater() {
+        return (this.constructor as any).diffusionWater;
+    }
+
+    get diffusionSugar() {
+        return (this.constructor as any).diffusionWater;
+    }
+
     public constructor(public pos: Vector2, public world: World) {
         if (world == null) {
             throw new Error("null world!");
@@ -52,64 +60,61 @@ export abstract class Tile {
             }
         }
         if (hasInventory(this)) {
-            const diffusionNeighbors =
-                Array.from(neighbors.values()).filter((tile) => {
-                    // this allows tissue and transports to diffuse water
-                    return hasInventory(tile) && (
-                        isSubclass(tile, this) ||
-                        (tile instanceof Cell && this instanceof Cell)
-                    );
-                }) as Array<Tile & HasInventory>;
-
-            const upperNeighbor = neighbors.get(DIRECTIONS.n);
-
-            // do some gravity
-            if (upperNeighbor && hasInventory(upperNeighbor) && isSubclass(upperNeighbor, this) && !(this instanceof Cell)) {
-                upperNeighbor.inventory.give(this.inventory, params.waterGravityPerTurn, 0);
-            }
-
+            const diffusionNeighbors = this.diffusionNeighbors(neighbors);
             for (const tile of diffusionNeighbors) {
-                // // give water to neighbors that you're less than
-                // if (tile.inventory.water < avgWater) {
-                //     const diff = Math.floor((avgWater - tile.inventory.water) / (neighborsWithInventory.length + 1));
-                //     this.inventory.give(tile.inventory, diff, 0);
-                // }
-                // take water from neighbors that you're bigger than
-                if (tile.inventory.water > this.inventory.water) {
-                    // const diff = Math.floor((tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1));
-
-                    // const diff = (tile.inventory.water - this.inventory.water) / (neighborsWithMore.length + 1);
-                    // const diffLow = Math.floor(diff);
-                    // const diffHigh = Math.ceil(diff);
-                    // if (diffLow !== diffHigh) {
-                    //     const fract = diff - diffLow;
-                    //     if (Math.random() < fract) {
-                    //         tile.inventory.give(this.inventory, diffLow, 0);
-                    //     } else {
-                    //         tile.inventory.give(this.inventory, diffHigh, 0);
-                    //     }
-                    // } else {
-                    //     // perfect integer
-                    //     // const diff = Math.floor((tile.inventory.water - this.inventory.water) / 2);
-                    //     tile.inventory.give(this.inventory, diff, 0);
-                    // }
-
-                    if (params.waterDiffusionType === "continuous") {
-                        const diffusionAmount = (tile.inventory.water - this.inventory.water) * params.waterDiffusionRate;
-                        tile.inventory.give(this.inventory, diffusionAmount, 0);
-                    } else {
-                        const waterDiff = tile.inventory.water - this.inventory.water;
-                        if (waterDiff > 1 && Math.random() < waterDiff * params.waterDiffusionRate) {
-                            tile.inventory.give(this.inventory, 1, 0);
-                        }
+                // take water from neighbors that have more water than you
+                if (this.diffusionWater != null) {
+                    if (tile.inventory.water > this.inventory.water) {
+                        this.diffuseWater(tile);
                     }
                 }
-                if (tile.inventory.sugar > this.inventory.sugar) {
-                    const diffusionAmount = (tile.inventory.sugar - this.inventory.sugar) * params.sugarDiffusionRate;
-                    // if (Math.random() < diffusionChance) {
-                    tile.inventory.give(this.inventory, 0, diffusionAmount);
-                    // }
+                if (this.diffusionSugar != null) {
+                    if (tile.inventory.sugar > this.inventory.sugar) {
+                        this.diffuseSugar(tile);
+                    }
                 }
+            }
+
+            this.resourceMoveGravity();
+        }
+    }
+
+    diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
+        return Array.from(neighbors.values()).filter((tile) => {
+            return hasInventory(tile) && (
+                isSubclass(tile, this) ||
+                // this allows tissue, Roots, Transports, etc. to diffuse water
+                (tile instanceof Cell && this instanceof Cell)
+            );
+        }) as Array<Tile & HasInventory>;
+    }
+
+    diffuseWater(giver: HasInventory) {
+        if (hasInventory(this)) {
+            if (params.waterDiffusionType === "continuous") {
+                const diffusionAmount = (giver.inventory.water - this.inventory.water) * this.diffusionWater;
+                giver.inventory.give(this.inventory, diffusionAmount, 0);
+            } else {
+                const waterDiff = giver.inventory.water - this.inventory.water;
+                if (waterDiff > 1 && Math.random() < waterDiff * this.diffusionWater) {
+                    giver.inventory.give(this.inventory, 1, 0);
+                }
+            }
+        }
+    }
+
+    diffuseSugar(giver: HasInventory) {
+        if (hasInventory(this)) {
+            const diffusionAmount = (giver.inventory.sugar - this.inventory.sugar) * this.diffusionSugar;
+            giver.inventory.give(this.inventory, 0, diffusionAmount);
+        }
+    }
+
+    resourceMoveGravity() {
+        if (hasInventory(this)) {
+            const upperNeighbor = this.world.tileAt(this.pos.x, this.pos.y - 1);
+            if (upperNeighbor && hasInventory(upperNeighbor) && isSubclass(upperNeighbor, this) && !(this instanceof Cell)) {
+                upperNeighbor.inventory.give(this.inventory, params.waterGravityPerTurn, 0);
             }
         }
     }
@@ -155,6 +160,7 @@ export class Air extends Tile {
 
 export class Soil extends Tile implements HasInventory {
     static displayName = "Soil";
+    static diffusionWater = params.waterDiffusionRate;
     public inventory = new Inventory(params.soilMaxWater);
     constructor(pos: Vector2, water: number = 0, world: World) {
         super(pos, world);
@@ -197,6 +203,8 @@ interface MetabolismState {
 }
 export class Cell extends Tile implements HasEnergy {
     static displayName = "Cell";
+    static diffusionWater = params.cellDiffusionWater;
+    static diffusionSugar = params.sugarDiffusionRate;
     public energy: number = params.cellEnergyMax;
     public darkness = 0;
     // public metabolism: MetabolismState = {
