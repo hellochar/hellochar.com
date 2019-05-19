@@ -109,7 +109,7 @@ export class TileRenderer extends Renderer<Tile> {
             if (newAudioValueTracker !== this.lastAudioValueTracker && newAudioValueTracker > 0) {
                 this.audio.setBuffer(blopBuffer);
                 const dist = this.target.pos.distanceToSquared(this.mito.world.player.pos);
-                const volume = Math.min(1, 1 / (1 + dist / 25));
+                const volume = Math.min(1, 1 / (1 + dist / 25)) * this.target.sugarConverted * this.target.sugarConverted;
                 this.audio.setVolume(volume);
                 // this.audio.setRefDistance(2);
                 // play blop sound

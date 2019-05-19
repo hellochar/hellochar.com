@@ -164,7 +164,7 @@ export class Soil extends Tile implements HasInventory {
     public inventory = new Inventory(params.soilMaxWater);
     constructor(pos: Vector2, water: number = 0, world: World) {
         super(pos, world);
-        this.inventory.change(water, 0);
+        this.inventory.add(water, 0);
     }
 }
 
@@ -191,7 +191,7 @@ export class Fountain extends Soil {
         }
         if (this.inventory.space() > 1 && this.cooldown <= 0) {
             // just constantly give yourself water
-            this.inventory.change(1, 0);
+            this.inventory.add(1, 0);
             this.cooldown = this.turnsPerWater;
         }
     }
@@ -255,7 +255,7 @@ export class Cell extends Tile implements HasEnergy {
                             wantedEnergy / params.cellEnergyMax,
                             tile.inventory.sugar,
                         );
-                        tile.inventory.change(0, -wantedSugar);
+                        tile.inventory.add(0, -wantedSugar);
                         const gotEnergy = wantedSugar * params.cellEnergyMax;
                         this.energy += gotEnergy;
                         // if (gotEnergy > 0) {
@@ -405,6 +405,7 @@ export class Leaf extends Cell {
     public averageEfficiency = 0;
     public averageSpeed = 0;
     public didConvert = false;
+    public sugarConverted = 0;
     public tilePairs: Vector2[] = []; // implied that the opposite direction is connected
 
     public step() {
@@ -413,6 +414,7 @@ export class Leaf extends Cell {
         const neighbors = this.world.tileNeighbors(this.pos);
         this.averageEfficiency = 0;
         this.averageSpeed = 0;
+        this.sugarConverted = 0;
         let numAir = 0;
         this.tilePairs = [];
 
@@ -420,34 +422,36 @@ export class Leaf extends Cell {
             const oppositeTile = this.world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
             if (tile instanceof Air &&
                 oppositeTile instanceof Tissue) {
+                numAir += 1;
                 this.tilePairs.push(dir);
                 const air = tile;
                 const tissue = oppositeTile;
-                // 0 to 1
-                // const speed = air.sunlight();
-                // const efficiency = air.co2();
-                const speed = air.co2();
-                const efficiency = air.sunlight();
-                // what about the flip?
-                // speedier in taller places
-                // efficiency is determined by how dark the place is? that sounds
+
+                // do the reaction slower in dark places
+                const speed = air.sunlight();
+
+                // gives much less sugar lower down
+                const efficiency = air.co2() * air.co2();
+
                 this.averageEfficiency += efficiency;
                 this.averageSpeed += speed;
-                numAir += 1;
-                if (Math.random() < speed * params.leafReactionRate) {
-                    // const neededWater = Math.round(1 / efficiency);
-                    // transform 1 sugar this turn
-                    const neededWaterFract = params.leafSugarPerReaction / efficiency;
-                    const waterLow = Math.floor(neededWaterFract);
-                    const waterHigh = Math.ceil(neededWaterFract);
-                    const chance = neededWaterFract - waterLow;
-                    const neededWater = neededWaterFract; // Math.random() < chance ? waterLow : waterHigh;
-                    const tissueWater = tissue.inventory.water;
-                    if (tissueWater >= neededWater) {
-                        tissue.inventory.change(-neededWater, params.leafSugarPerReaction);
-                        this.didConvert = true;
-                    }
+
+                // in prime conditions:
+                //      our rate of conversion is speed * params.leafReactionRate
+                //      we get 1 sugar at 1/efficiencyRatio (> 1) water
+                // if we have less than 1/efficiencyRatio water
+                //      our rate of conversion scales down proportionally
+                //      on conversion, we use up all the available water and get the corresponding amount of sugar
+                const bestEfficiencyWater = params.leafSugarPerReaction / efficiency;
+                const waterToConvert = Math.min(tissue.inventory.water, bestEfficiencyWater);
+                const chance = speed * params.leafReactionRate * waterToConvert / bestEfficiencyWater;
+                if (Math.random() < chance) {
+                    this.didConvert = true;
+                    const sugarConverted = waterToConvert * efficiency;
+                    tissue.inventory.add(-waterToConvert, sugarConverted);
+                    this.sugarConverted += sugarConverted;
                 }
+
             }
         }
         if (numAir > 0) {

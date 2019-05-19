@@ -73,16 +73,18 @@ export class Inventory {
         return {water, sugar};
     }
 
-    public change(water: number, sugar: number, autoRescale = false) {
-        if (autoRescale) {
-            const spaceNeeded = fpref(water + sugar);
-            const spaceAvailable = this.space();
-            if (spaceNeeded > spaceAvailable) {
-                // scale down the amount to give
-                water = water / spaceNeeded * spaceAvailable;
-                sugar = sugar / spaceNeeded * spaceAvailable;
-            }
+    public add(water: number, sugar: number) {
+        const spaceNeeded = fpref(water + sugar);
+        const spaceAvailable = this.space();
+        if (spaceNeeded > spaceAvailable) {
+            // scale down the amount to give
+            water = water / spaceNeeded * spaceAvailable;
+            sugar = sugar / spaceNeeded * spaceAvailable;
         }
+        this.change(water, sugar);
+    }
+
+    private change(water: number, sugar: number) {
         const newWater = fpref(this.water + water);
         const newSugar = fpref(this.sugar + sugar);
         this.validate(newWater, newSugar);

@@ -155,7 +155,7 @@ export class Player {
             !targetTile.isObstacle &&
             this.inventory.water >= waterCost &&
             this.inventory.sugar >= sugarCost) {
-            this.inventory.change(-waterCost, -sugarCost);
+            this.inventory.add(-waterCost, -sugarCost);
             const newTile = new cellType(position, this.world);
             build.audio.currentTime = 0;
             build.gain.gain.cancelScheduledValues(0);
@@ -215,7 +215,7 @@ export class Player {
             if (maybeCell != null) {
                 // refund the resources back
                 const refund = maybeCell.energy / params.cellEnergyMax;
-                this.inventory.change(refund, refund, true);
+                this.inventory.add(refund, refund);
                 if (hasInventory(maybeCell)) {
                     maybeCell.inventory.give(this.inventory, maybeCell.inventory.water, maybeCell.inventory.sugar);
                 }

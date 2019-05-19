@@ -8,7 +8,7 @@ const PARAMS_DEFAULT = {
     leafSugarPerReaction: 1,
     waterDiffusionRate: 0.001,
     cellDiffusionWater: 0.02,
-    waterDiffusionType: "discrete",
+    waterDiffusionType: "continuous",
     sugarDiffusionRate: 0,
     waterGravityPerTurn: 0.05,
     soilMaxWater: 20,

@@ -124,7 +124,7 @@ export class World {
             }
             if (oldTile.inventory.water !== 0 || oldTile.inventory.sugar !== 0) {
                 console.warn("lost", oldTile.inventory, "resources to building");
-                oldTile.inventory.change(-oldTile.inventory.water, -oldTile.inventory.sugar);
+                oldTile.inventory.add(-oldTile.inventory.water, -oldTile.inventory.sugar);
             }
         }
         // there's a chance we straight up lose some water as it overfills capacity
