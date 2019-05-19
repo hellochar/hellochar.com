@@ -33,6 +33,8 @@ export class InventoryRenderer extends Renderer<Inventory> {
     constructor(target: Inventory, scene: Scene, mito: Mito) {
         super(target, scene, mito);
         this.object.position.z = 1;
+        this.object.updateMatrix();
+        this.object.matrixAutoUpdate = false;
         for (let i = 0; i < this.target.water; i++) {
             this.createWaterMesh();
         }
@@ -60,12 +62,6 @@ export class InventoryRenderer extends Renderer<Inventory> {
             const lastMesh = array[array.length - 1];
             lastMesh.scale.set(scale, scale, 1);
         }
-    }
-    quantize(v: Vector3, size: number) {
-        const qv = v.clone();
-        qv.x = Math.floor(v.x / size) * size;
-        qv.y = Math.floor(v.y / size) * size;
-        lerp2(v, qv, 0.9);
     }
     update() {
         this.updateMeshes("water", this.target.water, this.waters, () => this.createWaterMesh());
