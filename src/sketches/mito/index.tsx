@@ -274,19 +274,17 @@ Textures in memory: ${this.renderer.info.memory.textures}
         );
     }
 
-    public worldStepAndUpdateRenderers() {
-        this.world.step();
+    public worldStepAndDeleteOldRenderers() {
+        const stats = this.world.step();
         if (this.tutorialRef) {
             this.tutorialRef.setState({ time: this.world.time });
         }
         this.gameState = this.world.checkWinLoss() || this.gameState;
 
-        const oldEntities = Array.from(this.renderers.keys());
-        // delete the renderers for entities that have been removed since last render
-        // this is the performance bottleneck, it's O(n^2)
-        const renderableEntities = this.world.renderableEntities();
-        const removedEntities = oldEntities.filter((e) => renderableEntities.indexOf(e) === -1);
-        for (const e of removedEntities) {
+        // const deletedEntities = this.getRemovedEntitiesNaive();
+        const deletedEntities = stats.deleted;
+
+        for (const e of deletedEntities) {
             const renderer = this.renderers.get(e);
             if (renderer == null) {
                 throw new Error(`Couldn't find renderer for ${e}!`);
@@ -296,6 +294,17 @@ Textures in memory: ${this.renderer.info.memory.textures}
         }
 
         this.updateAmbientAudio();
+    }
+
+    private getRemovedEntitiesNaive() {
+        const oldEntities = Array.from(this.renderers.keys());
+        // delete the renderers for entities that have been removed since last render
+        // this is the performance bottleneck, it's O(n^2)
+        // const renderableEntities = this.world.renderableEntities();
+        // const removedEntities = oldEntities.filter((e) => renderableEntities.indexOf(e) === -1);
+        const entities = this.world.entities();
+        const removedEntities = oldEntities.filter((e) => entities.indexOf(e) === -1);
+        return removedEntities;
     }
 
     private getCameraNormCoordinates(clientX: number, clientY: number) {
@@ -332,13 +341,13 @@ Textures in memory: ${this.renderer.info.memory.textures}
         if (this.gameState === "main") {
             if (params.isRealtime) {
                 if (this.frameCount % 3 === 0) {
-                    this.worldStepAndUpdateRenderers();
+                    this.worldStepAndDeleteOldRenderers();
                 }
             } else if (world.player.getAction() != null) {
-                this.worldStepAndUpdateRenderers();
+                this.worldStepAndDeleteOldRenderers();
             }
             // this.world.entities().forEach((entity) => {
-            this.world.renderableEntities().forEach((entity) => {
+            this.world.entities().forEach((entity) => {
                 const renderer = this.getOrCreateRenderer(entity);
                 renderer.update();
             });

@@ -9,6 +9,10 @@ import { params } from "../params";
 import { Player } from "./player";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, Rock, Soil, Tile, Tissue } from "./tile";
 
+export class StepStats {
+    constructor(public deleted: Entity[] = [], public added: Entity[] = []) {}
+}
+
 export class World {
     public time: number = 0;
     public readonly player = new Player(new Vector2(width / 2, height / 2), this);
@@ -128,21 +132,33 @@ export class World {
                 oldTile.inventory.add(-oldTile.inventory.water, -oldTile.inventory.sugar);
             }
         }
-        // there's a chance we straight up lose some water as it overfills capacity
+
+        const oldCell = this.gridCells[x][y];
+        if (oldCell != null) {
+            this.stepStats.deleted.push(oldCell);
+        }
+
         if (tile instanceof Cell) {
             // set gridCell only
             this.gridCells[x][y] = tile;
         } else {
             // hackhack - we should call .die() on gridCells[x][y] but we already have with the oldTile code above
             this.gridCells[x][y] = null;
+
+            const oldEnvironmentTile = this.gridEnvironment[x][y];
+            if (oldEnvironmentTile != null) {
+                this.stepStats.deleted.push(oldEnvironmentTile);
+            }
             this.gridEnvironment[x][y] = tile;
         }
+        this.stepStats.added.push(tile);
         this.fillCachedEntities();
     }
     public maybeRemoveCellAt(position: Vector2): Cell | null {
         const maybeCell = this.cellAt(position.x, position.y);
         if (maybeCell) {
             this.gridCells[position.x][position.y] = null;
+            this.stepStats.deleted.push(maybeCell);
         }
         this.fillCachedEntities();
         return maybeCell;
@@ -169,13 +185,14 @@ export class World {
         return mapping;
     }
     // only use for rendering
-    private cachedRenderableEntities?: Entity[];
-    public renderableEntities() {
-        if (this.cachedRenderableEntities == null) {
-            throw new Error("accessed renderable entities before filling");
-        }
-        return this.cachedRenderableEntities;
-    }
+    // private cachedRenderableEntities?: Entity[];
+    // public renderableEntities() {
+    //     if (this.cachedRenderableEntities == null) {
+    //         throw new Error("accessed renderable entities before filling");
+    //     }
+    //     return this.cachedRenderableEntities;
+    // }
+
     private cachedEntities?: Entity[];
     public entities() {
         if (this.cachedEntities == null) {
@@ -212,23 +229,27 @@ export class World {
         // are still left-over in the entities cache.
         newEntities.push(this.player);
         this.cachedEntities = newEntities;
-        (() => {
-            const entities: Entity[] = [this.player];
-            for (x = 0; x < width; x++) {
-                for (y = 0; y < height; y++) {
-                    entities.push(this.gridEnvironment[x][y]);
-                    const cellMaybe = this.gridCells[x][y];
-                    if (cellMaybe != null) {
-                        entities.push(cellMaybe);
-                    }
-                }
-            }
-            this.cachedRenderableEntities = entities;
-        })();
+
+        // update renderable entities
+        // (() => {
+        //     const entities: Entity[] = [this.player];
+        //     for (x = 0; x < width; x++) {
+        //         for (y = 0; y < height; y++) {
+        //             entities.push(this.gridEnvironment[x][y]);
+        //             const cellMaybe = this.gridCells[x][y];
+        //             if (cellMaybe != null) {
+        //                 entities.push(cellMaybe);
+        //             }
+        //         }
+        //     }
+        //     this.cachedRenderableEntities = entities;
+        // })();
     }
     // iterate through all the actions
-    public step() {
+    private stepStats: StepStats = new StepStats();
+    public step(): StepStats {
         const entities = this.entities();
+        this.stepStats = new StepStats();
         // dear god
         entities.forEach((entity) => {
             if (isSteppable(entity)) {
@@ -238,6 +259,7 @@ export class World {
         this.computeSunlight();
         this.time++;
         this.fillCachedEntities();
+        return this.stepStats;
         // this.checkResources();
     }
     public computeSunlight() {
