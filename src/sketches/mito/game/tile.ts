@@ -91,7 +91,7 @@ export abstract class Tile {
 
     diffuseWater(giver: HasInventory) {
         if (hasInventory(this)) {
-            if (params.waterDiffusionType === "continuous") {
+            if (params.soilDiffusionType === "continuous") {
                 const diffusionAmount = (giver.inventory.water - this.inventory.water) * this.diffusionWater;
                 giver.inventory.give(this.inventory, diffusionAmount, 0);
             } else {
@@ -160,7 +160,7 @@ export class Air extends Tile {
 
 export class Soil extends Tile implements HasInventory {
     static displayName = "Soil";
-    static diffusionWater = params.waterDiffusionRate;
+    static diffusionWater = params.soilDiffusionWater;
     public inventory = new Inventory(params.soilMaxWater);
     constructor(pos: Vector2, water: number = 0, world: World) {
         super(pos, world);
@@ -204,7 +204,7 @@ interface MetabolismState {
 export class Cell extends Tile implements HasEnergy {
     static displayName = "Cell";
     static diffusionWater = params.cellDiffusionWater;
-    static diffusionSugar = params.sugarDiffusionRate;
+    static diffusionSugar = params.cellDiffusionSugar;
     public energy: number = params.cellEnergyMax;
     public darkness = 0;
     // public metabolism: MetabolismState = {

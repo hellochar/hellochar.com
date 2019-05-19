@@ -51,7 +51,7 @@ export class Instructions extends React.PureComponent<InstructionsProps, {}> {
                 <h3>Water</h3>
                 <p>
                     Water is one of the main two resources.
-                        Water slowly diffuses from high to low densities (difference 2 required) at about 1 unit per {(1 / params.waterDiffusionRate).toFixed(0)} turns.
+                        Water slowly diffuses from high to low densities (difference 2 required) at about 1 unit per {(1 / params.soilDiffusionWater).toFixed(0)} turns.
                     Obtain water in the ground through Roots. Leaves require water to photosynthesize. You require water to build.
                     </p>
                 <h3>Sugar</h3>
