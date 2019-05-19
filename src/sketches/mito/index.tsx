@@ -308,17 +308,20 @@ Textures in memory: ${this.renderer.info.memory.textures}
     private getTileAtScreenPosition(clientX: number, clientY: number) {
         const cameraNorm = this.getCameraNormCoordinates(clientX, clientY);
         this.raycaster.setFromCamera(cameraNorm, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.scene.children, true).filter(({object}) => object instanceof TileMesh);
-        const i = intersects[0];
-        if (i != null) {
-            const {x, y} = i.point;
-            const ix = Math.round(x);
-            const iy = Math.round(y);
-            const tile = this.world.tileAt(ix, iy);
-            if (tile != null && tile.lightAmount() > 0) {
-                return tile;
-            }
+
+        // const coordinate = this.raycaster.ray.origin
+        // const intersects = this.raycaster.intersectObjects(this.scene.children, true).filter(({object}) => object instanceof TileMesh);
+        // const i = intersects[0];
+        // if (i != null) {
+
+        const {x, y} = this.raycaster.ray.origin;
+        const ix = Math.round(x);
+        const iy = Math.round(y);
+        const tile = this.world.tileAt(ix, iy);
+        if (tile != null && tile.lightAmount() > 0) {
+            return tile;
         }
+        // }
     }
 
     public animate() {
