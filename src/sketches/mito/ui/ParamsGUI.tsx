@@ -22,8 +22,8 @@ export class ParamsGUI extends React.Component {
         gui.add(params, "transportTurnsPerMove", 1, 50, 1);
         gui.add(params, "waterGravityPerTurn", 0, 1);
         const f = gui.addFolder("Needs Page Refresh");
-        f.add(params, "cellDiffusionSugar", 0, .25, 0.0001);
-        f.add(params, "cellDiffusionWater", 0, .25, 0.0001);
+        f.add(params, "cellDiffusionSugar", 0, .85, 0.0001);
+        f.add(params, "cellDiffusionWater", 0, .85, 0.0001);
         f.add(params, "cellEnergyMax", 400, 10000, 100);
         f.add(params, "fountainAppearanceRate", 1, 5, 0.1);
         f.add(params, "maxResources", 10, 1000, 1);
