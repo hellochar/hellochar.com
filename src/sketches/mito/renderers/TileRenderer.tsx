@@ -89,7 +89,7 @@ export class TileRenderer extends Renderer<Tile> {
                 this.originalColor.lerp(endColor, alpha);
             }
         }
-        mat.color = new Color(0).lerp(this.originalColor, lightAmount);
+        mat.color = new Color(0).lerp(this.originalColor, map(lightAmount, 0, 1, 0.2, 1));
         if (this.target instanceof Cell) {
             this.mesh.position.set(this.target.pos.x, this.target.pos.y + this.target.droopY, 1);
         }

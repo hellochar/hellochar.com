@@ -19,6 +19,7 @@ export class ParamsGUI extends React.Component {
         gui.add(params, "leafSugarPerReaction", 0, 1, .01);
         gui.add(params, "rootTurnsPerTransfer", 1, 100, 1);
         gui.add(params, "sunlightReintroduction", 0, 1, 0.01);
+        gui.add(params, "sunlightDiffusion", 0, 1, 0.01);
         gui.add(params, "transportTurnsPerMove", 1, 50, 1);
         gui.add(params, "waterGravityPerTurn", 0, 1);
         const f = gui.addFolder("Needs Page Refresh");

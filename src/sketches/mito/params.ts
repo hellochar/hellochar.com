@@ -17,6 +17,7 @@ const PARAMS_DEFAULT = {
     fountainAppearanceRate: 3,
     transportTurnsPerMove: 5,
     sunlightReintroduction: 0.2,
+    sunlightDiffusion: 0.5,
     maxResources: 100,
 };
 

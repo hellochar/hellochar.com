@@ -95,6 +95,7 @@ export class World {
             return this.gridEnvironment[x][y];
         }
     }
+
     public cellAt(x: number, y: number): Cell | null {
         if (this.isValidPosition(x, y)) {
             return this.gridCells[x][y];
@@ -102,6 +103,15 @@ export class World {
             return null;
         }
     }
+
+    public environmentTileAt(x: number, y: number): Tile | null {
+        if (this.isValidPosition(x, y)) {
+            return this.gridEnvironment[x][y];
+        } else {
+            return null;
+        }
+    }
+
     // Rules for replacement:
     // if tile is environment, clear out the gridCell and set the gridEnvironment.
     // if tile is cell, set gridCell, leave gridEnvironment alone.
@@ -264,10 +274,15 @@ export class World {
     }
     public computeSunlight() {
         // sunlight is special - we step downards from the top; neighbors don't affect the calculation so we don't have buffering problems
-        const directionalBias = Math.cos(this.time * Math.PI * 2 / 2000);
+        // 0 to PI = daytime, PI to 2PI = nighttime
+        const sunAngle = this.time * Math.PI * 2 / 400;
+        const directionalBias = Math.sin(sunAngle + Math.PI / 2);
+        const sunAmount = Math.atan(Math.sin(sunAngle) * 20) / (Math.PI / 2) * 0.5 + 0.5;
+        // const directionalBias = Math.cos(this.time * Math.PI * 2 / 200);
+        // const sunAmount = Math.max(0.1, Math.cos(this.time * Math.PI * 2 / 400));
         for (let y = 0; y <= height * 0.6; y++) {
             for (let x = 0; x < width; x++) {
-                const t = this.tileAt(x, y);
+                const t = this.environmentTileAt(x, y);
                 if (t instanceof Air) {
                     let sunlight = 0;
                     if (y === 0) {
@@ -285,11 +300,12 @@ export class World {
                         } else {
                             sunlight = leftSunlight * -directionalBias + upSunlight * (1 - (-directionalBias));
                         }
-                        // sunlight = upSunlight * 0.5 + rightSunlight * 0.25 + leftSunlight * 0.25;
-                        sunlight = sunlight * 0.5 + ((upSunlight + rightSunlight + leftSunlight) / 3) * 0.5;
+                        sunlight = sunlight * (1 - params.sunlightDiffusion) + ((upSunlight + rightSunlight + leftSunlight) / 3) * params.sunlightDiffusion;
                     }
                     // have at least a bit
                     sunlight = params.sunlightReintroduction + sunlight * (1 - params.sunlightReintroduction);
+
+                    sunlight *= sunAmount;
                     t.sunlightCached = sunlight;
                 }
             }
