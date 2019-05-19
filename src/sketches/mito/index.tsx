@@ -1,15 +1,15 @@
 import * as React from "react";
 import * as THREE from "three";
-import { OrthographicCamera, Scene, Vector2, Vector3 } from "three";
+import { OrthographicCamera, Scene, Vector3 } from "three";
 
 import devlog from "../../common/devlog";
 import { map } from "../../math/index";
 import { ISketch } from "../../sketch";
-import { Action, ActionBuild, ActionBuildTransport, ActionMove, ActionStill } from "./action";
+import { Action, ActionBuild, ActionBuildTransport, ActionMove } from "./action";
 import { drums, hookUpAudio, strings } from "./audio";
 import { Constructor } from "./constructor";
 import { Player, World } from "./game";
-import { Cell, Fruit, Tile, Tissue, Transport } from "./game/tile";
+import { Cell, Fruit, Tile, Tissue, Transport, Vein } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS } from "./keymap";
 import { params } from "./params";
 import { findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
@@ -17,8 +17,7 @@ import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
 import { NewPlayerTutorial } from "./tutorial";
-import TileHighlight from "./tutorial/tileHighlight";
-import { GameStack, Hover, HoveredTileInfo, HUD, ParamsGUI } from "./ui";
+import { GameStack, Hover, HUD, ParamsGUI } from "./ui";
 
 export type Entity = Tile | Player;
 
@@ -377,6 +376,13 @@ Textures in memory: ${this.renderer.info.memory.textures}
         if (action == null) {
             return null;
         }
+        if (action.type === "still" && this.autoplace === Vein) {
+            return {
+                type: "build",
+                cellType: Vein,
+                position: player.pos,
+            };
+        }
         if (action.type !== "move") {
             return action;
         }
@@ -397,13 +403,20 @@ Textures in memory: ${this.renderer.info.memory.textures}
                     dir: action.dir,
                 };
                 return buildTransportAction;
+            } else if (this.autoplace === Vein) {
+                const buildCapillaryAction: ActionBuild = {
+                    type: "build",
+                    cellType: Vein,
+                    position: player.pos.clone().add(action.dir),
+                };
+                return buildCapillaryAction;
             } else if (!player.verifyMove(action)) {
                 const buildAction: ActionBuild = {
                     type: "build",
                     cellType: this.autoplace,
                     position: player.pos.clone().add(action.dir),
                 };
-                if (this.autoplace !== Tissue) {
+                if (this.autoplace !== Tissue && this.autoplace !== Vein) {
                     this.autoplace = undefined;
                 }
                 return buildAction;
@@ -435,7 +448,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
         const target = this.getTileAtScreenPosition(clientX, clientY);
         if (target) {
             let path: THREE.Vector2[];
-            if (this.autoplace === Tissue) {
+            if (this.autoplace === Tissue || this.autoplace === Vein) {
                 path = pathFrom(findPositionsThroughNonObstacles(this.world, target.pos));
             } else {
                 path = pathFrom(findPositionsThroughTissue(this.world, target.pos));

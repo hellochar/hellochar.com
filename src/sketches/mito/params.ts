@@ -1,13 +1,13 @@
 const PARAMS_DEFAULT = {
     isRealtime: true,
     cellEnergyMax: 5000,
-    tissueInventoryCapacity: 10,
+    tissueInventoryCapacity: 20,
     rootTurnsPerTransfer: 20,
     leafReactionRate: 0.015,
     floorCo2: 0.5,
     leafSugarPerReaction: 1,
     waterDiffusionRate: 0.001,
-    cellDiffusionWater: 0.02, // TODO change this once there's a better way to get water from roots
+    cellDiffusionWater: 0.0, // TODO change this once there's a better way to get water from roots
     waterDiffusionType: "continuous",
     sugarDiffusionRate: 0.001,
     waterGravityPerTurn: 0.002,

@@ -3,7 +3,7 @@ import lazy from "../../../common/lazy";
 import { map } from "../../../math/index";
 import { blopBuffer, suckWaterBuffer } from "../audio";
 import { Constructor } from "../constructor";
-import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport } from "../game/tile";
+import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport, Vein } from "../game/tile";
 import { lerp2, Mito } from "../index";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
@@ -262,6 +262,11 @@ const materialMapping = lazy(() => {
         side: DoubleSide,
         transparent: true,
     }));
+    materials.set(Vein, new MeshBasicMaterial({
+        map: textureFromSpritesheet(Math.floor(184 / 16), Math.floor(152 / 16)),
+        side: DoubleSide,
+    }));
+
     return materials;
 });
 

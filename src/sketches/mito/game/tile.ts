@@ -540,6 +540,12 @@ export class Transport extends Tissue {
     }
 }
 
+export class Vein extends Tissue {
+    static displayName = "Vein";
+    static diffusionWater = 0.8;
+    static diffusionSugar = 0.8;
+}
+
 function isSubclass<T, U>(a: T, b: U) {
     return a instanceof b.constructor || b instanceof a.constructor;
 }

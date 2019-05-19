@@ -1,15 +1,11 @@
 import * as React from "react";
-import { Vector2 } from "three";
 
-import { HoveredTileInfo } from ".";
 import Mito from "..";
-import { Constructor } from "../constructor";
 import { World } from "../game";
-import { Air, Cell, hasEnergy, Leaf, Root, Tile, Tissue, Transport } from "../game/tile";
-import { hasInventory } from "../inventory";
-import { params } from "../params";
+import { Tile, Tissue, Transport, Vein } from "../game/tile";
 import { findPositionsThroughNonObstacles, findPositionsThroughTissue } from "../pathfinding";
 import TileHighlight from "../tutorial/tileHighlight";
+import { HoveredTileInfo } from "./HoveredTileInfo";
 
 interface HoverProps {
     mito: Mito;
@@ -37,7 +33,7 @@ export class Hover extends React.Component<HoverProps> {
     public maybeRenderPath() {
         const { autoplace, hoveredTile, scene, world } = this.props.mito;
         if (hoveredTile) {
-            if (autoplace === Tissue) {
+            if (autoplace === Tissue || autoplace === Vein) {
                 return <PathHighlight tile={hoveredTile} scene={scene} world={world} walkable="non-obstacles" />;
             }
             if (autoplace === Transport) {
