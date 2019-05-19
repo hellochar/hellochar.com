@@ -100,13 +100,16 @@ export class Inventory {
     validate(water: number = this.water, sugar: number = this.sugar) {
         const { capacity } = this;
         if (water < 0) {
-            throw new Error(`water < 0: ${water}`);
+            console.warn(`water < 0: ${water}`);
+            // throw new Error(`water < 0: ${water}`);
         }
         if (sugar < 0) {
-            throw new Error(`sugar < 0: ${sugar}`);
+            console.warn(`sugar < 0: ${sugar}`);
+            // throw new Error(`sugar < 0: ${sugar}`);
         }
         if (water + sugar > capacity) {
-            throw new Error(`bad inventory: ${water} water + ${sugar} > ${capacity} max`);
+            console.warn(`bad inventory: ${water} water + ${sugar} > ${capacity} max`);
+            // throw new Error(`bad inventory: ${water} water + ${sugar} > ${capacity} max`);
         }
     }
 }
