@@ -12,7 +12,7 @@ import { Player, World } from "./game";
 import { Cell, Fruit, Tile, Tissue, Transport, Vein } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS, MOVEMENT_KEYS } from "./keymap";
 import { params } from "./params";
-import { directionFor, findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
+import { actionMoveFor, findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
@@ -479,25 +479,21 @@ Textures in memory: ${this.renderer.info.memory.textures}
         }
 
         // clicking an adjacent tile means walk there, allowing for walking past the edge
-        const singleMove = directionFor(this.world.player.pos.x, this.world.player.pos.y, target.pos.x, target.pos.y);
+        const singleMove = actionMoveFor(this.world.player.pos.x, this.world.player.pos.y, target.pos.x, target.pos.y);
         if (singleMove) {
-            this.world.player.setAction({
-                type: "move",
-                dir: singleMove,
-            });
+            this.world.player.setAction(singleMove);
             return;
         }
 
         // now we're clicking past an adjacent tile. find a path.
-        let path: THREE.Vector2[];
+        let actions: Action[];
         // Tissue and Vein are common tiles you use to expand with (two types of roads)
         // when we're autoplacing those, allow building far away
         if (this.autoplace === Tissue || this.autoplace === Vein) {
-            path = pathFrom(findPositionsThroughNonObstacles(this.world, target.pos));
+            actions = pathFrom(findPositionsThroughNonObstacles(this.world, target.pos));
         } else {
-            path = pathFrom(findPositionsThroughTissue(this.world, target.pos, this.autoplace != null));
+            actions = pathFrom(findPositionsThroughTissue(this.world, target.pos, this.autoplace != null));
         }
-        const actions = this.pathToActions(path);
         this.world.player.setActions(actions);
     }
 

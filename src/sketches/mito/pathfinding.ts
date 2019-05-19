@@ -2,9 +2,10 @@ import { AStarFinder, DiagonalMovement, Grid } from "pathfinding";
 import { Vector2 } from "three";
 
 import { height, width } from ".";
-import { DIRECTION_VALUES } from "./directions";
+import { ActionMove } from "./action";
 import { World } from "./game";
 import { Cell, Tissue } from "./game/tile";
+import { MOVEMENTS } from "./keymap";
 
 export function findPositionsThroughTissue(world: World, target: Vector2, includeTargetIfNonTissue = false) {
     const grid = newGrid((x, y, g) => {
@@ -14,7 +15,7 @@ export function findPositionsThroughTissue(world: World, target: Vector2, includ
         }
     });
     grid.setWalkableAt(target.x, target.y, true);
-    const path = findPath(grid, world.player.pos, target);
+    const path = findPositions(grid, world.player.pos, target);
     if (!(world.tileAt(target) instanceof Cell) && !includeTargetIfNonTissue) {
         // get rid of trying to actually walk past the edge
         path.pop();
@@ -31,24 +32,24 @@ export function findPositionsThroughNonObstacles(world: World, target: Vector2) 
         }
     });
 
-    return findPath(grid, world.player.pos, target);
+    return findPositions(grid, world.player.pos, target);
 }
 
 export function pathFrom(positions: Array<[number, number]>) {
-    const path: Vector2[] = [];
+    const actions: ActionMove[] = [];
     for (let i = 0; i < positions.length - 1; i++) {
         const [fromX, fromY] = positions[i];
         const [toX, toY] = positions[i + 1];
-        const direction = directionFor(fromX, fromY, toX, toY);
+        const direction = actionMoveFor(fromX, fromY, toX, toY);
         if (direction == null) {
-            throw new Error("couldn't find direction");
+            throw new Error("couldn't find corresponding movement action");
         }
-        path.push(direction);
+        actions.push(direction);
     }
-    return path;
+    return actions;
 }
 
-function findPath(grid: Grid, start: Vector2, target: Vector2) {
+function findPositions(grid: Grid, start: Vector2, target: Vector2) {
     const finder = new AStarFinder({ diagonalMovement: DiagonalMovement.Always });
     // positions comes back as an array of [x, y] positions that are all adjacent to each other
     return finder.findPath(
@@ -73,8 +74,8 @@ function newGrid(fn: (x: number, y: number, grid: Grid) => void) {
     return grid;
 }
 
-export function directionFor(fromX: number, fromY: number, toX: number, toY: number): Vector2 | undefined {
+export function actionMoveFor(fromX: number, fromY: number, toX: number, toY: number): ActionMove | undefined {
     const dx = toX - fromX;
     const dy = toY - fromY;
-    return DIRECTION_VALUES.find(({x, y}) => x === dx && y === dy)
+    return MOVEMENTS.find(({dir}) => dir.x === dx && dir.y === dy);
 }
