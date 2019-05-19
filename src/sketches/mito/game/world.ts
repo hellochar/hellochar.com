@@ -38,8 +38,9 @@ export class World {
                     const water = Math.round(Math.max(1, Math.min(
                         // should be soil_max_water, isn't cuz of dependency cycles messing up instantiation
                         20, simplexValue > 0.4 ? 20 * heightScalar : 0)));
-                    if (heightScalar > 0.6 && simplexValue > 1) {
-                        return new Fountain(pos, water, this);
+                    if (heightScalar * simplexValue > 1 / params.fountainAppearanceRate) {
+                        const emitWaterScalar = Math.min(heightScalar * simplexValue, 1);
+                        return new Fountain(pos, water, this, Math.round(params.fountainTurnsPerWater / emitWaterScalar));
                     } else {
                         return new Soil(pos, water, this);
                     }

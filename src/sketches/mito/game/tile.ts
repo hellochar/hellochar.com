@@ -181,7 +181,7 @@ export class Fountain extends Soil {
     static displayName = "Fountain";
     isObstacle = true;
     private cooldown = 0;
-    constructor(pos: Vector2, water: number = 0, world: World, public turnsPerWater = params.fountainTurnsPerWater) {
+    constructor(pos: Vector2, water: number = 0, world: World, public turnsPerWater: number) {
         super(pos, water, world);
     }
     step() {
