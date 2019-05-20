@@ -87,9 +87,10 @@ export class TileRenderer extends Renderer<Tile> {
     update() {
         if (this.target instanceof GrowingCell) {
             // const s = this.steps(1.001 - this.target.timeRemaining / params.cellGestationTurns, 0.05);
-            const s = 1.001 - this.target.timeRemaining / params.cellGestationTurns;
-            this.mesh.scale.x = s;
-            this.mesh.scale.y = s;
+            const s = map(1.001 - this.target.timeRemaining / params.cellGestationTurns, 0, 1, 0.2, 1);
+            lerp2(this.mesh.scale, {x: s, y: s}, 0.1);
+            // this.mesh.scale.x = s;
+            // this.mesh.scale.y = s;
         } else {
             lerp2(this.mesh.scale, new Vector2(1, 1), 0.1);
         }
