@@ -2,6 +2,7 @@ import { Vector2 } from "three";
 
 import { Noise } from "../../../common/perlin";
 import { map } from "../../../math/index";
+import { Constructor } from "../constructor";
 import { DIRECTIONS } from "../directions";
 import { height, width } from "../index";
 import { hasInventory, HasInventory, Inventory } from "../inventory";
@@ -18,14 +19,19 @@ export function hasEnergy<T>(e: T): e is HasEnergy & T {
 
 export abstract class Tile {
     static displayName = "Tile";
+    static fallAmount = 0;
     public isObstacle = false;
     public darkness = Infinity;
-    get diffusionWater() {
+    get diffusionWater(): number {
         return (this.constructor as any).diffusionWater;
     }
 
-    get diffusionSugar() {
+    get diffusionSugar(): number {
         return (this.constructor as any).diffusionSugar;
+    }
+
+    get fallAmount(): number {
+        return (this.constructor as any).fallAmount;
     }
 
     public constructor(public pos: Vector2, public world: World) {
@@ -41,6 +47,12 @@ export abstract class Tile {
     // test tiles diffusing water around on same-type tiles
     public step() {
         const neighbors = this.world.tileNeighbors(this.pos);
+        this.stepDarkness(neighbors);
+        this.stepDiffusion(neighbors);
+        this.stepGravity();
+    }
+
+    stepDarkness(neighbors: Map<Vector2, Tile>) {
         if (this instanceof Cell) {
             this.darkness = 0;
         } else {
@@ -59,6 +71,9 @@ export abstract class Tile {
                 console.error("stepping environmental tile even when a cell is on-top:", cellHere);
             }
         }
+    }
+
+    stepDiffusion(neighbors: Map<Vector2, Tile>) {
         if (hasInventory(this)) {
             const diffusionNeighbors = this.diffusionNeighbors(neighbors);
             for (const tile of diffusionNeighbors) {
@@ -74,19 +89,11 @@ export abstract class Tile {
                     }
                 }
             }
-
-            this.resourceMoveGravity();
         }
     }
 
-    diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
-        return Array.from(neighbors.values()).filter((tile) => {
-            return hasInventory(tile) && (
-                isSubclass(tile, this) ||
-                // this allows tissue, Roots, Transports, etc. to diffuse water
-                (tile instanceof Cell && this instanceof Cell)
-            );
-        }) as Array<Tile & HasInventory>;
+    diffusionNeighbors(neighbors: Map<Vector2, Tile>): Array<Tile & HasInventory> {
+        return Array.from(neighbors.values()).filter((tile) => canPullResources(this, tile)) as Array<Tile & HasInventory>;
     }
 
     diffuseWater(giver: HasInventory) {
@@ -96,7 +103,8 @@ export abstract class Tile {
                 giver.inventory.give(this.inventory, diffusionAmount, 0);
             } else {
                 const waterDiff = giver.inventory.water - this.inventory.water;
-                if (waterDiff > 1 && Math.random() < waterDiff * this.diffusionWater) {
+                const chanceToHappenScalar = Math.min(waterDiff, 1);
+                if (Math.random() < waterDiff * this.diffusionWater * chanceToHappenScalar) {
                     giver.inventory.give(this.inventory, 1, 0);
                 }
             }
@@ -110,21 +118,48 @@ export abstract class Tile {
         }
     }
 
-    resourceMoveGravity() {
-        if (hasInventory(this)) {
-            const upperNeighbor = this.world.tileAt(this.pos.x, this.pos.y - 1);
-            if (upperNeighbor && hasInventory(upperNeighbor) && isSubclass(upperNeighbor, this) && !(this instanceof Cell)) {
-                upperNeighbor.inventory.give(this.inventory, params.waterGravityPerTurn, 0);
-            }
+    stepGravity() {
+        const fallAmount = this.fallAmount;
+        const lowerNeighbor = this.world.tileAt(this.pos.x, this.pos.y + 1);
+        if (hasInventory(lowerNeighbor) && fallAmount > 0 && canPullResources(lowerNeighbor, this)) {
+            this.inventory.give(lowerNeighbor.inventory,
+                params.soilDiffusionType === "continuous" ? fallAmount : randRound(fallAmount),
+                0);
         }
     }
+}
+
+function allowPull(receiver: any, recieverType: Constructor<any>, giver: any, giverType: Constructor<any>) {
+    return receiver instanceof recieverType && giver instanceof giverType;
+}
+
+function canPullResources(receiver: any, giver: any): giver is HasInventory {
+    return hasInventory(receiver) && hasInventory(giver) && (
+
+        // allow ancestors and children to exchange resources with each other (e.g. Soil and Fountain)
+        (receiver instanceof giver.constructor || giver instanceof receiver.constructor) ||
+
+        // allow all Cells to give to each other
+        (receiver instanceof Cell && giver instanceof Cell) ||
+
+        // allow air to give to soil
+        allowPull(receiver, Soil, giver, Air)
+    );
+}
+
+function randRound(x: number) {
+    const fract = x - Math.floor(x);
+    return (Math.random() > fract) ? Math.floor(x) : Math.ceil(x);
 }
 
 const noiseCo2 = new Noise();
 export class Air extends Tile {
     static displayName = "Air";
+    static fallAmount = 1;
+    static diffusionWater = 0.01;
     public sunlightCached: number = 1;
     public _co2: number;
+    public inventory = new Inventory(20);
     public constructor(public pos: Vector2, world: World) {
         super(pos, world);
         this.darkness = 0;
@@ -146,7 +181,20 @@ export class Air extends Tile {
     }
 
     step() {
+        this.stepGravity();
+        this.stepDiffusion(this.world.tileNeighbors(this.pos));
         this._co2 = this.computeCo2();
+    }
+
+    diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
+        // dont diffuse up
+        // neighbors.delete(DIRECTIONS.n);
+        // neighbors.delete(DIRECTIONS.nw);
+        // neighbors.delete(DIRECTIONS.ne);
+        neighbors.delete(DIRECTIONS.s);
+        neighbors.delete(DIRECTIONS.sw);
+        neighbors.delete(DIRECTIONS.se);
+        return super.diffusionNeighbors(neighbors);
     }
 
     public co2() {
@@ -161,6 +209,7 @@ export class Air extends Tile {
 export class Soil extends Tile implements HasInventory {
     static displayName = "Soil";
     static diffusionWater = params.soilDiffusionWater;
+    static fallAmount = params.waterGravityPerTurn;
     public inventory = new Inventory(params.soilMaxWater);
     constructor(pos: Vector2, water: number = 0, world: World) {
         super(pos, world);
@@ -546,10 +595,7 @@ export class Transport extends Tissue {
 
 export class Vein extends Tissue {
     static displayName = "Vein";
-    static diffusionWater = 0.8;
-    static diffusionSugar = 0.8;
-}
-
-function isSubclass<T, U>(a: T, b: U) {
-    return a instanceof b.constructor || b instanceof a.constructor;
+    static get diffusionWater() { return params.veinDiffusion; }
+    static get diffusionSugar() { return params.veinDiffusion; }
+    public inventory = new Inventory(4);
 }

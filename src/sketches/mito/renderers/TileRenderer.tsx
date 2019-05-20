@@ -62,7 +62,7 @@ export class TileRenderer extends Renderer<Tile> {
         this.mesh.updateMatrix();
         if (this.target instanceof Transport) {
             const dir = new Vector3(this.target.dir.x, this.target.dir.y, 0).normalize();
-            const length = 0.3;
+            const length = 1.2;
             const start = new Vector3(dir.x * -length / 2, dir.y * -length / 2, 0.1);
             const arrow = new ArrowHelper(dir, start, length, 0xffffff, 0.1, 0.1);
             arrow.position.z = 1.1;

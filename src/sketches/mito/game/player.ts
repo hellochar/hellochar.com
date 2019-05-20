@@ -187,7 +187,7 @@ export class Player {
             return true;
         }
         if (existingCell) {
-            this.attemptDeconstruct({ type: "deconstruct", position: action.position });
+            this.attemptDeconstruct({ type: "deconstruct", position: action.position, force: true });
         }
         const newCell = this.tryConstructingNewCell(action.position, action.cellType);
         if (newCell != null) {

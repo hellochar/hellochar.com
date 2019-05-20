@@ -103,9 +103,10 @@ export class InventoryRenderer extends Renderer<Inventory> {
             for (let i = 0; i < resourceArray.length - 1; i++) {
                 const p = resourceArray[i];
                 particles.commit(p.x + this.position.x, p.y + this.position.y, 1, 1);
+                resource -= 1;
             }
             const p = resourceArray[resourceArray.length - 1];
-            const fract = resource - Math.floor(resource);
+            const fract = resource;
             particles.commit(p.x + this.position.x, p.y + this.position.y, 1, fract);
         }
     }

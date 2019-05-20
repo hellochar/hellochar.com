@@ -6,18 +6,19 @@ const PARAMS_DEFAULT = {
     leafReactionRate: 0.015,
     floorCo2: 0.5,
     leafSugarPerReaction: 1,
-    cellDiffusionWater: 0.0,
-    cellDiffusionSugar: 0.001,
-    soilDiffusionType: "continuous",
+    cellDiffusionWater: 0.002,
+    cellDiffusionSugar: 0.002,
+    soilDiffusionType: "discrete",
     soilDiffusionWater: 0.001,
-    waterGravityPerTurn: 0.002,
+    veinDiffusion: 0.8,
+    waterGravityPerTurn: 0.01,
     soilMaxWater: 20,
     droop: 0.03,
     fountainTurnsPerWater: 11,
-    fountainAppearanceRate: 3,
+    fountainAppearanceRate: 1.5,
     transportTurnsPerMove: 5,
-    sunlightReintroduction: 0.2,
-    sunlightDiffusion: 0.5,
+    sunlightReintroduction: 0.15,
+    sunlightDiffusion: 0.0,
     maxResources: 100,
 };
 
@@ -40,6 +41,8 @@ export function updateParamsHash() {
     }
     if (Object.keys(nonDefaultParams).length > 0) {
         location.hash = encodeURI(JSON.stringify(nonDefaultParams));
+    } else {
+        location.hash = "";
     }
 }
 updateParamsHash();

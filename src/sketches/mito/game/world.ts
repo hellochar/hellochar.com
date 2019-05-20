@@ -1,7 +1,10 @@
 import { Vector2 } from "three";
+import * as THREE from "three";
+
 import devlog from "../../../common/devlog";
 import { Noise } from "../../../common/perlin";
 import { map } from "../../../math/index";
+import { Constructor } from "../constructor";
 import { DIRECTION_VALUES } from "../directions";
 import { Entity, GameState, height, isSteppable, width } from "../index";
 import { hasInventory } from "../inventory";
@@ -56,21 +59,52 @@ export class World {
         })));
         return grid;
     })();
-    private gridCells: Array<Array<Cell | null>> = (() => {
+    private gridCells: Array<Array<Cell | null>>;
+    constructor() {
+        // // always drop player on the Soil Air interface
+        // const playerX = this.player.pos.x;
+        // const firstSoil = this.gridEnvironment[playerX].find((t) => !(t instanceof Air))
+        // if (firstSoil) {
+        //     this.player.pos.y = firstSoil.pos.y;
+        // }
+
         const radius = 2.5;
-        const grid = new Array(width).fill(undefined).map((_, x) => (new Array(height).fill(undefined).map((__, y) => {
+        this.gridCells = new Array(width).fill(undefined).map((_, x) => (new Array(height).fill(undefined).map((__, y) => {
             const pos = new Vector2(x, y);
             // add a "seed" of tissue around the player
             if (this.player.pos.distanceTo(pos) < radius) {
+                // prevent Rocks underneath the seed
+                if (this.gridEnvironment instanceof Rock) {
+                    this.gridEnvironment[x][y] = new Soil(new Vector2(x, y), 0, this);
+                }
                 return new Tissue(pos, this);
             } else {
                 return null;
             }
         })));
-        return grid;
-    })();
-    constructor() {
         this.fillCachedEntities();
+
+        // // auto-add Roots
+        // const {x, y} = this.player.pos;
+        // this.newTile(x - 2, y + 2, Root);
+        // this.newTile(x + 2, y + 2, Root);
+
+        // // auto-add Veins
+        // for (let yTemp = y - 2; yTemp <= y + 2; yTemp++) {
+        //     this.newTile(x, yTemp, Vein);
+        // }
+        // this.newTile(x - 1, y + 2, Vein);
+        // this.newTile(x + 1, y + 2, Vein);
+
+        // // auto-add Leaves
+        // this.newTile(x, y - 2, Leaf);
+        // this.newTile(x + 1, y - 2, Leaf);
+        // this.newTile(x - 1, y - 2, Leaf);
+    }
+
+    private newTile(x: number, y: number, type: Constructor<Tile>) {
+        const p = new Vector2(x, y);
+        this.setTileAt(p, new type(p, this));
     }
 
     public tileAt(v: Vector2): Tile | null;
@@ -267,11 +301,25 @@ export class World {
             }
         });
         this.computeSunlight();
+        this.stepWeather();
         this.time++;
         this.fillCachedEntities();
         return this.stepStats;
         // this.checkResources();
     }
+
+    public stepWeather() {
+        // offset first rain event by 300 turns
+        const isRaining = (this.time + 600) % 800 < 100;
+        if (isRaining) {
+            const x = THREE.Math.randInt(0, width - 1);
+            const t = this.tileAt(x, 0);
+            if (t instanceof Air) {
+                t.inventory.add(3, 0);
+            }
+        }
+    }
+
     public computeSunlight() {
         // sunlight is special - we step downards from the top; neighbors don't affect the calculation so we don't have buffering problems
         // 0 to PI = daytime, PI to 2PI = nighttime
