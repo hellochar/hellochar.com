@@ -3,7 +3,7 @@ import lazy from "../../../common/lazy";
 import { map } from "../../../math/index";
 import { blopBuffer, suckWaterBuffer } from "../audio";
 import { Constructor } from "../constructor";
-import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport, Vein } from "../game/tile";
+import { Air, Cell, DeadCell, Fountain, Fruit, GrowingCell, hasEnergy, hasTilePairs, Leaf, Rock, Root, Soil, Tile, Tissue, Transport, Vein } from "../game/tile";
 import { lerp2, Mito } from "../index";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
@@ -28,7 +28,12 @@ export class TileRenderer extends Renderer<Tile> {
     private pairsLines: Line[] = [];
     constructor(target: Tile, scene: Scene, mito: Mito) {
         super(target, scene, mito);
-        this.mesh = new TileMesh(this);
+        if (this.target instanceof GrowingCell) {
+            this.growingRenderer = new TileRenderer(this.target.completedCell, this.scene, this.mito);
+            this.mesh = this.growingRenderer.mesh;
+        } else {
+            this.mesh = new TileMesh(this);
+        }
         // this.object.name = "TileRenderer Object";
 
         // if (this.target instanceof Air) {
@@ -73,8 +78,21 @@ export class TileRenderer extends Renderer<Tile> {
             this.mesh.add(this.audio);
         }
     }
+
+    steps(x: number, size: number) {
+        return Math.floor(x / size) * size;
+    }
+
+    private growingRenderer?: TileRenderer;
     update() {
-        lerp2(this.mesh.scale, new Vector2(1, 1), 0.1);
+        if (this.target instanceof GrowingCell) {
+            // const s = this.steps(1.001 - this.target.timeRemaining / params.cellGestationTurns, 0.05);
+            const s = 1.001 - this.target.timeRemaining / params.cellGestationTurns;
+            this.mesh.scale.x = s;
+            this.mesh.scale.y = s;
+        } else {
+            lerp2(this.mesh.scale, new Vector2(1, 1), 0.1);
+        }
         const lightAmount = this.target.lightAmount();
         const mat = this.mesh.material as MeshBasicMaterial;
         if (this.target instanceof Air) {

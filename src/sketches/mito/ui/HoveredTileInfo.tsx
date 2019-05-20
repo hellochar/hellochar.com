@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { Constructor } from "../constructor";
-import { Air, Cell, Fountain, hasEnergy, Leaf, Root, Tile } from "../game/tile";
+import { Air, Cell, Fountain, GrowingCell, hasEnergy, Leaf, Root, Tile } from "../game/tile";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
 
@@ -19,6 +19,7 @@ export class HoveredTileInfo extends React.Component<HoveredTileInfoProps> {
             this.tileInfo(tile),
             this.inventoryInfo(tile),
             this.cellInfo(tile),
+            this.growingCellInfo(tile),
             this.rootInfo(tile),
             this.leafInfo(tile),
             this.airInfo(tile),
@@ -81,6 +82,11 @@ export class HoveredTileInfo extends React.Component<HoveredTileInfoProps> {
             if (tile.droopY * 200 > 1) {
                 return <div className="info-cell">{(tile.droopY * 200).toFixed(0)}% droop</div>;
             }
+        }
+    }
+    private growingCellInfo(tile: Tile) {
+        if (tile instanceof GrowingCell) {
+            return <div className="info-growing-cell">{(100 - (tile.timeRemaining / params.cellGestationTurns) * 100).toFixed(0)}% mature</div>
         }
     }
 }

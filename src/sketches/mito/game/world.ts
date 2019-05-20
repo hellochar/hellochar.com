@@ -156,6 +156,13 @@ export class World {
         if (!this.isValidPosition(x, y)) {
             throw new Error(`invalid position ${x}, ${y} `);
         }
+        if (tile instanceof Fruit) {
+            if (this.fruit == null) {
+                this.fruit = tile;
+            } else {
+                console.warn("made multiple Fruit!");
+            }
+        }
         const oldTile = this.tileAt(x, y)!;
         // if replacing a tile with inventory, try giving resources to neighbors of the same type
         if (hasInventory(oldTile)) {

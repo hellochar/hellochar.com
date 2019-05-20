@@ -6,7 +6,7 @@ import { Constructor } from "../constructor";
 import { hasInventory, Inventory } from "../inventory";
 import { MOVEMENTS } from "../keymap";
 import { params } from "../params";
-import { Cell, Fruit, Tile, Tissue, Transport } from "./tile";
+import { Cell, Fruit, GrowingCell, Tile, Tissue, Transport } from "./tile";
 import { World } from "./world";
 
 export class Player {
@@ -180,34 +180,55 @@ export class Player {
             return undefined;
         }
     }
+
     public attemptBuild(action: ActionBuild) {
         const existingCell = this.world.cellAt(action.position.x, action.position.y);
-        if (existingCell instanceof action.cellType) {
+        if ((existingCell instanceof action.cellType) || (existingCell instanceof GrowingCell)) {
             // already built, whatever.
             return true;
         }
         if (existingCell) {
             this.attemptDeconstruct({ type: "deconstruct", position: action.position, force: true });
         }
-        const newCell = this.tryConstructingNewCell(action.position, action.cellType);
-        if (newCell != null) {
-            newCell.droopY = this.droopY();
-            this.world.setTileAt(action.position, newCell);
-            if (this.world.fruit == null && newCell instanceof Fruit) {
-                this.world.fruit = newCell;
-            }
-            if (newCell instanceof Tissue) {
-                // move into the tissue cell
-                this.attemptMove({
-                    type: "move",
-                    dir: action.position.clone().sub(this.pos),
-                });
-            }
+        const matureCell = this.tryConstructingNewCell(action.position, action.cellType);
+        if (matureCell != null) {
+            const growingCell = new GrowingCell(action.position, this.world, matureCell);
+            growingCell.droopY = this.droopY();
+            this.world.setTileAt(action.position, growingCell);
             return true;
         } else {
             return false;
         }
     }
+
+    // public attemptBuild(action: ActionBuild) {
+    //     const existingCell = this.world.cellAt(action.position.x, action.position.y);
+    //     if (existingCell instanceof action.cellType) {
+    //         // already built, whatever.
+    //         return true;
+    //     }
+    //     if (existingCell) {
+    //         this.attemptDeconstruct({ type: "deconstruct", position: action.position, force: true });
+    //     }
+    //     const newCell = this.tryConstructingNewCell(action.position, action.cellType);
+    //     if (newCell != null) {
+    //         newCell.droopY = this.droopY();
+    //         this.world.setTileAt(action.position, newCell);
+    //         if (this.world.fruit == null && newCell instanceof Fruit) {
+    //             this.world.fruit = newCell;
+    //         }
+    //         if (newCell instanceof Tissue) {
+    //             // move into the tissue cell
+    //             this.attemptMove({
+    //                 type: "move",
+    //                 dir: action.position.clone().sub(this.pos),
+    //             });
+    //         }
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
     public attemptBuildTransport(action: ActionBuildTransport) {
         const existingCell = this.world.cellAt(action.position.x, action.position.y);

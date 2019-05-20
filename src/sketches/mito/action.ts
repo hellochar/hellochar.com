@@ -12,9 +12,9 @@ export interface ActionMove {
     dir: Vector2;
 }
 
-export interface ActionBuild {
+export interface ActionBuild<T extends Cell = any> {
     type: "build";
-    cellType: Constructor<Cell>;
+    cellType: Constructor<T>;
     position: Vector2;
 }
 

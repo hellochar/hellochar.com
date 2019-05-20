@@ -34,7 +34,9 @@ export abstract class Tile {
         return (this.constructor as any).fallAmount;
     }
 
-    public constructor(public pos: Vector2, public world: World) {
+    public pos: Vector2;
+    public constructor(pos: Vector2, public world: World) {
+        this.pos = pos.clone();
         if (world == null) {
             throw new Error("null world!");
         }
@@ -57,7 +59,7 @@ export abstract class Tile {
             this.darkness = 0;
         } else {
             const minDarkness = Array.from(neighbors.values()).reduce((d, t) => {
-                const contrib = Math.max(0.2, map(this.pos.y, height / 2, height, 0.2, 1));
+                const contrib = Math.max(0.2, map(this.pos.y, height / 2, height, params.soilDarknessBase, 1));
                 const darknessFromNeighbor = t instanceof Rock ? Infinity : t.darkness + contrib;
                 if (t instanceof Cell) {
                     return 0;
@@ -246,10 +248,6 @@ export class Fountain extends Soil {
     }
 }
 
-interface MetabolismState {
-    type: "eating" | "not-eating";
-    duration: number;
-}
 export class Cell extends Tile implements HasEnergy {
     static displayName = "Cell";
     static diffusionWater = params.cellDiffusionWater;
@@ -432,6 +430,21 @@ export class Cell extends Tile implements HasEnergy {
             this.droopY += 1;
         } else {
             this.droopY = springNeighborCells.reduce((sum, n) => sum + n.droopY, 0) / springNeighborCells.length;
+        }
+    }
+}
+
+export class GrowingCell extends Cell {
+    public isObstacle = true;
+    public timeRemaining = params.cellGestationTurns;
+    constructor(pos: Vector2, world: World, public completedCell: Cell) {
+        super(pos, world);
+    }
+    step() {
+        super.step();
+        this.timeRemaining--;
+        if (this.timeRemaining <= 0) {
+            this.world.setTileAt(this.completedCell.pos, this.completedCell);
         }
     }
 }
