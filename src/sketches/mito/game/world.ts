@@ -275,11 +275,9 @@ export class World {
     public computeSunlight() {
         // sunlight is special - we step downards from the top; neighbors don't affect the calculation so we don't have buffering problems
         // 0 to PI = daytime, PI to 2PI = nighttime
-        const sunAngle = this.time * Math.PI * 2 / 400;
+        const sunAngle = this.time * Math.PI * 2 / 1000;
         const directionalBias = Math.sin(sunAngle + Math.PI / 2);
-        const sunAmount = Math.atan(Math.sin(sunAngle) * 20) / (Math.PI / 2) * 0.5 + 0.5;
-        // const directionalBias = Math.cos(this.time * Math.PI * 2 / 200);
-        // const sunAmount = Math.max(0.1, Math.cos(this.time * Math.PI * 2 / 400));
+        const sunAmount = Math.atan(Math.sin(sunAngle) * 12) / (Math.PI / 2) * 0.5 + 0.5;
         for (let y = 0; y <= height * 0.6; y++) {
             for (let x = 0; x < width; x++) {
                 const t = this.environmentTileAt(x, y);
@@ -291,9 +289,9 @@ export class World {
                         const tileUp = this.tileAt(x, y - 1);
                         const tileRight = this.tileAt(x + 1, y - 1);
                         const tileLeft = this.tileAt(x - 1, y - 1);
-                        const upSunlight = tileUp instanceof Air ? tileUp.sunlightCached : tileUp == null ? 1 : 0;
-                        const rightSunlight = tileRight instanceof Air ? tileRight.sunlightCached : tileRight == null ? 1 : 0;
-                        const leftSunlight = tileLeft instanceof Air ? tileLeft.sunlightCached : tileLeft == null ? 1 : 0;
+                        const upSunlight = tileUp instanceof Air ? tileUp.sunlightCached / sunAmount : tileUp == null ? 1 : 0;
+                        const rightSunlight = tileRight instanceof Air ? tileRight.sunlightCached / sunAmount : tileRight == null ? 1 : 0;
+                        const leftSunlight = tileLeft instanceof Air ? tileLeft.sunlightCached / sunAmount : tileLeft == null ? 1 : 0;
                         if (directionalBias > 0) {
                             // positive light travels to the right
                             sunlight = rightSunlight * directionalBias + upSunlight * (1 - directionalBias);
