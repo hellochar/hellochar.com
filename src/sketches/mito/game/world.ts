@@ -10,7 +10,7 @@ import { Entity, GameState, height, isSteppable, width } from "../index";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
 import { Player } from "./player";
-import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, Rock, Soil, Tile, Tissue } from "./tile";
+import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Vein } from "./tile";
 
 export class StepStats {
     constructor(public deleted: Entity[] = [], public added: Entity[] = []) {}
@@ -61,12 +61,12 @@ export class World {
     })();
     private gridCells: Array<Array<Cell | null>>;
     constructor() {
-        // // always drop player on the Soil Air interface
-        // const playerX = this.player.pos.x;
-        // const firstSoil = this.gridEnvironment[playerX].find((t) => !(t instanceof Air))
-        // if (firstSoil) {
-        //     this.player.pos.y = firstSoil.pos.y;
-        // }
+        // always drop player on the Soil Air interface
+        const playerX = this.player.pos.x;
+        const firstSoil = this.gridEnvironment[playerX].find((t) => !(t instanceof Air))
+        if (firstSoil) {
+            this.player.pos.y = firstSoil.pos.y;
+        }
 
         const radius = 2.5;
         this.gridCells = new Array(width).fill(undefined).map((_, x) => (new Array(height).fill(undefined).map((__, y) => {
@@ -84,22 +84,24 @@ export class World {
         })));
         this.fillCachedEntities();
 
-        // // auto-add Roots
-        // const {x, y} = this.player.pos;
-        // this.newTile(x - 2, y + 2, Root);
-        // this.newTile(x + 2, y + 2, Root);
+        // auto-add Roots
+        const {x, y} = this.player.pos;
+        this.newTile(x - 1, y + 2, Root);
+        this.newTile(x + 1, y + 2, Root);
 
-        // // auto-add Veins
-        // for (let yTemp = y - 2; yTemp <= y + 2; yTemp++) {
-        //     this.newTile(x, yTemp, Vein);
-        // }
+        // auto-add Veins
+        for (let yTemp = y - 2; yTemp <= y + 2; yTemp++) {
+            this.newTile(x, yTemp, Vein);
+        }
         // this.newTile(x - 1, y + 2, Vein);
         // this.newTile(x + 1, y + 2, Vein);
+        // this.newTile(x - 1, y - 1, Vein);
+        // this.newTile(x + 1, y - 1, Vein);
 
-        // // auto-add Leaves
-        // this.newTile(x, y - 2, Leaf);
-        // this.newTile(x + 1, y - 2, Leaf);
-        // this.newTile(x - 1, y - 2, Leaf);
+        // auto-add Leaves
+        this.newTile(x, y - 2, Leaf);
+        this.newTile(x + 1, y - 2, Leaf);
+        this.newTile(x - 1, y - 2, Leaf);
     }
 
     private newTile(x: number, y: number, type: Constructor<Tile>) {

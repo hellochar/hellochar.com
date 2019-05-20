@@ -156,7 +156,7 @@ const noiseCo2 = new Noise();
 export class Air extends Tile {
     static displayName = "Air";
     static fallAmount = 1;
-    static diffusionWater = 0.01;
+    static diffusionWater = 0.1;
     public sunlightCached: number = 1;
     public _co2: number;
     public inventory = new Inventory(20);

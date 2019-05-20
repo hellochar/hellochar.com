@@ -247,10 +247,11 @@ export class Player {
         // drop as much as you can onto the current tile
         const currentTile = this.currentTile();
         if (hasInventory(currentTile)) {
-            // first, pick up what you can from the tile
-            currentTile.inventory.give(this.inventory, currentTile.inventory.water, currentTile.inventory.sugar);
-
             const { water, sugar } = action;
+            // first, pick up the opposite of what you can from the tile to try and make space
+            currentTile.inventory.give(this.inventory, sugar, water);
+
+            // give as much as you can
             this.inventory.give(currentTile.inventory, water, sugar);
             return true;
         } else {
