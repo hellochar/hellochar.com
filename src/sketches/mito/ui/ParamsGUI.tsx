@@ -11,6 +11,7 @@ export class ParamsGUI extends React.Component {
             closed: true,
             width: 450,
         });
+        gui.add(params, "cellGestationTurns", 1, 100, 1);
         gui.add(params, "droop", 0, 0.5, 0.01);
         gui.add(params, "fountainTurnsPerWater", 1, 100, 1);
         gui.add(params, "floorCo2", 1 / 6, 1);

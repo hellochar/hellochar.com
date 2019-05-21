@@ -84,24 +84,24 @@ export class World {
         })));
         this.fillCachedEntities();
 
-        // auto-add Roots
-        const {x, y} = this.player.pos;
-        this.newTile(x - 1, y + 2, Root);
-        this.newTile(x + 1, y + 2, Root);
+        // // auto-add Roots
+        // const {x, y} = this.player.pos;
+        // this.newTile(x - 1, y + 2, Root);
+        // this.newTile(x + 1, y + 2, Root);
 
-        // auto-add Veins
-        for (let yTemp = y - 2; yTemp <= y + 2; yTemp++) {
-            this.newTile(x, yTemp, Vein);
-        }
+        // // auto-add Veins
+        // for (let yTemp = y - 2; yTemp <= y + 2; yTemp++) {
+        //     this.newTile(x, yTemp, Vein);
+        // }
         // this.newTile(x - 1, y + 2, Vein);
         // this.newTile(x + 1, y + 2, Vein);
         // this.newTile(x - 1, y - 1, Vein);
         // this.newTile(x + 1, y - 1, Vein);
 
-        // auto-add Leaves
-        this.newTile(x, y - 2, Leaf);
-        this.newTile(x + 1, y - 2, Leaf);
-        this.newTile(x - 1, y - 2, Leaf);
+        // // auto-add Leaves
+        // this.newTile(x, y - 2, Leaf);
+        // this.newTile(x + 1, y - 2, Leaf);
+        // this.newTile(x - 1, y - 2, Leaf);
     }
 
     private newTile(x: number, y: number, type: Constructor<Tile>) {
