@@ -18,15 +18,15 @@ export class TileMesh extends Mesh {
     }
 }
 
-export class TileRenderer extends Renderer<Tile> {
+export class TileRenderer<T extends Tile = Tile> extends Renderer<T> {
     // public object = new Object3D();
     public mesh: TileMesh;
     private inventoryRenderer?: InventoryRenderer;
     private originalColor: Color;
     private audio?: Audio;
     private lastAudioValueTracker = 0;
-    private pairsLines: Line[] = [];
-    constructor(target: Tile, scene: Scene, mito: Mito) {
+    private pairsLines: Object3D[] = [];
+    constructor(target: T, scene: Scene, mito: Mito) {
         super(target, scene, mito);
         if (this.target instanceof GrowingCell) {
             this.growingRenderer = new TileRenderer(this.target.completedCell, this.scene, this.mito);
@@ -60,19 +60,14 @@ export class TileRenderer extends Renderer<Tile> {
         const zIndex = this.target instanceof Cell ? 1 : 0;
         this.mesh.position.set(this.target.pos.x, this.target.pos.y, zIndex);
         if (this.target instanceof Cell) {
-            this.mesh.scale.set(0.01, 0.01, 1);
+            // if it takes no turns to build, start it off small just for show
+            if (!(this.target.constructor as Constructor<Cell>).turnsToBuild) {
+                this.mesh.scale.set(0.01, 0.01, 1);
+            }
         } else {
             this.mesh.matrixAutoUpdate = false;
         }
         this.mesh.updateMatrix();
-        if (this.target instanceof Transport) {
-            const dir = new Vector3(this.target.dir.x, this.target.dir.y, 0).normalize();
-            const length = 1.2;
-            const start = new Vector3(dir.x * -length / 2, dir.y * -length / 2, 0.1);
-            const arrow = new ArrowHelper(dir, start, length, 0xffffff, 0.1, 0.1);
-            arrow.position.z = 1.1;
-            this.mesh.add(arrow);
-        }
         if (this.target instanceof Leaf || this.target instanceof Root) {
             this.audio = new Audio(this.mito.audioListener);
             this.mesh.add(this.audio);
@@ -87,7 +82,7 @@ export class TileRenderer extends Renderer<Tile> {
     update() {
         if (this.target instanceof GrowingCell) {
             // const s = this.steps(1.001 - this.target.timeRemaining / params.cellGestationTurns, 0.05);
-            const s = map(1.001 - this.target.timeRemaining / params.cellGestationTurns, 0, 1, 0.2, 1);
+            const s = map(1.001 - this.target.timeRemaining / this.target.timeToBuild, 0, 1, 0.2, 1);
             lerp2(this.mesh.scale, {x: s, y: s}, 0.1);
             // this.mesh.scale.x = s;
             // this.mesh.scale.y = s;
@@ -169,7 +164,7 @@ export class TileRenderer extends Renderer<Tile> {
             }
         }
         if (this.hasActiveNeighbors(this.target)) {
-            const color =  new Color("rgb(9, 12, 255)").getHex();
+            const color = this.target instanceof Root ? new Color("rgb(9, 12, 255)").getHex() : 0xffffff;
             const lines = this.target.activeNeighbors;
             if (lines.length !== this.pairsLines.length) {
                 // redo pairs
@@ -177,7 +172,10 @@ export class TileRenderer extends Renderer<Tile> {
                 this.pairsLines = lines.map((dir) => {
                     const length = dir.length() - 0.25;
                     const arrowDir = new Vector3(dir.x, dir.y, 0).normalize();
-                    const arrowHelper = this.makeLine(arrowDir, new Vector3(), length, color);
+                    const arrowHelper =
+                        this.target instanceof Root
+                        ? this.makeLine(arrowDir, new Vector3(), length, color)
+                        : new ArrowHelper(arrowDir, new Vector3(0, 0, 5), length, color);
                     this.mesh.add(arrowHelper);
                     return arrowHelper;
                 });

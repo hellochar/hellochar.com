@@ -438,9 +438,10 @@ export class Cell extends Tile implements HasEnergy {
 export class GrowingCell extends Cell {
     public isObstacle = true;
     public timeRemaining: number;
+    public timeToBuild: number;
     constructor(pos: Vector2, world: World, public completedCell: Cell) {
         super(pos, world);
-        this.timeRemaining = (completedCell.constructor as any).turnsToBuild || 0;
+        this.timeRemaining = this.timeToBuild = (completedCell.constructor as any).turnsToBuild || 0;
     }
     step() {
         super.step();
@@ -595,22 +596,44 @@ export class Transport extends Tissue {
         // transport hungers at double speed
         this.energy -= 1;
         super.step();
-        const targetTile = this.world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
-        const fromTile = this.world.tileAt(this.pos.x - this.dir.x, this.pos.y - this.dir.y);
-        if (targetTile instanceof Cell && hasInventory(targetTile) &&
-            fromTile instanceof Cell && hasInventory(fromTile) &&
-            this.cooldown <= 0) {
-            this.inventory.give(targetTile.inventory, 1, 1);
-            fromTile.inventory.give(this.inventory, 1, 1);
+        if (this.cooldown <= 0) {
             this.cooldown += params.transportTurnsPerMove;
+
+            const targetTile = this.getTarget();
+            if (targetTile) {
+                this.inventory.give(targetTile.inventory, 1, 1);
+            }
+
+            const fromTile = this.getFrom();
+            if (fromTile) {
+                fromTile.inventory.give(this.inventory, 1, 1);
+            }
         }
         this.cooldown -= 1;
+    }
+
+    public getTarget() {
+        const targetTile = this.world.tileAt(this.pos.x + this.dir.x, this.pos.y + this.dir.y);
+        if (targetTile instanceof Cell && hasInventory(targetTile)) {
+            return targetTile;
+        }
+    }
+
+    public getFrom() {
+        const fromTile = this.world.tileAt(this.pos.x - this.dir.x, this.pos.y - this.dir.y);
+        if (fromTile instanceof Cell && hasInventory(fromTile)) {
+            return fromTile;
+        }
     }
 }
 
 export class Vein extends Tissue {
     static displayName = "Vein";
-    static get diffusionWater() { return params.veinDiffusion; }
+    static diffusionWater = 0;
+    // static get diffusionWater() { return params.veinDiffusion; }
     static get diffusionSugar() { return params.veinDiffusion; }
     public inventory = new Inventory(4);
+    diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
+        return super.diffusionNeighbors(neighbors).filter((t) => t instanceof Vein);
+    }
 }

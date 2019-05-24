@@ -17,6 +17,7 @@ import { InventoryRenderer } from "./renderers/InventoryRenderer";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
+import { TransportRenderer } from "./renderers/TransportRenderer";
 import { NewPlayerTutorial } from "./tutorial";
 import { GameStack, Hover, HUD, ParamsGUI } from "./ui";
 
@@ -40,6 +41,8 @@ export function lerp2(v: Vector3, t: {x: number, y: number}, l: number) {
 function createRendererFor<E extends Entity>(object: E, scene: Scene, mito: Mito): Renderer<Entity> {
     if (object instanceof Player) {
         return new PlayerRenderer(object, scene, mito);
+    } else if (object instanceof Transport) {
+        return new TransportRenderer(object, scene, mito);
     } else if (object instanceof Tile) {
         return new TileRenderer(object, scene, mito);
     } else {

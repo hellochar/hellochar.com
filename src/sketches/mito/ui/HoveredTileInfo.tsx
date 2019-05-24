@@ -86,7 +86,7 @@ export class HoveredTileInfo extends React.Component<HoveredTileInfoProps> {
     }
     private growingCellInfo(tile: Tile) {
         if (tile instanceof GrowingCell) {
-            return <div className="info-growing-cell">{(100 - (tile.timeRemaining / params.cellGestationTurns) * 100).toFixed(0)}% mature</div>
+            return <div className="info-growing-cell">{(100 - (tile.timeRemaining / tile.timeToBuild) * 100).toFixed(0)}% mature</div>
         }
     }
 }
