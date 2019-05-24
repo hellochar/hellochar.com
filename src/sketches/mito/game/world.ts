@@ -9,6 +9,7 @@ import { DIRECTION_VALUES } from "../directions";
 import { Entity, GameState, height, isSteppable, width } from "../index";
 import { hasInventory } from "../inventory";
 import { params } from "../params";
+import { Environment } from "./environment";
 import { Player } from "./player";
 import { Air, Cell, DeadCell, Fountain, Fruit, hasEnergy, Leaf, Rock, Root, Soil, Tile, Tissue, Vein } from "./tile";
 
@@ -20,48 +21,28 @@ export class World {
     public time: number = 0;
     public readonly player = new Player(new Vector2(width / 2, height / 2), this);
     public fruit?: Fruit = undefined;
-    private gridEnvironment: Tile[][] = (() => {
-        // start with a half water half air
-        const noiseWater = new Noise();
-        const noiseRock = new Noise();
-        const noiseHeight = new Noise();
-        const grid = new Array(width).fill(undefined).map((_, x) => (new Array(height).fill(undefined).map((__, y) => {
-            const pos = new Vector2(x, y);
-            const soilLevel = height / 2
-                - 4 * (noiseHeight.perlin2(0, x / 5) + 1) / 2
-                - 16 * (noiseHeight.perlin2(10, x / 20 + 10));
-            if (y > soilLevel) {
-                // const water = Math.floor(20 + Math.random() * 20);
-                const rockThreshold = map(y - height / 2, 0, height / 2, -0.7, 0.3);
-                const isRock = noiseRock.simplex2(x / 5, y / 5) < rockThreshold;
-                if (isRock) {
-                    const rock = new Rock(pos, this);
-                    return rock;
-                } else {
-                    const heightScalar = Math.pow(map(y - height / 2, 0, height / 2, 0.5, 1), 2);
-                    const simplexScalar = 0.2;
-                    // this 0.1 factor makes a *huge* difference
-                    const simplexValue = noiseWater.simplex2(x * simplexScalar, y * simplexScalar) + 0.2;
-                    const water = Math.round(Math.max(1, Math.min(
-                        // should be soil_max_water, isn't cuz of dependency cycles messing up instantiation
-                        20, simplexValue > 0.4 ? 20 * heightScalar : 0)));
-                    if (heightScalar * simplexValue > 1 / params.fountainAppearanceRate) {
-                        const emitWaterScalar = Math.min(heightScalar * simplexValue, 1);
-                        return new Fountain(pos, water, this, Math.round(params.fountainTurnsPerWater / emitWaterScalar));
-                    } else {
-                        return new Soil(pos, water, this);
-                    }
-                }
-            } else {
-                const air = new Air(pos, this);
-                return air;
-            }
-        })));
-        return grid;
-    })();
+    private gridEnvironment: Tile[][];
     private gridCells: Array<Array<Cell | null>>;
     private neighborCache: Array<Array<Map<Vector2, Tile>>>;
-    constructor() {
+
+    constructor(public environment: Environment) {
+        this.gridEnvironment = new Array(width).fill(undefined).map((_, x) => (new Array(height).fill(undefined).map((__, y) => {
+            const pos = new Vector2(x, y);
+
+            let tile: Tile | undefined;
+            for (const fillFunction of environment.fill) {
+                const t = fillFunction(pos, this);
+                if (t != null) {
+                    tile = t;
+                    break;
+                }
+            }
+            if (tile == null) {
+                tile = new Air(pos, this);
+            }
+            return tile;
+        })));
+
         // always drop player on the Soil Air interface
         const playerX = this.player.pos.x;
         const firstSoil = this.gridEnvironment[playerX].find((t) => !(t instanceof Air))
@@ -340,12 +321,12 @@ export class World {
 
     public stepWeather() {
         // offset first rain event by 300 turns
-        const isRaining = (this.time + 600) % 800 < 100;
+        const isRaining = (this.time + this.environment.climate.turnsBetweenRainfall - 200) % this.environment.climate.turnsBetweenRainfall < this.environment.climate.rainDuration;
         if (isRaining) {
             const x = THREE.Math.randInt(0, width - 1);
             const t = this.tileAt(x, 0);
             if (t instanceof Air) {
-                t.inventory.add(3, 0);
+                t.inventory.add(this.environment.climate.waterPerDroplet, 0);
             }
         }
     }

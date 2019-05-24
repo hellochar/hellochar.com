@@ -169,13 +169,13 @@ export class Air extends Tile {
     }
 
     private computeCo2() {
-        const base = map(this.pos.y, height / 2, 0, params.floorCo2, 1.15);
+        const base = map(this.pos.y, height / 2, 0, this.world.environment.floorCo2, 1.15);
         const scaleX = map(this.pos.y, height / 2, 0, 4, 9);
         // const offset = noiseCo2.perlin3(94.2321 - this.pos.x / scaleX, 3221 - this.pos.y / 2.5, world.time / 5 + 93.1) * 0.2;
         const time = this.world == null ? 0 : this.world.time;
         const offset = noiseCo2.perlin3(94.231 + (this.pos.x - width / 2) / scaleX, 2312 + this.pos.y / 8, time / 1000 + 93.1) * 0.25;
         // don't compute dark/light or water diffusion
-        return Math.max(Math.min(base + offset, 1), Math.min(0.4, params.floorCo2 * 0.75));
+        return Math.max(Math.min(base + offset, 1), Math.min(0.4, this.world.environment.floorCo2 * 0.75));
     }
 
     public lightAmount() {
@@ -211,11 +211,29 @@ export class Air extends Tile {
 export class Soil extends Tile implements HasInventory {
     static displayName = "Soil";
     static diffusionWater = params.soilDiffusionWater;
-    static fallAmount = params.waterGravityPerTurn;
     public inventory = new Inventory(params.soilMaxWater);
+    // static fallAmount = params.waterGravityPerTurn;
+    get fallAmount() {
+        return this.world.environment.waterGravityPerTurn;
+    }
+
     constructor(pos: Vector2, water: number = 0, world: World) {
         super(pos, world);
         this.inventory.add(water, 0);
+    }
+
+    step() {
+        super.step();
+        this.stepEvaporation();
+    }
+
+    stepEvaporation() {
+        const { evaporationRate, evaporationBottom } = this.world.environment;
+        const evaporationHeightScalar = map(this.pos.y, height / 2, height * evaporationBottom, 1, 0);
+        const evaporationAmountScalar = this.inventory.water;
+        if (Math.random() < evaporationRate * evaporationHeightScalar * evaporationAmountScalar) {
+            this.inventory.add(-1, 0);
+        }
     }
 }
 
@@ -354,7 +372,9 @@ export class Cell extends Tile implements HasEnergy {
                 this.world.player.pos.y += 1;
             }
             this.world.maybeRemoveCellAt(this.pos);
-            this.pos.y += 1;
+            if (this.pos.y < height - 1) {
+                this.pos.y += 1;
+            }
             this.droopY -= 1;
             // lol whatever lets just test it out
             this.world.setTileAt(this.pos, this);

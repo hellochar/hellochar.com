@@ -13,7 +13,6 @@ export class ParamsGUI extends React.Component {
         });
         gui.add(params, "droop", 0, 0.5, 0.01);
         gui.add(params, "fountainTurnsPerWater", 1, 100, 1);
-        gui.add(params, "floorCo2", 1 / 6, 1);
         gui.add(params, "isRealtime");
         gui.add(params, "leafReactionRate", 0, 0.2, .0001);
         gui.add(params, "leafSugarPerReaction", 0, 1, .01);
@@ -34,7 +33,6 @@ export class ParamsGUI extends React.Component {
         f.add(params, "soilDiffusionWater", 0, .25, 0.00001);
         f.add(params, "soilMaxWater", 1, 100, 1);
         f.add(params, "tissueInventoryCapacity", 1, 100, 1);
-        f.add(params, "waterGravityPerTurn", 0, 1);
 
         for (const c of gui.__controllers.concat(f.__controllers)) {
             c.onFinishChange(updateParamsHash);
