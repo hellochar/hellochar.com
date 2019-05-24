@@ -60,6 +60,7 @@ export class World {
         return grid;
     })();
     private gridCells: Array<Array<Cell | null>>;
+    private neighborCache: Array<Array<Map<Vector2, Tile>>>;
     constructor() {
         // always drop player on the Soil Air interface
         const playerX = this.player.pos.x;
@@ -81,6 +82,9 @@ export class World {
             } else {
                 return null;
             }
+        })));
+        this.neighborCache = new Array(width).fill(undefined).map((_, x) => (new Array(height).fill(undefined).map((__, y) => {
+            return this.computeTileNeighbors(x, y);
         })));
         this.fillCachedEntities();
 
@@ -205,7 +209,7 @@ export class World {
             this.gridEnvironment[x][y] = tile;
         }
         this.stepStats.added.push(tile);
-        this.fillCachedEntities();
+        this.handleTileUpdated(position);
     }
     public maybeRemoveCellAt(position: Vector2): Cell | null {
         const maybeCell = this.cellAt(position.x, position.y);
@@ -213,7 +217,7 @@ export class World {
             this.gridCells[position.x][position.y] = null;
             this.stepStats.deleted.push(maybeCell);
         }
-        this.fillCachedEntities();
+        this.handleTileUpdated(position);
         return maybeCell;
     }
     public isValidPosition(x: number, y: number) {
@@ -223,13 +227,18 @@ export class World {
             return true;
         }
     }
+
     public tileNeighbors(pos: Vector2) {
+        return new Map(this.neighborCache[pos.x][pos.y]);
+    }
+
+    private computeTileNeighbors(px: number, py: number) {
         const mapping = new Map<Vector2, Tile>();
         // randomize the neighbor array to reduce aliasing
         const directions = DIRECTION_VALUES_RAND[this.time % DIRECTION_VALUES_RAND.length];
         directions.forEach((v) => {
-            const x = pos.x + v.x;
-            const y = pos.y + v.y;
+            const x = px + v.x;
+            const y = py + v.y;
             const tile = this.tileAt(x, y);
             if (tile != null) {
                 mapping.set(v, tile);
@@ -252,6 +261,18 @@ export class World {
             throw new Error("accessed entities before filling");
         }
         return this.cachedEntities;
+    }
+
+    private handleTileUpdated(pos: Vector2) {
+        this.neighborCache[pos.x][pos.y] = this.computeTileNeighbors(pos.x, pos.y);
+        for (const dir of DIRECTION_VALUES) {
+            const x = pos.x + dir.x;
+            const y = pos.y + dir.y;
+            if (this.isValidPosition(x, y)) {
+                this.neighborCache[x][y] = this.computeTileNeighbors(x, y);
+            }
+        }
+        this.fillCachedEntities();
     }
     private fillCachedEntities() {
         const newEntities: Entity[] = [];
