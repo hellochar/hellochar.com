@@ -9,7 +9,7 @@ import { Action, ActionBuild, ActionBuildTransport, ActionMove } from "./action"
 import { drums, hookUpAudio, strings } from "./audio";
 import { Constructor } from "./constructor";
 import { Player, World } from "./game";
-import { Desert, Rocky, Temperate } from "./game/environment";
+import { ALL_ENVIRONMENTS, Desert, Rocky, Temperate } from "./game/environment";
 import { Cell, Fruit, Tile, Tissue, Transport, Vein } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS, MOVEMENT_KEYS } from "./keymap";
 import { params } from "./params";
@@ -64,7 +64,7 @@ export interface UIStateExpanding {
 export type UIState = UIStateMain | UIStateExpanding;
 
 export class Mito extends ISketch {
-    public readonly world = new World(Rocky());
+    public readonly world = new World((ALL_ENVIRONMENTS[params.environment] || Temperate)());
     public scene = new Scene();
     private camera = new OrthographicCamera(0, 0, 0, 0, -100, 100);
     public renderers = new Map<Entity, Renderer<Entity>>();

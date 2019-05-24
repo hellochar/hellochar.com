@@ -653,7 +653,7 @@ export class Vein extends Tissue {
     // static get diffusionWater() { return params.veinDiffusion; }
     static get diffusionSugar() { return params.veinDiffusion; }
     public inventory = new Inventory(4);
-    diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
-        return super.diffusionNeighbors(neighbors).filter((t) => t instanceof Vein);
-    }
+    // diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
+    //     return super.diffusionNeighbors(neighbors).filter((t) => t instanceof Vein);
+    // }
 }

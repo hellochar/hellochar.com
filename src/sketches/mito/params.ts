@@ -1,5 +1,8 @@
+import { ALL_ENVIRONMENTS } from "./game/environment";
+
 const PARAMS_DEFAULT = {
     isRealtime: true,
+    environment: "Temperate" as keyof typeof ALL_ENVIRONMENTS,
     cellEnergyMax: 5000,
     tissueInventoryCapacity: 20,
     rootTurnsPerTransfer: 20,

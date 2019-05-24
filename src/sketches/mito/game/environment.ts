@@ -144,3 +144,9 @@ export const Rocky = lazy(() => {
     };
     return e;
 });
+
+export const ALL_ENVIRONMENTS = {
+    Temperate,
+    Desert,
+    Rocky,
+};
