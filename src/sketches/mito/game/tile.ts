@@ -252,6 +252,7 @@ export class Cell extends Tile implements HasEnergy {
     static displayName = "Cell";
     static diffusionWater = params.cellDiffusionWater;
     static diffusionSugar = params.cellDiffusionSugar;
+    static turnsToBuild = params.cellGestationTurns;
     public energy: number = params.cellEnergyMax;
     public darkness = 0;
     // public metabolism: MetabolismState = {
@@ -436,9 +437,10 @@ export class Cell extends Tile implements HasEnergy {
 
 export class GrowingCell extends Cell {
     public isObstacle = true;
-    public timeRemaining = params.cellGestationTurns;
+    public timeRemaining: number;
     constructor(pos: Vector2, world: World, public completedCell: Cell) {
         super(pos, world);
+        this.timeRemaining = (completedCell.constructor as any).turnsToBuild || 0;
     }
     step() {
         super.step();

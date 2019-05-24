@@ -6,7 +6,7 @@ const PARAMS_DEFAULT = {
     leafReactionRate: 0.015,
     floorCo2: 0.5,
     leafSugarPerReaction: 1,
-    cellGestationTurns: 100,
+    cellGestationTurns: 0,
     cellDiffusionWater: 0.002,
     cellDiffusionSugar: 0.002,
     soilDarknessBase: 0.2,

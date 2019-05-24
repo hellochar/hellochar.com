@@ -11,7 +11,6 @@ export class ParamsGUI extends React.Component {
             closed: true,
             width: 450,
         });
-        gui.add(params, "cellGestationTurns", 1, 100, 1);
         gui.add(params, "droop", 0, 0.5, 0.01);
         gui.add(params, "fountainTurnsPerWater", 1, 100, 1);
         gui.add(params, "floorCo2", 1 / 6, 1);
@@ -26,6 +25,7 @@ export class ParamsGUI extends React.Component {
         gui.add(params, "transportTurnsPerMove", 1, 50, 1);
         gui.add(params, "veinDiffusion", 0, 0.85, 0.0001);
         const f = gui.addFolder("Needs Page Refresh");
+        f.add(params, "cellGestationTurns", 0, 100, 1);
         f.add(params, "cellDiffusionSugar", 0, .85, 0.0001);
         f.add(params, "cellDiffusionWater", 0, .85, 0.0001);
         f.add(params, "cellEnergyMax", 400, 10000, 100);

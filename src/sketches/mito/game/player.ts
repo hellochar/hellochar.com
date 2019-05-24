@@ -192,9 +192,21 @@ export class Player {
         }
         const matureCell = this.tryConstructingNewCell(action.position, action.cellType);
         if (matureCell != null) {
-            const growingCell = new GrowingCell(action.position, this.world, matureCell);
-            growingCell.droopY = this.droopY();
-            this.world.setTileAt(action.position, growingCell);
+            let cell: Cell;
+            if (action.cellType.turnsToBuild) {
+                cell = new GrowingCell(action.position, this.world, matureCell);
+            } else {
+                cell = matureCell;
+            }
+            cell.droopY = this.droopY();
+            this.world.setTileAt(action.position, cell);
+            if (cell instanceof Tissue) {
+                // move into the tissue cell
+                this.attemptMove({
+                    type: "move",
+                    dir: action.position.clone().sub(this.pos),
+                });
+            }
             return true;
         } else {
             return false;
