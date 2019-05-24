@@ -1,5 +1,5 @@
 import { Vector2 } from "three";
-import { height } from "..";
+import { height, width } from "..";
 import lazy from "../../../common/lazy";
 import { Noise } from "../../../common/perlin";
 import { map } from "../../../math";
@@ -117,23 +117,27 @@ export const Rocky = lazy(() => {
             rainDuration: 120,
             waterPerDroplet: 3,
         },
-        waterGravityPerTurn: 0.04,
+        waterGravityPerTurn: 0.1,
         evaporationBottom: 0.6,
         evaporationRate: 0.001,
         floorCo2: 1,
         fill: [
             (pos, world) => {
                 const {x, y} = pos;
-                const soilLevel = height / 2
+                const soilLevel = height * 0.55
                     - 4 * (noiseHeight.perlin2(0, x / 5) + 1) / 2
-                    - 16 * (noiseHeight.perlin2(10, x / 20 + 10));
-                const rockThreshold = (y < height * 0.33 || y > height * 0.66) ? 0.1 : 1;
-                const isRock = noiseRock.simplex2(x / 5, y / 5) < rockThreshold;
+                    - 16 * (noiseHeight.perlin2(10, x / 20 + 10))
+                    - map(x, 0, width, 10, -10);
+                const rockLevel = y
+                    - 6 * (noiseHeight.perlin2(0, x / 25) + 1) / 2
+                    - 20 * (noiseHeight.perlin2(10, x / 150 + 10));
+                const rockThreshold = (rockLevel < height * 0.5) ? -1 : -0.15;
+                const isRock = noiseRock.simplex2(x / 10, y / 10) < rockThreshold;
                 if (isRock) {
                     const rock = new Rock(pos, world);
                     return rock;
                 } else if (y > soilLevel) {
-                    return new Soil(pos, 1, world);
+                    return new Soil(pos, 3, world);
                 }
             },
         ],
