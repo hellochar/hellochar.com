@@ -426,7 +426,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
         if (action.type === "still" && (this.autoplace === Vein || this.autoplace === Tissue)) {
             return {
                 type: "build",
-                cellType: Vein,
+                cellType: this.autoplace,
                 position: player.pos,
             };
         }

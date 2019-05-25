@@ -183,7 +183,7 @@ export class Player {
 
     public attemptBuild(action: ActionBuild) {
         const existingCell = this.world.cellAt(action.position.x, action.position.y);
-        if ((existingCell instanceof action.cellType) || (existingCell instanceof GrowingCell)) {
+        if (existingCell != null && existingCell.constructor === action.cellType) {
             // already built, whatever.
             return true;
         }
