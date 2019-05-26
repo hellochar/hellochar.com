@@ -487,6 +487,7 @@ export function hasTilePairs(t: any): t is IHasTilePairs {
 
 export class Leaf extends Cell {
     static displayName = "Leaf";
+    public isObstacle = true;
     public averageEfficiency = 0;
     public averageSpeed = 0;
     public didConvert = false;
@@ -592,7 +593,8 @@ export class Root extends Cell {
 
 export class Fruit extends Cell {
     static displayName = "Fruit";
-    public inventory = new Inventory(1100);
+    static sugarToWin = 500;
+    public inventory = new Inventory(Fruit.sugarToWin + 100);
 
     // seeds aggressively take the inventory from neighbors
     step() {
@@ -649,10 +651,10 @@ export class Transport extends Tissue {
 
 export class Vein extends Tissue {
     static displayName = "Vein";
-    static diffusionWater = 0;
-    // static get diffusionWater() { return params.veinDiffusion; }
+    // static diffusionWater = 0;
+    static get diffusionWater() { return params.veinDiffusion; }
     static get diffusionSugar() { return params.veinDiffusion; }
-    public inventory = new Inventory(4);
+    public inventory = new Inventory(8);
     // diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
     //     return super.diffusionNeighbors(neighbors).filter((t) => t instanceof Vein);
     // }

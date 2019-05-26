@@ -30,13 +30,13 @@ export const Temperate = lazy(() => {
     const environment: Environment = {
         climate: {
             turnsBetweenRainfall: 800,
-            rainDuration: 100,
-            waterPerDroplet: 3,
+            rainDuration: 50,
+            waterPerDroplet: 2,
         },
         evaporationRate: 0.001,
         evaporationBottom: 0.6,
         floorCo2: 0.5,
-        waterGravityPerTurn: 0.01,
+        waterGravityPerTurn: 0.001,
         fill: [
             (pos, world) => {
                 const {x, y} = pos;

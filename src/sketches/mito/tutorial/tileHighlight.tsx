@@ -28,7 +28,7 @@ class TileHighlight extends React.PureComponent<TileHighlightProps, {}> {
         this.object.position.x = this.props.x;
         this.object.position.y = this.props.y;
         return <>
-            <Animate a={((t) => this.object.scale.setScalar(Math.sin(t * 2.7) * 0.04 + 0.94))} />
+            <Animate a={((t) => this.object.scale.setScalar(Math.sin(t * 3.7) * 0.04 + 0.94))} />
             <SceneObject object={this.object} parent={this.props.scene} />
         </>;
     }

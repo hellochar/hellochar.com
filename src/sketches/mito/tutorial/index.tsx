@@ -2,8 +2,10 @@ import * as React from "react";
 
 import Mito from "..";
 import { Action } from "../action";
+import { Fruit, Transport, Vein } from "../game/tile";
+import { BUILD_HOTKEYS } from "../keymap";
 import { Tutorial } from "./tutorial";
-import TutorialBuildTissue from "./tutorialBuildTissue";
+import {TutorialBuildLeaf, TutorialBuildRoot, TutorialBuildTissue} from "./tutorialBuildTissue";
 import TutorialMovement from "./tutorialMovement";
 
 interface NewPlayerTutorialProps {
@@ -19,6 +21,8 @@ export class NewPlayerTutorial extends React.PureComponent<NewPlayerTutorialProp
     static STEPS = [
         TutorialMovement,
         TutorialBuildTissue,
+        TutorialBuildRoot,
+        TutorialBuildLeaf,
     ];
 
     state = {
@@ -27,9 +31,15 @@ export class NewPlayerTutorial extends React.PureComponent<NewPlayerTutorialProp
     };
 
     handleFulfilled = () => {
-        this.setState({ step: this.state.step + 1});
+        this.setState({ step: this.state.step + 1}, () => {
+            if (this.isFinished()) {
+                BUILD_HOTKEYS.T = Transport;
+                BUILD_HOTKEYS.F = Fruit;
+                // BUILD_HOTKEYS.v = Vein;
+            }
+        });
     }
-    private tutorialRef: Tutorial | null = null;
+    public tutorialRef: Tutorial | null = null;
     handleCurrentTutorialRef = (ref: Tutorial) => {
         this.tutorialRef = ref;
     }

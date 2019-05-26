@@ -196,6 +196,9 @@ export class World {
         const maybeCell = this.cellAt(position.x, position.y);
         if (maybeCell) {
             this.gridCells[position.x][position.y] = null;
+            if (maybeCell === this.fruit) {
+                this.fruit = undefined;
+            }
             this.stepStats.deleted.push(maybeCell);
         }
         this.handleTileUpdated(position);
@@ -375,7 +378,7 @@ export class World {
     public checkWinLoss(): GameState | null {
         // you win if there's a seed with full capacity
         if (this.fruit != null) {
-            if (this.fruit.inventory.sugar > 1000) {
+            if (this.fruit.inventory.sugar > Fruit.sugarToWin) {
                 return "win";
             }
         }

@@ -34,7 +34,7 @@ export class HUD extends React.PureComponent<HUDProps> {
                 {this.renderSecondEls()}
                 {this.renderDPad()}
             </div>
-            <div className={classnames("mito-inventory", { hidden: !this.props.isTutorialFinished })}>
+            <div className={classnames("mito-inventory", { hidden: false })}>
                 {isMaxedEl}
                 <div className="mito-inventory-container">
                     {this.renderInventoryBar()}
@@ -123,7 +123,7 @@ export class HUD extends React.PureComponent<HUDProps> {
                 buttons.push(el);
             }
         }
-        if (this.props.world.fruit == null) {
+        if (this.props.world.fruit == null && BUILD_HOTKEYS.F) {
             buttons.push(this.renderBuildButton("F"));
         }
         return <div className="mito-hud-section mito-hud-section-build">{buttons}</div>;
@@ -154,7 +154,7 @@ export class HUD extends React.PureComponent<HUDProps> {
         const { world } = this.props;
         if (world.fruit != null) {
             return (<div className="mito-hud-section">
-                You bear Fruit! {world.fruit.inventory.sugar.toFixed(2)} of {1000} sugar!
+                You bear Fruit! {world.fruit.inventory.sugar.toFixed(2)} of {Fruit.sugarToWin} sugar!
                 </div>);
         }
     }

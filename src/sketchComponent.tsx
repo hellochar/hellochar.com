@@ -127,7 +127,13 @@ class SketchSuccessComponent extends React.Component<SketchSuccessComponentProps
         this.lastTimestamp = timestamp;
         this.props.sketch.frameCount++;
         this.props.sketch.timeElapsed = timestamp;
-        this.props.sketch.animate(millisElapsed);
+        try {
+            this.props.sketch.animate(millisElapsed);
+        } catch (e) {
+            console.error(e);
+        }
+
+        // force new render()
         this.setState({
             frameCount: this.props.sketch.frameCount,
         });

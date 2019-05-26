@@ -22,7 +22,7 @@ export default class TutorialMovement extends Tutorial {
                 {keyHints}
 
                 <div className="guide-movement">
-                    Use WASD, QEZC to move around.
+                    Use WASD, QEZC.
                 </div>
             </>
         );
@@ -35,7 +35,7 @@ export default class TutorialMovement extends Tutorial {
     }
 
     isFulfilled() {
-        return this.state.counter >= 3;
+        return this.state.counter >= 2;
     }
 }
 

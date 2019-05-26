@@ -10,7 +10,7 @@ import { Cell, Fruit, GrowingCell, Tile, Tissue, Transport } from "./tile";
 import { World } from "./world";
 
 export class Player {
-    public inventory = new Inventory(params.maxResources, params.maxResources / 2, params.maxResources / 2);
+    public inventory = new Inventory(params.maxResources, Math.round(params.maxResources / 3), Math.round(params.maxResources / 3));
     private action?: Action;
     private events = new EventEmitter();
     private actionQueue: Action[] = [];
@@ -99,11 +99,18 @@ export class Player {
     }
     public verifyMove(action: ActionMove) {
         const target = this.pos.clone().add(action.dir);
-        if (!this.world.isValidPosition(target.x, target.y)) {
+        return this.isWalkable(target);
+    }
+
+    public isWalkable(pos: Tile | Vector2) {
+        if (pos instanceof Tile) {
+            pos = pos.pos;
+        }
+        if (!this.world.isValidPosition(pos.x, pos.y)) {
             return false;
         }
-        const targetTile = this.world.tileAt(target.x, target.y);
-        if (!(targetTile instanceof Tissue)) {
+        const targetTile = this.world.tileAt(pos.x, pos.y);
+        if (!(targetTile instanceof Cell) || targetTile == null || targetTile.isObstacle) {
             // can't move!
             return false;
         }
@@ -111,7 +118,7 @@ export class Player {
     }
 
     public isBuildCandidate(tile: Tile | null): tile is Tile {
-        if (tile != null && !(tile instanceof Tissue) && !tile.isObstacle) {
+        if (tile != null && !this.isWalkable(tile) && !tile.isObstacle) {
             // This Tile could conceivably be built upon. But are we close enough?
             const offset = tile.pos.clone().sub(this.pos);
             const areWeCloseEnough = MOVEMENTS.find((move) => move.dir.equals(offset)) != null;
@@ -200,7 +207,7 @@ export class Player {
             }
             cell.droopY = this.droopY();
             this.world.setTileAt(action.position, cell);
-            if (cell instanceof Tissue) {
+            if (this.isWalkable(cell)) {
                 // move into the tissue cell
                 this.attemptMove({
                     type: "move",

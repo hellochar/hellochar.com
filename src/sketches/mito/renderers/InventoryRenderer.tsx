@@ -1,6 +1,7 @@
 import { Color, DoubleSide, PointsMaterial, Scene, Vector2, Vector3 } from "three";
 
 import lazy from "../../../common/lazy";
+import { map } from "../../../math";
 import { Mito } from "../index";
 import { Inventory } from "../inventory";
 import { textureFromSpritesheet } from "../spritesheet";
@@ -30,7 +31,7 @@ export class InventoryRenderer extends Renderer<Inventory> {
     static SugarParticles = lazy(() => new ResourceParticles(
         {
             color: new Color("yellow"),
-            size: 45,
+            size: 85,
             opacity: 0.9,
             map: textureFromSpritesheet(42, 12, "transparent"),
         },
@@ -102,12 +103,12 @@ export class InventoryRenderer extends Renderer<Inventory> {
         if (resourceArray.length > 0) {
             for (let i = 0; i < resourceArray.length - 1; i++) {
                 const p = resourceArray[i];
-                particles.commit(p.x + this.position.x, p.y + this.position.y, 1, 1);
+                particles.commit(p.x + this.position.x, p.y + this.position.y, 10, 1);
                 resource -= 1;
             }
             const p = resourceArray[resourceArray.length - 1];
             const fract = resource;
-            particles.commit(p.x + this.position.x, p.y + this.position.y, 1, fract);
+            particles.commit(p.x + this.position.x, p.y + this.position.y, 10, fract);
         }
     }
 
@@ -120,6 +121,11 @@ export class InventoryRenderer extends Renderer<Inventory> {
             // vel.y += Math.sin(performance.now() / 3000) * 0.1;
             const goTowardsCenterStrength = 0.1 + vel.length() * 0.1;
             vel.multiplyScalar(-goTowardsCenterStrength);
+            if (this.mito.world.player.pos.equals(this.position)) {
+                const avoidPlayerStrength = Math.max(Math.min(map(r.lengthSq(), 0, 1, 3, -5), 3), 0);
+                const v = r.clone().multiplyScalar(avoidPlayerStrength * 0.2);
+                vel.add(v);
+            }
             for (const l of resources) {
                 if (r === l) {
                     break;

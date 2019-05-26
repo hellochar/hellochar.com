@@ -58,9 +58,9 @@ export const MOVEMENTS = Object.keys(MOVEMENT_KEYS).map((key) => MOVEMENT_KEYS[k
 
 export const BUILD_HOTKEYS: { [key: string]: Constructor<Cell> } = {
     t: Tissue,
-    f: Leaf,
-    r: Root,
-    T: Transport,
-    F: Fruit,
-    v: Vein,
+    // f: Leaf,
+    // r: Root,
+    // T: Transport,
+    // F: Fruit,
+    // v: Vein,
 };

@@ -321,3 +321,25 @@
         font-size: 0.75em;
     }
 }
+
+.tutorial-build {
+    animation: growIn 2s both;
+    position: relative;
+    height: 1em;
+    overflow: hidden;
+
+    @keyframes growIn {
+        from { transform: scale(0.01, 0.01) };
+        to {transform: scale(1, 1) };
+    }
+
+    &.tutorial-build-tissue {
+        b { color: darkgreen; }
+    }
+    &.tutorial-build-root {
+        b { color: rgb(183, 94, 36); }
+    }
+    &.tutorial-build-leaf {
+        b { color: yellowgreen; }
+    }
+}

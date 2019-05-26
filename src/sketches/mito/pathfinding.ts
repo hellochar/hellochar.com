@@ -10,7 +10,7 @@ import { MOVEMENTS } from "./keymap";
 export function findPositionsThroughTissue(world: World, target: Vector2, includeTargetIfNonTissue = false) {
     const grid = newGrid((x, y, g) => {
         const tile = world.tileAt(x, y);
-        if (tile instanceof Tissue) {
+        if (tile != null && world.player.isWalkable(tile)) {
             g.setWalkableAt(x, y, true);
         }
     });

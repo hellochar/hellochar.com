@@ -10,7 +10,7 @@ import { drums, hookUpAudio, strings } from "./audio";
 import { Constructor } from "./constructor";
 import { Player, World } from "./game";
 import { ALL_ENVIRONMENTS, Desert, Rocky, Temperate } from "./game/environment";
-import { Cell, Fruit, Tile, Tissue, Transport, Vein } from "./game/tile";
+import { Cell, Fruit, Soil, Tile, Tissue, Transport, Vein } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS, MOVEMENT_KEYS } from "./keymap";
 import { params } from "./params";
 import { actionMoveFor, findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
@@ -20,6 +20,7 @@ import { Renderer } from "./renderers/Renderer";
 import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
 import { TransportRenderer } from "./renderers/TransportRenderer";
 import { NewPlayerTutorial } from "./tutorial";
+import { TutorialBuildRoot } from "./tutorial/tutorialBuildTissue";
 import { GameStack, Hover, HUD, ParamsGUI } from "./ui";
 
 export type Entity = Tile | Player;
@@ -84,8 +85,8 @@ export class Mito extends ISketch {
             world={this.world}
         />
         <GameStack mito={this} state={this.gameState} />
-        {/* <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />, */}
-        <ParamsGUI />
+        <NewPlayerTutorial ref={(ref) => this.tutorialRef = ref } mito={this} />,
+        {/* <ParamsGUI /> */}
         <Hover mito={this} />
         </>;
     }
@@ -93,7 +94,8 @@ export class Mito extends ISketch {
     public mouse = new THREE.Vector2();
     public hoveredTile?: Tile;
     private raycaster = new THREE.Raycaster();
-    public gameState: GameState = "instructions";
+    public gameState: GameState = "main";
+    private firstActionTakenYet = false;
     public audioListener = new THREE.AudioListener();
     private keyMap = new Set<string>();
     public uiState: UIState = { type: "main" };
@@ -137,6 +139,7 @@ export class Mito extends ISketch {
             this.handleClick(event.clientX!, event.clientY!);
         },
         keydown: (event: JQuery.Event) => {
+            this.firstActionTakenYet = true;
             const key = event.key!;
             this.keyMap.add(key);
             this.tryAction(key);
@@ -296,6 +299,9 @@ Textures in memory: ${this.renderer.info.memory.textures}
     }
 
     public worldStepAndDeleteOldRenderers() {
+        if (!this.firstActionTakenYet) {
+            return;
+        }
         const stats = this.world.step();
         if (this.tutorialRef) {
             this.tutorialRef.setState({ time: this.world.time });
@@ -356,9 +362,10 @@ Textures in memory: ${this.renderer.info.memory.textures}
 
     public animate() {
         const { world } = this;
-        if (document.activeElement !== this.canvas && !document.querySelector(".dg.ac")!.contains(document.activeElement)) {
-            this.canvas.focus();
-        }
+        // if (document.activeElement !== this.canvas && !document.querySelector(".dg.ac")!.contains(document.activeElement)) {
+        //     this.canvas.focus();
+        // }
+        this.canvas.focus();
         if (this.gameState === "main") {
             if (params.isRealtime) {
                 if (this.frameCount % 3 === 0) {
@@ -472,6 +479,15 @@ Textures in memory: ${this.renderer.info.memory.textures}
                 return action;
             }
         } else if (player.isBuildCandidate(targetTile)) {
+            if (this.tutorialRef != null) {
+                // we're in root tutorial
+                if (this.tutorialRef.tutorialRef instanceof TutorialBuildRoot) {
+                    // only allow building on the soil
+                    if (!(targetTile instanceof Soil)) {
+                        return;
+                    }
+                }
+            }
             // we attempt to move into a place we cannot
             this.enterUIStateExpanding(targetTile.pos);
             return;
@@ -494,6 +510,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
     }
 
     public handleClick(clientX: number, clientY: number) {
+        this.firstActionTakenYet = true;
         const target = this.getTileAtScreenPosition(clientX, clientY);
         if (this.uiState.type === "expanding") {
             if (target == null || !this.uiState.target.equals(target.pos)) {
