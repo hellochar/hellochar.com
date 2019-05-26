@@ -10,7 +10,7 @@ import { drums, hookUpAudio, strings } from "./audio";
 import { Constructor } from "./constructor";
 import { Player, World } from "./game";
 import { ALL_ENVIRONMENTS, Desert, Rocky, Temperate } from "./game/environment";
-import { Cell, Fruit, Soil, Tile, Tissue, Transport, Vein } from "./game/tile";
+import { Cell, Fruit, Root, Soil, Tile, Tissue, Transport, Vein } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS, MOVEMENT_KEYS } from "./keymap";
 import { params } from "./params";
 import { actionMoveFor, findPositionsThroughNonObstacles, findPositionsThroughTissue, pathFrom } from "./pathfinding";
@@ -471,7 +471,7 @@ Textures in memory: ${this.renderer.info.memory.textures}
                     cellType: this.autoplace,
                     position: player.pos.clone().add(action.dir),
                 };
-                if (this.autoplace !== Tissue && this.autoplace !== Vein) {
+                if (this.autoplace !== Tissue && this.autoplace !== Root) {
                     this.autoplace = undefined;
                 }
                 return buildAction;

@@ -10,7 +10,7 @@ import { Cell, Fruit, GrowingCell, Tile, Tissue, Transport } from "./tile";
 import { World } from "./world";
 
 export class Player {
-    public inventory = new Inventory(params.maxResources, Math.round(params.maxResources / 3), Math.round(params.maxResources / 3));
+    public inventory = new Inventory(params.maxResources, this, Math.round(params.maxResources / 3), Math.round(params.maxResources / 3));
     private action?: Action;
     private events = new EventEmitter();
     private actionQueue: Action[] = [];
@@ -250,6 +250,10 @@ export class Player {
     // }
 
     public attemptBuildTransport(action: ActionBuildTransport) {
+        if (action.dir == null) {
+            console.error("null dir", action);
+            return true;
+        }
         const existingCell = this.world.cellAt(action.position.x, action.position.y);
         if (existingCell) {
             this.attemptDeconstruct({ type: "deconstruct", position: action.position, force: true });

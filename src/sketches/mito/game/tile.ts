@@ -123,11 +123,16 @@ export abstract class Tile {
     stepGravity() {
         const fallAmount = this.fallAmount;
         const lowerNeighbor = this.world.tileAt(this.pos.x, this.pos.y + 1);
-        if (hasInventory(lowerNeighbor) && fallAmount > 0 && canPullResources(lowerNeighbor, this)) {
-            this.inventory.give(lowerNeighbor.inventory,
-                params.soilDiffusionType === "continuous" ? fallAmount : randRound(fallAmount),
-                0);
+        if (fallAmount > 0 && this.world.time % Math.floor(1 / fallAmount) < 1) {
+            if (hasInventory(lowerNeighbor) && canPullResources(lowerNeighbor, this)) {
+                this.inventory.give(lowerNeighbor.inventory, 1, 0);
+            }
         }
+        // if (hasInventory(lowerNeighbor) && fallAmount > 0 && canPullResources(lowerNeighbor, this)) {
+        //     this.inventory.give(lowerNeighbor.inventory,
+        //         params.soilDiffusionType === "continuous" ? fallAmount : randRound(fallAmount),
+        //         0);
+        // }
     }
 }
 
@@ -161,7 +166,7 @@ export class Air extends Tile {
     static diffusionWater = 0.1;
     public sunlightCached: number = 1;
     public _co2: number;
-    public inventory = new Inventory(20);
+    public inventory = new Inventory(20, this);
     public constructor(public pos: Vector2, world: World) {
         super(pos, world);
         this.darkness = 0;
@@ -211,7 +216,7 @@ export class Air extends Tile {
 export class Soil extends Tile implements HasInventory {
     static displayName = "Soil";
     static diffusionWater = params.soilDiffusionWater;
-    public inventory = new Inventory(params.soilMaxWater);
+    public inventory = new Inventory(params.soilMaxWater, this);
     // static fallAmount = params.waterGravityPerTurn;
     get fallAmount() {
         return this.world.environment.waterGravityPerTurn;
@@ -474,7 +479,7 @@ export class GrowingCell extends Cell {
 
 export class Tissue extends Cell implements HasInventory {
     static displayName = "Tissue";
-    public inventory = new Inventory(params.tissueInventoryCapacity);
+    public inventory = new Inventory(params.tissueInventoryCapacity, this);
 }
 
 interface IHasTilePairs {
@@ -552,7 +557,7 @@ export class Root extends Cell {
     public waterTransferAmount = 0;
     // public tilePairs: Vector2[] = []; // implied that the opposite direction is connected
     public activeNeighbors: Vector2[] = [];
-    public inventory: Inventory = new Inventory(20);
+    public inventory: Inventory = new Inventory(20, this);
     cooldown = 0;
 
     public step() {
@@ -593,8 +598,8 @@ export class Root extends Cell {
 
 export class Fruit extends Cell {
     static displayName = "Fruit";
-    static sugarToWin = 500;
-    public inventory = new Inventory(Fruit.sugarToWin + 100);
+    static sugarToWin = 200;
+    public inventory = new Inventory(Fruit.sugarToWin + 100, this);
 
     // seeds aggressively take the inventory from neighbors
     step() {
@@ -654,7 +659,7 @@ export class Vein extends Tissue {
     // static diffusionWater = 0;
     static get diffusionWater() { return params.veinDiffusion; }
     static get diffusionSugar() { return params.veinDiffusion; }
-    public inventory = new Inventory(8);
+    public inventory = new Inventory(8, this);
     // diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
     //     return super.diffusionNeighbors(neighbors).filter((t) => t instanceof Vein);
     // }

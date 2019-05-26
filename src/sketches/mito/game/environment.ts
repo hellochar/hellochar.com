@@ -33,7 +33,7 @@ export const Temperate = lazy(() => {
             rainDuration: 50,
             waterPerDroplet: 2,
         },
-        evaporationRate: 0.001,
+        evaporationRate: 0.0002,
         evaporationBottom: 0.6,
         floorCo2: 0.5,
         waterGravityPerTurn: 0.001,

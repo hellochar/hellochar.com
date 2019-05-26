@@ -76,39 +76,71 @@ export class InventoryRenderer extends Renderer<Inventory> {
     // public object = new Object3D();
     public waters: Vector2[] = [];
     public sugars: Vector2[] = [];
-    constructor(target: Inventory, public position: Vector2, scene: Scene, mito: Mito) {
+    constructor(target: Inventory, scene: Scene, mito: Mito) {
         super(target, scene, mito);
+        target.on("get", this.handleGetResources);
+        target.on("give", this.handleGiveResources);
         // this.object.name = "InventoryRenderer Object";
         // this.object.position.z = 1;
         // this.object.updateMatrix();
         // this.object.matrixAutoUpdate = false;
         for (let i = 0; i < this.target.water; i++) {
-            this.newParticle(this.waters);
+            this.waters.push(newParticle());
         }
         for (let i = 0; i < this.target.sugar; i++) {
-            this.newParticle(this.sugars);
+            this.sugars.push(newParticle());
         }
     }
+    private handleGetResources = (giver: Inventory, water: number, sugar: number) => {
+        let wantedMeshes = Math.ceil(this.target.water);
+        while (this.waters.length < wantedMeshes) {
+            const v = giver.carrier.pos.clone().sub(this.target.carrier.pos);
+            v.x += (Math.random() - 0.5) * 0.1;
+            v.y += (Math.random() - 0.5) * 0.1;
+            this.waters.push(v);
+        }
+
+        wantedMeshes = Math.ceil(this.target.sugar);
+        while (this.sugars.length < wantedMeshes) {
+            const v = giver.carrier.pos.clone().sub(this.target.carrier.pos);
+            v.x += (Math.random() - 0.5) * 0.1;
+            v.y += (Math.random() - 0.5) * 0.1;
+            this.sugars.push(v);
+        }
+    }
+
+    private handleGiveResources = (getter: Inventory, water: number, sugar: number) => {
+        let wantedMeshes = Math.ceil(this.target.water);
+        if (this.waters.length > wantedMeshes) {
+            this.waters.splice(wantedMeshes, this.waters.length - wantedMeshes);
+        }
+
+        wantedMeshes = Math.ceil(this.target.sugar);
+        if (this.sugars.length > wantedMeshes) {
+            this.sugars.splice(wantedMeshes, this.sugars.length - wantedMeshes);
+        }
+    }
+
     private updateNumParticles(resource: number, resourceArray: Vector2[]) {
         const wantedMeshes = Math.ceil(resource);
-        while (resourceArray.length < wantedMeshes) {
-            this.newParticle(resourceArray);
-        }
-        if (resourceArray.length > wantedMeshes) {
-            resourceArray.splice(wantedMeshes, resourceArray.length - wantedMeshes);
-        }
+        // while (resourceArray.length < wantedMeshes) {
+        //     this.newParticle(resourceArray);
+        // }
+        // if (resourceArray.length > wantedMeshes) {
+        //     resourceArray.splice(wantedMeshes, resourceArray.length - wantedMeshes);
+        // }
     }
 
     private commitParticles(particles: ResourceParticles, resource: number, resourceArray: Vector2[]) {
         if (resourceArray.length > 0) {
             for (let i = 0; i < resourceArray.length - 1; i++) {
                 const p = resourceArray[i];
-                particles.commit(p.x + this.position.x, p.y + this.position.y, 10, 1);
+                particles.commit(p.x + this.target.carrier.pos.x, p.y + this.target.carrier.pos.y, 10, 1);
                 resource -= 1;
             }
             const p = resourceArray[resourceArray.length - 1];
             const fract = resource;
-            particles.commit(p.x + this.position.x, p.y + this.position.y, 10, fract);
+            particles.commit(p.x + this.target.carrier.pos.x, p.y + this.target.carrier.pos.y, 10, fract);
         }
     }
 
@@ -121,7 +153,7 @@ export class InventoryRenderer extends Renderer<Inventory> {
             // vel.y += Math.sin(performance.now() / 3000) * 0.1;
             const goTowardsCenterStrength = 0.1 + vel.length() * 0.1;
             vel.multiplyScalar(-goTowardsCenterStrength);
-            if (this.mito.world.player.pos.equals(this.position)) {
+            if (this.mito.world.player.pos.equals(this.target.carrier.pos)) {
                 const avoidPlayerStrength = Math.max(Math.min(map(r.lengthSq(), 0, 1, 3, -5), 3), 0);
                 const v = r.clone().multiplyScalar(avoidPlayerStrength * 0.2);
                 vel.add(v);
@@ -151,8 +183,8 @@ export class InventoryRenderer extends Renderer<Inventory> {
     destroy() {
         // no-op
     }
-    newParticle(arr: Vector2[]) {
-        const position = new Vector2((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01);
-        arr.push(position);
-    }
+}
+
+function newParticle() {
+    return new Vector2((Math.random() - 0.5) * 0.01, (Math.random() - 0.5) * 0.01);
 }

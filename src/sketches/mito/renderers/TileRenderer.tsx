@@ -52,7 +52,7 @@ export class TileRenderer<T extends Tile = Tile> extends Renderer<T> {
         // }
         // this.object.add(this.mesh);
         if (hasInventory(this.target)) {
-            this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.target.pos, this.scene, this.mito);
+            this.inventoryRenderer = new InventoryRenderer(this.target.inventory, this.scene, this.mito);
             this.inventoryRenderer.animationOffset = (this.target.pos.x + this.target.pos.y) / 2;
             // this.mesh.add(this.inventoryRenderer.object);
         }

@@ -1,3 +1,6 @@
+import { EventEmitter } from "events";
+import { Vector2 } from "three";
+
 // floating point rounding error fix
 // without: 0.8 - 0.1 = 0.7000000000000001
 // with: fpref(0.8 - 0.1) = 0.7
@@ -5,9 +8,14 @@ function fpref(x: number) {
     return Math.round(x * 1e12) / 1e12;
 }
 
+interface HasPosition {
+    pos: Vector2;
+}
+
 export class Inventory {
     constructor(
         public capacity: number,
+        public carrier: HasPosition,
         public water: number = 0,
         public sugar: number = 0,
     ) {
@@ -70,7 +78,19 @@ export class Inventory {
         }
         this.change(-water, -sugar);
         other.change(water, sugar);
+        if (this.events) {
+            this.events.emit("give", other, water, sugar);
+        }
+        if (other.events) {
+            other.events.emit("get", this, water, sugar);
+        }
         return {water, sugar};
+    }
+
+    private events?: EventEmitter;
+    public on(name: "give" | "get", fn: (other: Inventory, water: number, sugar: number) => void) {
+        this.events = this.events || new EventEmitter();
+        this.events.on(name, fn);
     }
 
     public add(water: number, sugar: number) {
