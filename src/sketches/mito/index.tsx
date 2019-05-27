@@ -323,17 +323,6 @@ Textures in memory: ${this.renderer.info.memory.textures}
         this.updateAmbientAudio();
     }
 
-    private getRemovedEntitiesNaive() {
-        const oldEntities = Array.from(this.renderers.keys());
-        // delete the renderers for entities that have been removed since last render
-        // this is the performance bottleneck, it's O(n^2)
-        // const renderableEntities = this.world.renderableEntities();
-        // const removedEntities = oldEntities.filter((e) => renderableEntities.indexOf(e) === -1);
-        const entities = this.world.entities();
-        const removedEntities = oldEntities.filter((e) => entities.indexOf(e) === -1);
-        return removedEntities;
-    }
-
     private getCameraNormCoordinates(clientX: number, clientY: number) {
         return new THREE.Vector2(
             clientX / this.canvas.width * 2 - 1,

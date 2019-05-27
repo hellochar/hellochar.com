@@ -213,7 +213,7 @@ export class World {
     }
 
     public tileNeighbors(pos: Vector2) {
-        return new Map(this.neighborCache[pos.x][pos.y]);
+        return this.neighborCache[pos.x][pos.y];
     }
 
     private computeTileNeighbors(px: number, py: number) {

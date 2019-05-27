@@ -58,15 +58,16 @@ export abstract class Tile {
         if (this instanceof Cell) {
             this.darkness = 0;
         } else {
-            const minDarkness = Array.from(neighbors.values()).reduce((d, t) => {
+            let minDarkness = this.darkness;
+            for (const [_, t] of neighbors) {
                 const contrib = Math.max(0.2, map(this.pos.y, height / 2, height, params.soilDarknessBase, 1));
                 const darknessFromNeighbor = t instanceof Rock ? Infinity : t.darkness + contrib;
                 if (t instanceof Cell) {
-                    return 0;
+                    minDarkness = 0;
                 } else {
-                    return Math.min(d, darknessFromNeighbor);
+                    minDarkness = Math.min(minDarkness, darknessFromNeighbor);
                 }
-            }, this.darkness);
+            };
             this.darkness = minDarkness;
             const cellHere = this.world.cellAt(this.pos.x, this.pos.y) != null;
             if (cellHere) {
@@ -77,8 +78,10 @@ export abstract class Tile {
 
     stepDiffusion(neighbors: Map<Vector2, Tile>) {
         if (hasInventory(this)) {
-            const diffusionNeighbors = this.diffusionNeighbors(neighbors);
-            for (const tile of diffusionNeighbors) {
+            for (const [dir, tile] of neighbors) {
+                if (!this.canDiffuse(dir, tile)) {
+                    continue;
+                }
                 // take water from neighbors that have more water than you
                 if (this.diffusionWater != null) {
                     if (tile.inventory.water > this.inventory.water) {
@@ -94,8 +97,8 @@ export abstract class Tile {
         }
     }
 
-    diffusionNeighbors(neighbors: Map<Vector2, Tile>): Array<Tile & HasInventory> {
-        return Array.from(neighbors.values()).filter((tile) => canPullResources(this, tile)) as Array<Tile & HasInventory>;
+    canDiffuse(dir: Vector2, tile: Tile): tile is Tile & HasInventory {
+        return canPullResources(this, tile);
     }
 
     diffuseWater(giver: HasInventory) {
@@ -193,15 +196,11 @@ export class Air extends Tile {
         this._co2 = this.computeCo2();
     }
 
-    diffusionNeighbors(neighbors: Map<Vector2, Tile>) {
-        // dont diffuse up
-        // neighbors.delete(DIRECTIONS.n);
-        // neighbors.delete(DIRECTIONS.nw);
-        // neighbors.delete(DIRECTIONS.ne);
-        neighbors.delete(DIRECTIONS.s);
-        neighbors.delete(DIRECTIONS.sw);
-        neighbors.delete(DIRECTIONS.se);
-        return super.diffusionNeighbors(neighbors);
+    canDiffuse(dir: Vector2, tile: Tile): tile is Tile & HasInventory {
+        return dir !== DIRECTIONS.s &&
+            dir !== DIRECTIONS.sw &&
+            dir !== DIRECTIONS.se &&
+            super.canDiffuse(dir, tile);
     }
 
     public co2() {
@@ -509,7 +508,7 @@ export class Leaf extends Cell {
         let numAir = 0;
         this.tilePairs = [];
 
-        for (const [dir, tile] of neighbors.entries()) {
+        for (const [dir, tile] of neighbors) {
             const oppositeTile = this.world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
             if (tile instanceof Air &&
                 oppositeTile instanceof Tissue) {
@@ -574,7 +573,7 @@ export class Root extends Cell {
         // this.tilePairs = [];
         this.activeNeighbors = [];
         const neighbors = this.world.tileNeighbors(this.pos);
-        for (const [dir, tile] of neighbors.entries()) {
+        for (const [dir, tile] of neighbors) {
             // const oppositeTile = this.world.tileAt(this.pos.x - dir.x, this.pos.y - dir.y);
             if (tile instanceof Soil
                 /* && oppositeTile instanceof Tissue*/) {
@@ -598,6 +597,7 @@ export class Root extends Cell {
 
 export class Fruit extends Cell {
     static displayName = "Fruit";
+    public isObstacle = true;
     static sugarToWin = 200;
     public inventory = new Inventory(Fruit.sugarToWin + 100, this);
 
