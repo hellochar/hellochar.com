@@ -20,6 +20,8 @@ const Hero = () => (
             <h1 className="hero-name">Xiaohan Zhang</h1>
             <p className="header-services">
                 <nav className="header-nav">
+                    <a href="/resume.pdf">Resume</a>
+                    &middot;
                     <a href="#work">Work</a>
                     &middot;
                     {/* <a href="#installation">Installation</a>

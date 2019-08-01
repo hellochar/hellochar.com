@@ -49,6 +49,8 @@ export class ShrinkingHeader extends React.Component<IShrinkingHeaderProps, IShr
                     Creative technologist with over 12 years experience building interactive exhibits, web experiences, teaching, and workshops.
                     </p>
                     <nav className="header-nav">
+                        <a href="/resume.pdf">Resume</a>
+                        &middot;
                         <a href="#work">Work</a>
                         &middot;
                         {/* <a href="#installation">Installation</a>
