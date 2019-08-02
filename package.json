@@ -42,7 +42,6 @@
     "css-loader": "^0.28.4",
     "dat.gui": "^0.7.6",
     "delaunator": "^2.0.0",
-    "error-overlay-webpack-plugin": "^0.3.0",
     "es6-shim": "^0.35.3",
     "exports-loader": "^0.6.4",
     "express": "~4.9.0",

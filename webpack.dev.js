@@ -2,7 +2,7 @@ const path = require('path');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const webpack = require('webpack');
 const merge = require('webpack-merge');
-const ErrorOverlayPlugin = require('error-overlay-webpack-plugin')
+// const ErrorOverlayPlugin = require('error-overlay-webpack-plugin')
 const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
 
 
@@ -47,7 +47,7 @@ module.exports = merge(common, {
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
-    new ErrorOverlayPlugin(),
+    // new ErrorOverlayPlugin(),
     new FriendlyErrorsWebpackPlugin(),
     // new BundleAnalyzerPlugin({
     //   analyzerMode: 'static'
