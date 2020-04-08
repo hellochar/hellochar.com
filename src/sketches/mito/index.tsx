@@ -1,15 +1,14 @@
 import * as React from "react";
 import * as THREE from "three";
 import { Object3D, OrthographicCamera, Scene, Vector3 } from "three";
-
 import devlog from "../../common/devlog";
 import { map } from "../../math/index";
 import { ISketch } from "../../sketch";
-import { Action, ActionBuild, ActionBuildTransport, ActionMove } from "./action";
+import { Action, ActionBuild, ActionBuildTransport } from "./action";
 import { drums, hookUpAudio, strings } from "./audio";
 import { Constructor } from "./constructor";
 import { Player, World } from "./game";
-import { ALL_ENVIRONMENTS, Desert, Rocky, Temperate } from "./game/environment";
+import { ALL_ENVIRONMENTS, Temperate } from "./game/environment";
 import { Cell, Fruit, Root, Soil, Tile, Tissue, Transport, Vein } from "./game/tile";
 import { ACTION_KEYMAP, BUILD_HOTKEYS, MOVEMENT_KEYS } from "./keymap";
 import { params } from "./params";
@@ -17,11 +16,12 @@ import { actionMoveFor, findPositionsThroughNonObstacles, findPositionsThroughTi
 import { InventoryRenderer } from "./renderers/InventoryRenderer";
 import { PlayerRenderer } from "./renderers/PlayerRenderer";
 import { Renderer } from "./renderers/Renderer";
-import { TileMesh, TileRenderer } from "./renderers/TileRenderer";
+import { TileRenderer } from "./renderers/TileRenderer";
 import { TransportRenderer } from "./renderers/TransportRenderer";
 import { NewPlayerTutorial } from "./tutorial";
 import { TutorialBuildRoot } from "./tutorial/tutorialBuildTissue";
-import { GameStack, Hover, HUD, ParamsGUI } from "./ui";
+import { GameStack, Hover, HUD } from "./ui";
+
 
 export type Entity = Tile | Player;
 

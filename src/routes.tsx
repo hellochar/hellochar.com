@@ -1,9 +1,9 @@
 import * as React from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
-
 import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
 import { TitleMaker } from "./routes/titleMaker";
+
 import sketches = require("./sketches");
 import wipSketches = require("./wip");
 
