@@ -53,7 +53,7 @@
     "leapjs": "^0.6.4",
     "mini-css-extract-plugin": "^0.2.0",
     "morgan": ">=1.9.1",
-    "node-sass": "^4.5.3",
+    "node-sass": "^4.13.1",
     "normalize.css": "^8.0.0",
     "npm-run-all": "^4.0.2",
     "pathfinding": "^0.4.18",
