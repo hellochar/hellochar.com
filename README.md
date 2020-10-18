@@ -1,11 +1,11 @@
 Personal website dedicated to creative code, past work, etc.
 
-Development
+Development-
 ===========
 
 Run `yarn start` to start webpack-dev-server.
 
-Deploying
+Deploying-
 =========
 
 Pushes to master are set up to auto-deploy to a heroku host.
@@ -15,7 +15,7 @@ compile the ts into /public/app.js and run a local node express
 server which points public/ as a content base, hooking up
 index.html to find /app.js and /assets/ properly.
 
-Kiosk Mode
+Kiosk Mode-
 ==========
 
 Run `yarn kiosk` to start the server in kiosk mode, made for art
