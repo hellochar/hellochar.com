@@ -66,10 +66,9 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
     }
 
     private renderWork() {
-        const mitoName = `Mito (${(new Date()).toLocaleDateString(undefined, {month: 'long', year: 'numeric'})})`;
         return (
             <section className="content-section work" id="work">
-                { this.renderHighlight(mitoName, "/assets/images/mito_cover.png", 'https://hellochar.github.io/mito/#/') }
+                { this.renderHighlight("Mito", "/assets/images/mito_cover.png", 'https://hellochar.github.io/mito/#/') }
                 { this.renderHighlight("Flame", "/assets/images/flame.jpg") }
                 { this.renderHighlight("Line", "/assets/images/gravity4_cropped.jpg") }
                 { this.renderHighlight("Dots", "/assets/images/dots2.jpg") }
