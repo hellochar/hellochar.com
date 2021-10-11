@@ -47,7 +47,7 @@
     "html-webpack-inline-source-plugin": "^0.0.10",
     "html-webpack-plugin": "^3.0.0",
     "imports-loader": "^0.7.1",
-    "jquery": "^3.2.1",
+    "jquery": "^3.5.0",
     "leapjs": "^0.6.4",
     "mini-css-extract-plugin": "^0.2.0",
     "morgan": ">=1.9.1",
