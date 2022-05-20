@@ -84,15 +84,12 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                 <h1>About Me</h1>
                 <p>Hi there. My name's Xiaohan, but everyone just calls me Han-Han.</p>
                 <p>
-                    I am a new media artist in the San Francisco Bay Area, interested in
+                    I am a new media artist interested in
                     discovering and sharing the beauty of mathematics and physics. Topics of interest
                     include real time interactive art, emergent systems, generative design, self organization,
                     and physical simulations. I also care about UI, teaching, contributing to the broader
                     creative code community, music, and video games.
                 </p>
-                <LazyLoad height={500} offset={200} once>
-                    <img className="self" src="/assets/images/self_800x500.jpg" />
-                </LazyLoad>
                 <p>
                     My interest in generative art grew from my sense of adventure and discovery
                     in nature. My family would go on weekend trips to national parks, hiking and
@@ -125,9 +122,6 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     like old friends, running away from a bear, etc. etc!
                 </p>
                 <div className="contact-links">
-                    <a href="mailto:hellocharlien@hotmail.com">
-                        <FaEnvelope />
-                    </a>
                     <a href="https://www.instagram.com/hellochar">
                         <FaInstagram />
                     </a>
@@ -139,9 +133,6 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                     </a>
                     <a href="https://github.com/hellochar">
                         <FaGithub />
-                    </a>
-                    <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">
-                        <FaLinkedInSquare />
                     </a>
                 </div>
             </section>
