@@ -12,7 +12,7 @@ const COMPUTE_TEXTURE_SIDE_LENGTH = 64;
 class GravityGPUComputation extends ISketch {
     public mouse = new THREE.Vector2();
     public events = {
-        mousemove: (evt: JQuery.Event) => {
+        mousemove: (evt: any) => {
             this.mouse.x = evt.pageX;
             this.mouse.y = evt.pageY;
         },

@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as THREE from "three";
 
-import Worker = require('worker-loader!./worker');
+import Worker from 'worker-loader!./worker'; // eslint-disable-line import/no-webpack-loader-syntax
 import { ExplodeShader } from "../../common/explodeShader";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import WebcamBackgroundSubtractor from "../webcamBackgroundSubtractor";
