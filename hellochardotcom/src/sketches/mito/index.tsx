@@ -118,7 +118,7 @@ export class Mito extends ISketch {
     }
 
     public events = {
-        contextmenu: (event: JQuery.Event) => {
+        contextmenu: (event: any) => {
             if (this.uiState.type === "main") {
                 const tile = this.getTileAtScreenPosition(event.clientX!, event.clientY!);
                 if (tile != null) {
@@ -130,24 +130,24 @@ export class Mito extends ISketch {
             }
             return false;
         },
-        mousemove: (event: JQuery.Event) => {
+        mousemove: (event: any) => {
             this.mouse.x = event.clientX!;
             this.mouse.y = event.clientY!;
         },
-        click: (event: JQuery.Event) => {
+        click: (event: any) => {
             // left-click
             this.handleClick(event.clientX!, event.clientY!);
         },
-        keydown: (event: JQuery.Event) => {
+        keydown: (event: any) => {
             this.firstActionTakenYet = true;
             const key = event.key!;
             this.keyMap.add(key);
             this.tryAction(key);
         },
-        keyup: (event: JQuery.Event) => {
+        keyup: (event: any) => {
             this.keyMap.delete(event.key!);
         },
-        wheel: (event: JQuery.Event) => {
+        wheel: (event: any) => {
             const e = event.originalEvent as WheelEvent;
             // on my mouse, one scroll is + or - 125
             const delta = -(e.deltaX + e.deltaY) / 125 / 20;

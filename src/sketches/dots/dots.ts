@@ -20,7 +20,7 @@ const params: ParticleSystemParameters = {
 const attractor = makeAttractor();
 let mouseX: number, mouseY: number;
 
-function touchstart(event: JQuery.Event) {
+function touchstart(event: any) {
     // prevent emulated mouse events from occuring
     event.preventDefault();
     const touch = (event.originalEvent as TouchEvent).touches[0];
@@ -33,7 +33,7 @@ function touchstart(event: JQuery.Event) {
     mouseY = touchY;
 }
 
-function touchmove(event: JQuery.Event) {
+function touchmove(event: any) {
     const touch = (event.originalEvent as TouchEvent).touches[0];
     const touchX = touch.pageX;
     const touchY = touch.pageY;
@@ -43,11 +43,11 @@ function touchmove(event: JQuery.Event) {
     mouseY = touchY;
 }
 
-function touchend(event: JQuery.Event) {
+function touchend(event: any) {
     removeAttractor();
 }
 
-function mousedown(event: JQuery.Event) {
+function mousedown(event: any) {
     if (event.which === 1) {
         mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
         mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
@@ -55,13 +55,13 @@ function mousedown(event: JQuery.Event) {
     }
 }
 
-function mousemove(event: JQuery.Event) {
+function mousemove(event: any) {
     mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
     mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
     moveAttractor(mouseX, mouseY);
 }
 
-function mouseup(event: JQuery.Event) {
+function mouseup(event: any) {
     if (event.which === 1) {
         removeAttractor();
     }

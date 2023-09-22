@@ -17,7 +17,7 @@ import { initLeap } from "./leapMotion";
 export class LineSketch extends ISketch {
 
     public events = {
-        touchstart: (event: JQuery.Event) => {
+        touchstart: (event: any) => {
             // prevent emulated mouse events from occuring
             event.preventDefault();
             const touch = (event.originalEvent as TouchEvent).touches[0];
@@ -31,7 +31,7 @@ export class LineSketch extends ISketch {
             this.enableFirstAttractor(touchX, touchY);
         },
 
-        touchmove: (event: JQuery.Event) => {
+        touchmove: (event: any) => {
             const touch = (event.originalEvent as TouchEvent).touches[0];
             const touchX = touch.pageX;
             let touchY = touch.pageY;
@@ -42,11 +42,11 @@ export class LineSketch extends ISketch {
             this.moveFirstAttractor(touchX, touchY);
         },
 
-        touchend: (event: JQuery.Event) => {
+        touchend: (event: any) => {
             this.disableFirstAttractor();
         },
 
-        mousedown: (event: JQuery.Event) => {
+        mousedown: (event: any) => {
             if (event.which === 1) {
                 this.mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
                 this.mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
@@ -54,13 +54,13 @@ export class LineSketch extends ISketch {
             }
         },
 
-        mousemove: (event: JQuery.Event) => {
+        mousemove: (event: any) => {
             this.mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
             this.mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
             this.moveFirstAttractor(this.mouseX, this.mouseY);
         },
 
-        mouseup: (event: JQuery.Event) => {
+        mouseup: (event: any) => {
             if (event.which === 1) {
                 this.disableFirstAttractor();
             }

@@ -118,7 +118,7 @@ class Landscape extends ISketch {
     private get scrollTop() {
         return (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
     }
-    private handleTouch = (event: JQuery.Event) => {
+    private handleTouch = (event: any) => {
         const touch = (event.originalEvent as TouchEvent).touches[0];
         if (touch) {
             this.mouseX = touch.clientX || touch.screenX;
@@ -126,7 +126,7 @@ class Landscape extends ISketch {
         }
     };
     public events = {
-        mousemove: (event: JQuery.Event) => {
+        mousemove: (event: any) => {
             this.mouseX = event.clientX || (event.originalEvent as MouseEvent).layerX;
             this.mouseY = event.clientY || (event.originalEvent as MouseEvent).layerY;
         },

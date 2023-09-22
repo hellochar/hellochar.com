@@ -313,7 +313,7 @@ class Waves2 extends ISketch {
         this.renderer.render(this.scene, this.camera);
     }
 
-    setVelocityFromTouchEvent(event: JQuery.Event) {
+    setVelocityFromTouchEvent(event: any) {
         const canvasOffset = $(this.renderer.domElement).offset()!;
         const touch = (event as any).originalEvent.touches[0];
         const touchX = touch.pageX - canvasOffset.left;
@@ -322,7 +322,7 @@ class Waves2 extends ISketch {
         this.setVelocityFromCanvasCoordinates(touchX, touchY);
     }
 
-    setVelocityFromMouseEvent(event: JQuery.Event) {
+    setVelocityFromMouseEvent(event: any) {
         const mouseX = event.offsetX == null ? (event as any).originalEvent.layerX : event.offsetX;
         const mouseY = event.offsetY == null ? (event as any).originalEvent.layerY : event.offsetY;
         this.setVelocityFromCanvasCoordinates(mouseX, mouseY);
@@ -363,24 +363,24 @@ class Waves2 extends ISketch {
     }
 
     public events = {
-        mousemove: (event: JQuery.Event) => {
+        mousemove: (event: any) => {
             this.setVelocityFromMouseEvent(event);
         },
-        mousedown: (event: JQuery.Event) => {
+        mousedown: (event: any) => {
             if (event.which === 1) {
                 isTimeFast = true;
                 this.setVelocityFromMouseEvent(event);
             }
         },
 
-        mouseup: (event: JQuery.Event) => {
+        mouseup: (event: any) => {
             if (event.which === 1) {
                 isTimeFast = false;
                 this.setVelocityFromMouseEvent(event);
             }
         },
 
-        touchstart: (event: JQuery.Event) => {
+        touchstart: (event: any) => {
             // prevent emulated mouse events from occuring
             event.preventDefault();
 
@@ -388,11 +388,11 @@ class Waves2 extends ISketch {
             this.setVelocityFromTouchEvent(event);
         },
 
-        touchmove: (event: JQuery.Event) => {
+        touchmove: (event: any) => {
             this.setVelocityFromTouchEvent(event);
         },
 
-        touchend: (event: JQuery.Event) => {
+        touchend: (event: any) => {
             isTimeFast = false;
         },
     };

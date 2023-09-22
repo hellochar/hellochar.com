@@ -23,7 +23,7 @@ const GROW_AMOUNT_MIN = 0.0;
 export class Cymatics extends ISketch {
     public slowDownAmount = 0;
     public events = {
-        touchstart: (event: JQuery.Event) => {
+        touchstart: (event: any) => {
             // prevent emulated mouse events from occuring
             event.preventDefault();
             const touch = (event.originalEvent as TouchEvent).touches[0];
@@ -32,18 +32,18 @@ export class Cymatics extends ISketch {
             this.startInteraction(touchX, touchY);
         },
 
-        touchmove: (event: JQuery.Event) => {
+        touchmove: (event: any) => {
             const touch = (event.originalEvent as TouchEvent).touches[0];
             const touchX = touch.pageX;
             const touchY = touch.pageY;
             this.setMouse(touchX, touchY);
         },
 
-        touchend: (event: JQuery.Event) => {
+        touchend: (event: any) => {
             mousePressed = false;
         },
 
-        mousedown: (event: JQuery.Event) => {
+        mousedown: (event: any) => {
             if (event.which === 1) {
                 const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
                 const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
@@ -51,13 +51,13 @@ export class Cymatics extends ISketch {
             }
         },
 
-        mousemove: (event: JQuery.Event) => {
+        mousemove: (event: any) => {
             const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
             const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
             this.setMouse(mouseX, mouseY);
         },
 
-        mouseup: (event: JQuery.Event) => {
+        mouseup: (event: any) => {
             mousePressed = false;
         },
     };

@@ -322,7 +322,7 @@ function computeDepth() {
     return depth;
 }
 
-function mousemove(event: JQuery.Event) {
+function mousemove(event: any) {
     const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
     const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
 
@@ -330,7 +330,7 @@ function mousemove(event: JQuery.Event) {
     mousePosition.y = mouseY;
 }
 
-function mousedown(event: JQuery.Event) {
+function mousedown(event: any) {
 }
 
 function dblclick() {

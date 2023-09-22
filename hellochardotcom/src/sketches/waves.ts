@@ -236,25 +236,25 @@ function getDarkness(frame: number) {
 
 class Waves extends ISketch {
     public events = {
-        mousemove: (event: JQuery.Event) => {
+        mousemove: (event: any) => {
             this.setVelocityFromMouseEvent(event);
         },
 
-        mousedown: (event: JQuery.Event) => {
+        mousedown: (event: any) => {
             if (event.which === 1) {
                 isTimeFast = true;
                 this.setVelocityFromMouseEvent(event);
             }
         },
 
-        mouseup: (event: JQuery.Event) => {
+        mouseup: (event: any) => {
             if (event.which === 1) {
                 isTimeFast = false;
                 this.setVelocityFromMouseEvent(event);
             }
         },
 
-        touchstart: (event: JQuery.Event) => {
+        touchstart: (event: any) => {
             // prevent emulated mouse events from occuring
             event.preventDefault();
 
@@ -262,11 +262,11 @@ class Waves extends ISketch {
             this.setVelocityFromTouchEvent(event);
         },
 
-        touchmove: (event: JQuery.Event) => {
+        touchmove: (event: any) => {
             this.setVelocityFromTouchEvent(event);
         },
 
-        touchend: (event: JQuery.Event) => {
+        touchend: (event: any) => {
             isTimeFast = false;
         },
     };
@@ -346,13 +346,13 @@ class Waves extends ISketch {
         });
     }
 
-    setVelocityFromMouseEvent(event: JQuery.Event) {
+    setVelocityFromMouseEvent(event: any) {
         const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
         const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
         this.setVelocityFromCanvasCoordinates(mouseX, mouseY);
     }
 
-    setVelocityFromTouchEvent(event: JQuery.Event) {
+    setVelocityFromTouchEvent(event: any) {
         const canvasOffset = $(this.canvas).offset()!;
         const touch = (event.originalEvent as TouchEvent).touches[0];
         const touchX = touch.pageX - canvasOffset.left;
