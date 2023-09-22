@@ -40,18 +40,10 @@ export class FullPageSketch extends React.Component<ISketchRouteProps, {}> {
     }
 
     private requestFullscreen(ref: HTMLElement) {
-        if (ref.webkitRequestFullscreen) {
-            ref.webkitRequestFullscreen();
-        } else if (ref.mozRequestFullScreen) {
-            ref.mozRequestFullScreen();
-        }
+        ref.requestFullscreen();
     }
 
     private exitFullscreen() {
-        if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-            document.mozCancelFullScreen();
-        }
+        document.exitFullscreen();
     }
 }

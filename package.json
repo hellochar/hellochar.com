@@ -6,15 +6,19 @@
     "yarn": "^1.3.0"
   },
   "scripts": {
-    "build": "webpack --config webpack.dev.js",
-    "kiosk": "npm-run-all -s kiosk:build kiosk:server",
-    "kiosk:build": "cross-env KIOSK=true npm-run-all prod:build",
-    "kiosk:server": "node ./openpose_kiosk/server.js --kiosk",
-    "prod": "npm-run-all -p prod:build prod:server",
-    "prod:build": "webpack --config webpack.prod.js",
-    "prod:server": "node ./bin/www",
-    "start": "webpack-dev-server --open --config webpack.dev.js",
-    "stats": "webpack --config webpack.dev.js --profile --json > stats.json"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "old_build": "webpack --config webpack.dev.js",
+    "old_kiosk": "npm-run-all -s kiosk:build kiosk:server",
+    "old_kiosk:build": "cross-env KIOSK=true npm-run-all prod:build",
+    "old_kiosk:server": "node ./openpose_kiosk/server.js --kiosk",
+    "old_prod": "npm-run-all -p prod:build prod:server",
+    "old_prod:build": "webpack --config webpack.prod.js",
+    "old_prod:server": "node ./bin/www",
+    "old_start": "webpack-dev-server --open --config webpack.dev.js",
+    "old_stats": "webpack --config webpack.dev.js --profile --json > stats.json"
   },
   "dependencies": {
     "@types/classnames": "^2.2.3",
@@ -51,7 +55,6 @@
     "leapjs": "^0.6.4",
     "mini-css-extract-plugin": "^0.2.0",
     "morgan": ">=1.9.1",
-    "node-sass": "^6.0.1",
     "normalize.css": "^8.0.0",
     "npm-run-all": "^4.0.2",
     "pathfinding": "^0.4.18",
@@ -64,8 +67,10 @@
     "react-lazyload": "^2.3.0",
     "react-router-dom": "^4.1.2",
     "react-router-hash-link": "^1.1.0",
+    "react-scripts": "^5.0.1",
     "react-transition-group": "^2.2.1",
     "rimraf": "^2.6.2",
+    "sass": "^1.68.0",
     "sass-loader": "^6.0.6",
     "serve-favicon": "~2.1.3",
     "socket.io": "^2.1.1",
@@ -84,5 +89,17 @@
   },
   "devDependencies": {
     "tslint": "^5.8.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

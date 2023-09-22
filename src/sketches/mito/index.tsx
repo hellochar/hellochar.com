@@ -42,7 +42,7 @@ export function lerp2(v: Vector3, t: {x: number, y: number}, l: number) {
 
 function createRendererFor<E extends Entity>(object: E, scene: Scene, mito: Mito): Renderer<Entity> {
     if (object instanceof Player) {
-        return new PlayerRenderer(object, scene, mito);
+        return new PlayerRenderer(object as any, scene, mito);
     } else if (object instanceof Transport) {
         return new TransportRenderer(object, scene, mito);
     } else if (object instanceof Tile) {

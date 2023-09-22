@@ -35,7 +35,7 @@ if (location.hash.length > 0) {
 }
 
 export function updateParamsHash() {
-    const nonDefaultParams: Partial<Params> = {};
+    const nonDefaultParams: any = {};
     const keys = Object.keys(PARAMS_DEFAULT) as Array<keyof Params>;
     for (const key of keys) {
         if (params[key] !== PARAMS_DEFAULT[key]) {
