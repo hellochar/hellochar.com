@@ -1,0 +1,165 @@
+.content {
+    position: relative;
+    max-width: 800px;
+    margin: auto;
+    padding: 0 10px;
+
+    .content-section {
+        // adding padding-top to account for header when navving to it
+        padding-top: 80px;
+
+        > h1 {
+            text-align: center;
+            margin: 40px;
+            font-size: 3em;
+        }
+    }
+}
+
+.self {
+    display: block;
+    width: 400px;
+    height: 400px;
+    border-radius: 100%;
+    object-fit: cover;
+    margin: 80px auto;
+}
+
+.full-width {
+    display: block;
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+}
+
+.workshops {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+}
+
+.work-highlight {
+    text-align: center;
+
+
+    .work-highlight-name {
+        display: inline-block;
+        font-family: $palatino-family;
+        font-size: 30px;
+        font-weight: bold;
+        margin: 1em 0;
+    }
+
+    .work-highlight-image {
+        width: 100%;
+        max-height: 500px;
+        position: relative;
+
+        &:hover {
+            transition: transform 0.2s;
+            transform: scale(1.05);
+        }
+    }
+
+    .work-highlight-sheen {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 100px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        
+        &:hover {
+            opacity: 1;
+        }
+    }
+}
+
+.contact-links {
+    a {
+        margin: 0 15px;
+        font-size: 32px;
+
+        .fa-icon {
+            margin-right: 5px;
+        }
+
+        &:first-of-type {
+            margin-left: 0;
+        }
+    }
+}
+
+.page-footer {
+    font-family: $palatino-family;
+    background: $black;
+    color: $light-gray5;
+    margin-left: -100vw;
+    margin-right: -100vw;
+
+    .get-in-touch {
+        color: $light-gray5;
+        padding: 80px;
+        text-align: center;
+        font-size: 30px;
+    }
+
+    .copyright {
+        color: $gray3;
+        padding-bottom: 20px;
+        text-align: center;
+        font-size: 16px;
+    }
+}
+
+@media screen and (max-width: 539px) {
+    .content {
+    }
+}
+
+// https://jsfiddle.net/AntonTrollback/nqQc7/
+.sheen-on-hover {
+    overflow: hidden;
+}
+
+.sheen-on-hover:after {
+  content: "";
+  position: absolute;
+  top: -150%;
+  left: -210%;
+  width: 200%;
+  height: 250%;
+  opacity: 0;
+  transform: rotate(30deg);
+  
+  background: rgba(255, 255, 255, 0.13);
+  background: linear-gradient(
+    to right, 
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.13) 77%,
+    rgba(255, 255, 255, 0.5) 92%,
+    rgba(255, 255, 255, 0.0) 100%
+  );
+}
+
+/* Hover state - trigger effect */
+
+.sheen-on-hover:hover:after {
+  opacity: 1;
+  top: -50%;
+  left: -30%;
+  transition-property: left, top, opacity;
+  transition-duration: 0.5s, 0.5s, 0.15s;
+  transition-timing-function: ease;
+}
+
+/* Active state */
+
+.sheen-on-hover:active:after {
+  opacity: 0;
+}

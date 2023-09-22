@@ -1,0 +1,79 @@
+
+// fully fills its parent
+.sketch-component {
+    // background: $light-gray1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    text-align: center;
+    position: relative;
+    user-select: none;
+
+    .sketch-error {
+        animation-duration: 2s;
+        animation-name: opacify-in;
+        margin: auto;
+        text-align: center;
+
+        .back {
+            color: $gray3;
+            font-style: italic;
+        }
+    }
+
+    canvas {
+        background: #10161A;
+        display: block;
+        position: relative;
+        &:focus {
+            outline: none;
+        }
+    }
+}
+
+.sketch-elements {
+    // todo ensure this is ok
+    align-items: flex-start;
+    display: flex;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    position: absolute;
+    z-index: 1;
+    // hack to prevent mouse events from being captured by this element
+    visibility: hidden;
+
+    // but allow children to capture
+    > * {
+        visibility: visible;
+    }
+}
+
+@keyframes opacify-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.user-volume {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+    background: none;
+    color: $gray3;
+    border: none;
+    font-size: 30px;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+
+    &:hover {
+        cursor: pointer;
+    }
+}

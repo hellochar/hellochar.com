@@ -1,0 +1,84 @@
+.hero {
+    min-height: 100vh;
+    transition: all 0.2s;
+    font-family: $palatino-family;
+    display: flex;
+    flex-direction: column;
+
+    .hero-sketch {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+
+        .sketch-component.error {
+            background: url('/assets/images/hero_still.jpg') no-repeat;
+            background-size: cover;
+            background-position: center center;
+        }
+    }
+    
+    .hero-content {
+        position: relative;
+        max-width: 800px;
+        margin: 25vh auto auto auto;
+    }
+
+    .hero-name {
+        transition: all 0.2s;
+        // margin: 0 auto 100px auto;
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 80px;
+    }
+
+    a {
+        &:first-child {
+            margin-left: 0;
+        }
+        margin: 0 15px;
+    }
+}
+
+@-webkit-keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@-moz-keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@media screen and (max-width: 539px) {
+    .hero {
+        .hero-name {
+            font-size: 50px;
+        }
+    }
+}

@@ -1,0 +1,21 @@
+.full-page-sketch {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+a.back-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    color: $gray1;
+    font-size: 20px;
+    font-weight: 900;
+    z-index: 1;
+
+    &:active {
+        position: absolute;
+        top: 1;
+    }
+}

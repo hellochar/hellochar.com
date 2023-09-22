@@ -1,0 +1,26 @@
+
+#flame {
+    .flame-input {
+        margin: auto auto 0 auto;
+        width: 33%;
+        position: relative;
+        bottom: 20%;
+
+        input {
+            background: 0;
+            border: none;
+            border-bottom: 3px solid $light-gray5;
+            color: $light-gray5;
+            width: 100%;
+
+            font-family: $palatino-family;
+            font-size: 20px;
+            font-weight: 400;
+            text-align: center;
+
+            &:focus {
+                outline: none;
+            }
+        }
+    }
+}

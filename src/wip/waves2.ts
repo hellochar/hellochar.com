@@ -1,4 +1,3 @@
-import * as $ from "jquery";
 import { parse } from "query-string";
 import * as THREE from "three";
 
@@ -316,7 +315,7 @@ class Waves2 extends ISketch {
 
     setVelocityFromTouchEvent(event: JQuery.Event) {
         const canvasOffset = $(this.renderer.domElement).offset()!;
-        const touch = (event.originalEvent as TouchEvent).touches[0];
+        const touch = (event as any).originalEvent.touches[0];
         const touchX = touch.pageX - canvasOffset.left;
         const touchY = touch.pageY - canvasOffset.top;
 
@@ -324,8 +323,8 @@ class Waves2 extends ISketch {
     }
 
     setVelocityFromMouseEvent(event: JQuery.Event) {
-        const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+        const mouseX = event.offsetX == null ? (event as any).originalEvent.layerX : event.offsetX;
+        const mouseY = event.offsetY == null ? (event as any).originalEvent.layerY : event.offsetY;
         this.setVelocityFromCanvasCoordinates(mouseX, mouseY);
     }
 

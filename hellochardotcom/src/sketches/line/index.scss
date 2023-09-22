@@ -1,0 +1,23 @@
+
+#line {
+    .instructions-image {
+        width: 100%;
+        opacity: 0.75;
+    }
+
+    .line-instructions {
+        pointer-events: none;
+        background-color: transparentize($black, 0.08);
+        width: 100%;
+        transition: opacity 500ms ease-in;
+        opacity: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        &.visible {
+            opacity: 1;
+        }
+    }
+}
