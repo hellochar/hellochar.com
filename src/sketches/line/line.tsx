@@ -48,15 +48,15 @@ export class LineSketch extends ISketch {
 
         mousedown: (event: any) => {
             if (event.which === 1) {
-                this.mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-                this.mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+                this.mouseX = event.offsetX == null ? event.originalEvent.layerX : event.offsetX;
+                this.mouseY = event.offsetY == null ? event.originalEvent.layerY : event.offsetY;
                 this.enableFirstAttractor(this.mouseX, this.mouseY);
             }
         },
 
         mousemove: (event: any) => {
-            this.mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-            this.mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+            this.mouseX = event.offsetX == null ? event.originalEvent.layerX : event.offsetX;
+            this.mouseY = event.offsetY == null ? event.originalEvent.layerY : event.offsetY;
             this.moveFirstAttractor(this.mouseX, this.mouseY);
         },
 

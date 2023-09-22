@@ -127,8 +127,8 @@ class Landscape extends ISketch {
     };
     public events = {
         mousemove: (event: any) => {
-            this.mouseX = event.clientX || (event.originalEvent as MouseEvent).layerX;
-            this.mouseY = event.clientY || (event.originalEvent as MouseEvent).layerY;
+            this.mouseX = event.clientX || event.originalEvent.layerX;
+            this.mouseY = event.clientY || event.originalEvent.layerY;
         },
         touchmove: this.handleTouch,
         touchstart: this.handleTouch,

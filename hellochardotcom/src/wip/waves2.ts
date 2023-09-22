@@ -324,8 +324,8 @@ class Waves2 extends ISketch {
     }
 
     setVelocityFromMouseEvent(event: any) {
-        const mouseX = event.offsetX == null ? (event.originalEvent as MouseEvent).layerX : event.offsetX;
-        const mouseY = event.offsetY == null ? (event.originalEvent as MouseEvent).layerY : event.offsetY;
+        const mouseX = event.offsetX == null ? event.originalEvent.layerX : event.offsetX;
+        const mouseY = event.offsetY == null ? event.originalEvent.layerY : event.offsetY;
         this.setVelocityFromCanvasCoordinates(mouseX, mouseY);
     }
 
