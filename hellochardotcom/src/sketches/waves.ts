@@ -1,4 +1,4 @@
-import * as $ from "jquery";
+
 import { parse } from "query-string";
 import * as THREE from "three";
 

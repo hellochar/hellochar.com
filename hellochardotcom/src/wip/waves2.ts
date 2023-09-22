@@ -1,4 +1,3 @@
-import * as $ from "jquery";
 import { parse } from "query-string";
 import * as THREE from "three";
 
@@ -184,13 +183,21 @@ function getDarkness(frame: number) {
     }
 }
 
+function parseHTML(html: string) {
+    var t = document.createElement('template');
+    t.innerHTML = html;
+    return t.content;
+}
+
 class Waves2 extends ISketch {
     createAudioGroup(audioContext: SketchAudioContext) {
-        const backgroundAudio = $("<audio autoplay loop>")
-                                .append('<source src="/assets/sketches/waves/waves_background.mp3" type="audio/mp3">')
-                                .append('<source src="/assets/sketches/waves/waves_background.ogg" type="audio/ogg">') as JQuery<HTMLMediaElement>;
+        const backgroundAudio = new HTMLAudioElement();
+        backgroundAudio.autoplay = true;
+        backgroundAudio.loop = true;
+        backgroundAudio.appendChild(parseHTML('<source src="/assets/sketches/waves/waves_background.mp3" type="audio/mp3">'));
+        backgroundAudio.appendChild(parseHTML('<source src="/assets/sketches/waves/waves_background.ogg" type="audio/ogg">'));
 
-        const sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
+        const sourceNode = audioContext.createMediaElementSource(backgroundAudio);
         $("body").append(backgroundAudio);
 
         const backgroundAudioGain = audioContext.createGain();

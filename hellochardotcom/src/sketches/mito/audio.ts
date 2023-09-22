@@ -1,4 +1,4 @@
-import * as $ from "jquery";
+
 import * as THREE from "three";
 
 import devlog from "../../common/devlog";

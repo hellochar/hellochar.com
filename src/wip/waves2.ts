@@ -182,14 +182,21 @@ function getDarkness(frame: number) {
         return map(frame % 500, 0, 500, 1, 0);
     }
 }
+function parseHTML(html: string) {
+    var t = document.createElement('template');
+    t.innerHTML = html;
+    return t.content;
+}
 
 class Waves2 extends ISketch {
     createAudioGroup(audioContext: SketchAudioContext) {
-        const backgroundAudio = $("<audio autoplay loop>")
-                                .append('<source src="/assets/sketches/waves/waves_background.mp3" type="audio/mp3">')
-                                .append('<source src="/assets/sketches/waves/waves_background.ogg" type="audio/ogg">') as JQuery<HTMLMediaElement>;
+        const backgroundAudio = new HTMLAudioElement();
+        backgroundAudio.autoplay = true;
+        backgroundAudio.loop = true;
+        backgroundAudio.appendChild(parseHTML('<source src="/assets/sketches/waves/waves_background.mp3" type="audio/mp3">'));
+        backgroundAudio.appendChild(parseHTML('<source src="/assets/sketches/waves/waves_background.ogg" type="audio/ogg">'));
 
-        const sourceNode = audioContext.createMediaElementSource(backgroundAudio[0]);
+        const sourceNode = audioContext.createMediaElementSource(backgroundAudio);
         $("body").append(backgroundAudio);
 
         const backgroundAudioGain = audioContext.createGain();
@@ -314,10 +321,9 @@ class Waves2 extends ISketch {
     }
 
     setVelocityFromTouchEvent(event: any) {
-        const canvasOffset = $(this.renderer.domElement).offset()!;
         const touch = (event as any).originalEvent.touches[0];
-        const touchX = touch.pageX - canvasOffset.left;
-        const touchY = touch.pageY - canvasOffset.top;
+        const touchX = touch.pageX - this.renderer.domElement.offsetLeft;
+        const touchY = touch.pageY - this.renderer.domElement.offsetTop;
 
         this.setVelocityFromCanvasCoordinates(touchX, touchY);
     }
