@@ -1,11 +1,6 @@
 import * as React from "react";
 
-import FaEnvelope = require("react-icons/lib/fa/envelope");
-import FaFacebookOfficial = require("react-icons/lib/fa/facebook-official");
-import FaGithub = require("react-icons/lib/fa/github");
-import FaInstagram = require("react-icons/lib/fa/instagram");
-import FaLinkedInSquare = require("react-icons/lib/fa/linkedin-square");
-import FaTwitter = require("react-icons/lib/fa/twitter");
+import { FaEnvelope, FaFacebookF, FaGithub, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa";
 
 import { SketchComponent } from "../../sketchComponent";
 
@@ -43,7 +38,7 @@ const Hero = () => (
                     <FaInstagram />
                 </a>
                 <a href="https://www.facebook.com/hellocharlien">
-                    <FaFacebookOfficial />
+                    <FaFacebookF />
                 </a>
                 <a href="https://twitter.com/hellocharlien">
                     <FaTwitter />
@@ -52,7 +47,7 @@ const Hero = () => (
                     <FaGithub />
                 </a>
                 <a href="https://www.linkedin.com/in/xiaohan-zhang-70174341/">
-                    <FaLinkedInSquare />
+                    <FaLinkedin />
                 </a>
             </div>
         </div>

@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+debugger;
+
 // HACK monkeypatch the old features that requires THREE on the global namespace
 (window as any).THREE = THREE;
 // tslint:disable

@@ -7,13 +7,7 @@ import { HistorySection } from "./history";
 import { ShrinkingHeader } from "./shrinkingHeader";
 import Teaching from "./workshops";
 
-import FaEnvelope = require("react-icons/lib/fa/envelope");
-import FaFacebookOfficial = require("react-icons/lib/fa/facebook-official");
-import FaGithub = require("react-icons/lib/fa/github");
-import FaInstagram = require("react-icons/lib/fa/instagram");
-import FaLinkedInSquare = require("react-icons/lib/fa/linkedin-square");
-import FaPlay = require("react-icons/lib/fa/play");
-import FaTwitter = require("react-icons/lib/fa/twitter");
+import { FaFacebookF, FaGithub, FaInstagram, FaPlay, FaTwitter } from "react-icons/fa";
 
 
 export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
@@ -126,7 +120,7 @@ export class HomePage extends React.Component<RouteComponentProps<void>, {}> {
                         <FaInstagram />
                     </a>
                     <a href="https://www.facebook.com/hellocharlien">
-                        <FaFacebookOfficial />
+                        <FaFacebookF />
                     </a>
                     <a href="https://twitter.com/hellocharlien">
                         <FaTwitter />

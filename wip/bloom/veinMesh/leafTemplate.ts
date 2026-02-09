@@ -1,4 +1,4 @@
-import alphaComplex = require("alpha-complex");
+import alphaComplex from "alpha-complex";
 import * as THREE from "three";
 
 import { VeinedLeaf } from "../vein/veinedLeaf";

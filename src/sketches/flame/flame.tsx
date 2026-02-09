@@ -114,7 +114,7 @@ const material = new FlamePointsMaterial();
 
 let pointCloud: THREE.Points;
 const mousePosition = new THREE.Vector2(0, 0);
-let controls: THREE.OrbitControls;
+let controls: any;
 
 let globalBranches: Branch[];
 let superPoint: SuperPoint;
@@ -388,7 +388,7 @@ export class FlameSketch extends ISketch {
         camera.position.z = 2;
         camera.position.y = 1;
         camera.lookAt(new THREE.Vector3());
-        controls = new THREE.OrbitControls(camera, this.renderer.domElement);
+        controls = new (THREE as any).OrbitControls(camera, this.renderer.domElement);
         controls.autoRotate = true;
         controls.autoRotateSpeed = 1;
         controls.maxDistance = 8;

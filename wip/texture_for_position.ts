@@ -2,7 +2,7 @@ import * as React from "react";
 import * as THREE from "three";
 
 import devlog from "../common/devlog";
-import { ISketch, SketchAudioContext } from "../sketch";
+import { ISketch } from "../sketch";
 
 // goal - use a shader to fill in a texture, which is then used to fill in the positions of particles
 
@@ -12,7 +12,7 @@ class TextureForPosition extends ISketch {
     public scene = new THREE.Scene();
 
     public camera!: THREE.PerspectiveCamera;
-    public controls!: THREE.OrbitControls;
+    public controls!: any;
     public pointsMaterial!: THREE.ShaderMaterial;
 
     public init() {

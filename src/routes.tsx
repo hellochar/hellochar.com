@@ -5,7 +5,7 @@ import { HomePage } from "./routes/homePage";
 import { TitleMaker } from "./routes/titleMaker";
 
 import sketches from "./sketches";
-import wipSketches from "./wip";
+// import wipSketches from "./wip";
 
 const sketchRoutes = sketches.map(sketchClass => {
     const path = `/${sketchClass.id}`;
@@ -18,31 +18,31 @@ const sketchRoutes = sketches.map(sketchClass => {
     );
 });
 
-const wipSketchRoutes = wipSketches.map(sketchClass => {
-    const path = `/wip/${sketchClass.id}`;
-    return (
-        <Route
-            key={path}
-            path={path}
-            component={() => <FullPageSketch sketchClass={sketchClass} />}
-        />
-    );
-});
+// const wipSketchRoutes = wipSketches.map(sketchClass => {
+//     const path = `/wip/${sketchClass.id}`;
+//     return (
+//         <Route
+//             key={path}
+//             path={path}
+//             component={() => <FullPageSketch sketchClass={sketchClass} />}
+//         />
+//     );
+// });
 
-const WipListing = () => (
-    <>
-        <h1>
-            <a href="/">Home</a>
-        </h1>
-        <ul>
-            {wipSketches.map(sketch => (
-                <li>
-                    <a href={`/wip/${sketch.id}`}>{sketch.id}</a>
-                </li>
-            ))}
-        </ul>
-    </>
-);
+// const WipListing = () => (
+//     <>
+//         <h1>
+//             <a href="/">Home</a>
+//         </h1>
+//         <ul>
+//             {wipSketches.map(sketch => (
+//                 <li>
+//                     <a href={`/wip/${sketch.id}`}>{sketch.id}</a>
+//                 </li>
+//             ))}
+//         </ul>
+//     </>
+// );
 
 const SlidesIntroCC = () => {
     return (
@@ -225,7 +225,7 @@ export const Routes = () => (
     <Switch>
         <Redirect from="/wip/mito" to="/mito" />
         {sketchRoutes}
-        {wipSketchRoutes}
+        {/* {wipSketchRoutes} */}
         <Route
             path="/privacy-policy-td"
             component={PrivacyPolicyTwilightDungeons}
@@ -233,7 +233,7 @@ export const Routes = () => (
         <Route path="/slides/introcc" component={SlidesIntroCC} />
         <Route path="/slides/divecc" component={SlidesDiveCC} />
         <Route path="/slides/ccse" component={SlidesProgrammerCC} />
-        <Route path="/wip" component={WipListing} />
+        {/* <Route path="/wip" component={WipListing} /> */}
         <Route path="/admin/titleMaker" component={TitleMaker} />
         <Route path="/" component={HomePage} />
     </Switch>
