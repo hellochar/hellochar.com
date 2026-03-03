@@ -2,8 +2,8 @@ import * as $ from "jquery";
 import * as React from "react";
 import * as THREE from "three";
 
-import FaVolumeOff = require("react-icons/lib/fa/volume-off");
-import FaVolumeUp = require("react-icons/lib/fa/volume-up");
+import FaVolumeOff from "react-icons/lib/fa/volume-off";
+import FaVolumeUp from "react-icons/lib/fa/volume-up";
 
 import * as classnames from "classnames";
 import { Link } from "react-router-dom";

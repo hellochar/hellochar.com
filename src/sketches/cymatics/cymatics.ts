@@ -5,8 +5,7 @@ import { map, mirroredRepeat } from "../../math";
 import { ISketch } from "../../sketch";
 import { CymaticsAudio } from "./audio";
 import { RenderCymaticsShader } from "./renderCymaticsShader";
-
-const COMPUTE_CELL_STATE = require("./computeCellState.frag");
+import COMPUTE_CELL_STATE from "./computeCellState.frag";
 
 let mousePressed = false;
 const mousePosition = new THREE.Vector2(0, 0);

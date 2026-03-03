@@ -1,5 +1,9 @@
 import getSketches from "../getSketches";
 
-const wipSketches = getSketches(require.context("./", true, /\.\/\w+$/));
+const modules = import.meta.glob<{ default: any }>(
+    ['./**/index.{ts,tsx}', './*.{ts,tsx}', '!./index.ts'],
+    { eager: true },
+);
 
-export = wipSketches;
+const sketches = getSketches(modules);
+export default sketches;

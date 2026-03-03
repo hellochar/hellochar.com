@@ -1,4 +1,5 @@
 node_modules/
+dist/
 
 ableton music
 
@@ -10,21 +11,5 @@ Thumbs.db
 .idea/
 
 yarn-error.log
-
-public/report.html
-
-public/*.worker.js
-
-public/index.html
-public/style.css
-public/main.js
-public/main.css
-public/vendors~main.bundle.js
-
-public/kiosk.css
-public/kiosk.html
-public/kiosk.js
-public/vendors~kiosk.bundle.js
-public/vendors~kiosk~main.bundle.js
 
 openpose-1.3.0-win64-gpu-binaries/

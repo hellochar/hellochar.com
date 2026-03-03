@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import renderCymaticsFrag from "./renderCymatics.frag";
 
 export const RenderCymaticsShader: THREE.Shader = {
     uniforms: {
@@ -14,5 +15,5 @@ void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 }
 `,
-    fragmentShader: require("./renderCymatics.frag"),
+    fragmentShader: renderCymaticsFrag,
 }

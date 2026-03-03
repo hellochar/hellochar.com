@@ -1,11 +1,14 @@
 {
     "compilerOptions": {
         "allowJs": true,
-        "target": "es6",
-        "module": "commonjs",
+        "target": "es2015",
+        "module": "esnext",
+        "moduleResolution": "bundler",
         "jsx": "react",
         "strict": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true
     },
     "include": [
         "src"

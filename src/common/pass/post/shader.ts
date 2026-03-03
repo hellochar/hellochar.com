@@ -1,7 +1,6 @@
 import * as THREE from "three";
-
-const vertexShader = require("./vertex.glsl");
-const fragmentShader = require("./fragment.glsl");
+import vertexShader from "./vertex.glsl";
+import fragmentShader from "./fragment.glsl";
 
 export const PostShader: THREE.Shader = {
     uniforms: {

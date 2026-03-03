@@ -1,11 +1,11 @@
 import * as React from "react";
 
-import FaEnvelope = require("react-icons/lib/fa/envelope");
-import FaFacebookOfficial = require("react-icons/lib/fa/facebook-official");
-import FaGithub = require("react-icons/lib/fa/github");
-import FaInstagram = require("react-icons/lib/fa/instagram");
-import FaLinkedInSquare = require("react-icons/lib/fa/linkedin-square");
-import FaTwitter = require("react-icons/lib/fa/twitter");
+import FaEnvelope from "react-icons/lib/fa/envelope";
+import FaFacebookOfficial from "react-icons/lib/fa/facebook-official";
+import FaGithub from "react-icons/lib/fa/github";
+import FaInstagram from "react-icons/lib/fa/instagram";
+import FaLinkedInSquare from "react-icons/lib/fa/linkedin-square";
+import FaTwitter from "react-icons/lib/fa/twitter";
 
 import { SketchComponent } from "../../sketchComponent";
 

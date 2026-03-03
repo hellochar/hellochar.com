@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as THREE from "three";
 
-import Worker = require('worker-loader!./worker');
 import { ExplodeShader } from "../../common/explodeShader";
 import { ISketch, SketchAudioContext } from "../../sketch";
 import WebcamBackgroundSubtractor from "../webcamBackgroundSubtractor";
@@ -40,7 +39,7 @@ class DontMove extends ISketch {
 
     private initWorkers() {
         for (let i = 0; i < NUM_WORKERS; i++) {
-            const worker = new Worker();
+            const worker = new Worker(new URL("./worker.ts", import.meta.url));
             this.workers.push(worker);
         }
     }

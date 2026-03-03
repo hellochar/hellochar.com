@@ -4,6 +4,9 @@ import * as THREE from "three";
 import devlog from "../../common/devlog";
 import GPUComputationRenderer, { GPUComputationRendererVariable } from "../../common/gpuComputationRenderer";
 import { ISketch, SketchAudioContext } from "../../sketch";
+import randPosition5Frag from "../common-glsl/randPosition5.frag";
+import computePositionTextureFrag from "./computePositionTexture.frag";
+import textureToPositionVert from "./textureToPosition.vert";
 
 // goal - use a shader to fill in a texture, which is then used to fill in the positions of particles
 
@@ -37,11 +40,11 @@ class GravityGPUComputation extends ISketch {
 
         this.gpuRenderer = new GPUComputationRenderer(COMPUTE_TEXTURE_SIDE_LENGTH, COMPUTE_TEXTURE_SIDE_LENGTH, this.renderer);
 
-        const randomPosition = this.gpuRenderer.createShaderMaterial(require("../common-glsl/randPosition5.frag"), {});
+        const randomPosition = this.gpuRenderer.createShaderMaterial(randPosition5Frag, {});
         const noiseRenderTarget = this.gpuRenderer.createRenderTarget();
         this.gpuRenderer.doRenderTarget(randomPosition, noiseRenderTarget);
 
-        this.positionVariable = this.gpuRenderer.addVariable("positions", require("./computePositionTexture.frag"), noiseRenderTarget.texture);
+        this.positionVariable = this.gpuRenderer.addVariable("positions", computePositionTextureFrag, noiseRenderTarget.texture);
         this.gpuRenderer.setVariableDependencies(this.positionVariable, [ this.positionVariable ]);
         this.positionVariable.material.uniforms.u_mouse = { value: this.mouse };
         console.log(this.gpuRenderer.init());
@@ -53,7 +56,7 @@ class GravityGPUComputation extends ISketch {
         // ok great now we have a texture with position information. now we feed this into a vert that uses that texture in computing gl_Position
         // the goal here is transforming positionTexture -> points on screen
         this.pointsMaterial = new THREE.ShaderMaterial({
-            vertexShader: require("./textureToPosition.vert"),
+            vertexShader: textureToPositionVert,
             fragmentShader: `
 varying float v_speed;
 

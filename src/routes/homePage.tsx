@@ -7,13 +7,13 @@ import { HistorySection } from "./history";
 import { ShrinkingHeader } from "./shrinkingHeader";
 import Teaching from "./workshops";
 
-import FaEnvelope = require("react-icons/lib/fa/envelope");
-import FaFacebookOfficial = require("react-icons/lib/fa/facebook-official");
-import FaGithub = require("react-icons/lib/fa/github");
-import FaInstagram = require("react-icons/lib/fa/instagram");
-import FaLinkedInSquare = require("react-icons/lib/fa/linkedin-square");
-import FaPlay = require("react-icons/lib/fa/play");
-import FaTwitter = require("react-icons/lib/fa/twitter");
+import FaEnvelope from "react-icons/lib/fa/envelope";
+import FaFacebookOfficial from "react-icons/lib/fa/facebook-official";
+import FaGithub from "react-icons/lib/fa/github";
+import FaInstagram from "react-icons/lib/fa/instagram";
+import FaLinkedInSquare from "react-icons/lib/fa/linkedin-square";
+import FaPlay from "react-icons/lib/fa/play";
+import FaTwitter from "react-icons/lib/fa/twitter";
 
 
 export class HomePage extends React.Component<RouteComponentProps<void>, {}> {

@@ -4,8 +4,8 @@ import { FullPageSketch } from "./routes/fullPageSketch";
 import { HomePage } from "./routes/homePage";
 import { TitleMaker } from "./routes/titleMaker";
 
-import sketches = require("./sketches");
-import wipSketches = require("./wip");
+import sketches from "./sketches";
+import wipSketches from "./wip";
 
 const sketchRoutes = sketches.map(sketchClass => {
     const path = `/${sketchClass.id}`;
